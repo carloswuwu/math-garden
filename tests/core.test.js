@@ -108,10 +108,10 @@ function computeAnswer(math) {
   if (math.op === 'expand') return math.mode === 'coeff' ? math.a + math.b : math.a * math.b;
   if (math.op === 'pichart') return math.pct * 360 / 100;
   if (math.op === 'approx') return math.a / 2;
-  if (math.op === 'direction') return math.a;
+  if (math.op === 'direction') return math.k;
   if (math.op === 'time24') return math.a;
   if (math.op === 'cone') return math.coef + 'π';
-  if (math.op === 'centre') return math.a;
+  if (math.op === 'centre') return math.k;
   if (math.op === 'circleangle') return math.mode === 'centre' ? 2 * math.a : math.a;
   if (math.op === 'binomial') {
     var bfact = function (x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; };

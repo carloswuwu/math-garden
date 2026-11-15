@@ -1650,11 +1650,12 @@
 
   /* ================= 補缺題型（方向、時間、立體、三角、圓、二項式、微分） ================= */
 
+  var DIRECTION_KEYS = ['east', 'south', 'west', 'north'];
   var DIRECTION_FACTS = [
-    { zh: '指南針上的主要方向（東、南、西、北）共有幾個？', en: 'How many main compass directions are there (N, S, E, W)?', a: 4 },
-    { zh: '八方位（東、南、西、北、東南、東北、西南、西北）共有幾個？', en: 'How many compass points are there in the 8-point compass?', a: 8 },
-    { zh: '太陽從哪個方向升起？（1=東 2=南 3=西 4=北）', en: 'The sun rises in which direction? (1=E 2=S 3=W 4=N)', a: 1 },
-    { zh: '太陽從哪個方向落下？（1=東 2=南 3=西 4=北）', en: 'The sun sets in which direction? (1=E 2=S 3=W 4=N)', a: 3 }
+    { zh: '太陽從哪個方向升起？', en: 'In which direction does the sun rise?', k: 'east' },
+    { zh: '太陽從哪個方向落下？', en: 'In which direction does the sun set?', k: 'west' },
+    { zh: '與「東」相對的方向是？', en: 'Which direction is opposite to east?', k: 'west' },
+    { zh: '與「北」相對的方向是？', en: 'Which direction is opposite to north?', k: 'south' }
   ];
 
   var TIME24_FACTS = [
@@ -1674,12 +1675,16 @@
     { kind: 'sphereA', r: 6, coef: 144 }
   ];
 
+  var CENTRE_KEYS = ['incentre', 'circumcentre', 'centroid', 'orthocentre'];
   var CENTRE_FACTS = [
-    { zh: '三角形三條角平分線的交點叫甚麼心？（1=內心 2=外心 3=重心 4=垂心）', en: 'The three angle bisectors meet at which centre? (1=incentre 2=circumcentre 3=centroid 4=orthocentre)', a: 1 },
-    { zh: '三角形三條垂直平分線的交點叫甚麼心？（1=內心 2=外心 3=重心 4=垂心）', en: 'The three perpendicular bisectors meet at which centre?', a: 2 },
-    { zh: '三角形三條中線的交點叫甚麼心？（1=內心 2=外心 3=重心 4=垂心）', en: 'The three medians meet at which centre?', a: 3 },
-    { zh: '三角形三條高的交點叫甚麼心？（1=內心 2=外心 3=重心 4=垂心）', en: 'The three altitudes meet at which centre?', a: 4 }
+    { zh: '三角形三條角平分線的交點叫甚麼心？', en: 'The three angle bisectors meet at which centre?', k: 'incentre' },
+    { zh: '三角形三條垂直平分線的交點叫甚麼心？', en: 'The three perpendicular bisectors meet at which centre?', k: 'circumcentre' },
+    { zh: '三角形三條中線的交點叫甚麼心？', en: 'The three medians meet at which centre?', k: 'centroid' },
+    { zh: '三角形三條高的交點叫甚麼心？', en: 'The three altitudes meet at which centre?', k: 'orthocentre' }
   ];
+
+  var DIR_LABEL = { east: { zh: '東', en: 'East' }, south: { zh: '南', en: 'South' }, west: { zh: '西', en: 'West' }, north: { zh: '北', en: 'North' } };
+  var CENTRE_LABEL = { incentre: { zh: '內心', en: 'Incentre' }, circumcentre: { zh: '外心', en: 'Circumcentre' }, centroid: { zh: '重心', en: 'Centroid' }, orthocentre: { zh: '垂心', en: 'Orthocentre' } };
 
   /* 方向 */
   function genDirection(rng, o) {
@@ -1689,8 +1694,9 @@
       type: 'direction',
       prompt: { zh: q.zh, en: q.en },
       visual: null,
-      answer: q.a,
-      math: { op: 'direction', a: q.a, k: i },
+      answer: q.k,
+      choices: DIRECTION_KEYS.slice(),
+      math: { op: 'direction', k: q.k },
       hint: { zh: '想一想指南針的方向。', en: 'Think about the compass directions.' }
     };
   }
@@ -1745,8 +1751,9 @@
       type: 'centre',
       prompt: { zh: q.zh, en: q.en },
       visual: null,
-      answer: q.a,
-      math: { op: 'centre', a: q.a, k: i },
+      answer: q.k,
+      choices: CENTRE_KEYS.slice(),
+      math: { op: 'centre', k: q.k },
       hint: { zh: '內心＝角平分線，外心＝垂直平分線，重心＝中線，垂心＝高。', en: 'Incentre: angle bisectors; circumcentre: perpendicular bisectors; centroid: medians; orthocentre: altitudes.' }
     };
   }
@@ -2261,8 +2268,8 @@
         };
       case 'direction':
         return {
-          zh: ['想一想指南針的方向。', '答案是 ' + p.answer + '。'],
-          en: ['Think about the compass directions.', 'The answer is ' + p.answer + '.']
+          zh: ['想一想指南針的方向。', '答案是 ' + DIR_LABEL[p.answer].zh + '。'],
+          en: ['Think about the compass directions.', 'The answer is ' + DIR_LABEL[p.answer].en + '.']
         };
       case 'time24':
         return {
@@ -2276,8 +2283,8 @@
         };
       case 'centre':
         return {
-          zh: ['內心＝角平分線，外心＝垂直平分線，重心＝中線，垂心＝高。', '答案是 ' + p.answer + '。'],
-          en: ['Incentre: angle bisectors; circumcentre: perpendicular bisectors; centroid: medians; orthocentre: altitudes.', 'The answer is ' + p.answer + '.']
+          zh: ['內心＝角平分線，外心＝垂直平分線，重心＝中線，垂心＝高。', '答案是 ' + CENTRE_LABEL[p.answer].zh + '。'],
+          en: ['Incentre: angle bisectors; circumcentre: perpendicular bisectors; centroid: medians; orthocentre: altitudes.', 'The answer is ' + CENTRE_LABEL[p.answer].en + '.']
         };
       case 'circleangle':
         return {

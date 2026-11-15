@@ -64,6 +64,9 @@
 
     exam: { title: '綜合考試', result: '模擬試卷完成', empty: '此年級暫無可考題目', perfectUnlock: '🎉 滿分！已解鎖下一階段', needPerfect: '考取滿分即可解鎖下一階段' },
 
+    direction: { east: '東', south: '南', west: '西', north: '北' },
+    centre: { incentre: '內心', circumcentre: '外心', centroid: '重心', orthocentre: '垂心' },
+
     common: {
       cancel: '取消', confirm: '確定', close: '關閉', of: '共', masteredShort: '已掌握'
     }
@@ -127,6 +130,9 @@
     formulas: { title: 'Formula Sheet' },
 
     exam: { title: 'Mock Exam', result: 'Mock exam complete', empty: 'No questions for this grade yet', perfectUnlock: '🎉 Full marks! Next stage unlocked', needPerfect: 'Get full marks to unlock the next stage' },
+
+    direction: { east: 'East', south: 'South', west: 'West', north: 'North' },
+    centre: { incentre: 'Incentre', circumcentre: 'Circumcentre', centroid: 'Centroid', orthocentre: 'Orthocentre' },
 
     common: {
       cancel: 'Cancel', confirm: 'OK', close: 'Close', of: 'of', masteredShort: 'Mastered'

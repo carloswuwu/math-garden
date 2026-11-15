@@ -694,6 +694,13 @@
 
   function currentProblem() { return state.problems[state.index]; }
 
+  /* 選項顯示文字：字串答案以鍵值存儲，按題型本地化顯示 */
+  function choiceLabel(p, c) {
+    if (p.type === 'direction') return t('direction.' + c);
+    if (p.type === 'centre') return t('centre.' + c);
+    return MathCore.isFraction(c) ? MathCore.renderValue(c) : String(c);
+  }
+
   function renderQuestion(p) {
     var isQuiz = state.mode === 'quiz' || state.mode === 'exam';
     var skill = state.mode === 'exam' ? null : getSkill(state.skillId);
@@ -732,7 +739,7 @@
       });
     } else {
       p.choices.forEach(function (c) {
-        var label = MathCore.isFraction(c) ? MathCore.renderValue(c) : String(c);
+        var label = choiceLabel(p, c);
         choiceHtml += '<button class="choice" type="button" data-value="' + MathCore.renderValue(c) + '" data-key="' + MathCore.valueKey(c) + '">' + label + '</button>';
       });
     }
