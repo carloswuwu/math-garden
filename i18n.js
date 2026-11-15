@@ -53,7 +53,7 @@
     settings: {
       title: '設置', language: '語言 / Language', sound: '音效',
       theme: '主題', themeLight: '淺色', themeDark: '深色', themeAuto: '跟隨系統',
-      soundOn: '已開啟', soundOff: '已關閉', reset: '重置所有進度'
+      soundOn: '已開啟', soundOff: '已關閉', refreshApp: '強制更新到最新版本', reset: '重置所有進度'
     },
 
     colors: { green: '綠色', orange: '橙色' },
@@ -111,7 +111,7 @@
     settings: {
       title: 'Settings', language: 'Language / 語言', sound: 'Sound',
       theme: 'Theme', themeLight: 'Light', themeDark: 'Dark', themeAuto: 'Auto',
-      soundOn: 'On', soundOff: 'Off', reset: 'Reset all progress'
+      soundOn: 'On', soundOff: 'Off', refreshApp: 'Force update to latest', reset: 'Reset all progress'
     },
 
     colors: { green: 'Green', orange: 'Orange' },

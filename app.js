@@ -897,6 +897,7 @@
         themeSegBtn('auto', t('settings.themeAuto')) +
       '</div></div>' +
       '</div>' +
+      '<button class="btn secondary big" id="settingsRefresh" type="button" style="margin-bottom:10px">🔄 ' + t('settings.refreshApp') + '</button>' +
       '<button class="btn secondary big" id="settingsParent" type="button">👨‍👩‍👦 ' + t('home.parent') + '</button>';
 
     $('screen-settings').innerHTML = html;
@@ -917,6 +918,7 @@
         renderSettings();
       });
     });
+    $('settingsRefresh').addEventListener('click', forceUpdate);
     $('settingsParent').addEventListener('click', renderParent);
   }
 
@@ -953,8 +955,31 @@
     if (!('serviceWorker' in navigator)) return;
     if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('sw.js').catch(function () { /* 忽略 */ });
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
+        reg.update().catch(function () { /* 忽略 */ });
+      }).catch(function () { /* 忽略 */ });
+      // 有新版 Service Worker 接管時自動重新載入，確保拿到最新版本
+      var reloading = false;
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (reloading) return;
+        reloading = true;
+        window.location.reload();
+      });
     });
+  }
+
+  /* 強制更新：解除 Service Worker、清空快取，再重新載入 */
+  function forceUpdate() {
+    var done = function () { window.location.reload(); };
+    if (!('serviceWorker' in navigator)) { done(); return; }
+    navigator.serviceWorker.getRegistrations().then(function (rs) {
+      return Promise.all(rs.map(function (r) { return r.unregister(); }));
+    }).then(function () {
+      if (!('caches' in window)) return null;
+      return caches.keys().then(function (ks) {
+        return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+      });
+    }).then(done).catch(done);
   }
 
   function init() {

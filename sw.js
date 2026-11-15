@@ -1,5 +1,7 @@
-/* Service Worker：離線緩存全部應用資源 */
-const CACHE = 'math-garden-v1';
+/* Service Worker：離線快取
+ * 策略：網路優先（network-first）——上線時永遠取得最新版本；
+ *       離線時自動退回快取。快取版本號每次更新時遞增，舊快取會被清除。 */
+const CACHE = 'math-garden-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -30,14 +32,20 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== location.origin) return; // 只處理本站資源
+
   e.respondWith(
-    caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
-      const copy = res.clone();
-      if (res.ok && new URL(e.request.url).origin === location.origin) {
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
+    fetch(req).then((res) => {
+      if (res && res.ok) {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
       }
       return res;
-    }).catch(() => caches.match('./index.html')))
+    }).catch(() =>
+      caches.match(req).then((hit) => hit || caches.match('./index.html'))
+    )
   );
 });
