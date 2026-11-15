@@ -108,6 +108,16 @@ function computeAnswer(math) {
   if (math.op === 'expand') return math.mode === 'coeff' ? math.a + math.b : math.a * math.b;
   if (math.op === 'pichart') return math.pct * 360 / 100;
   if (math.op === 'approx') return math.a / 2;
+  if (math.op === 'direction') return math.a;
+  if (math.op === 'time24') return math.a;
+  if (math.op === 'cone') return math.coef + 'π';
+  if (math.op === 'centre') return math.a;
+  if (math.op === 'circleangle') return math.mode === 'centre' ? 2 * math.a : math.a;
+  if (math.op === 'binomial') {
+    var bfact = function (x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; };
+    return bfact(math.n) / (bfact(math.r) * bfact(math.n - math.r));
+  }
+  if (math.op === 'derivative') return math.mode === 'coeff' ? math.a * math.n : math.n - 1;
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -196,6 +206,13 @@ const SKILLS = {
   expand:         { id: 't.exp',       types: ['expand'],                    levels: [{}] },
   pichart:        { id: 't.pie',       types: ['pichart'],                   levels: [{}] },
   approx:         { id: 't.approx',    types: ['approx'],                    levels: [{}] },
+  direction:      { id: 't.dir',       types: ['direction'],                 levels: [{}] },
+  time24:         { id: 't.time24',    types: ['time24'],                    levels: [{}] },
+  cone:           { id: 't.cone',      types: ['cone'],                      levels: [{}] },
+  centre:         { id: 't.centre',    types: ['centre'],                    levels: [{}] },
+  circleangle:    { id: 't.cang',      types: ['circleangle'],               levels: [{}] },
+  binomial:       { id: 't.bin',       types: ['binomial'],                  levels: [{}] },
+  derivative:     { id: 't.deriv',     types: ['derivative'],                levels: [{}] },
 };
 
 const N = 400; // 每個類型的抽樣數量
@@ -372,7 +389,8 @@ for (let seed = 1; seed <= N; seed++) {
     'triangle', 'circle', 'volume', 'coord',
     'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
     'oddeven', 'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq',
-    'parallel', 'sqrt', 'congruent', 'similar', 'quadshape', 'cylinder', 'sinterest', 'expand', 'pichart', 'approx'];
+    'parallel', 'sqrt', 'congruent', 'similar', 'quadshape', 'cylinder', 'sinterest', 'expand', 'pichart', 'approx',
+    'direction', 'time24', 'cone', 'centre', 'circleangle', 'binomial', 'derivative'];
   supported.forEach((t) => {
     for (let seed = 1; seed <= 60; seed++) {
       const p = C.generateProblem(SKILLS[t], { seed });

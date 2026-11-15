@@ -833,6 +833,65 @@
       en: { name: 'Pie Charts', goal: 'Find central angle from percentage.' },
       lesson: 'ms.s3.pichart', types: ['pichart'], levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    /* ===================== 補缺課題（三） ===================== */
+
+    'g2.direction': {
+      id: 'g2.direction', stage: 'g2', order: 7,
+      zh: { name: '方向', goal: '認識東、南、西、北等方向。' },
+      en: { name: 'Directions', goal: 'Know the compass directions.' },
+      lesson: 'g2.direction', types: ['direction'], levels: [{}],
+      mastery: { practice: 10, quizPass: 0.8 }
+    },
+    'g3.time24': {
+      id: 'g3.time24', stage: 'g3', order: 9,
+      zh: { name: '24 小時制', goal: '會換算 12 與 24 小時制。' },
+      en: { name: '24-hour Clock', goal: 'Convert between 12- and 24-hour time.' },
+      lesson: 'g3.time24', types: ['time24'], levels: [{}],
+      mastery: { practice: 10, quizPass: 0.8 }
+    },
+    'ms.s3.cone': {
+      id: 'ms.s3.cone', stage: 'ms3', order: 9,
+      zh: { name: '圓錐與球體', goal: '會求圓錐與球體的體積／表面積。' },
+      en: { name: 'Cone & Sphere', goal: 'Find volume / surface area of cones and spheres.' },
+      lesson: 'ms.s3.cone', types: ['cone'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.centre': {
+      id: 'ms.s3.centre', stage: 'ms3', order: 10,
+      zh: { name: '三角形的心', goal: '認識內心、外心、重心、垂心。' },
+      en: { name: 'Centres of a Triangle', goal: 'Know incentre, circumcentre, centroid, orthocentre.' },
+      lesson: 'ms.s3.centre', types: ['centre'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.prob': {
+      id: 'ms.s3.prob', stage: 'ms3', order: 11,
+      zh: { name: '概率', goal: '會求簡單事件的概率。' },
+      en: { name: 'Probability', goal: 'Find the probability of simple events.' },
+      lesson: 'ms.s3.prob', types: ['prob'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s4.circleangle': {
+      id: 'hs.s4.circleangle', stage: 'hs1', order: 8,
+      zh: { name: '圓周角與圓心角', goal: '會用圓心角 = 2 × 圓周角。' },
+      en: { name: 'Angles in a Circle', goal: 'Use central angle = 2 × inscribed angle.' },
+      lesson: 'hs.s4.circleangle', types: ['circleangle'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.binomial': {
+      id: 'hs.s6.binomial', stage: 'hs3', order: 6,
+      zh: { name: '二項式定理', goal: '會用 C(n,r) 求展開式的係數。' },
+      en: { name: 'Binomial Theorem', goal: 'Use C(n,r) for expansion coefficients.' },
+      lesson: 'hs.s6.binomial', types: ['binomial'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.derivative': {
+      id: 'hs.s6.derivative', stage: 'hs3', order: 7,
+      zh: { name: '微分入門', goal: '會求 x^n 的導數。' },
+      en: { name: 'Intro to Derivatives', goal: 'Differentiate x^n.' },
+      lesson: 'hs.s6.derivative', types: ['derivative'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
     }
   };
 
@@ -855,7 +914,8 @@
         { id: 'g2.calc', zh: '進退位加減', en: 'Add & Subtract', skills: ['g2.addsub100r'] },
         { id: 'g2.mul', zh: '乘法啟蒙', en: 'Multiplication', skills: ['g2.mul25', 'g2.mul34'] },
         { id: 'g2.div', zh: '除法', en: 'Division', skills: ['g2.div', 'g2.word'] },
-        { id: 'g2.unit', zh: '度量', en: 'Measures', skills: ['g2.fact'] }
+        { id: 'g2.unit', zh: '度量', en: 'Measures', skills: ['g2.fact'] },
+        { id: 'g2.dir', zh: '圖形與空間', en: 'Shape & Space', skills: ['g2.direction'] }
       ] },
     { id: 'g3', zh: '小三', en: 'Primary 3', desc: { zh: '乘法表、多位數、分數入門', en: 'Times tables, multi-digit, intro to fractions' }, color: '#AF52DE', emoji: '🚀',
       topics: [
@@ -863,7 +923,8 @@
         { id: 'g3.calc', zh: '多位數與乘除', en: 'Big Numbers', skills: ['g3.addsubbig', 'g3.muldiv'] },
         { id: 'g3.frac', zh: '分數', en: 'Fractions', skills: ['g3.fraction', 'g3.word'] },
         { id: 'g3.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['g3.angle'] },
-        { id: 'g3.shape', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['g3.shape'] }
+        { id: 'g3.shape', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['g3.shape'] },
+        { id: 'g3.time', zh: '度量（續）', en: 'Measures (cont.)', skills: ['g3.time24'] }
       ] },
     { id: 'g4', zh: '小四', en: 'Primary 4', desc: { zh: '多位數乘除、分數、小數、面積', en: 'Multi-digit, fractions, decimals, area' }, color: '#5AC8FA', emoji: '🧭',
       topics: [
@@ -913,7 +974,10 @@
         { id: 'ms3.data', zh: '數據處理', en: 'Data Handling', skills: ['ms.s3.mode'] },
         { id: 'ms3.geo3', zh: '度量（續二）', en: 'Measures (cont.)', skills: ['ms.s3.cylinder'] },
         { id: 'ms3.alg', zh: '代數', en: 'Algebra', skills: ['ms.s3.expand'] },
-        { id: 'ms3.data2', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['ms.s3.pichart'] }
+        { id: 'ms3.data2', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['ms.s3.pichart'] },
+        { id: 'ms3.geo4', zh: '度量（續三）', en: 'Measures (cont.)', skills: ['ms.s3.cone'] },
+        { id: 'ms3.geo5', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s3.centre'] },
+        { id: 'ms3.data3', zh: '數據處理（續二）', en: 'Data Handling (cont.)', skills: ['ms.s3.prob'] }
       ] },
     { id: 'hs1', zh: '中四', en: 'S4', desc: { zh: '對數、函數求值、三角比', en: 'Logarithms, function values, trigonometric ratios' }, color: '#A2845E', emoji: '🧠',
       topics: [
@@ -922,7 +986,8 @@
         { id: 'hs1.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s4.word'] },
         { id: 'hs1.quad', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s4.quadsolve'] },
         { id: 'hs1.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['hs.s4.line'] },
-        { id: 'hs1.geo2', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['hs.s4.circleeq'] }
+        { id: 'hs1.geo2', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['hs.s4.circleeq'] },
+        { id: 'hs1.geo3', zh: '圖形與空間（續二）', en: 'Shape & Space (cont.)', skills: ['hs.s4.circleangle'] }
       ] },
     { id: 'hs2', zh: '中五', en: 'S5', desc: { zh: '等差、等比數列、概率', en: 'Arithmetic and geometric sequences, probability' }, color: '#8B6F47', emoji: '📈',
       topics: [
@@ -938,7 +1003,8 @@
         { id: 'hs3.alg', zh: '代數', en: 'Algebra', skills: ['hs.s6.quad'] },
         { id: 'hs3.stats', zh: '統計', en: 'Statistics', skills: ['hs.s6.stats'] },
         { id: 'hs3.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s6.word'] },
-        { id: 'hs3.data', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['hs.s6.comb', 'hs.s6.range'] }
+        { id: 'hs3.data', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['hs.s6.comb', 'hs.s6.range'] },
+        { id: 'hs3.alg2', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s6.binomial', 'hs.s6.derivative'] }
       ] },
     { id: 'college', zh: '大學', en: 'University', desc: { zh: '微積分、線性代數、概率統計', en: 'Calculus, linear algebra, statistics' }, color: '#8E8E93', emoji: '🎯',
       topics: [

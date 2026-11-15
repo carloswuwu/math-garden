@@ -30,7 +30,8 @@
     'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
     'oddeven',
     'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq',
-    'parallel', 'sqrt', 'congruent', 'similar', 'quadshape', 'cylinder', 'sinterest', 'expand', 'pichart', 'approx'
+    'parallel', 'sqrt', 'congruent', 'similar', 'quadshape', 'cylinder', 'sinterest', 'expand', 'pichart', 'approx',
+    'direction', 'time24', 'cone', 'centre', 'circleangle', 'binomial', 'derivative'
   ];
 
   /* ---------------- 可播種隨機數 ---------------- */
@@ -1647,6 +1648,164 @@
     };
   }
 
+  /* ================= 補缺題型（方向、時間、立體、三角、圓、二項式、微分） ================= */
+
+  var DIRECTION_FACTS = [
+    { zh: '指南針上的主要方向（東、南、西、北）共有幾個？', en: 'How many main compass directions are there (N, S, E, W)?', a: 4 },
+    { zh: '八方位（東、南、西、北、東南、東北、西南、西北）共有幾個？', en: 'How many compass points are there in the 8-point compass?', a: 8 },
+    { zh: '太陽從哪個方向升起？（1=東 2=南 3=西 4=北）', en: 'The sun rises in which direction? (1=E 2=S 3=W 4=N)', a: 1 },
+    { zh: '太陽從哪個方向落下？（1=東 2=南 3=西 4=北）', en: 'The sun sets in which direction? (1=E 2=S 3=W 4=N)', a: 3 }
+  ];
+
+  var TIME24_FACTS = [
+    { zh: '15:00 是下午幾點？', en: '15:00 is what time in the afternoon?', a: 3 },
+    { zh: '20:00 是晚上幾點？', en: '20:00 is what time in the evening?', a: 8 },
+    { zh: '13:00 是下午幾點？', en: '13:00 is what time in the afternoon?', a: 1 },
+    { zh: '16:30 是下午幾點半？', en: '16:30 is what time in the afternoon?', a: 4 },
+    { zh: '下午 5 時是 24 小時制的幾點？', en: '5 pm is what time on the 24-hour clock?', a: 17 }
+  ];
+
+  var SOLID_PAIRS = [
+    { kind: 'coneV', r: 3, h: 3, coef: 9 },
+    { kind: 'coneV', r: 3, h: 6, coef: 18 },
+    { kind: 'coneV', r: 3, h: 9, coef: 27 },
+    { kind: 'sphereV', r: 3, coef: 36 },
+    { kind: 'sphereA', r: 3, coef: 36 },
+    { kind: 'sphereA', r: 6, coef: 144 }
+  ];
+
+  var CENTRE_FACTS = [
+    { zh: '三角形三條角平分線的交點叫甚麼心？（1=內心 2=外心 3=重心 4=垂心）', en: 'The three angle bisectors meet at which centre? (1=incentre 2=circumcentre 3=centroid 4=orthocentre)', a: 1 },
+    { zh: '三角形三條垂直平分線的交點叫甚麼心？（1=內心 2=外心 3=重心 4=垂心）', en: 'The three perpendicular bisectors meet at which centre?', a: 2 },
+    { zh: '三角形三條中線的交點叫甚麼心？（1=內心 2=外心 3=重心 4=垂心）', en: 'The three medians meet at which centre?', a: 3 },
+    { zh: '三角形三條高的交點叫甚麼心？（1=內心 2=外心 3=重心 4=垂心）', en: 'The three altitudes meet at which centre?', a: 4 }
+  ];
+
+  /* 方向 */
+  function genDirection(rng, o) {
+    var i = Math.floor(rng() * DIRECTION_FACTS.length);
+    var q = DIRECTION_FACTS[i];
+    return {
+      type: 'direction',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'direction', a: q.a, k: i },
+      hint: { zh: '想一想指南針的方向。', en: 'Think about the compass directions.' }
+    };
+  }
+
+  /* 24 小時制 */
+  function genTime24(rng, o) {
+    var i = Math.floor(rng() * TIME24_FACTS.length);
+    var q = TIME24_FACTS[i];
+    return {
+      type: 'time24',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'time24', a: q.a, k: i },
+      hint: { zh: '下午 = 12 小時制 + 12。', en: 'PM = 12-hour time + 12.' }
+    };
+  }
+
+  /* 圓錐 / 球體（以 π 表示） */
+  function genCone(rng, o) {
+    var q = pick(rng, SOLID_PAIRS);
+    var zhPrompt, enPrompt, hint;
+    if (q.kind === 'coneV') {
+      zhPrompt = '圓錐半徑 ' + q.r + ' cm、高 ' + q.h + ' cm，體積是多少？（以 π 表示）';
+      enPrompt = 'A cone has radius ' + q.r + ' cm and height ' + q.h + ' cm. What is its volume? (in terms of π)';
+      hint = '圓錐體積 = π r² h / 3。';
+    } else if (q.kind === 'sphereV') {
+      zhPrompt = '球體半徑 ' + q.r + ' cm，體積是多少？（以 π 表示）';
+      enPrompt = 'A sphere has radius ' + q.r + ' cm. What is its volume? (in terms of π)';
+      hint = '球體積 = 4π r³ / 3。';
+    } else {
+      zhPrompt = '球體半徑 ' + q.r + ' cm，表面積是多少？（以 π 表示）';
+      enPrompt = 'A sphere has radius ' + q.r + ' cm. What is its surface area? (in terms of π)';
+      hint = '球表面積 = 4π r²。';
+    }
+    return {
+      type: 'cone',
+      prompt: { zh: zhPrompt, en: enPrompt },
+      visual: null,
+      answer: q.coef + 'π',
+      math: { op: 'cone', kind: q.kind, r: q.r, h: q.h || 0, coef: q.coef },
+      choices: circleChoices(rng, q.coef, 'π'),
+      hint: { zh: hint, en: hint }
+    };
+  }
+
+  /* 三角形的心 */
+  function genCentre(rng, o) {
+    var i = Math.floor(rng() * CENTRE_FACTS.length);
+    var q = CENTRE_FACTS[i];
+    return {
+      type: 'centre',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'centre', a: q.a, k: i },
+      hint: { zh: '內心＝角平分線，外心＝垂直平分線，重心＝中線，垂心＝高。', en: 'Incentre: angle bisectors; circumcentre: perpendicular bisectors; centroid: medians; orthocentre: altitudes.' }
+    };
+  }
+
+  /* 圓周角 / 圓心角 */
+  function genCircleangle(rng, o) {
+    var half = pick(rng, [20, 30, 40, 50, 60]);
+    var askCentre = rng() < 0.5;
+    var ans = askCentre ? half * 2 : half;
+    var zhPrompt = askCentre
+      ? '同一段弧上，圓周角是 ' + half + '°，對應的圓心角是多少度？'
+      : '同一段弧上，圓心角是 ' + (half * 2) + '°，對應的圓周角是多少度？';
+    var enPrompt = askCentre
+      ? 'On the same arc, an inscribed angle is ' + half + '°. What is the central angle?'
+      : 'On the same arc, the central angle is ' + (half * 2) + '°. What is the inscribed angle?';
+    return {
+      type: 'circleangle',
+      prompt: { zh: zhPrompt, en: enPrompt },
+      visual: null,
+      answer: ans,
+      math: { op: 'circleangle', a: half, mode: askCentre ? 'centre' : 'circ' },
+      hint: { zh: '圓心角 = 2 × 圓周角（同一弧）。', en: 'Central angle = 2 × inscribed angle (same arc).' }
+    };
+  }
+
+  /* 二項式定理 */
+  function genBinomial(rng, o) {
+    var n = pick(rng, [3, 4, 5, 6]);
+    var r = pick(rng, [1, 2, 3]);
+    while (r >= n) r = 1;
+    function C(a, b) {
+      function fact(x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; }
+      return fact(a) / (fact(b) * fact(a - b));
+    }
+    return {
+      type: 'binomial',
+      prompt: { zh: '在 $(x + 1)^' + n + '$ 的展開式中，$x^' + r + '$ 的係數是多少？', en: 'In the expansion of $(x + 1)^' + n + '$, what is the coefficient of $x^' + r + '$?' },
+      visual: null,
+      answer: C(n, r),
+      math: { op: 'binomial', n: n, r: r },
+      hint: { zh: 'x^r 的係數 = C(n, r)。', en: 'Coefficient of x^r = C(n, r).' }
+    };
+  }
+
+  /* 微分入門 */
+  function genDerivative(rng, o) {
+    var a = randInt(rng, 1, 9);
+    var n = pick(rng, [2, 3, 4]);
+    var askCoeff = rng() < 0.5;
+    return {
+      type: 'derivative',
+      prompt: { zh: '求 $\\dfrac{d}{dx}(' + a + 'x^' + n + ')$，' + (askCoeff ? '結果中 $x$ 的係數' : '結果的次數') + '是多少？', en: 'Find $\\dfrac{d}{dx}(' + a + 'x^' + n + ')$. What is the ' + (askCoeff ? 'coefficient of $x$' : 'degree') + '?' },
+      visual: null,
+      answer: askCoeff ? a * n : (n - 1),
+      math: { op: 'derivative', a: a, n: n, mode: askCoeff ? 'coeff' : 'deg' },
+      hint: { zh: 'd/dx(ax^n) = a·n·x^(n−1)。', en: 'd/dx(ax^n) = a·n·x^(n−1).' }
+    };
+  }
+
   /* 回傳 { zh: [步驟...], en: [步驟...] }；不支援的題型回傳 null */
   function explain(p) {
     if (!p || !p.math) return null;
@@ -2100,6 +2259,41 @@
           zh: ['最大誤差 = 單位的一半。', m.a + ' ÷ 2 = ' + p.answer + '。'],
           en: ['Max error = half of the unit.', m.a + ' ÷ 2 = ' + p.answer + '.']
         };
+      case 'direction':
+        return {
+          zh: ['想一想指南針的方向。', '答案是 ' + p.answer + '。'],
+          en: ['Think about the compass directions.', 'The answer is ' + p.answer + '.']
+        };
+      case 'time24':
+        return {
+          zh: ['下午 = 12 小時制 + 12。', '答案是 ' + p.answer + '。'],
+          en: ['PM = 12-hour time + 12.', 'The answer is ' + p.answer + '.']
+        };
+      case 'cone':
+        return {
+          zh: [m.kind === 'coneV' ? '圓錐體積 = π r² h / 3。' : m.kind === 'sphereV' ? '球體積 = 4π r³ / 3。' : '球表面積 = 4π r²。', '= ' + p.answer + '。'],
+          en: [m.kind === 'coneV' ? 'Cone volume = π r² h / 3.' : m.kind === 'sphereV' ? 'Sphere volume = 4π r³ / 3.' : 'Sphere surface area = 4π r².', '= ' + p.answer + '.']
+        };
+      case 'centre':
+        return {
+          zh: ['內心＝角平分線，外心＝垂直平分線，重心＝中線，垂心＝高。', '答案是 ' + p.answer + '。'],
+          en: ['Incentre: angle bisectors; circumcentre: perpendicular bisectors; centroid: medians; orthocentre: altitudes.', 'The answer is ' + p.answer + '.']
+        };
+      case 'circleangle':
+        return {
+          zh: ['圓心角 = 2 × 圓周角（同一弧）。', m.mode === 'centre' ? '2 × ' + m.a + '° = ' + p.answer + '°。' : '圓周角 = ' + (m.a * 2) + '° ÷ 2 = ' + p.answer + '°。'],
+          en: ['Central angle = 2 × inscribed angle (same arc).', m.mode === 'centre' ? '2 × ' + m.a + '° = ' + p.answer + '°.' : 'Inscribed angle = ' + (m.a * 2) + '° ÷ 2 = ' + p.answer + '°.']
+        };
+      case 'binomial':
+        return {
+          zh: ['x^r 的係數 = C(n, r)。', 'C(' + m.n + ', ' + m.r + ') = ' + p.answer + '。'],
+          en: ['Coefficient of x^r = C(n, r).', 'C(' + m.n + ', ' + m.r + ') = ' + p.answer + '.']
+        };
+      case 'derivative':
+        return {
+          zh: ['d/dx(ax^n) = a·n·x^(n−1)。', m.mode === 'coeff' ? '係數 = ' + m.a + ' × ' + m.n + ' = ' + p.answer + '。' : '次數 = ' + m.n + ' − 1 = ' + p.answer + '。'],
+          en: ['d/dx(ax^n) = a·n·x^(n−1).', m.mode === 'coeff' ? 'Coefficient = ' + m.a + ' × ' + m.n + ' = ' + p.answer + '.' : 'Degree = ' + m.n + ' − 1 = ' + p.answer + '.']
+        };
       default:
         return null;
     }
@@ -2175,7 +2369,14 @@
     sinterest: genSinterest,
     expand: genExpand,
     pichart: genPichart,
-    approx: genApprox
+    approx: genApprox,
+    direction: genDirection,
+    time24: genTime24,
+    cone: genCone,
+    centre: genCentre,
+    circleangle: genCircleangle,
+    binomial: genBinomial,
+    derivative: genDerivative
   };
 
   /* ---------------- 選項（干擾項）生成 ---------------- */
@@ -2283,6 +2484,12 @@
     if (p.type === 'expand') return 40;
     if (p.type === 'pichart') return 300;
     if (p.type === 'approx') return 600;
+    if (p.type === 'direction') return 10;
+    if (p.type === 'time24') return 24;
+    if (p.type === 'centre') return 6;
+    if (p.type === 'circleangle') return 150;
+    if (p.type === 'binomial') return 30;
+    if (p.type === 'derivative') return 40;
     return 99;
   }
 

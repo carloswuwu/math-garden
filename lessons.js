@@ -483,6 +483,47 @@
       zh: { title: '圓形圖', intro: '圓形圖中，每部分的圓心角 = 百分比 × 360°。', example: '佔 25% 的部分，圓心角 = 25% × 360° = 90°。', tip: '整個圓 = 360°。' },
       en: { title: 'Pie Charts', intro: 'In a pie chart, each sector\'s central angle = percentage × 360°.', example: '25% → central angle = 25% × 360° = 90°.', tip: 'A full circle is 360°.' },
       visual: null
+    },
+
+    'g2.direction': {
+      zh: { title: '方向', intro: '指南針有東、南、西、北四個主要方向。', example: '太陽從東方升起、西方落下。', tip: '記住「上北、下南、左西、右東」。' },
+      en: { title: 'Directions', intro: 'A compass has four main directions: N, S, E, W.', example: 'The sun rises in the east and sets in the west.', tip: 'Remember "north up, south down, west left, east right".' },
+      visual: null
+    },
+    'g3.time24': {
+      zh: { title: '24 小時制', intro: '下午的時間用 24 小時制 = 12 小時制 + 12。', example: '下午 5 時 = 17:00。', tip: '超過 12 就減 12，得到下午／晚上的時間。' },
+      en: { title: '24-hour Clock', intro: 'In 24-hour time, PM hours = 12-hour time + 12.', example: '5 pm = 17:00.', tip: 'Subtract 12 from times over 12 to get PM.' },
+      visual: null
+    },
+    'ms.s3.cone': {
+      zh: { title: '圓錐與球體', intro: '圓錐體積 = πr²h/3；球體積 = 4πr³/3；球表面積 = 4πr²。', example: '半徑 3 的球，體積 = 4π×27/3 = 36π。', tip: '答案用 π 表示。' },
+      en: { title: 'Cone & Sphere', intro: 'Cone volume = πr²h/3; sphere volume = 4πr³/3; sphere area = 4πr².', example: 'Radius 3 sphere: volume = 4π×27/3 = 36π.', tip: 'Leave answers in terms of π.' },
+      visual: null
+    },
+    'ms.s3.centre': {
+      zh: { title: '三角形的心', intro: '內心＝角平分線交點；外心＝垂直平分線交點；重心＝中線交點；垂心＝高的交點。', example: '三條中線交於重心。', tip: '記住四心分別由哪三條線組成。' },
+      en: { title: 'Centres of a Triangle', intro: 'Incentre: angle bisectors; circumcentre: perpendicular bisectors; centroid: medians; orthocentre: altitudes.', example: 'The three medians meet at the centroid.', tip: 'Remember which three lines form each centre.' },
+      visual: null
+    },
+    'ms.s3.prob': {
+      zh: { title: '概率', intro: '概率 = 符合條件的結果數 ÷ 所有可能結果數。', example: '擲一枚硬幣，正面概率 = 1/2。', tip: '先數總數，再數符合條件的數。' },
+      en: { title: 'Probability', intro: 'Probability = favourable outcomes ÷ total outcomes.', example: 'Tossing a coin, P(heads) = 1/2.', tip: 'Count the total, then the favourable outcomes.' },
+      visual: null
+    },
+    'hs.s4.circleangle': {
+      zh: { title: '圓周角與圓心角', intro: '同一段弧上，圓心角 = 2 × 圓周角。', example: '圓周角 40° → 圓心角 80°。', tip: '圓心角是圓周角的兩倍。' },
+      en: { title: 'Angles in a Circle', intro: 'On the same arc, central angle = 2 × inscribed angle.', example: 'Inscribed 40° → central 80°.', tip: 'Central angle is double the inscribed angle.' },
+      visual: null
+    },
+    'hs.s6.binomial': {
+      zh: { title: '二項式定理', intro: '(x+1)^n 展開式中，x^r 的係數 = C(n,r) = n!/(r!(n−r)!)。', example: '(x+1)^5 中 x² 的係數 = C(5,2) = 10。', tip: '係數就是組合數 C(n,r)。' },
+      en: { title: 'Binomial Theorem', intro: 'In (x+1)^n, the coefficient of x^r is C(n,r) = n!/(r!(n−r)!).', example: 'In (x+1)^5, coefficient of x² = C(5,2) = 10.', tip: 'The coefficient is the combination C(n,r).' },
+      visual: null
+    },
+    'hs.s6.derivative': {
+      zh: { title: '微分入門', intro: 'd/dx(ax^n) = a·n·x^(n−1)。', example: 'd/dx(3x²) = 6x。', tip: '指數乘到前面，指數減 1。' },
+      en: { title: 'Intro to Derivatives', intro: 'd/dx(ax^n) = a·n·x^(n−1).', example: 'd/dx(3x²) = 6x.', tip: 'Multiply by the exponent, then reduce it by 1.' },
+      visual: null
     }
   };
 
