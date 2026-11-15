@@ -46,6 +46,18 @@ function computeAnswer(math) {
   if (math.op === 'simul') return (math.s + math.d) / 2;
   if (math.op === 'indices') return math.e != null ? Math.pow(math.base, math.e) : Math.pow(math.base, math.e1 + math.e2);
   if (math.op === 'inequality') return 'x ' + math.sign + ' ' + math.x0;
+  if (math.op === 'log') return math.n;
+  if (math.op === 'fx') return math.a * math.x * math.x + math.b * math.x + math.c;
+  if (math.op === 'trig') {
+    if (math.which === 'sin') return { n: math.a, d: math.c };
+    if (math.which === 'cos') return { n: math.b, d: math.c };
+    return { n: math.a, d: math.b };
+  }
+  if (math.op === 'ap') return math.a + (math.n - 1) * math.d;
+  if (math.op === 'gp') return math.a * Math.pow(math.r, math.n - 1);
+  if (math.op === 'prob') return { n: math.good, d: math.total };
+  if (math.op === 'quad') return math.askSum ? math.sum : math.prod;
+  if (math.op === 'stats') { var s = math.nums.slice().sort(function (x, y) { return x - y; }); return s[(s.length - 1) / 2]; }
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -91,6 +103,14 @@ const SKILLS = {
   simul:          { id: 't.simul',     types: ['simul'],                     levels: [{}] },
   indices:        { id: 't.idx',       types: ['indices'],                   levels: [{}] },
   inequality:     { id: 't.ineq',      types: ['inequality'],                levels: [{}] },
+  log:            { id: 't.log',       types: ['log'],                       levels: [{}] },
+  fx:             { id: 't.fx',        types: ['fx'],                        levels: [{}] },
+  trig:           { id: 't.trig',      types: ['trig'],                     levels: [{}] },
+  ap:             { id: 't.ap',        types: ['ap'],                        levels: [{}] },
+  gp:             { id: 't.gp',        types: ['gp'],                        levels: [{}] },
+  prob:           { id: 't.prob',      types: ['prob'],                     levels: [{}] },
+  quad:           { id: 't.quad',      types: ['quad'],                     levels: [{}] },
+  stats:          { id: 't.stats',     types: ['stats'],                    levels: [{}] },
 };
 
 const N = 400; // 每個類型的抽樣數量
@@ -262,7 +282,8 @@ for (let seed = 1; seed <= N; seed++) {
 (function () {
   const supported = ['addition', 'subtraction', 'numberbonds', 'multiplication', 'division',
     'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average', 'equation', 'percent', 'ratio', 'area', 'fractionof',
-    'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality'];
+    'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
+    'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats'];
   supported.forEach((t) => {
     for (let seed = 1; seed <= 60; seed++) {
       const p = C.generateProblem(SKILLS[t], { seed });

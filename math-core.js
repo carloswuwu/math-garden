@@ -24,7 +24,8 @@
     'missing', 'multiplication', 'division', 'fraction', 'word',
     'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average',
     'equation', 'percent', 'ratio', 'area', 'fractionof',
-    'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality'
+    'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
+    'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats'
   ];
 
   /* ---------------- 可播種隨機數 ---------------- */
@@ -744,6 +745,150 @@
     };
   }
 
+  /* ================= 高中題型（中四至中六） ================= */
+
+  var TRIG_TRIPLES = [[3, 4, 5], [5, 12, 13], [8, 15, 17], [7, 24, 25]];
+
+  /* 對數 */
+  function genLog(rng, o) {
+    var base = pick(rng, [2, 3, 5, 10]);
+    var n = randInt(rng, 2, 4);
+    var val = Math.pow(base, n);
+    return {
+      type: 'log',
+      prompt: { zh: '$\\log_{' + base + '} ' + val + ' = ?$', en: '$\\log_{' + base + '} ' + val + ' = ?$' },
+      visual: null,
+      answer: n,
+      math: { op: 'log', base: base, n: n, val: val },
+      hint: { zh: '想一想：' + base + ' 的幾次方等於 ' + val + '？', en: 'What power of ' + base + ' gives ' + val + '?' }
+    };
+  }
+
+  /* 函數求值 */
+  function genFx(rng, o) {
+    var a = randInt(rng, 1, 3);
+    var b = randInt(rng, -5, 5);
+    var c = randInt(rng, -5, 5);
+    var x = randInt(rng, 1, 4);
+    var ans = a * x * x + b * x + c;
+    var bx = (b >= 0 ? '+ ' + b : '- ' + (-b));
+    var cc = (c >= 0 ? '+ ' + c : '- ' + (-c));
+    var expr = a + 'x^2 ' + bx + 'x ' + cc;
+    return {
+      type: 'fx',
+      prompt: { zh: '設 $f(x) = ' + expr + '$，求 $f(' + x + ')$。', en: 'If $f(x) = ' + expr + '$, find $f(' + x + ')$.' },
+      visual: null,
+      answer: ans,
+      math: { op: 'fx', a: a, b: b, c: c, x: x },
+      hint: { zh: '把 x = ' + x + ' 代入 f(x)。', en: 'Substitute x = ' + x + ' into f(x).' }
+    };
+  }
+
+  /* 三角比 */
+  function genTrig(rng, o) {
+    var t = pick(rng, TRIG_TRIPLES);
+    var a = t[0], b = t[1], c = t[2];
+    var which = pick(rng, ['sin', 'cos', 'tan']);
+    var num, den;
+    if (which === 'sin') { num = a; den = c; }
+    else if (which === 'cos') { num = b; den = c; }
+    else { num = a; den = b; }
+    return {
+      type: 'trig',
+      prompt: {
+        zh: '在直角三角形中，對邊 = ' + a + '，鄰邊 = ' + b + '，斜邊 = ' + c + '。求 $\\' + which + '\\theta$。',
+        en: 'In a right triangle, opposite = ' + a + ', adjacent = ' + b + ', hypotenuse = ' + c + '. Find $\\' + which + '\\theta$.'
+      },
+      visual: null,
+      answer: { n: num, d: den },
+      math: { op: 'trig', a: a, b: b, c: c, which: which },
+      hint: {
+        zh: which + ' θ = ' + (which === 'sin' ? '對邊 ÷ 斜邊' : which === 'cos' ? '鄰邊 ÷ 斜邊' : '對邊 ÷ 鄰邊') + '。',
+        en: which + ' θ = ' + (which === 'sin' ? 'opposite ÷ hypotenuse' : which === 'cos' ? 'adjacent ÷ hypotenuse' : 'opposite ÷ adjacent') + '.'
+      }
+    };
+  }
+
+  /* 等差數列 */
+  function genAp(rng, o) {
+    var a = randInt(rng, 1, 10);
+    var d = randInt(rng, 2, 6);
+    var n = randInt(rng, 5, 12);
+    return {
+      type: 'ap',
+      prompt: { zh: '等差數列首項是 ' + a + '，公差是 ' + d + '。求第 ' + n + ' 項。', en: 'An arithmetic sequence has first term ' + a + ' and common difference ' + d + '. Find the ' + n + 'th term.' },
+      visual: null,
+      answer: a + (n - 1) * d,
+      math: { op: 'ap', a: a, d: d, n: n },
+      hint: { zh: '第 n 項 = 首項 + (n − 1) × 公差。', en: 'nth term = first + (n − 1) × difference.' }
+    };
+  }
+
+  /* 等比數列 */
+  function genGp(rng, o) {
+    var a = randInt(rng, 1, 5);
+    var r = pick(rng, [2, 3]);
+    var n = randInt(rng, 3, 5);
+    return {
+      type: 'gp',
+      prompt: { zh: '等比數列首項是 ' + a + '，公比是 ' + r + '。求第 ' + n + ' 項。', en: 'A geometric sequence has first term ' + a + ' and common ratio ' + r + '. Find the ' + n + 'th term.' },
+      visual: null,
+      answer: a * Math.pow(r, n - 1),
+      math: { op: 'gp', a: a, r: r, n: n },
+      hint: { zh: '第 n 項 = 首項 × 公比^(n−1)。', en: 'nth term = first × ratio^(n−1).' }
+    };
+  }
+
+  /* 概率 */
+  function genProb(rng, o) {
+    var total = pick(rng, [6, 8, 10, 12]);
+    var good = randInt(rng, 1, total - 1);
+    return {
+      type: 'prob',
+      prompt: { zh: '袋中有 ' + total + ' 個球，其中 ' + good + ' 個是紅球。隨機抽一個，抽到紅球的概率是多少？', en: 'A bag has ' + total + ' balls, ' + good + ' of them red. What is the probability of drawing a red ball?' },
+      visual: null,
+      answer: { n: good, d: total },
+      math: { op: 'prob', good: good, total: total },
+      hint: { zh: '概率 = 紅球數 ÷ 總數。', en: 'Probability = red ÷ total.' }
+    };
+  }
+
+  /* 二次方程的根之和 / 積 */
+  function genQuad(rng, o) {
+    var p = randInt(rng, 1, 8);
+    var q = randInt(rng, 1, 8);
+    var sum = p + q;
+    var prod = p * q;
+    var askSum = rng() < 0.5;
+    var bx = (sum > 0 ? '- ' + sum : '+ ' + (-sum));
+    var cs = (prod > 0 ? '+ ' + prod : '- ' + (-prod));
+    var eq = 'x^2 ' + bx + 'x ' + cs + ' = 0';
+    return {
+      type: 'quad',
+      prompt: { zh: '設二次方程 $' + eq + '$ 的兩根為 α 和 β。求 $' + (askSum ? '\\alpha + \\beta' : '\\alpha\\beta') + '$。', en: 'The quadratic $' + eq + '$ has roots α and β. Find $' + (askSum ? '\\alpha + \\beta' : '\\alpha\\beta') + '$.' },
+      visual: null,
+      answer: askSum ? sum : prod,
+      math: { op: 'quad', p: p, q: q, sum: sum, prod: prod, askSum: askSum },
+      hint: { zh: '兩根之和 = −(x 的係數)；兩根之積 = 常數項。', en: 'Sum = −(coefficient of x); product = constant term.' }
+    };
+  }
+
+  /* 中位數 */
+  function genStats(rng, o) {
+    var n = pick(rng, [5, 7]);
+    var nums = [];
+    for (var i = 0; i < n; i++) nums.push(randInt(rng, 1, 20));
+    var sorted = nums.slice().sort(function (x, y) { return x - y; });
+    return {
+      type: 'stats',
+      prompt: { zh: '求 ' + nums.join('、') + ' 的中位數。', en: 'Find the median of ' + nums.join(', ') + '.' },
+      visual: null,
+      answer: sorted[(n - 1) / 2],
+      math: { op: 'stats', nums: nums, sorted: sorted },
+      hint: { zh: '先把數字由小到大排列，再取中間那個。', en: 'Sort the numbers, then take the middle one.' }
+    };
+  }
+
   /* ---------------- 解題步驟（小課堂「一步步示範」用） ---------------- */
 
   function explainEquationZh(m) {
@@ -933,6 +1078,46 @@
           zh: ['兩邊同時減 ' + m.b + '：' + m.a + 'x ' + m.sign + ' ' + (m.a * m.x0) + '。', '兩邊同時除以 ' + m.a + '（正數，不變號）：' + p.answer + '。'],
           en: ['Subtract ' + m.b + ' from both sides: ' + m.a + 'x ' + m.sign + ' ' + (m.a * m.x0) + '.', 'Divide both sides by ' + m.a + ' (positive, keep the sign): ' + p.answer + '.']
         };
+      case 'log':
+        return {
+          zh: ['想一想：' + m.base + ' 的幾次方等於 ' + m.val + '。', m.base + '^' + m.n + ' = ' + m.val + '，所以 = ' + p.answer + '。'],
+          en: ['What power of ' + m.base + ' gives ' + m.val + '?', m.base + '^' + m.n + ' = ' + m.val + ', so = ' + p.answer + '.']
+        };
+      case 'fx':
+        return {
+          zh: ['把 x = ' + m.x + ' 代入 $f(x)$。', 'f(' + m.x + ') = ' + m.a + '×' + m.x + '² ' + (m.b >= 0 ? '+ ' + m.b : '− ' + (-m.b)) + '×' + m.x + ' ' + (m.c >= 0 ? '+ ' + m.c : '− ' + (-m.c)) + ' = ' + p.answer + '。'],
+          en: ['Substitute x = ' + m.x + ' into $f(x)$.', 'f(' + m.x + ') = ' + m.a + '×' + m.x + '² ' + (m.b >= 0 ? '+ ' + m.b : '− ' + (-m.b)) + '×' + m.x + ' ' + (m.c >= 0 ? '+ ' + m.c : '− ' + (-m.c)) + ' = ' + p.answer + '.']
+        };
+      case 'trig':
+        return {
+          zh: [m.which + ' θ = ' + (m.which === 'sin' ? '對邊 ÷ 斜邊' : m.which === 'cos' ? '鄰邊 ÷ 斜邊' : '對邊 ÷ 鄰邊') + '。', '= ' + p.answer.n + '/' + p.answer.d + '。'],
+          en: [m.which + ' θ = ' + (m.which === 'sin' ? 'opposite ÷ hypotenuse' : m.which === 'cos' ? 'adjacent ÷ hypotenuse' : 'opposite ÷ adjacent') + '.', '= ' + p.answer.n + '/' + p.answer.d + '.']
+        };
+      case 'ap':
+        return {
+          zh: ['第 n 項 = 首項 + (n − 1) × 公差。', '= ' + m.a + ' + (' + m.n + ' − 1) × ' + m.d + ' = ' + p.answer + '。'],
+          en: ['nth term = first + (n − 1) × difference.', '= ' + m.a + ' + (' + m.n + ' − 1) × ' + m.d + ' = ' + p.answer + '.']
+        };
+      case 'gp':
+        return {
+          zh: ['第 n 項 = 首項 × 公比^(n−1)。', '= ' + m.a + ' × ' + m.r + '^(' + m.n + ' − 1) = ' + p.answer + '。'],
+          en: ['nth term = first × ratio^(n−1).', '= ' + m.a + ' × ' + m.r + '^(' + m.n + ' − 1) = ' + p.answer + '.']
+        };
+      case 'prob':
+        return {
+          zh: ['概率 = 紅球數 ÷ 總數。', '= ' + m.good + '/' + m.total + '。'],
+          en: ['Probability = red ÷ total.', '= ' + m.good + '/' + m.total + '.']
+        };
+      case 'quad':
+        return {
+          zh: [m.askSum ? '兩根之和 = −(x 的係數)。' : '兩根之積 = 常數項。', '= ' + p.answer + '。'],
+          en: [m.askSum ? 'Sum of roots = −(coefficient of x).' : 'Product of roots = constant term.', '= ' + p.answer + '.']
+        };
+      case 'stats':
+        return {
+          zh: ['把數字由小到大排列：' + m.sorted.join('、') + '。', '取中間那個 = ' + p.answer + '。'],
+          en: ['Sort the numbers: ' + m.sorted.join(', ') + '.', 'Take the middle one = ' + p.answer + '.']
+        };
       default:
         return null;
     }
@@ -966,7 +1151,15 @@
     pythagoras: genPythagoras,
     simul: genSimul,
     indices: genIndices,
-    inequality: genInequality
+    inequality: genInequality,
+    log: genLog,
+    fx: genFx,
+    trig: genTrig,
+    ap: genAp,
+    gp: genGp,
+    prob: genProb,
+    quad: genQuad,
+    stats: genStats
   };
 
   /* ---------------- 選項（干擾項）生成 ---------------- */
@@ -1037,12 +1230,19 @@
     if (p.type === 'pythagoras') return 40;
     if (p.type === 'simul') return 20;
     if (p.type === 'indices') return 4000;
+    if (p.type === 'log') return 10;
+    if (p.type === 'fx') return 80;
+    if (p.type === 'ap') return 100;
+    if (p.type === 'gp') return 500;
+    if (p.type === 'quad') return 100;
+    if (p.type === 'stats') return 30;
     return 99;
   }
 
   /* 每個類型合理的干擾項數值下界（有向數可為負） */
   function distractorMin(p, o) {
     if (p.type === 'directed') return -100;
+    if (p.type === 'fx') return -40;
     return 0;
   }
 
@@ -1057,7 +1257,7 @@
       case 'comparegroup': return math.a + '_' + math.b + '_' + math.mode;
     }
     var parts = [math.op];
-    var keys = ['a', 'b', 'c', 'd', 'r', 'mode', 'form', 'n', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w'];
+    var keys = ['a', 'b', 'c', 'd', 'r', 'mode', 'form', 'n', 'x', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w', 'base', 'val', 'which', 'good', 'total', 'askSum', 'sum', 'prod'];
     keys.forEach(function (k) {
       if (math[k] != null) parts.push(k + '=' + math[k]);
     });

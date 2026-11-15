@@ -253,6 +253,55 @@
       zh: { title: '一元一次不等式', intro: '解法和方程相似，但兩邊乘或除以負數時，不等號要反向。', example: '2x + 1 > 5 → 2x > 4 → x > 2。', tip: '除以負數時，不等號要轉方向。' },
       en: { title: 'Linear Inequalities', intro: 'Solve like an equation, but reverse the inequality sign when multiplying or dividing by a negative.', example: '2x + 1 > 5 → 2x > 4 → x > 2.', tip: 'Reverse the sign when dividing by a negative.' },
       visual: null
+    },
+
+    /* ---------- 中四（S4） ---------- */
+
+    'hs.s4.log': {
+      zh: { title: '對數', intro: '$\\log_b x$ 就是問「$b$ 的幾次方等於 $x$」。', example: '$\\log_2 8 = 3$，因為 $2^3 = 8$。', tip: '對數和指數是互逆的。' },
+      en: { title: 'Logarithms', intro: '$\\log_b x$ asks: "what power of $b$ gives $x$?".', example: '$\\log_2 8 = 3$ because $2^3 = 8$.', tip: 'Logs and powers are inverses.' },
+      visual: null
+    },
+    'hs.s4.fx': {
+      zh: { title: '函數求值', intro: '把 x 的值代入函數 $f(x)$，再計算。', example: '若 $f(x) = 2x^2 + 3x - 1$，則 $f(2) = 8 + 6 - 1 = 13$。', tip: '先算平方，再乘，最後加減。' },
+      en: { title: 'Function Values', intro: 'Substitute the value of x into $f(x)$, then calculate.', example: 'If $f(x) = 2x^2 + 3x - 1$, then $f(2) = 8 + 6 - 1 = 13$.', tip: 'Square first, then multiply, then add/subtract.' },
+      visual: null
+    },
+    'hs.s4.trig': {
+      zh: { title: '三角比', intro: '在直角三角形中：$\\sin\\theta = \\dfrac{\\text{對邊}}{\\text{斜邊}}$，$\\cos\\theta = \\dfrac{\\text{鄰邊}}{\\text{斜邊}}$，$\\tan\\theta = \\dfrac{\\text{對邊}}{\\text{鄰邊}}$。', example: '對邊 3、鄰邊 4、斜邊 5，則 $\\sin\\theta = 3/5$。', tip: '記住「SOH CAH TOA」。' },
+      en: { title: 'Trigonometric Ratios', intro: 'In a right triangle: $\\sin\\theta = \\dfrac{\\text{opp}}{\\text{hyp}}$, $\\cos\\theta = \\dfrac{\\text{adj}}{\\text{hyp}}$, $\\tan\\theta = \\dfrac{\\text{opp}}{\\text{adj}}$.', example: 'opp 3, adj 4, hyp 5 → $\\sin\\theta = 3/5$.', tip: 'Remember SOH CAH TOA.' },
+      visual: null
+    },
+
+    /* ---------- 中五（S5） ---------- */
+
+    'hs.s5.ap': {
+      zh: { title: '等差數列', intro: '每項相差固定的「公差」$d$。第 n 項 = 首項 + (n − 1)d。', example: '首項 3、公差 4，第 5 項 = 3 + 4×4 = 19。', tip: '先找首項和公差。' },
+      en: { title: 'Arithmetic Sequences', intro: 'Each term differs by a fixed common difference $d$. nth term = first + (n − 1)d.', example: 'First 3, difference 4: 5th term = 3 + 4×4 = 19.', tip: 'Find the first term and the difference.' },
+      visual: null
+    },
+    'hs.s5.gp': {
+      zh: { title: '等比數列', intro: '每項乘以固定的「公比」$r$。第 n 項 = 首項 × r^(n−1)。', example: '首項 2、公比 3，第 4 項 = 2 × 3³ = 54。', tip: '先找首項和公比。' },
+      en: { title: 'Geometric Sequences', intro: 'Each term is multiplied by a fixed common ratio $r$. nth term = first × r^(n−1).', example: 'First 2, ratio 3: 4th term = 2 × 3³ = 54.', tip: 'Find the first term and the ratio.' },
+      visual: null
+    },
+    'hs.s5.prob': {
+      zh: { title: '概率', intro: '概率 = 符合條件的結果數 ÷ 所有可能的結果數。', example: '袋中 8 個球，3 個紅球，抽到紅球的概率 = 3/8。', tip: '先數總數，再數符合條件的數。' },
+      en: { title: 'Probability', intro: 'Probability = favourable outcomes ÷ total outcomes.', example: '8 balls, 3 red → P(red) = 3/8.', tip: 'Count the total, then the favourable outcomes.' },
+      visual: null
+    },
+
+    /* ---------- 中六（S6） ---------- */
+
+    'hs.s6.quad': {
+      zh: { title: '二次方程的根', intro: '二次方程 $x^2 + bx + c = 0$ 的兩根 α、β：兩根之和 = −b，兩根之積 = c。', example: '$x^2 - 7x + 12 = 0$：兩根之和 = 7，積 = 12。', tip: '和 = −(x 的係數)，積 = 常數項。' },
+      en: { title: 'Roots of Quadratics', intro: 'For $x^2 + bx + c = 0$ with roots α, β: sum = −b, product = c.', example: '$x^2 - 7x + 12 = 0$: sum = 7, product = 12.', tip: 'Sum = −(coefficient of x); product = constant.' },
+      visual: null
+    },
+    'hs.s6.stats': {
+      zh: { title: '中位數', intro: '把數據由小到大排列，取中間那個數（若個數是單數）。', example: '1、3、7、8、9 的中位數是 7。', tip: '先排序，再取中間。' },
+      en: { title: 'Median', intro: 'Sort the data, then take the middle value (for an odd count).', example: 'Median of 1, 3, 7, 8, 9 is 7.', tip: 'Sort first, then take the middle.' },
+      visual: null
     }
   };
 

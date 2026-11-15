@@ -61,6 +61,27 @@
     });
   }
 
+  /* 文字中的 $...$ 會用 KaTeX 渲染成數學式；其餘照常轉義（無 KaTeX 時退回純文字） */
+  function renderMath(text) {
+    var s = String(text);
+    if (s.indexOf('$') === -1) return esc(s);
+    var parts = s.split(/\$([^$]*)\$/);
+    var out = '';
+    for (var i = 0; i < parts.length; i++) {
+      if (i % 2 === 1) {
+        if (window.katex) {
+          try { out += window.katex.renderToString(parts[i], { throwOnError: false }); }
+          catch (e) { out += esc(parts[i]); }
+        } else {
+          out += esc(parts[i]);
+        }
+      } else {
+        out += esc(parts[i]);
+      }
+    }
+    return out;
+  }
+
   function loadProgress() {
     try {
       var raw = localStorage.getItem(STORE_KEY);
@@ -455,12 +476,12 @@
     if (lesson) {
       var l = state.lang === 'zh' ? lesson.zh : lesson.en;
       html += '<div class="lesson-card"><h2>' + t('lesson.title') + '</h2>' +
-        '<div class="lesson-label">' + t('lesson.intro') + '</div><p class="lesson-text">' + esc(l.intro) + '</p>';
+        '<div class="lesson-label">' + t('lesson.intro') + '</div><p class="lesson-text">' + renderMath(l.intro) + '</p>';
       if (lesson.visual) {
         html += '<div class="lesson-visual" id="lessonVisual"></div>';
       }
-      html += '<div class="lesson-label">' + t('lesson.example') + '</div><p class="lesson-text">' + esc(l.example) + '</p>' +
-        '<div class="lesson-label">' + t('lesson.tip') + '</div><p class="lesson-text">' + esc(l.tip) + '</p>' +
+      html += '<div class="lesson-label">' + t('lesson.example') + '</div><p class="lesson-text">' + renderMath(l.example) + '</p>' +
+        '<div class="lesson-label">' + t('lesson.tip') + '</div><p class="lesson-text">' + renderMath(l.tip) + '</p>' +
         '</div>' +
         '<div class="lesson-card" style="margin-top:12px">' +
         '<button class="btn secondary big" id="lessonExample" type="button">📖 ' + t('lesson.showExample') + '</button>' +
@@ -497,13 +518,13 @@
     box.hidden = false;
     if (!ex) {
       box.innerHTML = '<div class="lesson-label">' + t('lesson.example') + '</div>' +
-        '<p class="prompt-small">' + esc(L(p.prompt)) + '</p>';
+        '<p class="prompt-small">' + renderMath(L(p.prompt)) + '</p>';
       return;
     }
     var steps = state.lang === 'zh' ? ex.zh : ex.en;
-    var list = '<ol class="steps-list">' + steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>';
+    var list = '<ol class="steps-list">' + steps.map(function (s) { return '<li>' + renderMath(s) + '</li>'; }).join('') + '</ol>';
     box.innerHTML = '<div class="lesson-label">' + t('lesson.showExample') + '</div>' +
-      '<p class="prompt-small">' + esc(L(p.prompt)) + '</p>' + list +
+      '<p class="prompt-small">' + renderMath(L(p.prompt)) + '</p>' + list +
       '<button class="btn secondary" id="exampleNext" type="button" style="margin-top:10px">🔄 ' + t('lesson.nextExample') + '</button>';
     $('exampleNext').addEventListener('click', function () { showWorkedExample(skillId); });
   }
@@ -588,7 +609,7 @@
     }
 
     // 題干 + 視覺
-    var bodyHtml = '<div class="prompt-card"><div class="prompt-text">' + esc(L(p.prompt)) + '</div>' +
+    var bodyHtml = '<div class="prompt-card"><div class="prompt-text">' + renderMath(L(p.prompt)) + '</div>' +
       '<div class="prompt-visual" id="qVisual"></div></div>';
 
     // 選項

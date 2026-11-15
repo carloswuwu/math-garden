@@ -415,23 +415,85 @@
       mastery: { practice: 12, quizPass: 0.8 }
     },
 
-    'hs.algebra2': {
-      id: 'hs.algebra2', stage: 'hs', order: 1, scaffold: true,
-      zh: { name: '代數 II', goal: '二次函數、指數與對數。' },
-      en: { name: 'Algebra II', goal: 'Quadratics, exponentials, and logarithms.' },
-      lesson: null, types: null, levels: null, mastery: { practice: 12, quizPass: 0.8 }
+    /* ===================== 中四（S4） ===================== */
+
+    'hs.s4.log': {
+      id: 'hs.s4.log', stage: 'hs1', order: 1,
+      zh: { name: '對數', goal: '會求簡單的對數值。' },
+      en: { name: 'Logarithms', goal: 'Evaluate simple logarithms.' },
+      lesson: 'hs.s4.log',
+      types: ['log'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
     },
-    'hs.trig': {
-      id: 'hs.trig', stage: 'hs', order: 2, scaffold: true,
-      zh: { name: '三角函數', goal: '三角比與三角恆等式。' },
-      en: { name: 'Trigonometry', goal: 'Trig ratios and identities.' },
-      lesson: null, types: null, levels: null, mastery: { practice: 12, quizPass: 0.8 }
+    'hs.s4.fx': {
+      id: 'hs.s4.fx', stage: 'hs1', order: 2,
+      zh: { name: '函數求值', goal: '會代入二次函數求值。' },
+      en: { name: 'Function Values', goal: 'Evaluate a quadratic function.' },
+      lesson: 'hs.s4.fx',
+      types: ['fx'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
     },
-    'hs.precalc': {
-      id: 'hs.precalc', stage: 'hs', order: 3, scaffold: true,
-      zh: { name: '微積分預備', goal: '數列、極限與函數圖像。' },
-      en: { name: 'Precalculus', goal: 'Sequences, limits, and graphing.' },
-      lesson: null, types: null, levels: null, mastery: { practice: 12, quizPass: 0.8 }
+    'hs.s4.trig': {
+      id: 'hs.s4.trig', stage: 'hs1', order: 3,
+      zh: { name: '三角比', goal: '會用 sin、cos、tan 求直角三角形的比。' },
+      en: { name: 'Trigonometric Ratios', goal: 'Use sin, cos, tan in right triangles.' },
+      lesson: 'hs.s4.trig',
+      types: ['trig'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    /* ===================== 中五（S5） ===================== */
+
+    'hs.s5.ap': {
+      id: 'hs.s5.ap', stage: 'hs2', order: 1,
+      zh: { name: '等差數列', goal: '會求等差數列的第 n 項。' },
+      en: { name: 'Arithmetic Sequences', goal: 'Find the nth term of an arithmetic sequence.' },
+      lesson: 'hs.s5.ap',
+      types: ['ap'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.gp': {
+      id: 'hs.s5.gp', stage: 'hs2', order: 2,
+      zh: { name: '等比數列', goal: '會求等比數列的第 n 項。' },
+      en: { name: 'Geometric Sequences', goal: 'Find the nth term of a geometric sequence.' },
+      lesson: 'hs.s5.gp',
+      types: ['gp'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.prob': {
+      id: 'hs.s5.prob', stage: 'hs2', order: 3,
+      zh: { name: '概率', goal: '會求簡單事件的概率。' },
+      en: { name: 'Probability', goal: 'Find the probability of simple events.' },
+      lesson: 'hs.s5.prob',
+      types: ['prob'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    /* ===================== 中六（S6） ===================== */
+
+    'hs.s6.quad': {
+      id: 'hs.s6.quad', stage: 'hs3', order: 1,
+      zh: { name: '二次方程的根', goal: '會用根與係數的關係求兩根之和或積。' },
+      en: { name: 'Roots of Quadratics', goal: 'Use sum/product of roots.' },
+      lesson: 'hs.s6.quad',
+      types: ['quad'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.stats': {
+      id: 'hs.s6.stats', stage: 'hs3', order: 2,
+      zh: { name: '中位數', goal: '會求一組數據的中位數。' },
+      en: { name: 'Median', goal: 'Find the median of a data set.' },
+      lesson: 'hs.s6.stats',
+      types: ['stats'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
     },
 
     'col.calculus': {
@@ -506,10 +568,20 @@
       topics: [
         { id: 'ms3.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s3.indices', 'ms.s3.inequality'] }
       ] },
-    { id: 'hs', zh: '高中', en: 'Senior Secondary', desc: { zh: '代數 II、三角、微積分預備', en: 'Algebra II, trig, precalculus' }, color: '#A2845E', emoji: '🧠',
+    { id: 'hs1', zh: '中四', en: 'S4', desc: { zh: '對數、函數求值、三角比', en: 'Logarithms, function values, trigonometric ratios' }, color: '#A2845E', emoji: '🧠',
       topics: [
-        { id: 'hs.alg', zh: '代數 II', en: 'Algebra II', skills: ['hs.algebra2'] },
-        { id: 'hs.trig', zh: '三角與函數', en: 'Trig & Functions', skills: ['hs.trig', 'hs.precalc'] }
+        { id: 'hs1.num', zh: '數與代數', en: 'Number & Algebra', skills: ['hs.s4.log', 'hs.s4.fx'] },
+        { id: 'hs1.trig', zh: '三角學', en: 'Trigonometry', skills: ['hs.s4.trig'] }
+      ] },
+    { id: 'hs2', zh: '中五', en: 'S5', desc: { zh: '等差、等比數列、概率', en: 'Arithmetic and geometric sequences, probability' }, color: '#8B6F47', emoji: '📈',
+      topics: [
+        { id: 'hs2.seq', zh: '數列', en: 'Sequences', skills: ['hs.s5.ap', 'hs.s5.gp'] },
+        { id: 'hs2.prob', zh: '概率', en: 'Probability', skills: ['hs.s5.prob'] }
+      ] },
+    { id: 'hs3', zh: '中六', en: 'S6', desc: { zh: '二次方程的根、中位數', en: 'Roots of quadratics, median' }, color: '#7A5F3C', emoji: '📊',
+      topics: [
+        { id: 'hs3.alg', zh: '代數', en: 'Algebra', skills: ['hs.s6.quad'] },
+        { id: 'hs3.stats', zh: '統計', en: 'Statistics', skills: ['hs.s6.stats'] }
       ] },
     { id: 'college', zh: '大學', en: 'University', desc: { zh: '微積分、線性代數、概率統計', en: 'Calculus, linear algebra, statistics' }, color: '#8E8E93', emoji: '🎯',
       topics: [
