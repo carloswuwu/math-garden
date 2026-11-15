@@ -327,6 +327,24 @@
       case 'rect':
         html = rectSVG(visual.l, visual.w);
         break;
+      case 'compass':
+        html = compassSVG();
+        break;
+      case 'cone':
+        html = coneSVG();
+        break;
+      case 'sphere':
+        html = sphereSVG();
+        break;
+      case 'pie':
+        html = pieSVG(visual.pct);
+        break;
+      case 'cylinder':
+        html = cylinderSVG();
+        break;
+      case 'symmetry':
+        html = symmetrySVG();
+        break;
     }
     container.innerHTML = html;
   }
@@ -400,6 +418,81 @@
       '<rect x="' + x0 + '" y="' + y0 + '" width="' + bw + '" height="' + hh + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
       '<text x="' + (W / 2) + '" y="' + (y0 + hh + 20) + '" text-anchor="middle" font-size="14" fill="#333">長 ' + l + ' cm</text>' +
       '<text x="' + (x0 - 8) + '" y="' + (y0 + hh / 2) + '" text-anchor="end" font-size="14" fill="#333">闊 ' + w + ' cm</text>' +
+      '</svg>';
+  }
+
+  function compassSVG() {
+    var W = 220, H = 220, cx = 110, cy = 110, R = 86;
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2"/>' +
+      '<polygon points="' + cx + ',' + (cy - R) + ' ' + (cx - 10) + ',' + (cy - 34) + ' ' + (cx + 10) + ',' + (cy - 34) + '" fill="#FF3B30"/>' +
+      '<polygon points="' + cx + ',' + (cy + R) + ' ' + (cx - 10) + ',' + (cy + 34) + ' ' + (cx + 10) + ',' + (cy + 34) + '" fill="#C7C7CC"/>' +
+      '<polygon points="' + (cx - R) + ',' + cy + ' ' + (cx - 34) + ',' + (cy - 10) + ' ' + (cx - 34) + ',' + (cy + 10) + '" fill="#C7C7CC"/>' +
+      '<polygon points="' + (cx + R) + ',' + cy + ' ' + (cx + 34) + ',' + (cy - 10) + ' ' + (cx + 34) + ',' + (cy + 10) + '" fill="#C7C7CC"/>' +
+      '<text x="' + cx + '" y="' + (cy - R - 6) + '" text-anchor="middle" font-size="16" font-weight="bold" fill="#FF3B30">北 N</text>' +
+      '<text x="' + cx + '" y="' + (cy + R + 20) + '" text-anchor="middle" font-size="14" fill="#666">南 S</text>' +
+      '<text x="' + (cx - R - 10) + '" y="' + (cy + 5) + '" text-anchor="end" font-size="14" fill="#666">西 W</text>' +
+      '<text x="' + (cx + R + 10) + '" y="' + (cy + 5) + '" font-size="14" fill="#666">東 E</text>' +
+      '</svg>';
+  }
+
+  function coneSVG() {
+    var W = 240, H = 220, cx = 120, topY = 28, baseY = 176;
+    var apexX = cx, apexY = topY, bl = cx - 56, br = cx + 56;
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<line x1="' + apexX + '" y1="' + apexY + '" x2="' + bl + '" y2="' + baseY + '" stroke="#FF9500" stroke-width="2.5"/>' +
+      '<line x1="' + apexX + '" y1="' + apexY + '" x2="' + br + '" y2="' + baseY + '" stroke="#FF9500" stroke-width="2.5"/>' +
+      '<ellipse cx="' + cx + '" cy="' + baseY + '" rx="56" ry="15" fill="#FFE0B2" stroke="#FF9500" stroke-width="2.5"/>' +
+      '<line x1="' + apexX + '" y1="' + apexY + '" x2="' + cx + '" y2="' + baseY + '" stroke="#007AFF" stroke-width="2" stroke-dasharray="6 4"/>' +
+      '<text x="' + (apexX + 8) + '" y="' + ((apexY + baseY) / 2) + '" font-size="13" fill="#007AFF">高 h</text>' +
+      '<text x="' + cx + '" y="' + (baseY + 32) + '" text-anchor="middle" font-size="13" fill="#333">半徑 r</text>' +
+      '</svg>';
+  }
+
+  function sphereSVG() {
+    var W = 200, H = 200, cx = 100, cy = 95, R = 70;
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
+      '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + R + '" ry="' + Math.round(R * 0.35) + '" fill="none" stroke="#007AFF" stroke-width="1.5"/>' +
+      '<text x="' + cx + '" y="' + (cy - R - 8) + '" text-anchor="middle" font-size="13" fill="#333">半徑 r</text>' +
+      '</svg>';
+  }
+
+  function pieSVG(pct) {
+    var W = 200, H = 200, cx = 100, cy = 100, R = 80;
+    var angle = pct / 100 * 360;
+    var x1 = cx, y1 = cy - R;
+    var rad = angle * Math.PI / 180;
+    var x2 = cx + R * Math.sin(rad);
+    var y2 = cy - R * Math.cos(rad);
+    var large = angle > 180 ? 1 : 0;
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M ' + cx + ',' + cy + ' L ' + x1 + ',' + y1 + ' A ' + R + ',' + R + ' 0 ' + large + ' 1 ' + x2.toFixed(2) + ',' + y2.toFixed(2) + ' Z" fill="#FFB300" stroke="#007AFF" stroke-width="2"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="#007AFF" stroke-width="2"/>' +
+      '<text x="' + cx + '" y="' + (cy + R + 20) + '" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">' + pct + '%</text>' +
+      '</svg>';
+  }
+
+  function cylinderSVG() {
+    var W = 200, H = 240, cx = 100, topY = 52, bottomY = 190, rx = 46, ry = 15;
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<ellipse cx="' + cx + '" cy="' + bottomY + '" rx="' + rx + '" ry="' + ry + '" fill="#BBDEFB" stroke="#007AFF" stroke-width="2"/>' +
+      '<rect x="' + (cx - rx) + '" y="' + topY + '" width="' + (2 * rx) + '" height="' + (bottomY - topY) + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2"/>' +
+      '<ellipse cx="' + cx + '" cy="' + topY + '" rx="' + rx + '" ry="' + ry + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2"/>' +
+      '<text x="' + (cx - rx - 8) + '" y="' + ((topY + bottomY) / 2) + '" text-anchor="end" font-size="13" fill="#333">高 h</text>' +
+      '<text x="' + (cx + rx + 8) + '" y="' + (topY + 4) + '" font-size="13" fill="#333">r</text>' +
+      '</svg>';
+  }
+
+  function symmetrySVG() {
+    var W = 220, H = 220, cx = 110, cy = 110, s = 72;
+    var x0 = cx - s, y0 = cy - s, x1 = cx + s, y1 = cy + s;
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="' + x0 + '" y="' + y0 + '" width="' + (2 * s) + '" height="' + (2 * s) + '" fill="#FFF9C4" stroke="#FFB300" stroke-width="2.5"/>' +
+      '<line x1="' + cx + '" y1="' + y0 + '" x2="' + cx + '" y2="' + y1 + '" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="6 4"/>' +
+      '<line x1="' + x0 + '" y1="' + cy + '" x2="' + x1 + '" y2="' + cy + '" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="6 4"/>' +
+      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x1 + '" y2="' + y1 + '" stroke="#FF3B30" stroke-width="1.5" stroke-dasharray="6 4"/>' +
+      '<line x1="' + x1 + '" y1="' + y0 + '" x2="' + x0 + '" y2="' + y1 + '" stroke="#FF3B30" stroke-width="1.5" stroke-dasharray="6 4"/>' +
       '</svg>';
   }
 

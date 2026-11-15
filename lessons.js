@@ -386,7 +386,7 @@
     'g6.symmetry': {
       zh: { title: '對稱', intro: '沿著對稱軸對摺，兩邊能完全重疊。', example: '正方形有 4 條對稱軸。', tip: '畫出所有能對摺的直線。' },
       en: { title: 'Symmetry', intro: 'Fold along a line of symmetry so both halves match.', example: 'A square has 4 lines of symmetry.', tip: 'Draw all the folding lines.' },
-      visual: null
+      visual: { kind: 'symmetry' }
     },
     'ms.s1.liketerms': {
       zh: { title: '合併同類項', intro: '同類項 = 變數相同的項，可把係數相加減。', example: '3x + 5x = 8x。', tip: '只看係數相加減，變數不變。' },
@@ -472,7 +472,7 @@
     'ms.s3.cylinder': {
       zh: { title: '圓柱體積', intro: '圓柱體積 = π r² h；側面積 = 2π r h。', example: '半徑 3、高 5：體積 = π × 9 × 5 = 45π。', tip: '答案用 π 表示即可。' },
       en: { title: 'Volume of Cylinder', intro: 'Volume = π r² h; curved surface area = 2π r h.', example: 'Radius 3, height 5: volume = π × 9 × 5 = 45π.', tip: 'Leave answers in terms of π.' },
-      visual: null
+      visual: { kind: 'cylinder' }
     },
     'ms.s3.expand': {
       zh: { title: '展開（恆等式）', intro: '(x + a)(x + b) = x² + (a+b)x + ab。', example: '(x + 3)(x + 2) = x² + 5x + 6。', tip: 'x 的係數 = a + b，常數項 = a × b。' },
@@ -482,13 +482,13 @@
     'ms.s3.pichart': {
       zh: { title: '圓形圖', intro: '圓形圖中，每部分的圓心角 = 百分比 × 360°。', example: '佔 25% 的部分，圓心角 = 25% × 360° = 90°。', tip: '整個圓 = 360°。' },
       en: { title: 'Pie Charts', intro: 'In a pie chart, each sector\'s central angle = percentage × 360°.', example: '25% → central angle = 25% × 360° = 90°.', tip: 'A full circle is 360°.' },
-      visual: null
+      visual: { kind: 'pie', pct: 25 }
     },
 
     'g2.direction': {
       zh: { title: '方向', intro: '指南針有東、南、西、北四個主要方向。', example: '太陽從東方升起、西方落下。', tip: '記住「上北、下南、左西、右東」。' },
       en: { title: 'Directions', intro: 'A compass has four main directions: N, S, E, W.', example: 'The sun rises in the east and sets in the west.', tip: 'Remember "north up, south down, west left, east right".' },
-      visual: null
+      visual: { kind: 'compass' }
     },
     'g3.time24': {
       zh: { title: '24 小時制', intro: '下午的時間用 24 小時制 = 12 小時制 + 12。', example: '下午 5 時 = 17:00。', tip: '超過 12 就減 12，得到下午／晚上的時間。' },
@@ -498,7 +498,7 @@
     'ms.s3.cone': {
       zh: { title: '圓錐與球體', intro: '圓錐體積 = πr²h/3；球體積 = 4πr³/3；球表面積 = 4πr²。', example: '半徑 3 的球，體積 = 4π×27/3 = 36π。', tip: '答案用 π 表示。' },
       en: { title: 'Cone & Sphere', intro: 'Cone volume = πr²h/3; sphere volume = 4πr³/3; sphere area = 4πr².', example: 'Radius 3 sphere: volume = 4π×27/3 = 36π.', tip: 'Leave answers in terms of π.' },
-      visual: null
+      visual: { kind: 'cone' }
     },
     'ms.s3.centre': {
       zh: { title: '三角形的心', intro: '內心＝角平分線交點；外心＝垂直平分線交點；重心＝中線交點；垂心＝高的交點。', example: '三條中線交於重心。', tip: '記住四心分別由哪三條線組成。' },

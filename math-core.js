@@ -1313,7 +1313,7 @@
     return {
       type: 'symmetry',
       prompt: { zh: q.zh, en: q.en },
-      visual: null,
+      visual: { kind: 'symmetry' },
       answer: q.a,
       math: { op: 'symmetry', a: q.a, k: i },
       hint: { zh: '想像沿著直線對摺，兩邊完全重疊。', en: 'Fold along a line so both halves match.' }
@@ -1585,7 +1585,7 @@
     return {
       type: 'cylinder',
       prompt: { zh: '圓柱半徑 ' + r + ' cm、高 ' + h + ' cm，' + (askVol ? '體積' : '側面積') + '是多少？（以 π 表示）', en: 'A cylinder has radius ' + r + ' cm and height ' + h + ' cm. What is its ' + (askVol ? 'volume' : 'curved surface area') + '? (in terms of π)' },
-      visual: null,
+      visual: { kind: 'cylinder' },
       answer: coef + 'π',
       math: { op: 'cylinder', r: r, h: h, mode: askVol ? 'vol' : 'lat', coef: coef },
       choices: circleChoices(rng, coef, 'π'),
@@ -1628,7 +1628,7 @@
     return {
       type: 'pichart',
       prompt: { zh: '圓形圖中，佔 ' + pct + '% 的部分對應的圓心角是多少度？', en: 'In a pie chart, what central angle corresponds to ' + pct + '%?' },
-      visual: null,
+      visual: { kind: 'pie', pct: pct },
       answer: pct * 360 / 100,
       math: { op: 'pichart', pct: pct },
       hint: { zh: '圓心角 = 百分比 × 360°。', en: 'Central angle = percentage × 360°.' }
@@ -1693,7 +1693,7 @@
     return {
       type: 'direction',
       prompt: { zh: q.zh, en: q.en },
-      visual: null,
+      visual: { kind: 'compass' },
       answer: q.k,
       choices: DIRECTION_KEYS.slice(),
       math: { op: 'direction', k: q.k },
@@ -1735,7 +1735,7 @@
     return {
       type: 'cone',
       prompt: { zh: zhPrompt, en: enPrompt },
-      visual: null,
+      visual: { kind: q.kind === 'coneV' ? 'cone' : 'sphere' },
       answer: q.coef + 'π',
       math: { op: 'cone', kind: q.kind, r: q.r, h: q.h || 0, coef: q.coef },
       choices: circleChoices(rng, q.coef, 'π'),
