@@ -541,7 +541,7 @@
     return {
       type: 'average',
       prompt: { zh: nums.join('、') + ' 的平均數是多少？', en: 'What is the average of ' + nums.join(', ') + '?' },
-      visual: null,
+      visual: { kind: 'barchart' },
       answer: sum / n,
       math: { op: 'avg', nums: nums, avg: sum / n },
       hint: { zh: '全部加起來，再除以個數。', en: 'Add them all up, then divide by how many there are.' }
@@ -585,7 +585,7 @@
       return {
         type: 'percent',
         prompt: { zh: whole + ' 的 ' + p + '% 是多少？', en: 'What is ' + p + '% of ' + whole + '?' },
-        visual: null,
+        visual: { kind: 'percentgrid', pct: p },
         answer: result,
         math: { op: 'percent', kind: 'of', p: p, whole: whole, result: result },
         hint: { zh: '先算 1%（除以 100），再乘以 ' + p + '。', en: 'Find 1% (divide by 100), then multiply by ' + p + '.' }
@@ -597,7 +597,7 @@
     return {
       type: 'percent',
       prompt: { zh: part + ' 是 ' + whole2 + ' 的百分之幾？', en: part + ' is what percent of ' + whole2 + '?' },
-      visual: null,
+      visual: { kind: 'percentgrid', pct: pct },
       answer: pct,
       math: { op: 'percent', kind: 'what', pct: pct, whole: whole2, part: part },
       hint: { zh: '用「部分 ÷ 整體 × 100%」。', en: 'Use part ÷ whole × 100%.' }
@@ -681,7 +681,7 @@
     return {
       type: 'directed',
       prompt: { zh: s, en: s },
-      visual: null,
+      visual: { kind: 'numberline' },
       answer: ans,
       math: { op: op, a: a, b: b },
       hint: { zh: '先決定正負號，再算絕對值。', en: 'Decide the sign first, then the magnitude.' }
@@ -731,7 +731,7 @@
       return {
         type: 'pythagoras',
         prompt: { zh: '直角三角形的兩條直角邊是 ' + a + ' 和 ' + b + '，斜邊是多少？', en: 'A right triangle has legs ' + a + ' and ' + b + '. What is the hypotenuse?' },
-        visual: null,
+        visual: { kind: 'righttri' },
         answer: c,
         math: { op: 'pythagoras', a: a, b: b, c: c, mode: 'hyp' },
         hint: { zh: '畢氏定理：斜邊² = ' + a + '² + ' + b + '²。', en: 'Pythagoras: hyp² = ' + a + '² + ' + b + '².' }
@@ -740,7 +740,7 @@
     return {
       type: 'pythagoras',
       prompt: { zh: '直角三角形的斜邊是 ' + c + '，一條直角邊是 ' + a + '，另一條是多少？', en: 'A right triangle has hypotenuse ' + c + ' and one leg ' + a + '. Find the other leg.' },
-      visual: null,
+      visual: { kind: 'righttri' },
       answer: b,
       math: { op: 'pythagoras', a: a, b: b, c: c, mode: 'leg' },
       hint: { zh: '另一條直角邊² = 斜邊² − 已知邊²。', en: 'Other leg² = hyp² − known leg².' }
@@ -869,7 +869,7 @@
         zh: '在直角三角形中，對邊 = ' + a + '，鄰邊 = ' + b + '，斜邊 = ' + c + '。求 $\\' + which + '\\theta$。',
         en: 'In a right triangle, opposite = ' + a + ', adjacent = ' + b + ', hypotenuse = ' + c + '. Find $\\' + which + '\\theta$.'
       },
-      visual: null,
+      visual: { kind: 'righttri' },
       answer: { n: num, d: den },
       math: { op: 'trig', a: a, b: b, c: c, which: which },
       hint: {
@@ -952,7 +952,7 @@
     return {
       type: 'stats',
       prompt: { zh: '求 ' + nums.join('、') + ' 的中位數。', en: 'Find the median of ' + nums.join(', ') + '.' },
-      visual: null,
+      visual: { kind: 'barchart' },
       answer: sorted[(n - 1) / 2],
       math: { op: 'stats', nums: nums, sorted: sorted },
       hint: { zh: '先把數字由小到大排列，再取中間那個。', en: 'Sort the numbers, then take the middle one.' }
@@ -1127,7 +1127,7 @@
     return {
       type: 'polygon',
       prompt: { zh: n + ' 邊形的內角和是多少？', en: 'What is the sum of the interior angles of a ' + n + '-sided polygon?' },
-      visual: null,
+      visual: { kind: 'polygon', n: n },
       answer: (n - 2) * 180,
       math: { op: 'polygon', n: n },
       hint: { zh: '內角和 = (n − 2) × 180°。', en: 'Sum = (n − 2) × 180°.' }
@@ -1233,7 +1233,7 @@
       return {
         type: 'oddeven',
         prompt: { zh: n + ' 之後的下一個偶數是多少？', en: 'What is the next even number after ' + n + '?' },
-        visual: null,
+        visual: { kind: 'oddeven' },
         answer: n + 2,
         math: { op: 'oddeven', mode: 'nexteven', n: n },
         hint: { zh: '偶數是 2、4、6、8…，逐個加 2。', en: 'Even numbers are 2, 4, 6, 8…; keep adding 2.' }
@@ -1244,7 +1244,7 @@
       return {
         type: 'oddeven',
         prompt: { zh: m + ' 之後的下一個奇數是多少？', en: 'What is the next odd number after ' + m + '?' },
-        visual: null,
+        visual: { kind: 'oddeven' },
         answer: m + 2,
         math: { op: 'oddeven', mode: 'nextodd', n: m },
         hint: { zh: '奇數是 1、3、5、7…，逐個加 2。', en: 'Odd numbers are 1, 3, 5, 7…; keep adding 2.' }
@@ -1258,7 +1258,7 @@
         zh: '1 到 ' + n2 + ' 有多少個' + (askEven ? '偶數' : '奇數') + '？',
         en: 'How many ' + (askEven ? 'even' : 'odd') + ' numbers are there from 1 to ' + n2 + '?'
       },
-      visual: null,
+      visual: { kind: 'oddeven' },
       answer: askEven ? Math.floor(n2 / 2) : Math.ceil(n2 / 2),
       math: { op: 'oddeven', mode: askEven ? 'counteven' : 'countodd', n: n2 },
       hint: { zh: '逐個數：' + (askEven ? '2、4、6…' : '1、3、5…') + '。', en: 'Count: ' + (askEven ? '2, 4, 6…' : '1, 3, 5…') + '.' }
@@ -1268,13 +1268,13 @@
   /* ================= 補缺題型（圖形性質、代數、數據、高中） ================= */
 
   var SHAPE_FACTS = [
-    { zh: '正方形有幾條邊？', en: 'How many sides does a square have?', a: 4 },
-    { zh: '三角形有幾條邊？', en: 'How many sides does a triangle have?', a: 3 },
-    { zh: '長方形有幾條邊？', en: 'How many sides does a rectangle have?', a: 4 },
-    { zh: '正方體有幾個面？', en: 'How many faces does a cube have?', a: 6 },
-    { zh: '長方體有幾個面？', en: 'How many faces does a cuboid have?', a: 6 },
-    { zh: '正方體有幾個頂點？', en: 'How many vertices does a cube have?', a: 8 },
-    { zh: '圓柱體有幾個圓形面？', en: 'How many circular faces does a cylinder have?', a: 2 }
+    { zh: '正方形有幾條邊？', en: 'How many sides does a square have?', a: 4, kind: 'square' },
+    { zh: '三角形有幾條邊？', en: 'How many sides does a triangle have?', a: 3, kind: 'triangle' },
+    { zh: '長方形有幾條邊？', en: 'How many sides does a rectangle have?', a: 4, kind: 'rect' },
+    { zh: '正方體有幾個面？', en: 'How many faces does a cube have?', a: 6, kind: 'cube' },
+    { zh: '長方體有幾個面？', en: 'How many faces does a cuboid have?', a: 6, kind: 'cuboid' },
+    { zh: '正方體有幾個頂點？', en: 'How many vertices does a cube have?', a: 8, kind: 'cube' },
+    { zh: '圓柱體有幾個圓形面？', en: 'How many circular faces does a cylinder have?', a: 2, kind: 'cylinder' }
   ];
 
   var SYM_FACTS = [
@@ -1299,7 +1299,7 @@
     return {
       type: 'shape',
       prompt: { zh: q.zh, en: q.en },
-      visual: null,
+      visual: { kind: 'shape', shape: q.kind },
       answer: q.a,
       math: { op: 'shape', a: q.a, k: i },
       hint: { zh: '想一想圖形有幾條邊／幾個面。', en: 'Count the sides / faces.' }
@@ -1391,7 +1391,7 @@
     return {
       type: 'mode',
       prompt: { zh: '求 ' + nums.join('、') + ' 的眾數。', en: 'Find the mode of ' + nums.join(', ') + '.' },
-      visual: null,
+      visual: { kind: 'barchart' },
       answer: mode,
       math: { op: 'mode', nums: nums, m: mode },
       hint: { zh: '眾數 = 出現次數最多的數。', en: 'Mode = the most frequent value.' }
@@ -1456,7 +1456,7 @@
     return {
       type: 'range',
       prompt: { zh: '求 ' + nums.join('、') + ' 的分佈域。', en: 'Find the range of ' + nums.join(', ') + '.' },
-      visual: null,
+      visual: { kind: 'barchart' },
       answer: mx - mn,
       math: { op: 'range', nums: nums },
       hint: { zh: '分佈域 = 最大 − 最小。', en: 'Range = max − min.' }
@@ -1469,7 +1469,7 @@
     return {
       type: 'circleeq',
       prompt: { zh: '圓的方程是 $x^2 + y^2 = ' + (r * r) + '$，求半徑。', en: 'A circle has equation $x^2 + y^2 = ' + (r * r) + '$. Find its radius.' },
-      visual: null,
+      visual: { kind: 'circle', r: r },
       answer: r,
       math: { op: 'circleeq', r: r },
       hint: { zh: 'x² + y² = r²，半徑 = r。', en: 'x² + y² = r², so radius = r.' }
@@ -1504,7 +1504,7 @@
         zh: '兩條平行線被一直線所截，一對' + label + '中，其中一個是 ' + ang + '°，另一個是多少度？',
         en: 'Two parallel lines are cut by a transversal. In a pair of ' + (kind === 'corr' ? 'corresponding' : kind === 'alt' ? 'alternate' : 'co-interior') + ' angles, one is ' + ang + '°. What is the other?'
       },
-      visual: null,
+      visual: { kind: 'parallel' },
       answer: ans,
       math: { op: 'parallel', a: ang, mode: kind },
       hint: { zh: kind === 'int' ? '同側內角互補（和 = 180°）。' : '平行線的同位角／內錯角相等。', en: kind === 'int' ? 'Co-interior angles sum to 180°.' : 'Corresponding / alternate angles are equal.' }
@@ -1531,7 +1531,7 @@
     return {
       type: 'congruent',
       prompt: { zh: q.zh, en: q.en },
-      visual: null,
+      visual: { kind: 'twotri' },
       answer: q.a,
       math: { op: 'congruent', a: q.a, k: i },
       hint: { zh: '全等三角形對應邊、對應角相等。', en: 'Congruent triangles have equal sides and angles.' }
@@ -1545,7 +1545,7 @@
       return {
         type: 'similar',
         prompt: { zh: '把一個圖形放大 ' + k + ' 倍，對應邊是原來的幾倍？', en: 'A shape is enlarged by factor ' + k + '. Its sides are how many times the original?' },
-        visual: null,
+        visual: { kind: 'twotri' },
         answer: k,
         math: { op: 'similar', mode: 'scale', k: k },
         hint: { zh: '放大 k 倍，對應邊也是原來的 k 倍。', en: 'Enlarging by k makes sides k times longer.' }
@@ -1555,7 +1555,7 @@
     return {
       type: 'similar',
       prompt: { zh: '兩個相似三角形，對應邊分別是 ' + a + ' 和 ' + (a * k) + '，放大倍數是多少？', en: 'Two similar triangles have corresponding sides ' + a + ' and ' + (a * k) + '. What is the scale factor?' },
-      visual: null,
+      visual: { kind: 'twotri' },
       answer: k,
       math: { op: 'similar', mode: 'ratio', a: a, k: k },
       hint: { zh: '放大倍數 = 對應邊之比。', en: 'Scale factor = ratio of corresponding sides.' }
@@ -1750,7 +1750,7 @@
     return {
       type: 'centre',
       prompt: { zh: q.zh, en: q.en },
-      visual: null,
+      visual: { kind: 'centre' },
       answer: q.k,
       choices: CENTRE_KEYS.slice(),
       math: { op: 'centre', k: q.k },
@@ -1772,7 +1772,7 @@
     return {
       type: 'circleangle',
       prompt: { zh: zhPrompt, en: enPrompt },
-      visual: null,
+      visual: { kind: 'circleang' },
       answer: ans,
       math: { op: 'circleangle', a: half, mode: askCentre ? 'centre' : 'circ' },
       hint: { zh: '圓心角 = 2 × 圓周角（同一弧）。', en: 'Central angle = 2 × inscribed angle (same arc).' }

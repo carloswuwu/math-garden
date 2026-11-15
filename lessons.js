@@ -216,7 +216,7 @@
     'ms.s1.directed': {
       zh: { title: '有向數', intro: '正負數相加減，先看符號；乘除時，同號得正、異號得負。', example: '(-5) + 3 = -2；(-4) × (-3) = 12；12 ÷ (-3) = -4。', tip: '減去一個負數，等於加上它的相反數。' },
       en: { title: 'Directed Numbers', intro: 'For adding/subtracting, watch the signs; for ×/÷, same signs give +, different signs give −.', example: '(-5) + 3 = -2; (-4) × (-3) = 12; 12 ÷ (-3) = -4.', tip: 'Subtracting a negative is the same as adding its opposite.' },
-      visual: null
+      visual: { kind: 'numberline' }
     },
     'ms.s1.exprsub': {
       zh: { title: '代數式求值', intro: '把已知的數代入字母，再按運算順序計算。', example: '已知 x = 4，2x + 3 = 2 × 4 + 3 = 11。', tip: '代入後，先乘除後加減。' },
@@ -234,7 +234,7 @@
     'ms.s2.pythagoras': {
       zh: { title: '畢氏定理', intro: '直角三角形中，斜邊² = 兩條直角邊平方和。', example: '3² + 4² = 9 + 16 = 25，所以斜邊 = 5。', tip: '求直角邊時，用「斜邊² − 另一條邊²」。' },
       en: { title: 'Pythagoras Theorem', intro: 'In a right triangle, hyp² = sum of the squares of the two legs.', example: '3² + 4² = 9 + 16 = 25, so hyp = 5.', tip: 'For a leg, use hyp² − other leg².' },
-      visual: null
+      visual: { kind: 'righttri' }
     },
     'ms.s2.simul': {
       zh: { title: '聯立方程', intro: '兩條方程一起解；把兩式相加或相減，消去一個未知數。', example: 'x + y = 5，x − y = 1；相加得 2x = 6，x = 3。', tip: '先消去一個未知數，再求另一個。' },
@@ -270,7 +270,7 @@
     'hs.s4.trig': {
       zh: { title: '三角比', intro: '在直角三角形中：$\\sin\\theta = \\dfrac{\\text{對邊}}{\\text{斜邊}}$，$\\cos\\theta = \\dfrac{\\text{鄰邊}}{\\text{斜邊}}$，$\\tan\\theta = \\dfrac{\\text{對邊}}{\\text{鄰邊}}$。', example: '對邊 3、鄰邊 4、斜邊 5，則 $\\sin\\theta = 3/5$。', tip: '記住「SOH CAH TOA」。' },
       en: { title: 'Trigonometric Ratios', intro: 'In a right triangle: $\\sin\\theta = \\dfrac{\\text{opp}}{\\text{hyp}}$, $\\cos\\theta = \\dfrac{\\text{adj}}{\\text{hyp}}$, $\\tan\\theta = \\dfrac{\\text{opp}}{\\text{adj}}$.', example: 'opp 3, adj 4, hyp 5 → $\\sin\\theta = 3/5$.', tip: 'Remember SOH CAH TOA.' },
-      visual: null
+      visual: { kind: 'righttri' }
     },
 
     /* ---------- 中五（S5） ---------- */
@@ -360,7 +360,7 @@
     'ms.s2.polygon': {
       zh: { title: '多邊形內角和', intro: 'n 邊形的內角和 = (n − 2) × 180°。', example: '五邊形：內角和 = (5 − 2) × 180° = 540°。', tip: '邊數減 2，再乘 180°。' },
       en: { title: 'Polygon Angle Sum', intro: 'Sum of interior angles of an n-gon = (n − 2) × 180°.', example: 'Pentagon: sum = (5 − 2) × 180° = 540°.', tip: 'Take sides minus 2, times 180°.' },
-      visual: null
+      visual: { kind: 'polygon', n: 5 }
     },
     'hs.s4.quadsolve': {
       zh: { title: '二次方程求根', intro: '把 x² + bx + c = 0 因式分解成 (x − p)(x − q) = 0，根就是 p 和 q。', example: 'x² − 5x + 6 = 0 → (x − 2)(x − 3) = 0，根是 2 和 3。', tip: '找兩個數，和是 −b、積是 c。' },
@@ -437,7 +437,7 @@
     'ms.s1.parallel': {
       zh: { title: '角與平行線', intro: '平行線被截線所截：同位角相等、內錯角相等、同側內角互補（和 = 180°）。', example: '若一個同位角是 65°，另一個也是 65°。', tip: '先分清是同位角、內錯角還是同側內角。' },
       en: { title: 'Angles & Parallel Lines', intro: 'With parallel lines: corresponding and alternate angles are equal; co-interior angles sum to 180°.', example: 'If one corresponding angle is 65°, the other is also 65°.', tip: 'First identify the angle type.' },
-      visual: null
+      visual: { kind: 'parallel' }
     },
     'ms.s1.sqrt': {
       zh: { title: '平方根', intro: '√x 就是問「哪個數自乘等於 x」。', example: '√64 = 8，因為 8 × 8 = 64。', tip: '背熟常見平方數：1、4、9、16、25、36、49、64、81、100。' },
@@ -447,12 +447,12 @@
     'ms.s2.congruent': {
       zh: { title: '全等三角形', intro: '全等三角形形狀和大小完全相同，對應邊和對應角相等。', example: '判定方法：SSS、SAS、ASA、AAS、RHS。', tip: '全等 = 完全一樣（形狀 + 大小）。' },
       en: { title: 'Congruent Triangles', intro: 'Congruent triangles are identical in shape and size; corresponding sides and angles are equal.', example: 'Conditions: SSS, SAS, ASA, AAS, RHS.', tip: 'Congruent = exactly the same (shape + size).' },
-      visual: null
+      visual: { kind: 'twotri' }
     },
     'ms.s2.similar': {
       zh: { title: '相似三角形', intro: '相似圖形形狀相同、大小不同，對應邊成比例。', example: '放大 3 倍，對應邊是原來的 3 倍。', tip: '相似 = 形狀相同（大小可不同）。' },
       en: { title: 'Similar Triangles', intro: 'Similar shapes have the same shape but different size; corresponding sides are proportional.', example: 'Enlarging by 3 makes sides 3 times longer.', tip: 'Similar = same shape (size may differ).' },
-      visual: null
+      visual: { kind: 'twotri' }
     },
     'ms.s2.quad': {
       zh: { title: '四邊形', intro: '平行四邊形有兩組平行對邊；梯形只有一組。', example: '正方形有 4 條相等的邊。', tip: '記住各四邊形的邊和角性質。' },
@@ -493,7 +493,7 @@
     'g3.time24': {
       zh: { title: '24 小時制', intro: '下午的時間用 24 小時制 = 12 小時制 + 12。', example: '下午 5 時 = 17:00。', tip: '超過 12 就減 12，得到下午／晚上的時間。' },
       en: { title: '24-hour Clock', intro: 'In 24-hour time, PM hours = 12-hour time + 12.', example: '5 pm = 17:00.', tip: 'Subtract 12 from times over 12 to get PM.' },
-      visual: null
+      visual: { kind: 'clock' }
     },
     'ms.s3.cone': {
       zh: { title: '圓錐與球體', intro: '圓錐體積 = πr²h/3；球體積 = 4πr³/3；球表面積 = 4πr²。', example: '半徑 3 的球，體積 = 4π×27/3 = 36π。', tip: '答案用 π 表示。' },
@@ -503,7 +503,7 @@
     'ms.s3.centre': {
       zh: { title: '三角形的心', intro: '內心＝角平分線交點；外心＝垂直平分線交點；重心＝中線交點；垂心＝高的交點。', example: '三條中線交於重心。', tip: '記住四心分別由哪三條線組成。' },
       en: { title: 'Centres of a Triangle', intro: 'Incentre: angle bisectors; circumcentre: perpendicular bisectors; centroid: medians; orthocentre: altitudes.', example: 'The three medians meet at the centroid.', tip: 'Remember which three lines form each centre.' },
-      visual: null
+      visual: { kind: 'centre' }
     },
     'ms.s3.prob': {
       zh: { title: '概率', intro: '概率 = 符合條件的結果數 ÷ 所有可能結果數。', example: '擲一枚硬幣，正面概率 = 1/2。', tip: '先數總數，再數符合條件的數。' },
@@ -513,7 +513,7 @@
     'hs.s4.circleangle': {
       zh: { title: '圓周角與圓心角', intro: '同一段弧上，圓心角 = 2 × 圓周角。', example: '圓周角 40° → 圓心角 80°。', tip: '圓心角是圓周角的兩倍。' },
       en: { title: 'Angles in a Circle', intro: 'On the same arc, central angle = 2 × inscribed angle.', example: 'Inscribed 40° → central 80°.', tip: 'Central angle is double the inscribed angle.' },
-      visual: null
+      visual: { kind: 'circleang' }
     },
     'hs.s6.binomial': {
       zh: { title: '二項式定理', intro: '(x+1)^n 展開式中，x^r 的係數 = C(n,r) = n!/(r!(n−r)!)。', example: '(x+1)^5 中 x² 的係數 = C(5,2) = 10。', tip: '係數就是組合數 C(n,r)。' },
