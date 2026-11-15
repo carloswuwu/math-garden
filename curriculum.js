@@ -625,6 +625,13 @@
       lesson: 'g1.money', types: ['money'], levels: [{}],
       mastery: { practice: 10, quizPass: 0.8 }
     },
+    'g1.oddeven': {
+      id: 'g1.oddeven', stage: 'g1', order: 7,
+      zh: { name: '單雙數', goal: '會分辨奇數和偶數。' },
+      en: { name: 'Odd & Even', goal: 'Tell odd and even numbers apart.' },
+      lesson: 'g1.oddeven', types: ['oddeven'], levels: [{}],
+      mastery: { practice: 10, quizPass: 0.8 }
+    },
     'g2.fact': {
       id: 'g2.fact', stage: 'g2', order: 6,
       zh: { name: '單位換算', goal: '記住常用的時間與長度換算。' },
@@ -687,7 +694,8 @@
         { id: 'g1.calc', zh: '加減運算', en: 'Add & Subtract', skills: ['g1.add20', 'g1.sub20'] },
         { id: 'g1.num', zh: '更大的數', en: 'Bigger Numbers', skills: ['g1.place100', 'g1.addsub100'] },
         { id: 'g1.word', zh: '解決問題', en: 'Word Problems', skills: ['g1.word'] },
-        { id: 'g1.money', zh: '貨幣', en: 'Money', skills: ['g1.money'] }
+        { id: 'g1.money', zh: '貨幣', en: 'Money', skills: ['g1.money'] },
+        { id: 'g1.oddeven', zh: '單雙數', en: 'Odd & Even', skills: ['g1.oddeven'] }
       ] },
     { id: 'g2', zh: '小二', en: 'Primary 2', desc: { zh: '100 以內進退位、乘法啟蒙', en: 'Regrouping within 100, intro to multiplication' }, color: '#007AFF', emoji: '🌈',
       topics: [

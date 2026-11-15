@@ -76,6 +76,11 @@ function computeAnswer(math) {
   if (math.op === 'quadsolve') return Math.max(math.p, math.q);
   if (math.op === 'line') return (math.b[1] - math.a[1]) / (math.b[0] - math.a[0]);
   if (math.op === 'variation') return math.k * math.c;
+  if (math.op === 'oddeven') {
+    if (math.mode === 'counteven') return Math.floor(math.n / 2);
+    if (math.mode === 'countodd') return Math.ceil(math.n / 2);
+    return math.n + 2;
+  }
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -142,6 +147,7 @@ const SKILLS = {
   quadsolve:      { id: 't.qsolve',    types: ['quadsolve'],                 levels: [{}] },
   line:           { id: 't.line',      types: ['line'],                      levels: [{}] },
   variation:      { id: 't.var',       types: ['variation'],                 levels: [{}] },
+  oddeven:        { id: 't.oddeven',   types: ['oddeven'],                   levels: [{}] },
 };
 
 const N = 400; // 每個類型的抽樣數量
@@ -316,7 +322,8 @@ for (let seed = 1; seed <= N; seed++) {
     'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
     'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
     'triangle', 'circle', 'volume', 'coord',
-    'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation'];
+    'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
+    'oddeven'];
   supported.forEach((t) => {
     for (let seed = 1; seed <= 60; seed++) {
       const p = C.generateProblem(SKILLS[t], { seed });

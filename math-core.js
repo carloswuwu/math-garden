@@ -27,7 +27,8 @@
     'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
     'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
     'triangle', 'circle', 'volume', 'coord',
-    'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation'
+    'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
+    'oddeven'
   ];
 
   /* ---------------- 可播種隨機數 ---------------- */
@@ -1220,6 +1221,46 @@
     };
   }
 
+  /* 單雙數（奇偶） */
+  function genOddEven(rng, o) {
+    var kind = Math.floor(rng() * 3);
+    if (kind === 0) {
+      var n = randInt(rng, 1, 20) * 2;
+      return {
+        type: 'oddeven',
+        prompt: { zh: n + ' 之後的下一個偶數是多少？', en: 'What is the next even number after ' + n + '?' },
+        visual: null,
+        answer: n + 2,
+        math: { op: 'oddeven', mode: 'nexteven', n: n },
+        hint: { zh: '偶數是 2、4、6、8…，逐個加 2。', en: 'Even numbers are 2, 4, 6, 8…; keep adding 2.' }
+      };
+    }
+    if (kind === 1) {
+      var m = randInt(rng, 1, 20) * 2 - 1;
+      return {
+        type: 'oddeven',
+        prompt: { zh: m + ' 之後的下一個奇數是多少？', en: 'What is the next odd number after ' + m + '?' },
+        visual: null,
+        answer: m + 2,
+        math: { op: 'oddeven', mode: 'nextodd', n: m },
+        hint: { zh: '奇數是 1、3、5、7…，逐個加 2。', en: 'Odd numbers are 1, 3, 5, 7…; keep adding 2.' }
+      };
+    }
+    var n2 = randInt(rng, 2, 20);
+    var askEven = rng() < 0.5;
+    return {
+      type: 'oddeven',
+      prompt: {
+        zh: '1 到 ' + n2 + ' 有多少個' + (askEven ? '偶數' : '奇數') + '？',
+        en: 'How many ' + (askEven ? 'even' : 'odd') + ' numbers are there from 1 to ' + n2 + '?'
+      },
+      visual: null,
+      answer: askEven ? Math.floor(n2 / 2) : Math.ceil(n2 / 2),
+      math: { op: 'oddeven', mode: askEven ? 'counteven' : 'countodd', n: n2 },
+      hint: { zh: '逐個數：' + (askEven ? '2、4、6…' : '1、3、5…') + '。', en: 'Count: ' + (askEven ? '2, 4, 6…' : '1, 3, 5…') + '.' }
+    };
+  }
+
   /* 回傳 { zh: [步驟...], en: [步驟...] }；不支援的題型回傳 null */
   function explain(p) {
     if (!p || !p.math) return null;
@@ -1545,6 +1586,23 @@
           zh: ['y = kx；由 x = ' + m.a + '、y = ' + (m.k * m.a) + ' 得 k = ' + m.k + '。', '所以 y = ' + m.k + ' × ' + m.c + ' = ' + p.answer + '。'],
           en: ['y = kx; from x = ' + m.a + ', y = ' + (m.k * m.a) + ' we get k = ' + m.k + '.', 'So y = ' + m.k + ' × ' + m.c + ' = ' + p.answer + '.']
         };
+      case 'oddeven':
+        if (m.mode === 'nexteven') {
+          return {
+            zh: ['偶數是 2、4、6、8…，逐個加 2。', m.n + ' + 2 = ' + p.answer + '。'],
+            en: ['Even numbers are 2, 4, 6, 8…; add 2 each time.', m.n + ' + 2 = ' + p.answer + '.']
+          };
+        }
+        if (m.mode === 'nextodd') {
+          return {
+            zh: ['奇數是 1、3、5、7…，逐個加 2。', m.n + ' + 2 = ' + p.answer + '。'],
+            en: ['Odd numbers are 1, 3, 5, 7…; add 2 each time.', m.n + ' + 2 = ' + p.answer + '.']
+          };
+        }
+        return {
+          zh: ['逐個數：' + (m.mode === 'counteven' ? '2、4、6…' : '1、3、5…'), '共有 ' + p.answer + ' 個。'],
+          en: ['Count: ' + (m.mode === 'counteven' ? '2, 4, 6…' : '1, 3, 5…'), 'There are ' + p.answer + ' of them.']
+        };
       default:
         return null;
     }
@@ -1598,7 +1656,8 @@
     fact: genFact,
     quadsolve: genQuadsolve,
     line: genLine,
-    variation: genVariation
+    variation: genVariation,
+    oddeven: genOddEven
   };
 
   /* ---------------- 選項（干擾項）生成 ---------------- */
@@ -1686,6 +1745,7 @@
     if (p.type === 'quadsolve') return 20;
     if (p.type === 'line') return 10;
     if (p.type === 'variation') return 50;
+    if (p.type === 'oddeven') return 50;
     return 99;
   }
 

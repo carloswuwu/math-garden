@@ -337,6 +337,11 @@
       en: { title: 'Money & Change', intro: 'Change = money paid − price.', example: 'Item $6, paid $10 → change = 10 − 6 = $4.', tip: 'Use subtraction for change.' },
       visual: null
     },
+    'g1.oddeven': {
+      zh: { title: '單雙數', intro: '偶數是 2、4、6、8…（可以兩個一組）；奇數是 1、3、5、7…。', example: '8 是偶數，7 是奇數；8 之後的下一個偶數是 10。', tip: '看個位：0、2、4、6、8 是偶數。' },
+      en: { title: 'Odd & Even', intro: 'Even numbers are 2, 4, 6, 8… (can be paired); odd are 1, 3, 5, 7….', example: '8 is even, 7 is odd; the next even after 8 is 10.', tip: 'Look at the units digit: 0, 2, 4, 6, 8 are even.' },
+      visual: null
+    },
     'g2.fact': {
       zh: { title: '單位換算', intro: '記住常用的換算：1 小時 = 60 分鐘、1 米 = 100 釐米、1 千克 = 1000 克。', example: '1 日 = 24 小時。', tip: '多讀幾次就記住。' },
       en: { title: 'Units', intro: 'Remember: 1 hour = 60 min, 1 m = 100 cm, 1 kg = 1000 g.', example: '1 day = 24 hours.', tip: 'Read them a few times to remember.' },
