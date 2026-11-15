@@ -760,6 +760,79 @@
       en: { name: 'Range', goal: 'Find the range of a data set.' },
       lesson: 'hs.s6.range', types: ['range'], levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    /* ===================== 初中補缺 ===================== */
+
+    'ms.s1.parallel': {
+      id: 'ms.s1.parallel', stage: 'ms1', order: 7,
+      zh: { name: '角與平行線', goal: '認識同位角、內錯角與同側內角。' },
+      en: { name: 'Angles & Parallel Lines', goal: 'Know corresponding, alternate and co-interior angles.' },
+      lesson: 'ms.s1.parallel', types: ['parallel'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s1.sqrt': {
+      id: 'ms.s1.sqrt', stage: 'ms1', order: 8,
+      zh: { name: '平方根', goal: '會求完全平方數的平方根。' },
+      en: { name: 'Square Roots', goal: 'Find square roots of perfect squares.' },
+      lesson: 'ms.s1.sqrt', types: ['sqrt'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s2.congruent': {
+      id: 'ms.s2.congruent', stage: 'ms2', order: 6,
+      zh: { name: '全等三角形', goal: '認識全等三角形的判定與性質。' },
+      en: { name: 'Congruent Triangles', goal: 'Know congruence conditions and properties.' },
+      lesson: 'ms.s2.congruent', types: ['congruent'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s2.similar': {
+      id: 'ms.s2.similar', stage: 'ms2', order: 7,
+      zh: { name: '相似三角形', goal: '認識相似圖形的放大倍數。' },
+      en: { name: 'Similar Triangles', goal: 'Understand scale factor of similar shapes.' },
+      lesson: 'ms.s2.similar', types: ['similar'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s2.quad': {
+      id: 'ms.s2.quad', stage: 'ms2', order: 8,
+      zh: { name: '四邊形', goal: '認識平行四邊形、梯形等的性質。' },
+      en: { name: 'Quadrilaterals', goal: 'Know properties of parallelograms, trapezia, etc.' },
+      lesson: 'ms.s2.quad', types: ['quadshape'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s2.sinterest': {
+      id: 'ms.s2.sinterest', stage: 'ms2', order: 9,
+      zh: { name: '單利息', goal: '會計算單利息。' },
+      en: { name: 'Simple Interest', goal: 'Calculate simple interest.' },
+      lesson: 'ms.s2.sinterest', types: ['sinterest'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s2.approx': {
+      id: 'ms.s2.approx', stage: 'ms2', order: 10,
+      zh: { name: '量度誤差', goal: '會求四捨五入的最大誤差。' },
+      en: { name: 'Errors in Measurement', goal: 'Find the max error of rounding.' },
+      lesson: 'ms.s2.approx', types: ['approx'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.cylinder': {
+      id: 'ms.s3.cylinder', stage: 'ms3', order: 6,
+      zh: { name: '圓柱體積', goal: '會求圓柱的體積與側面積。' },
+      en: { name: 'Volume of Cylinder', goal: 'Find volume and curved surface area.' },
+      lesson: 'ms.s3.cylinder', types: ['cylinder'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.expand': {
+      id: 'ms.s3.expand', stage: 'ms3', order: 7,
+      zh: { name: '展開（恆等式）', goal: '會展開 (x+a)(x+b)。' },
+      en: { name: 'Expanding Binomials', goal: 'Expand (x+a)(x+b).' },
+      lesson: 'ms.s3.expand', types: ['expand'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.pichart': {
+      id: 'ms.s3.pichart', stage: 'ms3', order: 8,
+      zh: { name: '圓形圖', goal: '會由百分比求圓心角。' },
+      en: { name: 'Pie Charts', goal: 'Find central angle from percentage.' },
+      lesson: 'ms.s3.pichart', types: ['pichart'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
     }
   };
 
@@ -818,7 +891,9 @@
         { id: 'ms1.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s1.directed', 'ms.s1.exprsub', 'ms.s1.linear'] },
         { id: 'ms1.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s1.coord'] },
         { id: 'ms1.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s1.word'] },
-        { id: 'ms1.lt', zh: '數與代數（續）', en: 'Number & Algebra (cont.)', skills: ['ms.s1.liketerms'] }
+        { id: 'ms1.lt', zh: '數與代數（續）', en: 'Number & Algebra (cont.)', skills: ['ms.s1.liketerms'] },
+        { id: 'ms1.geo2', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['ms.s1.parallel'] },
+        { id: 'ms1.num2', zh: '數與代數（續二）', en: 'Number & Algebra (cont.)', skills: ['ms.s1.sqrt'] }
       ] },
     { id: 'ms2', zh: '中二', en: 'S2', desc: { zh: '畢氏定理、聯立方程', en: 'Pythagoras, simultaneous equations' }, color: '#FF6B35', emoji: '📐',
       topics: [
@@ -826,14 +901,19 @@
         { id: 'ms2.alg', zh: '代數', en: 'Algebra', skills: ['ms.s2.simul'] },
         { id: 'ms2.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s2.word'] },
         { id: 'ms2.poly', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['ms.s2.polygon'] },
-        { id: 'ms2.polyc', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['ms.s2.polycoeff'] }
+        { id: 'ms2.polyc', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['ms.s2.polycoeff'] },
+        { id: 'ms2.geo3', zh: '圖形與空間（續二）', en: 'Shape & Space (cont.)', skills: ['ms.s2.congruent', 'ms.s2.similar', 'ms.s2.quad'] },
+        { id: 'ms2.num', zh: '數與代數（續二）', en: 'Number & Algebra (cont.)', skills: ['ms.s2.sinterest', 'ms.s2.approx'] }
       ] },
     { id: 'ms3', zh: '中三', en: 'S3', desc: { zh: '指數定律、一元一次不等式', en: 'Laws of indices, linear inequalities' }, color: '#FF8C42', emoji: '🧮',
       topics: [
         { id: 'ms3.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s3.indices', 'ms.s3.inequality'] },
         { id: 'ms3.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s3.word'] },
         { id: 'ms3.geo2', zh: '度量（續）', en: 'Measures (cont.)', skills: ['ms.s3.arclen'] },
-        { id: 'ms3.data', zh: '數據處理', en: 'Data Handling', skills: ['ms.s3.mode'] }
+        { id: 'ms3.data', zh: '數據處理', en: 'Data Handling', skills: ['ms.s3.mode'] },
+        { id: 'ms3.geo3', zh: '度量（續二）', en: 'Measures (cont.)', skills: ['ms.s3.cylinder'] },
+        { id: 'ms3.alg', zh: '代數', en: 'Algebra', skills: ['ms.s3.expand'] },
+        { id: 'ms3.data2', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['ms.s3.pichart'] }
       ] },
     { id: 'hs1', zh: '中四', en: 'S4', desc: { zh: '對數、函數求值、三角比', en: 'Logarithms, function values, trigonometric ratios' }, color: '#A2845E', emoji: '🧠',
       topics: [

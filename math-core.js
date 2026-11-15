@@ -29,7 +29,8 @@
     'triangle', 'circle', 'volume', 'coord',
     'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
     'oddeven',
-    'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq'
+    'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq',
+    'parallel', 'sqrt', 'congruent', 'similar', 'quadshape', 'cylinder', 'sinterest', 'expand', 'pichart', 'approx'
   ];
 
   /* ---------------- 可播種隨機數 ---------------- */
@@ -1474,6 +1475,178 @@
     };
   }
 
+  /* ================= 初中補缺題型 ================= */
+
+  var CONGRUENT_FACTS = [
+    { zh: '證明三角形全等的方法共有幾種（SSS、SAS、ASA、AAS、RHS）？', en: 'How many congruence conditions are there (SSS, SAS, ASA, AAS, RHS)?', a: 5 },
+    { zh: '兩個全等三角形，對應邊共有幾組相等？', en: 'How many pairs of equal sides do two congruent triangles have?', a: 3 },
+    { zh: '兩個全等三角形，對應角共有幾組相等？', en: 'How many pairs of equal angles do two congruent triangles have?', a: 3 }
+  ];
+
+  var QUAD_FACTS = [
+    { zh: '平行四邊形有幾組平行的對邊？', en: 'How many pairs of parallel sides does a parallelogram have?', a: 2 },
+    { zh: '梯形有幾組平行的對邊？', en: 'How many pairs of parallel sides does a trapezium have?', a: 1 },
+    { zh: '正方形有幾條相等的邊？', en: 'How many equal sides does a square have?', a: 4 },
+    { zh: '菱形有幾條相等的邊？', en: 'How many equal sides does a rhombus have?', a: 4 },
+    { zh: '長方形有幾組相等的邊？', en: 'How many pairs of equal sides does a rectangle have?', a: 2 }
+  ];
+
+  /* 角與平行線 */
+  function genParallel(rng, o) {
+    var ang = pick(rng, [40, 50, 60, 70, 80, 110, 120, 130]);
+    var kind = pick(rng, ['corr', 'alt', 'int']);
+    var label = kind === 'corr' ? '同位角' : kind === 'alt' ? '內錯角' : '同側內角';
+    var ans = kind === 'int' ? 180 - ang : ang;
+    return {
+      type: 'parallel',
+      prompt: {
+        zh: '兩條平行線被一直線所截，一對' + label + '中，其中一個是 ' + ang + '°，另一個是多少度？',
+        en: 'Two parallel lines are cut by a transversal. In a pair of ' + (kind === 'corr' ? 'corresponding' : kind === 'alt' ? 'alternate' : 'co-interior') + ' angles, one is ' + ang + '°. What is the other?'
+      },
+      visual: null,
+      answer: ans,
+      math: { op: 'parallel', a: ang, mode: kind },
+      hint: { zh: kind === 'int' ? '同側內角互補（和 = 180°）。' : '平行線的同位角／內錯角相等。', en: kind === 'int' ? 'Co-interior angles sum to 180°.' : 'Corresponding / alternate angles are equal.' }
+    };
+  }
+
+  /* 平方根 */
+  function genSqrt(rng, o) {
+    var base = randInt(rng, 2, 15);
+    return {
+      type: 'sqrt',
+      prompt: { zh: '$\\sqrt{' + (base * base) + '} = ?$', en: '$\\sqrt{' + (base * base) + '} = ?$' },
+      visual: null,
+      answer: base,
+      math: { op: 'sqrt', base: base },
+      hint: { zh: '找一個數，自乘等於 ' + (base * base) + '。', en: 'Find a number whose square is ' + (base * base) + '.' }
+    };
+  }
+
+  /* 全等三角形 */
+  function genCongruent(rng, o) {
+    var i = Math.floor(rng() * CONGRUENT_FACTS.length);
+    var q = CONGRUENT_FACTS[i];
+    return {
+      type: 'congruent',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'congruent', a: q.a, k: i },
+      hint: { zh: '全等三角形對應邊、對應角相等。', en: 'Congruent triangles have equal sides and angles.' }
+    };
+  }
+
+  /* 相似三角形 */
+  function genSimilar(rng, o) {
+    var k = randInt(rng, 2, 5);
+    if (rng() < 0.5) {
+      return {
+        type: 'similar',
+        prompt: { zh: '把一個圖形放大 ' + k + ' 倍，對應邊是原來的幾倍？', en: 'A shape is enlarged by factor ' + k + '. Its sides are how many times the original?' },
+        visual: null,
+        answer: k,
+        math: { op: 'similar', mode: 'scale', k: k },
+        hint: { zh: '放大 k 倍，對應邊也是原來的 k 倍。', en: 'Enlarging by k makes sides k times longer.' }
+      };
+    }
+    var a = randInt(rng, 2, 5);
+    return {
+      type: 'similar',
+      prompt: { zh: '兩個相似三角形，對應邊分別是 ' + a + ' 和 ' + (a * k) + '，放大倍數是多少？', en: 'Two similar triangles have corresponding sides ' + a + ' and ' + (a * k) + '. What is the scale factor?' },
+      visual: null,
+      answer: k,
+      math: { op: 'similar', mode: 'ratio', a: a, k: k },
+      hint: { zh: '放大倍數 = 對應邊之比。', en: 'Scale factor = ratio of corresponding sides.' }
+    };
+  }
+
+  /* 四邊形 */
+  function genQuadshape(rng, o) {
+    var i = Math.floor(rng() * QUAD_FACTS.length);
+    var q = QUAD_FACTS[i];
+    return {
+      type: 'quadshape',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'quadshape', a: q.a, k: i },
+      hint: { zh: '想一想這個四邊形的性質。', en: 'Think about the quadrilateral\'s properties.' }
+    };
+  }
+
+  /* 圓柱體積 / 側面積（以 π 表示） */
+  function genCylinder(rng, o) {
+    var r = pick(rng, [2, 3, 4, 5]);
+    var h = pick(rng, [4, 5, 6, 8]);
+    var askVol = rng() < 0.5;
+    var coef = askVol ? r * r * h : 2 * r * h;
+    return {
+      type: 'cylinder',
+      prompt: { zh: '圓柱半徑 ' + r + ' cm、高 ' + h + ' cm，' + (askVol ? '體積' : '側面積') + '是多少？（以 π 表示）', en: 'A cylinder has radius ' + r + ' cm and height ' + h + ' cm. What is its ' + (askVol ? 'volume' : 'curved surface area') + '? (in terms of π)' },
+      visual: null,
+      answer: coef + 'π',
+      math: { op: 'cylinder', r: r, h: h, mode: askVol ? 'vol' : 'lat', coef: coef },
+      choices: circleChoices(rng, coef, 'π'),
+      hint: { zh: askVol ? '體積 = π r² h。' : '側面積 = 2π r h。', en: askVol ? 'Volume = π r² h.' : 'Curved surface area = 2π r h.' }
+    };
+  }
+
+  /* 單利息 */
+  function genSinterest(rng, o) {
+    var P = pick(rng, [1000, 2000, 5000]);
+    var r = pick(rng, [2, 4, 5, 10]);
+    var t = pick(rng, [1, 2, 3]);
+    return {
+      type: 'sinterest',
+      prompt: { zh: '本金 $' + P + '，年利率 ' + r + '%，' + t + ' 年的單利息是多少？', en: 'A principal of $' + P + ' earns ' + r + '% p.a. simple interest for ' + t + ' years. What is the interest?' },
+      visual: null,
+      answer: P * r * t / 100,
+      math: { op: 'sinterest', p: P, r: r, n: t },
+      hint: { zh: '單利息 = 本金 × 利率 × 年數。', en: 'Simple interest = principal × rate × years.' }
+    };
+  }
+
+  /* 展開（恆等式） */
+  function genExpand(rng, o) {
+    var a = randInt(rng, 1, 6), b = randInt(rng, 1, 6);
+    var askCoeff = rng() < 0.5;
+    return {
+      type: 'expand',
+      prompt: { zh: '展開 $(x + ' + a + ')(x + ' + b + ')$，' + (askCoeff ? '$x$ 的係數' : '常數項') + '是多少？', en: 'Expand $(x + ' + a + ')(x + ' + b + ')$. What is the ' + (askCoeff ? 'coefficient of $x$' : 'constant term') + '?' },
+      visual: null,
+      answer: askCoeff ? (a + b) : (a * b),
+      math: { op: 'expand', a: a, b: b, mode: askCoeff ? 'coeff' : 'const' },
+      hint: { zh: '(x + a)(x + b) = x² + (a+b)x + ab。', en: '(x + a)(x + b) = x² + (a+b)x + ab.' }
+    };
+  }
+
+  /* 圓形圖 */
+  function genPichart(rng, o) {
+    var pct = pick(rng, [10, 20, 25, 30, 40, 50, 75]);
+    return {
+      type: 'pichart',
+      prompt: { zh: '圓形圖中，佔 ' + pct + '% 的部分對應的圓心角是多少度？', en: 'In a pie chart, what central angle corresponds to ' + pct + '%?' },
+      visual: null,
+      answer: pct * 360 / 100,
+      math: { op: 'pichart', pct: pct },
+      hint: { zh: '圓心角 = 百分比 × 360°。', en: 'Central angle = percentage × 360°.' }
+    };
+  }
+
+  /* 量度誤差 */
+  function genApprox(rng, o) {
+    var unit = pick(rng, [10, 100, 1000]);
+    return {
+      type: 'approx',
+      prompt: { zh: '把數值四捨五入至最接近的 ' + unit + '，最大絕對誤差是多少？', en: 'When a number is rounded to the nearest ' + unit + ', what is the maximum absolute error?' },
+      visual: null,
+      answer: unit / 2,
+      math: { op: 'approx', a: unit },
+      hint: { zh: '最大誤差 = 單位的一半。', en: 'Max error = half of the unit.' }
+    };
+  }
+
   /* 回傳 { zh: [步驟...], en: [步驟...] }；不支援的題型回傳 null */
   function explain(p) {
     if (!p || !p.math) return null;
@@ -1877,6 +2050,56 @@
           zh: ['圓方程 x² + y² = r²，半徑 = r。', 'r² = ' + (m.r * m.r) + '，所以 r = ' + p.answer + '。'],
           en: ['Circle equation x² + y² = r², radius = r.', 'r² = ' + (m.r * m.r) + ', so r = ' + p.answer + '.']
         };
+      case 'parallel':
+        return {
+          zh: [m.mode === 'int' ? '同側內角互補（和 = 180°）。' : '平行線的同位角／內錯角相等。', m.mode === 'int' ? '180° − ' + m.a + '° = ' + p.answer + '°。' : '所以答案是 ' + p.answer + '°。'],
+          en: [m.mode === 'int' ? 'Co-interior angles sum to 180°.' : 'Corresponding / alternate angles are equal.', m.mode === 'int' ? '180° − ' + m.a + '° = ' + p.answer + '°.' : 'So the answer is ' + p.answer + '°.']
+        };
+      case 'sqrt':
+        return {
+          zh: ['找一個數，自乘等於 ' + (m.base * m.base) + '。', m.base + ' × ' + m.base + ' = ' + (m.base * m.base) + '，所以 = ' + p.answer + '。'],
+          en: ['Find a number whose square is ' + (m.base * m.base) + '.', m.base + ' × ' + m.base + ' = ' + (m.base * m.base) + ', so = ' + p.answer + '.']
+        };
+      case 'congruent':
+        return {
+          zh: ['全等三角形對應邊、對應角相等。', '答案是 ' + p.answer + '。'],
+          en: ['Congruent triangles have equal sides and angles.', 'The answer is ' + p.answer + '.']
+        };
+      case 'similar':
+        return {
+          zh: [m.mode === 'scale' ? '放大 k 倍，對應邊也是 k 倍。' : '放大倍數 = 對應邊之比。', '答案是 ' + p.answer + '。'],
+          en: [m.mode === 'scale' ? 'Enlarging by k makes sides k times longer.' : 'Scale factor = ratio of corresponding sides.', 'The answer is ' + p.answer + '.']
+        };
+      case 'quadshape':
+        return {
+          zh: ['想一想這個四邊形的性質。', '答案是 ' + p.answer + '。'],
+          en: ['Think about the quadrilateral\'s properties.', 'The answer is ' + p.answer + '.']
+        };
+      case 'cylinder':
+        return {
+          zh: [m.mode === 'vol' ? '體積 = π r² h。' : '側面積 = 2π r h。', '= ' + p.answer + '。'],
+          en: [m.mode === 'vol' ? 'Volume = π r² h.' : 'Curved surface area = 2π r h.', '= ' + p.answer + '.']
+        };
+      case 'sinterest':
+        return {
+          zh: ['單利息 = 本金 × 利率 × 年數。', '= ' + m.p + ' × ' + m.r + '% × ' + m.n + ' = ' + p.answer + '。'],
+          en: ['Simple interest = principal × rate × years.', '= ' + m.p + ' × ' + m.r + '% × ' + m.n + ' = ' + p.answer + '.']
+        };
+      case 'expand':
+        return {
+          zh: ['(x + a)(x + b) = x² + (a+b)x + ab。', m.mode === 'coeff' ? 'x 的係數 = ' + m.a + ' + ' + m.b + ' = ' + p.answer + '。' : '常數項 = ' + m.a + ' × ' + m.b + ' = ' + p.answer + '。'],
+          en: ['(x + a)(x + b) = x² + (a+b)x + ab.', m.mode === 'coeff' ? 'Coefficient of x = ' + m.a + ' + ' + m.b + ' = ' + p.answer + '.' : 'Constant term = ' + m.a + ' × ' + m.b + ' = ' + p.answer + '.']
+        };
+      case 'pichart':
+        return {
+          zh: ['圓心角 = 百分比 × 360°。', m.pct + '% × 360° = ' + p.answer + '°。'],
+          en: ['Central angle = percentage × 360°.', m.pct + '% × 360° = ' + p.answer + '°.']
+        };
+      case 'approx':
+        return {
+          zh: ['最大誤差 = 單位的一半。', m.a + ' ÷ 2 = ' + p.answer + '。'],
+          en: ['Max error = half of the unit.', m.a + ' ÷ 2 = ' + p.answer + '.']
+        };
       default:
         return null;
     }
@@ -1942,7 +2165,17 @@
     invvar: genInvvar,
     comb: genComb,
     range: genRange,
-    circleeq: genCircleeq
+    circleeq: genCircleeq,
+    parallel: genParallel,
+    sqrt: genSqrt,
+    congruent: genCongruent,
+    similar: genSimilar,
+    quadshape: genQuadshape,
+    cylinder: genCylinder,
+    sinterest: genSinterest,
+    expand: genExpand,
+    pichart: genPichart,
+    approx: genApprox
   };
 
   /* ---------------- 選項（干擾項）生成 ---------------- */
@@ -2041,6 +2274,15 @@
     if (p.type === 'comb') return 300;
     if (p.type === 'range') return 40;
     if (p.type === 'circleeq') return 15;
+    if (p.type === 'parallel') return 200;
+    if (p.type === 'sqrt') return 20;
+    if (p.type === 'congruent') return 10;
+    if (p.type === 'similar') return 10;
+    if (p.type === 'quadshape') return 10;
+    if (p.type === 'sinterest') return 2000;
+    if (p.type === 'expand') return 40;
+    if (p.type === 'pichart') return 300;
+    if (p.type === 'approx') return 600;
     return 99;
   }
 
@@ -2062,7 +2304,7 @@
       case 'comparegroup': return math.a + '_' + math.b + '_' + math.mode;
     }
     var parts = [math.op];
-    var keys = ['a', 'b', 'c', 'd', 'r', 'mode', 'form', 'n', 'x', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w', 'base', 'val', 'which', 'good', 'total', 'askSum', 'sum', 'prod', 'angle'];
+    var keys = ['a', 'b', 'c', 'd', 'r', 'h', 'mode', 'form', 'n', 'x', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w', 'base', 'val', 'which', 'good', 'total', 'askSum', 'sum', 'prod', 'angle'];
     keys.forEach(function (k) {
       if (math[k] != null) parts.push(k + '=' + math[k]);
     });

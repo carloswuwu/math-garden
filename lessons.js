@@ -432,6 +432,57 @@
       zh: { title: '分佈域', intro: '分佈域 = 最大值 − 最小值，量度數據的分散程度。', example: '3、7、5、9、1 的分佈域 = 9 − 1 = 8。', tip: '先找最大和最小值。' },
       en: { title: 'Range', intro: 'Range = max − min; it measures the spread of data.', example: 'Range of 3, 7, 5, 9, 1 = 9 − 1 = 8.', tip: 'Find the max and min first.' },
       visual: null
+    },
+
+    'ms.s1.parallel': {
+      zh: { title: '角與平行線', intro: '平行線被截線所截：同位角相等、內錯角相等、同側內角互補（和 = 180°）。', example: '若一個同位角是 65°，另一個也是 65°。', tip: '先分清是同位角、內錯角還是同側內角。' },
+      en: { title: 'Angles & Parallel Lines', intro: 'With parallel lines: corresponding and alternate angles are equal; co-interior angles sum to 180°.', example: 'If one corresponding angle is 65°, the other is also 65°.', tip: 'First identify the angle type.' },
+      visual: null
+    },
+    'ms.s1.sqrt': {
+      zh: { title: '平方根', intro: '√x 就是問「哪個數自乘等於 x」。', example: '√64 = 8，因為 8 × 8 = 64。', tip: '背熟常見平方數：1、4、9、16、25、36、49、64、81、100。' },
+      en: { title: 'Square Roots', intro: '√x asks "what number squared equals x?".', example: '√64 = 8 because 8 × 8 = 64.', tip: 'Learn the squares: 1, 4, 9, 16, 25, 36, 49, 64, 81, 100.' },
+      visual: null
+    },
+    'ms.s2.congruent': {
+      zh: { title: '全等三角形', intro: '全等三角形形狀和大小完全相同，對應邊和對應角相等。', example: '判定方法：SSS、SAS、ASA、AAS、RHS。', tip: '全等 = 完全一樣（形狀 + 大小）。' },
+      en: { title: 'Congruent Triangles', intro: 'Congruent triangles are identical in shape and size; corresponding sides and angles are equal.', example: 'Conditions: SSS, SAS, ASA, AAS, RHS.', tip: 'Congruent = exactly the same (shape + size).' },
+      visual: null
+    },
+    'ms.s2.similar': {
+      zh: { title: '相似三角形', intro: '相似圖形形狀相同、大小不同，對應邊成比例。', example: '放大 3 倍，對應邊是原來的 3 倍。', tip: '相似 = 形狀相同（大小可不同）。' },
+      en: { title: 'Similar Triangles', intro: 'Similar shapes have the same shape but different size; corresponding sides are proportional.', example: 'Enlarging by 3 makes sides 3 times longer.', tip: 'Similar = same shape (size may differ).' },
+      visual: null
+    },
+    'ms.s2.quad': {
+      zh: { title: '四邊形', intro: '平行四邊形有兩組平行對邊；梯形只有一組。', example: '正方形有 4 條相等的邊。', tip: '記住各四邊形的邊和角性質。' },
+      en: { title: 'Quadrilaterals', intro: 'A parallelogram has two pairs of parallel sides; a trapezium has one.', example: 'A square has 4 equal sides.', tip: 'Remember the side and angle properties.' },
+      visual: null
+    },
+    'ms.s2.sinterest': {
+      zh: { title: '單利息', intro: '單利息 = 本金 × 年利率 × 年數。', example: '本金 $1000、年利率 5%、2 年：利息 = 1000 × 5% × 2 = $100。', tip: '記住公式：I = P × r × t。' },
+      en: { title: 'Simple Interest', intro: 'Simple interest = principal × rate × years.', example: '$1000 at 5% for 2 years: interest = 1000 × 5% × 2 = $100.', tip: 'Remember: I = P × r × t.' },
+      visual: null
+    },
+    'ms.s2.approx': {
+      zh: { title: '量度誤差', intro: '四捨五入至最接近的某單位，最大絕對誤差 = 單位的一半。', example: '四捨五入至最接近的 10，最大誤差 = 5。', tip: '最大誤差 = 單位 ÷ 2。' },
+      en: { title: 'Errors in Measurement', intro: 'When rounded to a unit, the max absolute error = half the unit.', example: 'Rounded to the nearest 10, max error = 5.', tip: 'Max error = unit ÷ 2.' },
+      visual: null
+    },
+    'ms.s3.cylinder': {
+      zh: { title: '圓柱體積', intro: '圓柱體積 = π r² h；側面積 = 2π r h。', example: '半徑 3、高 5：體積 = π × 9 × 5 = 45π。', tip: '答案用 π 表示即可。' },
+      en: { title: 'Volume of Cylinder', intro: 'Volume = π r² h; curved surface area = 2π r h.', example: 'Radius 3, height 5: volume = π × 9 × 5 = 45π.', tip: 'Leave answers in terms of π.' },
+      visual: null
+    },
+    'ms.s3.expand': {
+      zh: { title: '展開（恆等式）', intro: '(x + a)(x + b) = x² + (a+b)x + ab。', example: '(x + 3)(x + 2) = x² + 5x + 6。', tip: 'x 的係數 = a + b，常數項 = a × b。' },
+      en: { title: 'Expanding Binomials', intro: '(x + a)(x + b) = x² + (a+b)x + ab.', example: '(x + 3)(x + 2) = x² + 5x + 6.', tip: 'Coefficient of x = a + b; constant = a × b.' },
+      visual: null
+    },
+    'ms.s3.pichart': {
+      zh: { title: '圓形圖', intro: '圓形圖中，每部分的圓心角 = 百分比 × 360°。', example: '佔 25% 的部分，圓心角 = 25% × 360° = 90°。', tip: '整個圓 = 360°。' },
+      en: { title: 'Pie Charts', intro: 'In a pie chart, each sector\'s central angle = percentage × 360°.', example: '25% → central angle = 25% × 360° = 90°.', tip: 'A full circle is 360°.' },
+      visual: null
     }
   };
 

@@ -98,6 +98,16 @@ function computeAnswer(math) {
   }
   if (math.op === 'range') { var ar = math.nums; return Math.max.apply(null, ar) - Math.min.apply(null, ar); }
   if (math.op === 'circleeq') return math.r;
+  if (math.op === 'parallel') return math.mode === 'int' ? 180 - math.a : math.a;
+  if (math.op === 'sqrt') return math.base;
+  if (math.op === 'congruent') return math.a;
+  if (math.op === 'similar') return math.k;
+  if (math.op === 'quadshape') return math.a;
+  if (math.op === 'cylinder') return math.coef + 'π';
+  if (math.op === 'sinterest') return math.p * math.r * math.n / 100;
+  if (math.op === 'expand') return math.mode === 'coeff' ? math.a + math.b : math.a * math.b;
+  if (math.op === 'pichart') return math.pct * 360 / 100;
+  if (math.op === 'approx') return math.a / 2;
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -176,6 +186,16 @@ const SKILLS = {
   comb:           { id: 't.comb',      types: ['comb'],                      levels: [{}] },
   range:          { id: 't.range',     types: ['range'],                     levels: [{}] },
   circleeq:       { id: 't.ceq',       types: ['circleeq'],                  levels: [{}] },
+  parallel:       { id: 't.par',       types: ['parallel'],                  levels: [{}] },
+  sqrt:           { id: 't.sqrt',      types: ['sqrt'],                      levels: [{}] },
+  congruent:      { id: 't.cong',      types: ['congruent'],                 levels: [{}] },
+  similar:        { id: 't.sim',       types: ['similar'],                   levels: [{}] },
+  quadshape:      { id: 't.quadshape', types: ['quadshape'],                 levels: [{}] },
+  cylinder:       { id: 't.cyl',       types: ['cylinder'],                  levels: [{}] },
+  sinterest:      { id: 't.si',        types: ['sinterest'],                 levels: [{}] },
+  expand:         { id: 't.exp',       types: ['expand'],                    levels: [{}] },
+  pichart:        { id: 't.pie',       types: ['pichart'],                   levels: [{}] },
+  approx:         { id: 't.approx',    types: ['approx'],                    levels: [{}] },
 };
 
 const N = 400; // 每個類型的抽樣數量
@@ -351,7 +371,8 @@ for (let seed = 1; seed <= N; seed++) {
     'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
     'triangle', 'circle', 'volume', 'coord',
     'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
-    'oddeven', 'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq'];
+    'oddeven', 'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq',
+    'parallel', 'sqrt', 'congruent', 'similar', 'quadshape', 'cylinder', 'sinterest', 'expand', 'pichart', 'approx'];
   supported.forEach((t) => {
     for (let seed = 1; seed <= 60; seed++) {
       const p = C.generateProblem(SKILLS[t], { seed });
