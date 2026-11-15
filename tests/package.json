@@ -1,0 +1,12 @@
+{
+  "name": "math-kid-tests",
+  "version": "1.0.0",
+  "private": true,
+  "description": "數學樂園 · Math Garden 的開發測試依賴",
+  "devDependencies": {
+    "jsdom": "25.0.1"
+  },
+  "dependencies": {
+    "chinese-conv": "^4.1.0"
+  }
+}

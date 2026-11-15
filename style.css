@@ -1,0 +1,284 @@
+/* ================= 數學樂園 · Math Garden =================
+   Apple 風格、大號觸控目標、自動淺色/深色、響應式。 */
+
+:root {
+  --bg: #F2F2F7;
+  --card: #FFFFFF;
+  --card-2: #FFFFFF;
+  --text: #1C1C1E;
+  --text-2: #6E6E73;
+  --sep: rgba(60, 60, 67, 0.12);
+  --accent: #007AFF;
+  --green: #34C759;
+  --orange: #FF9500;
+  --red: #FF3B30;
+  --purple: #AF52DE;
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  --radius: 20px;
+  --radius-s: 14px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
+}
+/* 深色主題：手動選擇 dark，或 auto 時跟隨系統 */
+:root[data-theme="dark"] {
+  --bg: #000000;
+  --card: #1C1C1E;
+  --card-2: #2C2C2E;
+  --text: #F2F2F7;
+  --text-2: #AEAEB2;
+  --sep: rgba(255, 255, 255, 0.12);
+  --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] {
+    --bg: #000000;
+    --card: #1C1C1E;
+    --card-2: #2C2C2E;
+    --text: #F2F2F7;
+    --text-2: #AEAEB2;
+    --sep: rgba(255, 255, 255, 0.12);
+    --shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+/* 關鍵修復：帶 hidden 屬性的元素必須真正隱藏（避免被 display 覆蓋擋住點擊） */
+[hidden] { display: none !important; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1.45;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+h1, h2, h3, p { margin: 0; }
+
+.app { max-width: 720px; margin: 0 auto; padding: 0 16px 40px; }
+
+/* ---------- 頂欄 ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 0;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+}
+.topbar-title { flex: 1; font-weight: 700; font-size: 19px; }
+.topbar-right { display: flex; align-items: center; gap: 6px; }
+.topbar-chip {
+  font-size: 13px; font-weight: 600; padding: 5px 10px;
+  background: var(--card); border: 1px solid var(--sep); border-radius: 999px;
+}
+.icon-btn {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--card); border: 1px solid var(--sep);
+}
+.icon-btn svg { width: 20px; height: 20px; }
+#langBtn { width: auto; padding: 0 12px; font-size: 14px; font-weight: 600; }
+
+/* ---------- 屏幕 ---------- */
+.screen { padding-top: 8px; }
+.screen[hidden] { display: none; }
+.page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.page-sub { color: var(--text-2); font-size: 15px; margin: 4px 0 20px; }
+
+/* ---------- 首頁：階段卡片 ---------- */
+.stage-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.stage-card {
+  text-align: left; padding: 18px 16px; border-radius: var(--radius);
+  background: var(--card); box-shadow: var(--shadow); border: 1px solid var(--sep);
+  transition: transform 0.12s ease;
+}
+.stage-card:active { transform: scale(0.97); }
+.stage-card .emoji { font-size: 32px; display: block; margin-bottom: 8px; }
+.stage-card .name { font-size: 18px; font-weight: 700; }
+.stage-card .desc { font-size: 12.5px; color: var(--text-2); margin-top: 3px; min-height: 34px; }
+.stage-card .stage-count { display: block; font-size: 12px; font-weight: 700; color: var(--text-2); margin-top: 10px; }
+
+/* ---------- 主題 / 技能 ---------- */
+.topic-block { margin-bottom: 18px; }
+.topic-title { font-size: 15px; font-weight: 700; color: var(--text-2); margin: 6px 2px 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+.skill-card {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border: 1px solid var(--sep); border-radius: var(--radius);
+  padding: 14px 14px; margin-bottom: 10px; box-shadow: var(--shadow);
+}
+.skill-card.locked { opacity: 0.5; }
+.skill-card .badge {
+  width: 46px; height: 46px; border-radius: 14px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--stage-color, var(--accent)); color: #fff; font-weight: 800; font-size: 20px;
+}
+.skill-card .info { flex: 1; min-width: 0; }
+.skill-card .info .name { font-weight: 700; font-size: 16.5px; }
+.skill-card .info .goal { font-size: 13px; color: var(--text-2); margin-top: 2px; }
+.skill-card .stars { font-size: 13px; font-weight: 700; color: var(--orange); white-space: nowrap; }
+.skill-card .go {
+  flex: none; padding: 9px 14px; border-radius: 12px; font-weight: 700; font-size: 14px;
+  background: var(--accent); color: #fff;
+}
+.skill-card .go.secondary { background: var(--card-2); color: var(--accent); border: 1px solid var(--sep); }
+
+/* ---------- 小課堂 ---------- */
+.lesson-card {
+  background: var(--card); border: 1px solid var(--sep); border-radius: var(--radius);
+  padding: 20px; box-shadow: var(--shadow); margin-bottom: 14px;
+}
+.lesson-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+.lesson-label { font-size: 12px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 4px; }
+.lesson-text { font-size: 16px; }
+.lesson-visual { margin: 14px 0 4px; display: flex; justify-content: center; }
+.lesson-actions { display: flex; gap: 10px; margin-top: 8px; }
+.lesson-actions .btn { flex: 1; }
+
+/* ---------- 按鈕 ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 14px 18px; border-radius: 14px; font-size: 17px; font-weight: 700;
+  background: var(--accent); color: #fff; min-height: 50px;
+}
+.btn.secondary { background: var(--card-2); color: var(--accent); border: 1px solid var(--sep); }
+.btn.big { width: 100%; font-size: 18px; min-height: 56px; }
+
+/* ---------- 練習 / 測驗 ---------- */
+.practice-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.practice-head .p-title { font-weight: 800; font-size: 19px; }
+.practice-head .p-count { margin-left: auto; color: var(--text-2); font-size: 14px; }
+.progress-bar { height: 10px; border-radius: 6px; background: var(--sep); overflow: hidden; margin-bottom: 16px; }
+.progress-bar > i { display: block; height: 100%; background: var(--green); border-radius: 6px; transition: width 0.3s ease; }
+
+.prompt-card {
+  background: var(--card); border: 1px solid var(--sep); border-radius: var(--radius);
+  padding: 22px 18px; box-shadow: var(--shadow); text-align: center; margin-bottom: 14px;
+}
+.prompt-text { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.3; }
+.prompt-visual { margin-top: 16px; display: flex; justify-content: center; }
+.prompt-visual svg { max-width: 100%; height: auto; }
+
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.choice {
+  min-height: 64px; border-radius: 16px; font-size: 24px; font-weight: 800;
+  background: var(--card); border: 2px solid var(--sep); box-shadow: var(--shadow);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform 0.1s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.choice:active { transform: scale(0.96); }
+.choice.correct { background: var(--green); border-color: var(--green); color: #fff; }
+.choice.wrong { background: var(--red); border-color: var(--red); color: #fff; animation: shake 0.35s; }
+.choice:disabled { opacity: 0.85; cursor: default; }
+.choice .frac-mini { font-size: 13px; opacity: 0.85; }
+
+.feedback {
+  min-height: 34px; text-align: center; font-size: 19px; font-weight: 800; margin: 14px 0 4px;
+}
+.feedback.ok { color: var(--green); }
+.feedback.no { color: var(--red); }
+
+.practice-footer { display: flex; gap: 10px; margin-top: 10px; }
+.practice-footer .btn { flex: 1; }
+.practice-footer .btn.hint { flex: 0 0 auto; background: var(--card-2); color: var(--orange); border: 1px solid var(--sep); }
+.hint-box { background: var(--card); border: 1px solid var(--sep); border-radius: var(--radius-s); padding: 12px 14px; font-size: 15px; color: var(--text-2); margin-top: 10px; }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(6px); }
+  75% { transform: translateX(-4px); }
+}
+
+/* ---------- 結果 / 證書 ---------- */
+.result-card {
+  text-align: center; background: var(--card); border: 1px solid var(--sep);
+  border-radius: var(--radius); padding: 30px 20px; box-shadow: var(--shadow);
+}
+.result-card .big { font-size: 56px; margin-bottom: 4px; }
+.result-card h2 { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+.result-card .score { font-size: 40px; font-weight: 800; color: var(--accent); margin: 8px 0; }
+.result-stars { font-size: 34px; letter-spacing: 4px; margin: 8px 0 4px; }
+.result-actions { display: flex; gap: 10px; margin-top: 20px; }
+.result-actions .btn { flex: 1; }
+
+/* ---------- 家長中心 / 設置 ---------- */
+.panel { background: var(--card); border: 1px solid var(--sep); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+.panel h2 { font-size: 18px; font-weight: 800; margin-bottom: 12px; }
+.stat-row { display: flex; gap: 10px; margin-bottom: 8px; }
+.stat { flex: 1; background: var(--card-2); border-radius: var(--radius-s); padding: 14px; text-align: center; }
+.stat .v { font-size: 26px; font-weight: 800; }
+.stat .k { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+.row-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--sep); }
+.row-item:last-child { border-bottom: none; }
+.row-item .nm { flex: 1; font-weight: 600; font-size: 15px; }
+.row-item .bar { width: 110px; height: 8px; border-radius: 5px; background: var(--sep); overflow: hidden; }
+.row-item .bar > i { display: block; height: 100%; background: var(--green); }
+.row-item .pc { width: 42px; text-align: right; font-size: 13px; color: var(--text-2); }
+.settings-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--sep); }
+.settings-row:last-child { border-bottom: none; }
+.settings-row .k { font-weight: 600; }
+.switch { width: 52px; height: 32px; border-radius: 999px; background: var(--sep); position: relative; transition: background 0.2s; }
+.switch.on { background: var(--green); }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.switch.on::after { transform: translateX(20px); }
+.danger-btn { width: 100%; background: var(--red); }
+.seg { display: flex; background: var(--card-2); border: 1px solid var(--sep); border-radius: 12px; padding: 3px; gap: 3px; }
+.seg-btn { padding: 8px 12px; border-radius: 9px; font-size: 14px; font-weight: 600; color: var(--text-2); }
+.seg-btn.on { background: var(--card); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
+/* ---------- 彈窗 / 提示 ---------- */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 50; background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.modal { background: var(--card); border-radius: var(--radius); padding: 22px; max-width: 400px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.modal h3 { font-size: 18px; font-weight: 800; margin-bottom: 8px; }
+.modal p { color: var(--text-2); font-size: 15px; margin-bottom: 18px; }
+.modal .btn-row { display: flex; gap: 10px; }
+.modal .btn-row .btn { flex: 1; }
+
+.toast {
+  position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%);
+  background: var(--card-2); color: var(--text); border: 1px solid var(--sep);
+  padding: 12px 20px; border-radius: 999px; font-weight: 600; font-size: 15px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25); z-index: 60; white-space: nowrap;
+}
+
+/* ---------- 彩帶 ---------- */
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 70; overflow: hidden; }
+.confetti-piece {
+  position: absolute; top: -20px; border-radius: 2px;
+  animation: confetti-fall linear forwards;
+}
+@keyframes confetti-fall {
+  to { transform: translateY(110vh) rotate(720deg); opacity: 0.9; }
+}
+
+/* ---------- 視覺組件（圓點 / 網格 / 分數） ---------- */
+.dots { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 340px; }
+.dot { width: 22px; height: 22px; border-radius: 50%; background: #FF9500; display: inline-block; }
+.dot.green { background: #34C759; }
+.dot.gray { background: #C7C7CC; }
+.dot-group { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.dot-label { font-size: 16px; font-weight: 800; color: var(--text-2); }
+.op-symbol { font-size: 32px; font-weight: 800; align-self: center; }
+.compare-wrap { display: flex; gap: 26px; align-items: center; justify-content: center; }
+.counters-wrap { display: flex; gap: 18px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.grid-wrap { display: grid; gap: 6px; }
+.grid-cell { width: 22px; height: 22px; border-radius: 6px; background: #5856D6; }
+.swatch { width: 22px; height: 22px; border-radius: 50%; display: inline-block; flex: none; }
+.color-choice { flex-direction: row; gap: 10px; justify-content: center; }
+.big-num { font-size: 44px; font-weight: 800; }
+
+/* ---------- 響應式 ---------- */
+@media (max-width: 480px) {
+  .stage-grid { gap: 10px; }
+  .prompt-text { font-size: 26px; }
+  .choice { min-height: 58px; font-size: 22px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
