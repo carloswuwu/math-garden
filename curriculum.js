@@ -346,7 +346,7 @@
     /* ===================== 中一（S1） ===================== */
 
     'ms.s1.directed': {
-      id: 'ms.s1.directed', stage: 'ms', order: 1,
+      id: 'ms.s1.directed', stage: 'ms1', order: 1,
       zh: { name: '有向數', goal: '會做正負數的加、減、乘、除。' },
       en: { name: 'Directed Numbers', goal: 'Add, subtract, multiply and divide positive and negative numbers.' },
       lesson: 'ms.s1.directed',
@@ -355,7 +355,7 @@
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'ms.s1.exprsub': {
-      id: 'ms.s1.exprsub', stage: 'ms', order: 2,
+      id: 'ms.s1.exprsub', stage: 'ms1', order: 2,
       zh: { name: '代數式求值', goal: '會把已知數代入代數式求值。' },
       en: { name: 'Substitution', goal: 'Evaluate an algebraic expression for a given value.' },
       lesson: 'ms.s1.exprsub',
@@ -364,7 +364,7 @@
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'ms.s1.linear': {
-      id: 'ms.s1.linear', stage: 'ms', order: 3,
+      id: 'ms.s1.linear', stage: 'ms1', order: 3,
       zh: { name: '一元一次方程', goal: '會解兩步的一元一次方程。' },
       en: { name: 'Linear Equations', goal: 'Solve one-variable linear equations in two steps.' },
       lesson: 'ms.s1.linear',
@@ -376,7 +376,7 @@
     /* ===================== 中二（S2） ===================== */
 
     'ms.s2.pythagoras': {
-      id: 'ms.s2.pythagoras', stage: 'ms', order: 4,
+      id: 'ms.s2.pythagoras', stage: 'ms2', order: 1,
       zh: { name: '畢氏定理', goal: '會用畢氏定理求直角三角形的邊長。' },
       en: { name: 'Pythagoras Theorem', goal: 'Use Pythagoras to find sides of a right triangle.' },
       lesson: 'ms.s2.pythagoras',
@@ -385,7 +385,7 @@
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'ms.s2.simul': {
-      id: 'ms.s2.simul', stage: 'ms', order: 5,
+      id: 'ms.s2.simul', stage: 'ms2', order: 2,
       zh: { name: '聯立方程', goal: '會解簡單的二元一次方程組。' },
       en: { name: 'Simultaneous Equations', goal: 'Solve simple simultaneous linear equations.' },
       lesson: 'ms.s2.simul',
@@ -397,7 +397,7 @@
     /* ===================== 中三（S3） ===================== */
 
     'ms.s3.indices': {
-      id: 'ms.s3.indices', stage: 'ms', order: 6,
+      id: 'ms.s3.indices', stage: 'ms3', order: 1,
       zh: { name: '指數定律', goal: '會用指數定律計算乘方與同底數相乘。' },
       en: { name: 'Laws of Indices', goal: 'Use index laws to evaluate powers and same-base products.' },
       lesson: 'ms.s3.indices',
@@ -406,7 +406,7 @@
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'ms.s3.inequality': {
-      id: 'ms.s3.inequality', stage: 'ms', order: 7,
+      id: 'ms.s3.inequality', stage: 'ms3', order: 2,
       zh: { name: '一元一次不等式', goal: '會解簡單的一元一次不等式。' },
       en: { name: 'Linear Inequalities', goal: 'Solve simple linear inequalities in one variable.' },
       lesson: 'ms.s3.inequality',
@@ -493,11 +493,18 @@
         { id: 'g6.alg', zh: '代數', en: 'Algebra', skills: ['g6.equation'] },
         { id: 'g6.num', zh: '數與比例', en: 'Numbers & Ratio', skills: ['g6.percent', 'g6.ratio'] }
       ] },
-    { id: 'ms', zh: '初中', en: 'Junior Secondary', desc: { zh: '有向數、代數、方程、畢氏定理、指數、不等式', en: 'Directed numbers, algebra, equations, Pythagoras, indices, inequalities' }, color: '#FF3B30', emoji: '🎓',
+    { id: 'ms1', zh: '中一', en: 'S1', desc: { zh: '有向數、代數式求值、一元一次方程', en: 'Directed numbers, substitution, linear equations' }, color: '#FF3B30', emoji: '🎓',
       topics: [
-        { id: 'ms.s1', zh: '中一', en: 'S1', skills: ['ms.s1.directed', 'ms.s1.exprsub', 'ms.s1.linear'] },
-        { id: 'ms.s2', zh: '中二', en: 'S2', skills: ['ms.s2.pythagoras', 'ms.s2.simul'] },
-        { id: 'ms.s3', zh: '中三', en: 'S3', skills: ['ms.s3.indices', 'ms.s3.inequality'] }
+        { id: 'ms1.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s1.directed', 'ms.s1.exprsub', 'ms.s1.linear'] }
+      ] },
+    { id: 'ms2', zh: '中二', en: 'S2', desc: { zh: '畢氏定理、聯立方程', en: 'Pythagoras, simultaneous equations' }, color: '#FF6B35', emoji: '📐',
+      topics: [
+        { id: 'ms2.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s2.pythagoras'] },
+        { id: 'ms2.alg', zh: '代數', en: 'Algebra', skills: ['ms.s2.simul'] }
+      ] },
+    { id: 'ms3', zh: '中三', en: 'S3', desc: { zh: '指數定律、一元一次不等式', en: 'Laws of indices, linear inequalities' }, color: '#FF8C42', emoji: '🧮',
+      topics: [
+        { id: 'ms3.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s3.indices', 'ms.s3.inequality'] }
       ] },
     { id: 'hs', zh: '高中', en: 'Senior Secondary', desc: { zh: '代數 II、三角、微積分預備', en: 'Algebra II, trig, precalculus' }, color: '#A2845E', emoji: '🧠',
       topics: [
