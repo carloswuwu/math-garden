@@ -7,7 +7,7 @@ const { JSDOM } = require('jsdom');
 
 const ROOT = path.join(__dirname, '..');
 const HTML = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-const SCRIPTS = ['math-core.js', 'i18n.js', 'curriculum.js', 'curriculum-outline.js', 'lessons.js', 'app.js'];
+const SCRIPTS = ['math-core.js', 'i18n.js', 'curriculum.js', 'curriculum-outline.js', 'formulas.js', 'lessons.js', 'app.js'];
 
 let checks = 0;
 function check(cond, msg) { checks++; assert.ok(cond, msg); }
@@ -161,6 +161,23 @@ async function main() {
   check(d6.querySelectorAll('#screen-outline .outline-stage').length >= 4, '應列出至少 4 個學習階段');
   check(d6.body.textContent.includes('第一學習階段'), '應包含第一學習階段');
   check(d6.body.textContent.includes('第四學習階段'), '應包含第四學習階段');
+
+  /* 12. 公式一覽 */
+  const ctx7 = boot();
+  const d7 = ctx7.d;
+  d7.getElementById('homeFormulasBtn').click();
+  check(!d7.getElementById('screen-formulas').hidden, '公式頁應顯示');
+  check(d7.querySelectorAll('#screen-formulas .formula-latex').length >= 10, '應列出多條公式');
+
+  /* 13. 綜合考試（模擬試卷） */
+  const ctx8 = boot();
+  const d8 = ctx8.d;
+  d8.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  const examBtn = d8.getElementById('stageExamBtn');
+  check(!!examBtn, '年級頁應有「綜合考試」按鈕');
+  examBtn.click();
+  check(!d8.getElementById('screen-practice').hidden, '綜合考試應進入作答畫面');
+  check(d8.body.textContent.includes('綜合考試'), '作答畫面應顯示「綜合考試」');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);

@@ -58,7 +58,11 @@
 
     colors: { green: '綠色', orange: '橙色' },
 
-    outline: { title: '課程大綱' },
+    outline: { title: '課程大綱', covered: '本 app 已有練習' },
+
+    formulas: { title: '公式一覽' },
+
+    exam: { title: '綜合考試', result: '模擬試卷完成', empty: '此年級暫無可考題目' },
 
     common: {
       cancel: '取消', confirm: '確定', close: '關閉', of: '共', masteredShort: '已掌握'
@@ -118,7 +122,11 @@
 
     colors: { green: 'Green', orange: 'Orange' },
 
-    outline: { title: 'Curriculum Outline' },
+    outline: { title: 'Curriculum Outline', covered: 'covered in this app' },
+
+    formulas: { title: 'Formula Sheet' },
+
+    exam: { title: 'Mock Exam', result: 'Mock exam complete', empty: 'No questions for this grade yet' },
 
     common: {
       cancel: 'Cancel', confirm: 'OK', close: 'Close', of: 'of', masteredShort: 'Mastered'

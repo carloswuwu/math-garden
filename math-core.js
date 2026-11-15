@@ -295,7 +295,7 @@
 
   function genWord(rng, o) {
     var op = pick(rng, o.ops || ['add', 'sub', 'mul']);
-    var a, b, answer, prompt, mathOp;
+    var a, b, c = null, answer, prompt, mathOp;
     if (op === 'add') {
       a = randInt(rng, o.min != null ? o.min : 1, o.max != null ? o.max : 20);
       b = randInt(rng, 1, o.max != null ? o.max : 20);
@@ -342,6 +342,36 @@
         zh: '一件貨品原價 $' + orig + '，減價 ' + off + '% 後售價多少？',
         en: 'An item costs $' + orig + ' and is reduced by ' + off + '%. What is the new price?'
       };
+    } else if (op === 'speed') {
+      var sp = pick(rng, [20, 40, 60, 80, 100]);
+      var min = pick(rng, [30, 60, 90, 120]);
+      a = sp; b = min;
+      answer = sp * min / 60;
+      mathOp = 'wspeed';
+      prompt = {
+        zh: '一輛車以 ' + sp + ' km/h 的速率行駛 ' + min + ' 分鐘，共行了多少 km？',
+        en: 'A car travels at ' + sp + ' km/h for ' + min + ' minutes. How far does it travel?'
+      };
+    } else if (op === 'profit') {
+      var cost = pick(rng, [100, 200, 500]);
+      var pp = pick(rng, [10, 20, 25, 50]);
+      a = cost; b = pp;
+      answer = pp;
+      mathOp = 'wprofit';
+      prompt = {
+        zh: '一件貨品成本 $' + cost + '，以 $' + Math.round(cost * (1 + pp / 100)) + ' 出售，盈利百分率是多少？',
+        en: 'An item costs $' + cost + ' and is sold for $' + Math.round(cost * (1 + pp / 100)) + '. What is the profit percentage?'
+      };
+    } else if (op === 'compound') {
+      var prin = pick(rng, [1000, 2000]);
+      var rate = pick(rng, [10, 20]);
+      a = prin; b = rate; c = 2;
+      answer = Math.round(prin * Math.pow(1 + rate / 100, c));
+      mathOp = 'wcompound';
+      prompt = {
+        zh: '把 $' + prin + ' 存入銀行，年利率 ' + rate + '%（複利息），' + c + ' 年後本利和是多少？',
+        en: '$' + prin + ' is deposited at ' + rate + '% p.a. compounded annually. What is the amount after ' + c + ' years?'
+      };
     } else {
       var p = randInt(rng, 1, 3), q = randInt(rng, 1, 3);
       while (q === p) q = randInt(rng, 1, 3);
@@ -360,7 +390,7 @@
       prompt: prompt,
       visual: null,
       answer: answer,
-      math: { op: mathOp, a: a, b: b },
+      math: { op: mathOp, a: a, b: b, c: c },
       hint: { zh: '先想想用哪種運算。', en: 'Decide which operation to use.' }
     };
   }
@@ -1316,6 +1346,24 @@
           return {
             zh: ['先求一份：' + m.a + ' ÷ 總份數。', '乙佔一份的比例，答案 = ' + p.answer + '。'],
             en: ['Find one share first.', 'B\'s share = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wspeed') {
+          return {
+            zh: ['距離 = 速率 × 時間。', '= ' + m.a + ' × (' + m.b + '/60) = ' + p.answer + ' km。'],
+            en: ['Distance = speed × time.', '= ' + m.a + ' × (' + m.b + '/60) = ' + p.answer + ' km.']
+          };
+        }
+        if (m.op === 'wprofit') {
+          return {
+            zh: ['盈利 = 售價 − 成本；盈利百分率 = 盈利 ÷ 成本 × 100%。', '= ' + p.answer + '%。'],
+            en: ['Profit = selling − cost; profit % = profit ÷ cost × 100%.', '= ' + p.answer + '%.']
+          };
+        }
+        if (m.op === 'wcompound') {
+          return {
+            zh: ['本利和 = 本金 × (1 + 利率)^年數。', '= ' + m.a + ' × (1 + ' + m.b + '%)² = ' + p.answer + '。'],
+            en: ['Amount = principal × (1 + rate)^years.', '= ' + m.a + ' × (1 + ' + m.b + '%)² = ' + p.answer + '.']
           };
         }
         return null;

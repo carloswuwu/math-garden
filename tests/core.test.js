@@ -65,6 +65,9 @@ function computeAnswer(math) {
   if (math.op === 'warea') return math.a * math.b;
   if (math.op === 'wpercent') return math.a * (100 - math.b) / 100;
   if (math.op === 'wratio') return math.b;
+  if (math.op === 'wspeed') return math.a * math.b / 60;
+  if (math.op === 'wprofit') return math.b;
+  if (math.op === 'wcompound') return Math.round(math.a * Math.pow(1 + math.b / 100, math.c));
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -122,7 +125,7 @@ const SKILLS = {
   circle:         { id: 't.circ',      types: ['circle'],                   levels: [{}] },
   volume:         { id: 't.vol',       types: ['volume'],                   levels: [{}] },
   coord:          { id: 't.coord',     types: ['coord'],                    levels: [{}] },
-  word2:          { id: 't.word2',     types: ['word'],                     levels: [{ ops: ['area', 'percent', 'ratio'], max: 1000, maxFactor: 9 }] },
+  word2:          { id: 't.word2',     types: ['word'],                     levels: [{ ops: ['area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }] },
 };
 
 const N = 400; // 每個類型的抽樣數量

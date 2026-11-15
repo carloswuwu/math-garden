@@ -9,10 +9,12 @@
   var I18N = window.I18N;
   var Curriculum = window.Curriculum;
   var CurriculumOutline = window.CurriculumOutline;
+  var Formulas = window.Formulas;
   var Lessons = window.Lessons;
 
   var STORE_KEY = 'mathpath.progress.v1';
   var QUIZ_LENGTH = 10;
+  var EXAM_LENGTH = 20;
 
   /* ---------------- 狀態 ---------------- */
   var state = {
@@ -39,7 +41,7 @@
 
   /* ---------------- DOM ---------------- */
   var $ = function (id) { return document.getElementById(id); };
-  var screens = ['home', 'stage', 'lesson', 'practice', 'parent', 'settings', 'outline'];
+  var screens = ['home', 'stage', 'lesson', 'practice', 'parent', 'settings', 'outline', 'formulas'];
 
   /* ---------------- 工具 ---------------- */
   function t(path, tokens) {
@@ -408,6 +410,7 @@
       case 'parent': title = t('parent.title'); break;
       case 'settings': title = t('settings.title'); break;
       case 'outline': title = t('outline.title'); break;
+      case 'formulas': title = t('formulas.title'); break;
     }
     $('topbarTitle').textContent = title;
   }
@@ -423,6 +426,7 @@
       case 'parent': renderHome(); break;
       case 'settings': renderHome(); break;
       case 'outline': renderHome(); break;
+      case 'formulas': renderHome(); break;
     }
   }
 
@@ -449,6 +453,7 @@
     html += '</div>' +
       '<p class="page-sub" style="margin-top:14px;font-size:13px">' + t('home.unlocked', { u: unlockedCount, t: realStages.length }) + '</p>' +
       '<p class="page-sub" style="font-size:13px;margin-bottom:14px">' + t('home.nextHint') + '</p>' +
+      '<button class="btn secondary big" id="homeFormulasBtn" type="button" style="margin-bottom:10px">📐 ' + t('formulas.title') + '</button>' +
       '<button class="btn secondary big" id="homeOutlineBtn" type="button" style="margin-bottom:10px">📚 ' + t('outline.title') + '</button>' +
       '<button class="btn secondary big" id="homeParentBtn" type="button">👨‍👩‍👦 ' + t('home.parent') + '</button>';
 
@@ -457,6 +462,7 @@
     $('screen-home').querySelectorAll('.stage-card').forEach(function (el) {
       el.addEventListener('click', function () { renderStage(el.getAttribute('data-stage')); });
     });
+    $('homeFormulasBtn').addEventListener('click', renderFormulas);
     $('homeOutlineBtn').addEventListener('click', renderOutline);
     $('homeParentBtn').addEventListener('click', renderParent);
   }
@@ -469,8 +475,10 @@
     var stage = getStage(stageId);
     var stats = stageSkillStats(stage);
 
+    var hasReal = stageSkills(stage).some(function (s) { return !s.scaffold && s.types && s.types.length; });
     var html = '<h1 class="page-title">' + stage.emoji + ' ' + L(stage) + '</h1>' +
-      '<p class="page-sub">' + L(stage.desc) + ' · ' + t('stage.unlockedCount', { u: stats.unlocked, t: stats.total }) + '</p>';
+      '<p class="page-sub">' + L(stage.desc) + ' · ' + t('stage.unlockedCount', { u: stats.unlocked, t: stats.total }) + '</p>' +
+      (hasReal ? '<button class="btn primary big" id="stageExamBtn" type="button" style="width:100%;margin-bottom:14px">📝 ' + t('exam.title') + '</button>' : '');
 
     var prevMastered = true;
     var idx = 0;
@@ -488,6 +496,8 @@
     });
 
     $('screen-stage').innerHTML = html;
+    var examBtn = $('stageExamBtn');
+    if (examBtn) examBtn.addEventListener('click', function () { renderGradeExam(stageId); });
     bindStageCards();
   }
 
@@ -667,12 +677,17 @@
   function currentProblem() { return state.problems[state.index]; }
 
   function renderQuestion(p) {
-    var isQuiz = state.mode === 'quiz';
-    var skill = getSkill(state.skillId);
+    var isQuiz = state.mode === 'quiz' || state.mode === 'exam';
+    var skill = state.mode === 'exam' ? null : getSkill(state.skillId);
 
     // 頭部
     var headHtml;
-    if (isQuiz) {
+    if (state.mode === 'exam') {
+      var examStage = getStage(state.examStage);
+      headHtml = '<div class="practice-head"><span class="p-title">📝 ' + t('exam.title') + ' · ' + L(examStage) + '</span>' +
+        '<span class="p-count">' + t('practice.question', { i: state.index + 1, n: state.problems.length }) + '</span></div>' +
+        '<div class="progress-bar"><i style="width:' + Math.round(state.index / state.problems.length * 100) + '%"></i></div>';
+    } else if (isQuiz) {
       var done = state.index;
       headHtml = '<div class="practice-head"><span class="p-title">' + t('quiz.title') + '</span>' +
         '<span class="p-count">' + t('practice.question', { i: state.index + 1, n: state.problems.length }) + '</span></div>' +
@@ -796,6 +811,8 @@
     if (state.index < state.problems.length) {
       state.locked = false;
       renderQuestion(state.problems[state.index]);
+    } else if (state.mode === 'exam') {
+      finishExam();
     } else {
       finishQuiz();
     }
@@ -827,6 +844,75 @@
 
     $('quizBack').addEventListener('click', function () { renderStage(state.stageId); });
     $('quizRetry').addEventListener('click', function () { startQuiz(state.skillId); });
+  }
+
+  /* ---------------- 綜合考試（模擬試卷） ---------------- */
+
+  function renderGradeExam(stageId) {
+    var stage = getStage(stageId);
+    state.examStage = stageId;
+    state.mode = 'exam';
+    state.skillId = null;
+    state.problems = buildGradeExam(stage, EXAM_LENGTH);
+    state.index = 0;
+    state.correct = 0;
+    state.results = [];
+    state.locked = false;
+    state.quizStart = Date.now();
+    show('practice');
+    if (!state.problems.length) { toast(t('exam.empty')); renderStage(stageId); return; }
+    renderQuestion(state.problems[0]);
+  }
+
+  function buildGradeExam(stage, n) {
+    var skills = stageSkills(stage).filter(function (s) { return !s.scaffold && s.types && s.types.length; });
+    if (!skills.length) return [];
+    var rng = MathCore.seedRandom(Date.now() & 0xffffffff);
+    var out = [];
+    var lastSigs = [];
+    var guard = 0;
+    var k = 0;
+    while (out.length < n && guard++ < n * 200) {
+      var skill = skills[k % skills.length];
+      k++;
+      var types = skill.types.map(function (x) { return typeof x === 'string' ? x : x.t; });
+      var ti = Math.floor(rng() * types.length);
+      var step = skillProgress(skill.id).difficultyStep || 0;
+      var p = MathCore.generateProblem(skill, { rng: rng, difficultyStep: step, typeIndex: ti });
+      if (lastSigs.indexOf(p.sig) === -1) {
+        p.skillId = skill.id;
+        out.push(p);
+        lastSigs.push(p.sig);
+        if (lastSigs.length > 4) lastSigs.shift();
+      }
+    }
+    for (var i = out.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var tmp = out[i]; out[i] = out[j]; out[j] = tmp;
+    }
+    return out;
+  }
+
+  function finishExam() {
+    var stage = getStage(state.examStage);
+    var grade = MathCore.gradeQuiz(state.results);
+    var seconds = Math.round((Date.now() - state.quizStart) / 1000);
+    var starsHtml = '';
+    for (var i = 1; i <= 3; i++) starsHtml += '<span style="opacity:' + (i <= grade.stars ? 1 : 0.2) + '">★</span>';
+    $('screen-practice').innerHTML =
+      '<div class="result-card">' +
+      '<div class="big">' + (grade.stars >= 2 ? '🎉' : (grade.stars >= 1 ? '👍' : '💪')) + '</div>' +
+      '<h2>' + t('exam.result') + '</h2>' +
+      '<p class="page-sub">' + L(stage) + '</p>' +
+      '<div class="score">' + t('quiz.score', { c: grade.correct, t: grade.total }) + '</div>' +
+      '<div class="result-stars">' + starsHtml + '</div>' +
+      '<p class="page-sub">' + Math.round(grade.percent * 100) + '% · ' + t('quiz.time') + '：' + Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0') + '</p>' +
+      '<div class="result-actions">' +
+      '<button class="btn secondary" id="examBack" type="button">' + t('quiz.back') + '</button>' +
+      '<button class="btn" id="examRetry" type="button">' + t('quiz.retry') + '</button>' +
+      '</div></div>';
+    $('examBack').addEventListener('click', function () { renderStage(state.examStage); });
+    $('examRetry').addEventListener('click', function () { renderGradeExam(state.examStage); });
   }
 
   /* ---------------- 家長中心 ---------------- */
@@ -978,6 +1064,28 @@
     });
   }
 
+  /* ---------------- 公式一覽（參考） ---------------- */
+
+  function renderFormulas() {
+    show('formulas');
+    var F = Formulas;
+    if (!F) { $('screen-formulas').innerHTML = '<p class="page-sub">—</p>'; return; }
+    var lang = state.lang === 'zh' ? 'zh' : 'en';
+    var html = '<h1 class="page-title">📐 ' + t('formulas.title') + '</h1>' +
+      '<p class="page-sub">' + esc(F.intro[lang]) + '</p>';
+    F.sections.forEach(function (sec) {
+      html += '<div class="outline-stage"><h2>' + esc(sec[lang]) + '</h2>';
+      sec.items.forEach(function (it) {
+        html += '<div class="formula-row">' +
+          '<div class="formula-name">' + esc(it[lang]) + '</div>' +
+          '<div class="formula-latex">' + renderMath('$' + it.latex + '$') + '</div>' +
+          '</div>';
+      });
+      html += '</div>';
+    });
+    $('screen-formulas').innerHTML = html;
+  }
+
   /* ---------------- 課程大綱（參考） ---------------- */
 
   function renderOutline() {
@@ -985,11 +1093,21 @@
     var o = CurriculumOutline;
     if (!o) { $('screen-outline').innerHTML = '<p class="page-sub">—</p>'; return; }
     var lang = state.lang === 'zh' ? 'zh' : 'en';
+    var KS_APP = { ks1: ['prek', 'g1', 'g2', 'g3'], ks2: ['g4', 'g5', 'g6'], js: ['ms1', 'ms2', 'ms3'], ss: ['hs1', 'hs2', 'hs3'] };
     var html = '<h1 class="page-title">📚 ' + t('outline.title') + '</h1>' +
       '<p class="page-sub">' + esc(o.intro[lang]) + '</p>' +
       '<p class="page-sub" style="font-size:13px">' + esc(o.note[lang]) + '</p>';
     o.stages.forEach(function (stage) {
       html += '<div class="outline-stage"><h2>' + esc(stage[lang]) + '</h2>';
+      var skillNames = [];
+      (KS_APP[stage.id] || []).forEach(function (sid) {
+        var st = getStage(sid);
+        if (!st) return;
+        stageSkills(st).forEach(function (sk) { if (!sk.scaffold) skillNames.push(nameOf(sk)); });
+      });
+      if (skillNames.length) {
+        html += '<div class="outline-covered">📌 ' + t('outline.covered') + '：' + skillNames.map(esc).join('、') + '</div>';
+      }
       stage.strands.forEach(function (strand) {
         html += '<div class="outline-strand"><div class="outline-strand-title">' + esc(strand[lang]) + '</div><ul class="outline-units">';
         strand.units.forEach(function (u) { html += '<li>' + esc(u[lang]) + '</li>'; });
