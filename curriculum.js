@@ -680,6 +680,86 @@
       en: { name: 'Direct Variation', goal: 'Solve y = kx variation problems.' },
       lesson: 'hs.s5.variation', types: ['variation'], levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    /* ===================== 補缺課題（二） ===================== */
+
+    'g3.shape': {
+      id: 'g3.shape', stage: 'g3', order: 8,
+      zh: { name: '圖形性質', goal: '認識平面與立體圖形的邊、面和頂點。' },
+      en: { name: 'Shape Properties', goal: 'Know sides, faces and vertices of shapes.' },
+      lesson: 'g3.shape', types: ['shape'], levels: [{}],
+      mastery: { practice: 10, quizPass: 0.8 }
+    },
+    'g6.symmetry': {
+      id: 'g6.symmetry', stage: 'g6', order: 7,
+      zh: { name: '對稱', goal: '會數圖形的對稱軸。' },
+      en: { name: 'Symmetry', goal: 'Count lines of symmetry.' },
+      lesson: 'g6.symmetry', types: ['symmetry'], levels: [{}],
+      mastery: { practice: 10, quizPass: 0.8 }
+    },
+    'ms.s1.liketerms': {
+      id: 'ms.s1.liketerms', stage: 'ms1', order: 6,
+      zh: { name: '合併同類項', goal: '會合併代數式的同類項。' },
+      en: { name: 'Collecting Like Terms', goal: 'Combine like terms.' },
+      lesson: 'ms.s1.liketerms', types: ['liketerms'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s2.polycoeff': {
+      id: 'ms.s2.polycoeff', stage: 'ms2', order: 5,
+      zh: { name: '多項式', goal: '認識多項式的次數與係數。' },
+      en: { name: 'Polynomials', goal: 'Know degree and coefficients.' },
+      lesson: 'ms.s2.polycoeff', types: ['polycoeff'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.arclen': {
+      id: 'ms.s3.arclen', stage: 'ms3', order: 4,
+      zh: { name: '弧長與扇形', goal: '會求扇形的弧長（以 π 表示）。' },
+      en: { name: 'Arc Length', goal: 'Find arc length (in terms of π).' },
+      lesson: 'ms.s3.arclen', types: ['arclen'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.mode': {
+      id: 'ms.s3.mode', stage: 'ms3', order: 5,
+      zh: { name: '眾數', goal: '會求一組數據的眾數。' },
+      en: { name: 'Mode', goal: 'Find the mode of a data set.' },
+      lesson: 'ms.s3.mode', types: ['mode'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s4.circleeq': {
+      id: 'hs.s4.circleeq', stage: 'hs1', order: 7,
+      zh: { name: '圓的方程', goal: '會由 x² + y² = r² 求半徑。' },
+      en: { name: 'Equation of a Circle', goal: 'Find the radius from x² + y² = r².' },
+      lesson: 'hs.s4.circleeq', types: ['circleeq'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.asum': {
+      id: 'hs.s5.asum', stage: 'hs2', order: 6,
+      zh: { name: '等差數列求和', goal: '會求等差數列前 n 項的和。' },
+      en: { name: 'Sum of Arithmetic Sequence', goal: 'Sum the first n terms.' },
+      lesson: 'hs.s5.asum', types: ['asum'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.invvar': {
+      id: 'hs.s5.invvar', stage: 'hs2', order: 7,
+      zh: { name: '反變', goal: '會解 y = k/x 的反變問題。' },
+      en: { name: 'Inverse Variation', goal: 'Solve y = k/x problems.' },
+      lesson: 'hs.s5.invvar', types: ['invvar'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.comb': {
+      id: 'hs.s6.comb', stage: 'hs3', order: 4,
+      zh: { name: '排列與組合', goal: '會計算排列 P(n,r) 與組合 C(n,r)。' },
+      en: { name: 'Permutation & Combination', goal: 'Compute P(n,r) and C(n,r).' },
+      lesson: 'hs.s6.comb', types: ['comb'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.range': {
+      id: 'hs.s6.range', stage: 'hs3', order: 5,
+      zh: { name: '分佈域', goal: '會求一組數據的分佈域。' },
+      en: { name: 'Range', goal: 'Find the range of a data set.' },
+      lesson: 'hs.s6.range', types: ['range'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
     }
   };
 
@@ -709,7 +789,8 @@
         { id: 'g3.mul', zh: '乘法表', en: 'Times Tables', skills: ['g3.multable', 'g3.mulfree'] },
         { id: 'g3.calc', zh: '多位數與乘除', en: 'Big Numbers', skills: ['g3.addsubbig', 'g3.muldiv'] },
         { id: 'g3.frac', zh: '分數', en: 'Fractions', skills: ['g3.fraction', 'g3.word'] },
-        { id: 'g3.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['g3.angle'] }
+        { id: 'g3.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['g3.angle'] },
+        { id: 'g3.shape', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['g3.shape'] }
       ] },
     { id: 'g4', zh: '小四', en: 'Primary 4', desc: { zh: '多位數乘除、分數、小數、面積', en: 'Multi-digit, fractions, decimals, area' }, color: '#5AC8FA', emoji: '🧭',
       topics: [
@@ -729,25 +810,30 @@
         { id: 'g6.alg', zh: '代數', en: 'Algebra', skills: ['g6.equation'] },
         { id: 'g6.num', zh: '數與比例', en: 'Numbers & Ratio', skills: ['g6.percent', 'g6.ratio'] },
         { id: 'g6.geo', zh: '度量', en: 'Measurement', skills: ['g6.circle', 'g6.volume'] },
-        { id: 'g6.word', zh: '解決問題', en: 'Word Problems', skills: ['g6.word'] }
+        { id: 'g6.word', zh: '解決問題', en: 'Word Problems', skills: ['g6.word'] },
+        { id: 'g6.sym', zh: '圖形與空間', en: 'Shape & Space', skills: ['g6.symmetry'] }
       ] },
     { id: 'ms1', zh: '中一', en: 'S1', desc: { zh: '有向數、代數式求值、一元一次方程', en: 'Directed numbers, substitution, linear equations' }, color: '#FF3B30', emoji: '🎓',
       topics: [
         { id: 'ms1.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s1.directed', 'ms.s1.exprsub', 'ms.s1.linear'] },
         { id: 'ms1.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s1.coord'] },
-        { id: 'ms1.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s1.word'] }
+        { id: 'ms1.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s1.word'] },
+        { id: 'ms1.lt', zh: '數與代數（續）', en: 'Number & Algebra (cont.)', skills: ['ms.s1.liketerms'] }
       ] },
     { id: 'ms2', zh: '中二', en: 'S2', desc: { zh: '畢氏定理、聯立方程', en: 'Pythagoras, simultaneous equations' }, color: '#FF6B35', emoji: '📐',
       topics: [
         { id: 'ms2.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s2.pythagoras'] },
         { id: 'ms2.alg', zh: '代數', en: 'Algebra', skills: ['ms.s2.simul'] },
         { id: 'ms2.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s2.word'] },
-        { id: 'ms2.poly', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['ms.s2.polygon'] }
+        { id: 'ms2.poly', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['ms.s2.polygon'] },
+        { id: 'ms2.polyc', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['ms.s2.polycoeff'] }
       ] },
     { id: 'ms3', zh: '中三', en: 'S3', desc: { zh: '指數定律、一元一次不等式', en: 'Laws of indices, linear inequalities' }, color: '#FF8C42', emoji: '🧮',
       topics: [
         { id: 'ms3.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s3.indices', 'ms.s3.inequality'] },
-        { id: 'ms3.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s3.word'] }
+        { id: 'ms3.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s3.word'] },
+        { id: 'ms3.geo2', zh: '度量（續）', en: 'Measures (cont.)', skills: ['ms.s3.arclen'] },
+        { id: 'ms3.data', zh: '數據處理', en: 'Data Handling', skills: ['ms.s3.mode'] }
       ] },
     { id: 'hs1', zh: '中四', en: 'S4', desc: { zh: '對數、函數求值、三角比', en: 'Logarithms, function values, trigonometric ratios' }, color: '#A2845E', emoji: '🧠',
       topics: [
@@ -755,20 +841,24 @@
         { id: 'hs1.trig', zh: '三角學', en: 'Trigonometry', skills: ['hs.s4.trig'] },
         { id: 'hs1.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s4.word'] },
         { id: 'hs1.quad', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s4.quadsolve'] },
-        { id: 'hs1.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['hs.s4.line'] }
+        { id: 'hs1.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['hs.s4.line'] },
+        { id: 'hs1.geo2', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['hs.s4.circleeq'] }
       ] },
     { id: 'hs2', zh: '中五', en: 'S5', desc: { zh: '等差、等比數列、概率', en: 'Arithmetic and geometric sequences, probability' }, color: '#8B6F47', emoji: '📈',
       topics: [
         { id: 'hs2.seq', zh: '數列', en: 'Sequences', skills: ['hs.s5.ap', 'hs.s5.gp'] },
         { id: 'hs2.prob', zh: '概率', en: 'Probability', skills: ['hs.s5.prob'] },
         { id: 'hs2.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s5.word'] },
-        { id: 'hs2.alg', zh: '代數', en: 'Algebra', skills: ['hs.s5.variation'] }
+        { id: 'hs2.alg', zh: '代數', en: 'Algebra', skills: ['hs.s5.variation'] },
+        { id: 'hs2.seq2', zh: '數列（續）', en: 'Sequences (cont.)', skills: ['hs.s5.asum'] },
+        { id: 'hs2.alg2', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s5.invvar'] }
       ] },
     { id: 'hs3', zh: '中六', en: 'S6', desc: { zh: '二次方程的根、中位數', en: 'Roots of quadratics, median' }, color: '#7A5F3C', emoji: '📊',
       topics: [
         { id: 'hs3.alg', zh: '代數', en: 'Algebra', skills: ['hs.s6.quad'] },
         { id: 'hs3.stats', zh: '統計', en: 'Statistics', skills: ['hs.s6.stats'] },
-        { id: 'hs3.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s6.word'] }
+        { id: 'hs3.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s6.word'] },
+        { id: 'hs3.data', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['hs.s6.comb', 'hs.s6.range'] }
       ] },
     { id: 'college', zh: '大學', en: 'University', desc: { zh: '微積分、線性代數、概率統計', en: 'Calculus, linear algebra, statistics' }, color: '#8E8E93', emoji: '🎯',
       topics: [

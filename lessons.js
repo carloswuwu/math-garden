@@ -376,6 +376,62 @@
       zh: { title: '正變', intro: '若 y 隨 x 正變，則 y = kx，k 是常數。', example: 'x = 2 時 y = 6，k = 3；x = 5 時 y = 3 × 5 = 15。', tip: '先由已知一組 x、y 求 k。' },
       en: { title: 'Direct Variation', intro: 'If y varies directly as x, then y = kx for a constant k.', example: 'x = 2 gives y = 6, so k = 3; at x = 5, y = 3 × 5 = 15.', tip: 'Find k from a known pair first.' },
       visual: null
+    },
+
+    'g3.shape': {
+      zh: { title: '圖形性質', intro: '邊是圖形的線段，面是立體圖形的平面，頂點是角的尖端。', example: '正方體有 6 個面、8 個頂點。', tip: '用手指逐個數。' },
+      en: { title: 'Shape Properties', intro: 'Sides are edges, faces are flat surfaces, vertices are corners.', example: 'A cube has 6 faces and 8 vertices.', tip: 'Count them one by one.' },
+      visual: null
+    },
+    'g6.symmetry': {
+      zh: { title: '對稱', intro: '沿著對稱軸對摺，兩邊能完全重疊。', example: '正方形有 4 條對稱軸。', tip: '畫出所有能對摺的直線。' },
+      en: { title: 'Symmetry', intro: 'Fold along a line of symmetry so both halves match.', example: 'A square has 4 lines of symmetry.', tip: 'Draw all the folding lines.' },
+      visual: null
+    },
+    'ms.s1.liketerms': {
+      zh: { title: '合併同類項', intro: '同類項 = 變數相同的項，可把係數相加減。', example: '3x + 5x = 8x。', tip: '只看係數相加減，變數不變。' },
+      en: { title: 'Collecting Like Terms', intro: 'Like terms have the same variable; add/subtract their coefficients.', example: '3x + 5x = 8x.', tip: 'Add the coefficients; keep the variable.' },
+      visual: null
+    },
+    'ms.s2.polycoeff': {
+      zh: { title: '多項式', intro: '次數 = 最高次項的指數；係數 = 每項前面的數。', example: '5x² 的次數是 2，係數是 5。', tip: '先找出最高次項。' },
+      en: { title: 'Polynomials', intro: 'Degree = highest exponent; coefficient = the number in front.', example: '5x² has degree 2 and coefficient 5.', tip: 'Find the highest-power term first.' },
+      visual: null
+    },
+    'ms.s3.arclen': {
+      zh: { title: '弧長與扇形', intro: '弧長 = 2πr × (圓心角 ÷ 360°)。', example: '半徑 6、圓心角 60°：弧長 = 2π × 6 × 60/360 = 2π。', tip: '先算出圓心角佔全圓的份數。' },
+      en: { title: 'Arc Length', intro: 'Arc length = 2πr × (angle ÷ 360°).', example: 'Radius 6, angle 60°: arc = 2π × 6 × 60/360 = 2π.', tip: 'Find the fraction of the full circle first.' },
+      visual: { kind: 'circle', r: 6 }
+    },
+    'ms.s3.mode': {
+      zh: { title: '眾數', intro: '眾數 = 一組數據中出現次數最多的數。', example: '2、3、3、5、3 的眾數是 3。', tip: '數每種數字出現多少次。' },
+      en: { title: 'Mode', intro: 'The mode is the value that appears most often.', example: 'Mode of 2, 3, 3, 5, 3 is 3.', tip: 'Count how many times each value appears.' },
+      visual: null
+    },
+    'hs.s4.circleeq': {
+      zh: { title: '圓的方程', intro: '圓心在原點的圓方程是 x² + y² = r²，r 是半徑。', example: 'x² + y² = 25，半徑 = 5。', tip: '開方即可得到半徑。' },
+      en: { title: 'Equation of a Circle', intro: 'A circle centred at the origin is x² + y² = r², where r is the radius.', example: 'x² + y² = 25 → radius 5.', tip: 'Take the square root for the radius.' },
+      visual: null
+    },
+    'hs.s5.asum': {
+      zh: { title: '等差數列求和', intro: '前 n 項和 = n/2 × (首項 + 末項)。', example: '1+2+…+10 = 10/2 × (1+10) = 55。', tip: '先求末項 a + (n−1)d。' },
+      en: { title: 'Sum of Arithmetic Sequence', intro: 'Sum of first n terms = n/2 × (first + last).', example: '1+2+…+10 = 10/2 × (1+10) = 55.', tip: 'Find the last term a + (n−1)d first.' },
+      visual: null
+    },
+    'hs.s5.invvar': {
+      zh: { title: '反變', intro: '若 y 隨 x 反變，則 y = k/x（即 xy = k）。', example: 'x = 2 時 y = 6，k = 12；x = 3 時 y = 4。', tip: '先由 xy 求常數 k。' },
+      en: { title: 'Inverse Variation', intro: 'If y varies inversely as x, then y = k/x (so xy = k).', example: 'x = 2 gives y = 6, so k = 12; at x = 3, y = 4.', tip: 'Find k from xy first.' },
+      visual: null
+    },
+    'hs.s6.comb': {
+      zh: { title: '排列與組合', intro: '排列 P(n,r) = n!/(n−r)!；組合 C(n,r) = n!/(r!(n−r)!)。', example: 'P(5,2) = 20；C(5,2) = 10。', tip: '排列考慮次序，組合不考慮。' },
+      en: { title: 'Permutation & Combination', intro: 'P(n,r) = n!/(n−r)!; C(n,r) = n!/(r!(n−r)!).', example: 'P(5,2) = 20; C(5,2) = 10.', tip: 'Permutation cares about order; combination does not.' },
+      visual: null
+    },
+    'hs.s6.range': {
+      zh: { title: '分佈域', intro: '分佈域 = 最大值 − 最小值，量度數據的分散程度。', example: '3、7、5、9、1 的分佈域 = 9 − 1 = 8。', tip: '先找最大和最小值。' },
+      en: { title: 'Range', intro: 'Range = max − min; it measures the spread of data.', example: 'Range of 3, 7, 5, 9, 1 = 9 − 1 = 8.', tip: 'Find the max and min first.' },
+      visual: null
     }
   };
 

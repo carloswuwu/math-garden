@@ -28,7 +28,8 @@
     'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
     'triangle', 'circle', 'volume', 'coord',
     'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
-    'oddeven'
+    'oddeven',
+    'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq'
   ];
 
   /* ---------------- 可播種隨機數 ---------------- */
@@ -1091,7 +1092,8 @@
     { zh: '平角是多少度？', en: 'How many degrees is a straight angle?', a: 180 },
     { zh: '一個周角是多少度？', en: 'How many degrees is a full turn?', a: 360 },
     { zh: '銳角小於多少度？', en: 'An acute angle is less than how many degrees?', a: 90 },
-    { zh: '鈍角大於多少度？', en: 'An obtuse angle is greater than how many degrees?', a: 90 }
+    { zh: '鈍角大於多少度？', en: 'An obtuse angle is greater than how many degrees?', a: 90 },
+    { zh: '任何凸多邊形的外角和是多少度？', en: 'What is the sum of exterior angles of any convex polygon?', a: 360 }
   ];
 
   var UNIT_FACTS = [
@@ -1258,6 +1260,217 @@
       answer: askEven ? Math.floor(n2 / 2) : Math.ceil(n2 / 2),
       math: { op: 'oddeven', mode: askEven ? 'counteven' : 'countodd', n: n2 },
       hint: { zh: '逐個數：' + (askEven ? '2、4、6…' : '1、3、5…') + '。', en: 'Count: ' + (askEven ? '2, 4, 6…' : '1, 3, 5…') + '.' }
+    };
+  }
+
+  /* ================= 補缺題型（圖形性質、代數、數據、高中） ================= */
+
+  var SHAPE_FACTS = [
+    { zh: '正方形有幾條邊？', en: 'How many sides does a square have?', a: 4 },
+    { zh: '三角形有幾條邊？', en: 'How many sides does a triangle have?', a: 3 },
+    { zh: '長方形有幾條邊？', en: 'How many sides does a rectangle have?', a: 4 },
+    { zh: '正方體有幾個面？', en: 'How many faces does a cube have?', a: 6 },
+    { zh: '長方體有幾個面？', en: 'How many faces does a cuboid have?', a: 6 },
+    { zh: '正方體有幾個頂點？', en: 'How many vertices does a cube have?', a: 8 },
+    { zh: '圓柱體有幾個圓形面？', en: 'How many circular faces does a cylinder have?', a: 2 }
+  ];
+
+  var SYM_FACTS = [
+    { zh: '正方形有幾條對稱軸？', en: 'How many lines of symmetry does a square have?', a: 4 },
+    { zh: '長方形有幾條對稱軸？', en: 'How many lines of symmetry does a rectangle have?', a: 2 },
+    { zh: '等邊三角形有幾條對稱軸？', en: 'How many lines of symmetry does an equilateral triangle have?', a: 3 },
+    { zh: '等腰三角形有幾條對稱軸？', en: 'How many lines of symmetry does an isosceles triangle have?', a: 1 },
+    { zh: '菱形有幾條對稱軸？', en: 'How many lines of symmetry does a rhombus have?', a: 2 }
+  ];
+
+  var ARCLEN_PAIRS = [[3, 60], [3, 120], [3, 180], [6, 30], [6, 60], [6, 90], [6, 120], [6, 180], [9, 60], [9, 120], [9, 180], [12, 30], [12, 60], [12, 90], [12, 120], [12, 180]];
+
+  function factInt(rng, facts) {
+    var i = Math.floor(rng() * facts.length);
+    return facts[i];
+  }
+
+  /* 圖形性質 */
+  function genShape(rng, o) {
+    var i = Math.floor(rng() * SHAPE_FACTS.length);
+    var q = SHAPE_FACTS[i];
+    return {
+      type: 'shape',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'shape', a: q.a, k: i },
+      hint: { zh: '想一想圖形有幾條邊／幾個面。', en: 'Count the sides / faces.' }
+    };
+  }
+
+  /* 對稱軸 */
+  function genSymmetry(rng, o) {
+    var i = Math.floor(rng() * SYM_FACTS.length);
+    var q = SYM_FACTS[i];
+    return {
+      type: 'symmetry',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'symmetry', a: q.a, k: i },
+      hint: { zh: '想像沿著直線對摺，兩邊完全重疊。', en: 'Fold along a line so both halves match.' }
+    };
+  }
+
+  /* 合併同類項 */
+  function genLiketerms(rng, o) {
+    var sub = rng() < 0.5;
+    var a = randInt(rng, 2, 9), b = randInt(rng, 1, 9);
+    if (sub && a <= b) { var t = a; a = b; b = t; }
+    var ans = sub ? a - b : a + b;
+    return {
+      type: 'liketerms',
+      prompt: { zh: '合併同類項：' + a + 'x ' + (sub ? '− ' : '+ ') + b + 'x，x 的係數是多少？', en: 'Simplify: ' + a + 'x ' + (sub ? '− ' : '+ ') + b + 'x. What is the coefficient of x?' },
+      visual: null,
+      answer: ans,
+      math: { op: 'liketerms', a: a, b: b, mode: sub ? 'sub' : 'add' },
+      hint: { zh: '同類項相加減：係數相加減。', en: 'Add or subtract the coefficients.' }
+    };
+  }
+
+  /* 多項式次數 / 係數 */
+  function genPolycoeff(rng, o) {
+    var deg = pick(rng, [2, 3]);
+    var coeff = randInt(rng, 2, 9);
+    var askDeg = rng() < 0.5;
+    var term = coeff + 'x^' + deg;
+    if (askDeg) {
+      return {
+        type: 'polycoeff',
+        prompt: { zh: '多項式 ' + term + ' 的次數是多少？', en: 'What is the degree of the polynomial ' + term + '?' },
+        visual: null,
+        answer: deg,
+        math: { op: 'polycoeff', mode: 'deg', c: coeff, d: deg },
+        hint: { zh: '次數 = 最高次項的指數。', en: 'Degree = the highest exponent.' }
+      };
+    }
+    return {
+      type: 'polycoeff',
+      prompt: { zh: '多項式 ' + term + ' + 3 中，$x^' + deg + '$ 的係數是多少？', en: 'In the polynomial ' + term + ' + 3, what is the coefficient of $x^' + deg + '$?' },
+      visual: null,
+      answer: coeff,
+      math: { op: 'polycoeff', mode: 'coeff', c: coeff, d: deg },
+      hint: { zh: '係數 = 該項前面的數。', en: 'Coefficient = the number in front of the term.' }
+    };
+  }
+
+  /* 扇形弧長（以 π 表示） */
+  function genArclen(rng, o) {
+    var pr = pick(rng, ARCLEN_PAIRS);
+    var r = pr[0], angle = pr[1];
+    var coef = r * angle / 180;
+    return {
+      type: 'arclen',
+      prompt: { zh: '半徑 ' + r + ' cm、圓心角 ' + angle + '° 的扇形，弧長是多少？（以 π 表示）', en: 'A sector has radius ' + r + ' cm and central angle ' + angle + '°. What is its arc length? (in terms of π)' },
+      visual: { kind: 'circle', r: r },
+      answer: coef + 'π',
+      math: { op: 'arclen', r: r, angle: angle, coef: coef },
+      choices: circleChoices(rng, coef, 'π'),
+      hint: { zh: '弧長 = 2πr × (圓心角 ÷ 360°)。', en: 'Arc length = 2πr × (angle ÷ 360°).' }
+    };
+  }
+
+  /* 眾數 */
+  function genMode(rng, o) {
+    var n = pick(rng, [5, 6, 7]);
+    var mode = randInt(rng, 1, 9);
+    var nums = [mode, mode, mode];
+    while (nums.length < n) {
+      var x = randInt(rng, 1, 9);
+      if (x !== mode) nums.push(x);
+    }
+    nums = shuffle(rng, nums);
+    return {
+      type: 'mode',
+      prompt: { zh: '求 ' + nums.join('、') + ' 的眾數。', en: 'Find the mode of ' + nums.join(', ') + '.' },
+      visual: null,
+      answer: mode,
+      math: { op: 'mode', nums: nums, m: mode },
+      hint: { zh: '眾數 = 出現次數最多的數。', en: 'Mode = the most frequent value.' }
+    };
+  }
+
+  /* 等差數列求和 */
+  function genAsum(rng, o) {
+    var n = randInt(rng, 5, 12);
+    var a = randInt(rng, 1, 10);
+    var d = randInt(rng, 1, 5);
+    return {
+      type: 'asum',
+      prompt: { zh: '等差數列首項 ' + a + '、公差 ' + d + '，求前 ' + n + ' 項的和。', en: 'An arithmetic sequence has first term ' + a + ' and common difference ' + d + '. Find the sum of the first ' + n + ' terms.' },
+      visual: null,
+      answer: n * (2 * a + (n - 1) * d) / 2,
+      math: { op: 'asum', a: a, d: d, n: n },
+      hint: { zh: '和 = n/2 × (首項 + 末項)。', en: 'Sum = n/2 × (first + last).' }
+    };
+  }
+
+  /* 反變 */
+  function genInvvar(rng, o) {
+    var k = 12 * randInt(rng, 1, 4); // 12 的倍數，能被 2、3、4、6 整除
+    var a = pick(rng, [2, 3, 4, 6]);
+    var c = pick(rng, [2, 3, 4, 6]);
+    while (c === a) c = pick(rng, [2, 3, 4, 6]);
+    return {
+      type: 'invvar',
+      prompt: { zh: '已知 $y$ 隨 $x$ 反變。當 $x = ' + a + '$ 時 $y = ' + (k / a) + '$，求 $x = ' + c + '$ 時的 $y$。', en: '$y$ varies inversely as $x$. When $x = ' + a + '$, $y = ' + (k / a) + '$. Find $y$ when $x = ' + c + '$.' },
+      visual: null,
+      answer: k / c,
+      math: { op: 'invvar', k: k, a: a, c: c },
+      hint: { zh: 'y = k/x，先求 k = xy。', en: 'y = k/x; find k = xy first.' }
+    };
+  }
+
+  /* 排列與組合 */
+  function genComb(rng, o) {
+    var n = pick(rng, [4, 5, 6, 7]);
+    var r = pick(rng, [2, 3]);
+    if (r >= n) r = 2;
+    var perm = rng() < 0.5;
+    function fact(x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; }
+    var ans = perm ? fact(n) / fact(n - r) : fact(n) / (fact(r) * fact(n - r));
+    return {
+      type: 'comb',
+      prompt: { zh: (perm ? 'P' : 'C') + '(' + n + ', ' + r + ') = ?', en: (perm ? 'P' : 'C') + '(' + n + ', ' + r + ') = ?' },
+      visual: null,
+      answer: ans,
+      math: { op: 'comb', n: n, r: r, mode: perm ? 'P' : 'C' },
+      hint: { zh: (perm ? '排列：n! ÷ (n−r)!' : '組合：n! ÷ (r!(n−r)!)'), en: (perm ? 'Permutation: n! ÷ (n−r)!' : 'Combination: n! ÷ (r!(n−r)!)') }
+    };
+  }
+
+  /* 分佈域 */
+  function genRange(rng, o) {
+    var n = randInt(rng, 4, 6);
+    var nums = [];
+    for (var i = 0; i < n; i++) nums.push(randInt(rng, 1, 30));
+    var mn = Math.min.apply(null, nums), mx = Math.max.apply(null, nums);
+    return {
+      type: 'range',
+      prompt: { zh: '求 ' + nums.join('、') + ' 的分佈域。', en: 'Find the range of ' + nums.join(', ') + '.' },
+      visual: null,
+      answer: mx - mn,
+      math: { op: 'range', nums: nums },
+      hint: { zh: '分佈域 = 最大 − 最小。', en: 'Range = max − min.' }
+    };
+  }
+
+  /* 圓方程的半徑 */
+  function genCircleeq(rng, o) {
+    var r = randInt(rng, 1, 10);
+    return {
+      type: 'circleeq',
+      prompt: { zh: '圓的方程是 $x^2 + y^2 = ' + (r * r) + '$，求半徑。', en: 'A circle has equation $x^2 + y^2 = ' + (r * r) + '$. Find its radius.' },
+      visual: null,
+      answer: r,
+      math: { op: 'circleeq', r: r },
+      hint: { zh: 'x² + y² = r²，半徑 = r。', en: 'x² + y² = r², so radius = r.' }
     };
   }
 
@@ -1603,6 +1816,67 @@
           zh: ['逐個數：' + (m.mode === 'counteven' ? '2、4、6…' : '1、3、5…'), '共有 ' + p.answer + ' 個。'],
           en: ['Count: ' + (m.mode === 'counteven' ? '2, 4, 6…' : '1, 3, 5…'), 'There are ' + p.answer + ' of them.']
         };
+      case 'shape':
+        return {
+          zh: ['想一想這個圖形有幾條邊／幾個面。', '答案是 ' + p.answer + '。'],
+          en: ['Think about how many sides / faces the shape has.', 'The answer is ' + p.answer + '.']
+        };
+      case 'symmetry':
+        return {
+          zh: ['想像沿著直線對摺，看兩邊能否完全重疊。', '對稱軸有 ' + p.answer + ' 條。'],
+          en: ['Imagine folding along a line so both halves match.', 'There are ' + p.answer + ' lines of symmetry.']
+        };
+      case 'liketerms':
+        return {
+          zh: ['同類項相加減：係數相加減。', m.a + ' ' + (m.mode === 'sub' ? '− ' : '+ ') + m.b + ' = ' + p.answer + '。'],
+          en: ['Add/subtract like terms by adding/subtracting coefficients.', m.a + ' ' + (m.mode === 'sub' ? '− ' : '+ ') + m.b + ' = ' + p.answer + '.']
+        };
+      case 'polycoeff':
+        if (m.mode === 'deg') {
+          return {
+            zh: ['次數 = 最高次項的指數。', 'x^' + m.d + ' 的指數是 ' + m.d + '。'],
+            en: ['Degree = the highest exponent.', 'The exponent of x^' + m.d + ' is ' + m.d + '.']
+          };
+        }
+        return {
+          zh: ['係數 = 該項前面的數。', 'x^' + m.d + ' 前面的數是 ' + p.answer + '。'],
+          en: ['Coefficient = the number in front of the term.', 'The number in front of x^' + m.d + ' is ' + p.answer + '.']
+        };
+      case 'arclen':
+        return {
+          zh: ['弧長 = 2πr × (圓心角 ÷ 360°)。', '= 2π × ' + m.r + ' × (' + m.angle + '/360) = ' + p.answer + '。'],
+          en: ['Arc length = 2πr × (angle ÷ 360°).', '= 2π × ' + m.r + ' × (' + m.angle + '/360) = ' + p.answer + '.']
+        };
+      case 'mode':
+        return {
+          zh: ['眾數 = 出現次數最多的數。', '答案是 ' + p.answer + '。'],
+          en: ['Mode = the most frequent value.', 'The answer is ' + p.answer + '.']
+        };
+      case 'asum':
+        return {
+          zh: ['和 = n/2 × (首項 + 末項)。', '末項 = ' + (m.a + (m.n - 1) * m.d) + '，和 = ' + p.answer + '。'],
+          en: ['Sum = n/2 × (first + last).', 'Last = ' + (m.a + (m.n - 1) * m.d) + ', sum = ' + p.answer + '.']
+        };
+      case 'invvar':
+        return {
+          zh: ['y = k/x；k = xy = ' + m.a + ' × ' + (m.k / m.a) + ' = ' + m.k + '。', 'x = ' + m.c + ' 時，y = ' + m.k + '/' + m.c + ' = ' + p.answer + '。'],
+          en: ['y = k/x; k = xy = ' + m.a + ' × ' + (m.k / m.a) + ' = ' + m.k + '.', 'When x = ' + m.c + ', y = ' + m.k + '/' + m.c + ' = ' + p.answer + '.']
+        };
+      case 'comb':
+        return {
+          zh: [m.mode === 'P' ? '排列：n! ÷ (n−r)!' : '組合：n! ÷ (r!(n−r)!)', m.mode + '(' + m.n + ',' + m.r + ') = ' + p.answer + '。'],
+          en: [m.mode === 'P' ? 'Permutation: n! ÷ (n−r)!' : 'Combination: n! ÷ (r!(n−r)!)', m.mode + '(' + m.n + ',' + m.r + ') = ' + p.answer + '.']
+        };
+      case 'range':
+        return {
+          zh: ['分佈域 = 最大 − 最小。', '= ' + Math.max.apply(null, m.nums) + ' − ' + Math.min.apply(null, m.nums) + ' = ' + p.answer + '。'],
+          en: ['Range = max − min.', '= ' + Math.max.apply(null, m.nums) + ' − ' + Math.min.apply(null, m.nums) + ' = ' + p.answer + '.']
+        };
+      case 'circleeq':
+        return {
+          zh: ['圓方程 x² + y² = r²，半徑 = r。', 'r² = ' + (m.r * m.r) + '，所以 r = ' + p.answer + '。'],
+          en: ['Circle equation x² + y² = r², radius = r.', 'r² = ' + (m.r * m.r) + ', so r = ' + p.answer + '.']
+        };
       default:
         return null;
     }
@@ -1657,7 +1931,18 @@
     quadsolve: genQuadsolve,
     line: genLine,
     variation: genVariation,
-    oddeven: genOddEven
+    oddeven: genOddEven,
+    shape: genShape,
+    symmetry: genSymmetry,
+    liketerms: genLiketerms,
+    polycoeff: genPolycoeff,
+    arclen: genArclen,
+    mode: genMode,
+    asum: genAsum,
+    invvar: genInvvar,
+    comb: genComb,
+    range: genRange,
+    circleeq: genCircleeq
   };
 
   /* ---------------- 選項（干擾項）生成 ---------------- */
@@ -1746,6 +2031,16 @@
     if (p.type === 'line') return 10;
     if (p.type === 'variation') return 50;
     if (p.type === 'oddeven') return 50;
+    if (p.type === 'shape') return 10;
+    if (p.type === 'symmetry') return 10;
+    if (p.type === 'liketerms') return 20;
+    if (p.type === 'polycoeff') return 12;
+    if (p.type === 'mode') return 12;
+    if (p.type === 'asum') return 600;
+    if (p.type === 'invvar') return 20;
+    if (p.type === 'comb') return 300;
+    if (p.type === 'range') return 40;
+    if (p.type === 'circleeq') return 15;
     return 99;
   }
 
@@ -1767,7 +2062,7 @@
       case 'comparegroup': return math.a + '_' + math.b + '_' + math.mode;
     }
     var parts = [math.op];
-    var keys = ['a', 'b', 'c', 'd', 'r', 'mode', 'form', 'n', 'x', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w', 'base', 'val', 'which', 'good', 'total', 'askSum', 'sum', 'prod'];
+    var keys = ['a', 'b', 'c', 'd', 'r', 'mode', 'form', 'n', 'x', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w', 'base', 'val', 'which', 'good', 'total', 'askSum', 'sum', 'prod', 'angle'];
     keys.forEach(function (k) {
       if (math[k] != null) parts.push(k + '=' + math[k]);
     });

@@ -81,6 +81,23 @@ function computeAnswer(math) {
     if (math.mode === 'countodd') return Math.ceil(math.n / 2);
     return math.n + 2;
   }
+  if (math.op === 'shape') return math.a;
+  if (math.op === 'symmetry') return math.a;
+  if (math.op === 'liketerms') return math.mode === 'sub' ? math.a - math.b : math.a + math.b;
+  if (math.op === 'polycoeff') return math.mode === 'deg' ? math.d : math.c;
+  if (math.op === 'arclen') return math.coef + 'π';
+  if (math.op === 'mode') return math.m;
+  if (math.op === 'asum') return math.n * (2 * math.a + (math.n - 1) * math.d) / 2;
+  if (math.op === 'invvar') return math.k / math.c;
+  if (math.op === 'comb') {
+    var fn = 1, fr = 1, fnr = 1;
+    for (var i = 2; i <= math.n; i++) fn *= i;
+    for (var j = 2; j <= math.r; j++) fr *= j;
+    for (var k2 = 2; k2 <= (math.n - math.r); k2++) fnr *= k2;
+    return math.mode === 'P' ? fn / fnr : fn / (fr * fnr);
+  }
+  if (math.op === 'range') { var ar = math.nums; return Math.max.apply(null, ar) - Math.min.apply(null, ar); }
+  if (math.op === 'circleeq') return math.r;
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -148,6 +165,17 @@ const SKILLS = {
   line:           { id: 't.line',      types: ['line'],                      levels: [{}] },
   variation:      { id: 't.var',       types: ['variation'],                 levels: [{}] },
   oddeven:        { id: 't.oddeven',   types: ['oddeven'],                   levels: [{}] },
+  shape:          { id: 't.shape',     types: ['shape'],                     levels: [{}] },
+  symmetry:       { id: 't.sym',       types: ['symmetry'],                  levels: [{}] },
+  liketerms:      { id: 't.lt',        types: ['liketerms'],                 levels: [{}] },
+  polycoeff:      { id: 't.pc',        types: ['polycoeff'],                 levels: [{}] },
+  arclen:         { id: 't.arc',       types: ['arclen'],                    levels: [{}] },
+  mode:           { id: 't.mode',      types: ['mode'],                      levels: [{}] },
+  asum:           { id: 't.asum',      types: ['asum'],                      levels: [{}] },
+  invvar:         { id: 't.invvar',    types: ['invvar'],                    levels: [{}] },
+  comb:           { id: 't.comb',      types: ['comb'],                      levels: [{}] },
+  range:          { id: 't.range',     types: ['range'],                     levels: [{}] },
+  circleeq:       { id: 't.ceq',       types: ['circleeq'],                  levels: [{}] },
 };
 
 const N = 400; // 每個類型的抽樣數量
@@ -323,7 +351,7 @@ for (let seed = 1; seed <= N; seed++) {
     'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
     'triangle', 'circle', 'volume', 'coord',
     'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
-    'oddeven'];
+    'oddeven', 'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq'];
   supported.forEach((t) => {
     for (let seed = 1; seed <= 60; seed++) {
       const p = C.generateProblem(SKILLS[t], { seed });
