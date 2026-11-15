@@ -58,6 +58,13 @@ function computeAnswer(math) {
   if (math.op === 'prob') return { n: math.good, d: math.total };
   if (math.op === 'quad') return math.askSum ? math.sum : math.prod;
   if (math.op === 'stats') { var s = math.nums.slice().sort(function (x, y) { return x - y; }); return s[(s.length - 1) / 2]; }
+  if (math.op === 'triangle') return math.b * math.h / 2;
+  if (math.op === 'circle') return math.mode === 'area' ? (math.r * math.r) + 'π' : (2 * math.r) + 'π';
+  if (math.op === 'volume') return math.l * math.w * math.h;
+  if (math.op === 'coord') return math.mode === 'dist' ? math.dist : '(' + math.mx + ', ' + math.my + ')';
+  if (math.op === 'warea') return math.a * math.b;
+  if (math.op === 'wpercent') return math.a * (100 - math.b) / 100;
+  if (math.op === 'wratio') return math.b;
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -111,6 +118,11 @@ const SKILLS = {
   prob:           { id: 't.prob',      types: ['prob'],                     levels: [{}] },
   quad:           { id: 't.quad',      types: ['quad'],                     levels: [{}] },
   stats:          { id: 't.stats',     types: ['stats'],                    levels: [{}] },
+  triangle:       { id: 't.tri',       types: ['triangle'],                 levels: [{}] },
+  circle:         { id: 't.circ',      types: ['circle'],                   levels: [{}] },
+  volume:         { id: 't.vol',       types: ['volume'],                   levels: [{}] },
+  coord:          { id: 't.coord',     types: ['coord'],                    levels: [{}] },
+  word2:          { id: 't.word2',     types: ['word'],                     levels: [{ ops: ['area', 'percent', 'ratio'], max: 1000, maxFactor: 9 }] },
 };
 
 const N = 400; // 每個類型的抽樣數量
@@ -283,7 +295,8 @@ for (let seed = 1; seed <= N; seed++) {
   const supported = ['addition', 'subtraction', 'numberbonds', 'multiplication', 'division',
     'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average', 'equation', 'percent', 'ratio', 'area', 'fractionof',
     'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
-    'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats'];
+    'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
+    'triangle', 'circle', 'volume', 'coord'];
   supported.forEach((t) => {
     for (let seed = 1; seed <= 60; seed++) {
       const p = C.generateProblem(SKILLS[t], { seed });

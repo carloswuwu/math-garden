@@ -302,6 +302,34 @@
       zh: { title: '中位數', intro: '把數據由小到大排列，取中間那個數（若個數是單數）。', example: '1、3、7、8、9 的中位數是 7。', tip: '先排序，再取中間。' },
       en: { title: 'Median', intro: 'Sort the data, then take the middle value (for an odd count).', example: 'Median of 1, 3, 7, 8, 9 is 7.', tip: 'Sort first, then take the middle.' },
       visual: null
+    },
+
+    /* ---------- 幾何、座標、應用題 ---------- */
+
+    'g4.triangle': {
+      zh: { title: '三角形面積', intro: '三角形面積 = 底 × 高 ÷ 2。', example: '底 8 cm、高 5 cm，面積 = 8 × 5 ÷ 2 = 20 cm²。', tip: '記得最後要除以 2。' },
+      en: { title: 'Triangle Area', intro: 'Area = base × height ÷ 2.', example: 'Base 8 cm, height 5 cm → area = 8 × 5 ÷ 2 = 20 cm².', tip: 'Remember to divide by 2.' },
+      visual: { kind: 'triangle', b: 8, h: 5 }
+    },
+    'g6.circle': {
+      zh: { title: '圓的周長與面積', intro: '圓周長 = 2πr；圓面積 = πr²。', example: '半徑 5 cm：周長 = 10π cm，面積 = 25π cm²。', tip: '答案用 π 表示即可。' },
+      en: { title: 'Circles', intro: 'Circumference = 2πr; area = πr².', example: 'Radius 5 cm: circumference = 10π cm, area = 25π cm².', tip: 'Leave the answer in terms of π.' },
+      visual: { kind: 'circle', r: 5 }
+    },
+    'g6.volume': {
+      zh: { title: '立體圖形的體積', intro: '長方體體積 = 長 × 闊 × 高。', example: '長 4 cm、闊 3 cm、高 2 cm，體積 = 24 cm³。', tip: '體積單位是立方（cm³）。' },
+      en: { title: 'Volume of Cuboids', intro: 'Volume = length × width × height.', example: '4 cm by 3 cm by 2 cm → volume = 24 cm³.', tip: 'Volume is in cubic units (cm³).' },
+      visual: { kind: 'cuboid', l: 4, w: 3, h: 2 }
+    },
+    'ms.s1.coord': {
+      zh: { title: '座標', intro: '兩點 A(x₁,y₁)、B(x₂,y₂)：距離 = √((x₂−x₁)² + (y₂−y₁)²)；中點 = ((x₁+x₂)/2, (y₁+y₂)/2)。', example: 'A(0,0)、B(3,4)：距離 5；中點 (1.5, 2)。', tip: '先算 x 和 y 的差。' },
+      en: { title: 'Coordinates', intro: 'For A(x₁,y₁), B(x₂,y₂): distance = √((x₂−x₁)² + (y₂−y₁)²); midpoint = ((x₁+x₂)/2, (y₁+y₂)/2).', example: 'A(0,0), B(3,4): distance 5; midpoint (1.5, 2).', tip: 'Work out the x and y differences first.' },
+      visual: { kind: 'plane', a: [0, 0], b: [3, 4] }
+    },
+    'generic.word': {
+      zh: { title: '應用題', intro: '先讀懂題目，找出已知數和要求的量，再選合適的運算。', example: '小明有 8 個，吃了 3 個，還剩幾個？8 − 3 = 5。', tip: '圈出數字和關鍵詞（「一共」「還剩」「每」等）。' },
+      en: { title: 'Word Problems', intro: 'Read carefully, find the numbers and what is asked, then choose the operation.', example: 'Sam has 8, eats 3. How many left? 8 − 3 = 5.', tip: 'Circle the numbers and key words.' },
+      visual: null
     }
   };
 

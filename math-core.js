@@ -25,7 +25,8 @@
     'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average',
     'equation', 'percent', 'ratio', 'area', 'fractionof',
     'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
-    'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats'
+    'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
+    'triangle', 'circle', 'volume', 'coord'
   ];
 
   /* ---------------- 可播種隨機數 ---------------- */
@@ -294,11 +295,12 @@
 
   function genWord(rng, o) {
     var op = pick(rng, o.ops || ['add', 'sub', 'mul']);
-    var a, b, answer, prompt;
+    var a, b, answer, prompt, mathOp;
     if (op === 'add') {
       a = randInt(rng, o.min != null ? o.min : 1, o.max != null ? o.max : 20);
       b = randInt(rng, 1, o.max != null ? o.max : 20);
       answer = a + b;
+      mathOp = 'add';
       prompt = {
         zh: '小明有 ' + a + ' 個蘋果，媽媽又給了他 ' + b + ' 個，一共有幾個？',
         en: 'Sam has ' + a + ' apples and gets ' + b + ' more. How many in all?'
@@ -307,17 +309,50 @@
       a = randInt(rng, 2, o.max != null ? o.max : 20);
       b = randInt(rng, 1, a);
       answer = a - b;
+      mathOp = 'sub';
       prompt = {
         zh: '小明有 ' + a + ' 個蘋果，吃了 ' + b + ' 個，還剩幾個？',
         en: 'Sam has ' + a + ' apples and eats ' + b + '. How many are left?'
       };
-    } else {
+    } else if (op === 'mul') {
       a = randInt(rng, 2, o.maxFactor != null ? o.maxFactor : 9);
       b = randInt(rng, 2, o.maxFactor != null ? o.maxFactor : 9);
       answer = a * b;
+      mathOp = 'mul';
       prompt = {
         zh: '每盒有 ' + a + ' 個，一共有 ' + b + ' 盒，一共有幾個？',
         en: 'There are ' + a + ' in each box and ' + b + ' boxes. How many in all?'
+      };
+    } else if (op === 'area') {
+      a = randInt(rng, 2, 12);
+      b = randInt(rng, 2, 12);
+      answer = a * b;
+      mathOp = 'warea';
+      prompt = {
+        zh: '長方形花園長 ' + a + ' m，闊 ' + b + ' m，面積是多少？',
+        en: 'A rectangular garden is ' + a + ' m by ' + b + ' m. What is its area?'
+      };
+    } else if (op === 'percent') {
+      var orig = randInt(rng, 2, 10) * 10;
+      var off = pick(rng, [10, 20, 50]);
+      a = orig; b = off;
+      answer = orig * (100 - off) / 100;
+      mathOp = 'wpercent';
+      prompt = {
+        zh: '一件貨品原價 $' + orig + '，減價 ' + off + '% 後售價多少？',
+        en: 'An item costs $' + orig + ' and is reduced by ' + off + '%. What is the new price?'
+      };
+    } else {
+      var p = randInt(rng, 1, 3), q = randInt(rng, 1, 3);
+      while (q === p) q = randInt(rng, 1, 3);
+      var kk = randInt(rng, 1, 10);
+      var total = (p + q) * kk;
+      a = total; b = q * kk;
+      answer = q * kk;
+      mathOp = 'wratio';
+      prompt = {
+        zh: '把 $' + total + ' 按 ' + p + ' : ' + q + ' 分給甲、乙，乙得多少？',
+        en: 'Share $' + total + ' between A and B in the ratio ' + p + ' : ' + q + '. How much does B get?'
       };
     }
     return {
@@ -325,8 +360,8 @@
       prompt: prompt,
       visual: null,
       answer: answer,
-      math: { op: op, a: a, b: b },
-      hint: { zh: '先想想用加法、減法還是乘法。', en: 'Decide: add, subtract, or multiply?' }
+      math: { op: mathOp, a: a, b: b },
+      hint: { zh: '先想想用哪種運算。', en: 'Decide which operation to use.' }
     };
   }
 
@@ -904,6 +939,119 @@
     return 'Multiply both sides by ' + m.a + ': x = ' + m.c + ' × ' + m.a + '.';
   }
 
+  /* ================= 幾何與座標（含圖示） ================= */
+
+  function fpt(p) { return '(' + p[0] + ', ' + p[1] + ')'; }
+
+  /* 三角形面積 */
+  function genTriangle(rng, o) {
+    var b = randInt(rng, 2, 12);
+    var h = randInt(rng, 2, 12) * 2; // 高為偶數 → 面積整數
+    return {
+      type: 'triangle',
+      prompt: { zh: '三角形的底是 ' + b + ' cm，高是 ' + h + ' cm，面積是多少？', en: 'A triangle has base ' + b + ' cm and height ' + h + ' cm. What is its area?' },
+      visual: { kind: 'triangle', b: b, h: h },
+      answer: b * h / 2,
+      math: { op: 'triangle', b: b, h: h },
+      hint: { zh: '三角形面積 = 底 × 高 ÷ 2。', en: 'Triangle area = base × height ÷ 2.' }
+    };
+  }
+
+  /* 圓的周長 / 面積（以 π 表示，答案為字串） */
+  function genCircle(rng, o) {
+    var r = randInt(rng, 1, 6);
+    var suf = 'π';
+    if (rng() < 0.5) {
+      return {
+        type: 'circle',
+        prompt: { zh: '圓的半徑是 ' + r + ' cm，面積是多少？（以 π 表示）', en: 'A circle has radius ' + r + ' cm. What is its area? (in terms of π)' },
+        visual: { kind: 'circle', r: r },
+        answer: (r * r) + suf,
+        math: { op: 'circle', r: r, mode: 'area' },
+        choices: circleChoices(rng, r * r, suf),
+        hint: { zh: '圓面積 = π r²。', en: 'Area = π r².' }
+      };
+    }
+    return {
+      type: 'circle',
+      prompt: { zh: '圓的半徑是 ' + r + ' cm，周長是多少？（以 π 表示）', en: 'A circle has radius ' + r + ' cm. What is its circumference? (in terms of π)' },
+      visual: { kind: 'circle', r: r },
+      answer: (2 * r) + suf,
+      math: { op: 'circle', r: r, mode: 'circ' },
+      choices: circleChoices(rng, 2 * r, suf),
+      hint: { zh: '圓周長 = 2π r。', en: 'Circumference = 2π r.' }
+    };
+  }
+
+  function circleChoices(rng, k, suf) {
+    var out = [k + suf];
+    var seen = {}; seen[k] = true;
+    var guard = 0;
+    while (out.length < 4 && guard++ < 100) {
+      var cand = k + pick(rng, [1, 2, -1, 3, -2]);
+      if (cand <= 0) cand = k + 1;
+      if (!seen[cand]) { seen[cand] = true; out.push(cand + suf); }
+    }
+    return shuffle(rng, out);
+  }
+
+  /* 長方體體積 */
+  function genVolume(rng, o) {
+    var l = randInt(rng, 2, 6);
+    var w = randInt(rng, 2, 6);
+    var h = randInt(rng, 2, 6);
+    return {
+      type: 'volume',
+      prompt: { zh: '長方體的長 ' + l + ' cm、闊 ' + w + ' cm、高 ' + h + ' cm，體積是多少？', en: 'A cuboid is ' + l + ' cm by ' + w + ' cm by ' + h + ' cm. What is its volume?' },
+      visual: { kind: 'cuboid', l: l, w: w, h: h },
+      answer: l * w * h,
+      math: { op: 'volume', l: l, w: w, h: h },
+      hint: { zh: '體積 = 長 × 闊 × 高。', en: 'Volume = length × width × height.' }
+    };
+  }
+
+  /* 座標：兩點距離 / 中點 */
+  function genCoord(rng, o) {
+    if (rng() < 0.5) {
+      var t = pick(rng, [[3, 4, 5], [6, 8, 10], [5, 12, 13]]);
+      var dx = t[0], dy = t[1], dist = t[2];
+      var x0 = randInt(rng, 0, 3), y0 = randInt(rng, 0, 3);
+      var A = [x0, y0], B = [x0 + dx, y0 + dy];
+      return {
+        type: 'coord',
+        prompt: { zh: 'A' + fpt(A) + '，B' + fpt(B) + '。求 AB 的長度。', en: 'A' + fpt(A) + ', B' + fpt(B) + '. Find the length of AB.' },
+        visual: { kind: 'plane', a: A, b: B },
+        answer: dist,
+        math: { op: 'coord', a: A, b: B, mode: 'dist', dist: dist },
+        hint: { zh: '長度 = √((△x)² + (△y)²)。', en: 'Length = √((△x)² + (△y)²).' }
+      };
+    }
+    var k = randInt(rng, 1, 3), m = randInt(rng, 1, 3);
+    var x1 = randInt(rng, 0, 2), y1 = randInt(rng, 0, 2);
+    var A2 = [x1, y1], B2 = [x1 + 2 * k, y1 + 2 * m];
+    var mx = x1 + k, my = y1 + m;
+    var answer = '(' + mx + ', ' + my + ')';
+    return {
+      type: 'coord',
+      prompt: { zh: 'A' + fpt(A2) + '，B' + fpt(B2) + '。求 AB 的中點。', en: 'A' + fpt(A2) + ', B' + fpt(B2) + '. Find the midpoint of AB.' },
+      visual: { kind: 'plane', a: A2, b: B2 },
+      answer: answer,
+      math: { op: 'coord', a: A2, b: B2, mode: 'mid', mx: mx, my: my },
+      choices: midpointChoices(rng, mx, my),
+      hint: { zh: '中點 = ((x1+x2)/2, (y1+y2)/2)。', en: 'Midpoint = ((x1+x2)/2, (y1+y2)/2).' }
+    };
+  }
+
+  function midpointChoices(rng, mx, my) {
+    var out = [
+      '(' + mx + ', ' + my + ')',
+      '(' + (mx + 1) + ', ' + my + ')',
+      '(' + mx + ', ' + (my + 1) + ')',
+      '(' + (mx - 1) + ', ' + my + ')'
+    ];
+    return shuffle(rng, out);
+  }
+
   /* 回傳 { zh: [步驟...], en: [步驟...] }；不支援的題型回傳 null */
   function explain(p) {
     if (!p || !p.math) return null;
@@ -1118,6 +1266,59 @@
           zh: ['把數字由小到大排列：' + m.sorted.join('、') + '。', '取中間那個 = ' + p.answer + '。'],
           en: ['Sort the numbers: ' + m.sorted.join(', ') + '.', 'Take the middle one = ' + p.answer + '.']
         };
+      case 'triangle':
+        return {
+          zh: ['三角形面積 = 底 × 高 ÷ 2。', '= ' + m.b + ' × ' + m.h + ' ÷ 2 = ' + p.answer + '。'],
+          en: ['Triangle area = base × height ÷ 2.', '= ' + m.b + ' × ' + m.h + ' ÷ 2 = ' + p.answer + '.']
+        };
+      case 'circle':
+        if (m.mode === 'area') {
+          return {
+            zh: ['圓面積 = π r²。', '= π × ' + m.r + '² = ' + p.answer + '。'],
+            en: ['Area = π r².', '= π × ' + m.r + '² = ' + p.answer + '.']
+          };
+        }
+        return {
+          zh: ['圓周長 = 2π r。', '= 2 × π × ' + m.r + ' = ' + p.answer + '。'],
+          en: ['Circumference = 2π r.', '= 2 × π × ' + m.r + ' = ' + p.answer + '.']
+        };
+      case 'volume':
+        return {
+          zh: ['體積 = 長 × 闊 × 高。', '= ' + m.l + ' × ' + m.w + ' × ' + m.h + ' = ' + p.answer + '。'],
+          en: ['Volume = length × width × height.', '= ' + m.l + ' × ' + m.w + ' × ' + m.h + ' = ' + p.answer + '.']
+        };
+      case 'coord':
+        if (m.mode === 'dist') {
+          var dxv = m.b[0] - m.a[0], dyv = m.b[1] - m.a[1];
+          return {
+            zh: ['△x = ' + dxv + '，△y = ' + dyv + '。', '長度 = √(' + (dxv * dxv) + ' + ' + (dyv * dyv) + ') = ' + p.answer + '。'],
+            en: ['△x = ' + dxv + ', △y = ' + dyv + '.', 'Length = √(' + (dxv * dxv) + ' + ' + (dyv * dyv) + ') = ' + p.answer + '.']
+          };
+        }
+        return {
+          zh: ['中點 x = (' + m.a[0] + ' + ' + m.b[0] + ') ÷ 2 = ' + m.mx + '。', '中點 y = (' + m.a[1] + ' + ' + m.b[1] + ') ÷ 2 = ' + m.my + '。', '中點 = ' + p.answer + '。'],
+          en: ['mid x = (' + m.a[0] + ' + ' + m.b[0] + ') ÷ 2 = ' + m.mx + '.', 'mid y = (' + m.a[1] + ' + ' + m.b[1] + ') ÷ 2 = ' + m.my + '.', 'midpoint = ' + p.answer + '.']
+        };
+      case 'word':
+        if (m.op === 'warea') {
+          return {
+            zh: ['面積 = 長 × 闊。', '= ' + m.a + ' × ' + m.b + ' = ' + p.answer + '。'],
+            en: ['Area = length × width.', '= ' + m.a + ' × ' + m.b + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wpercent') {
+          return {
+            zh: ['減價後售價 = 原價 × (100 − ' + m.b + ')% 。', '= ' + m.a + ' × ' + (100 - m.b) + '% = ' + p.answer + '。'],
+            en: ['New price = original × (100 − ' + m.b + ')%.', '= ' + m.a + ' × ' + (100 - m.b) + '% = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wratio') {
+          return {
+            zh: ['先求一份：' + m.a + ' ÷ 總份數。', '乙佔一份的比例，答案 = ' + p.answer + '。'],
+            en: ['Find one share first.', 'B\'s share = ' + p.answer + '.']
+          };
+        }
+        return null;
       default:
         return null;
     }
@@ -1159,7 +1360,11 @@
     gp: genGp,
     prob: genProb,
     quad: genQuad,
-    stats: genStats
+    stats: genStats,
+    triangle: genTriangle,
+    circle: genCircle,
+    volume: genVolume,
+    coord: genCoord
   };
 
   /* ---------------- 選項（干擾項）生成 ---------------- */
@@ -1236,6 +1441,9 @@
     if (p.type === 'gp') return 500;
     if (p.type === 'quad') return 100;
     if (p.type === 'stats') return 30;
+    if (p.type === 'triangle') return 200;
+    if (p.type === 'volume') return 300;
+    if (p.type === 'coord') return p.math && p.math.mode === 'dist' ? 20 : 80;
     return 99;
   }
 

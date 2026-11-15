@@ -513,6 +513,107 @@
       zh: { name: '概率與統計', goal: '概率、分布與統計推斷。' },
       en: { name: 'Probability & Statistics', goal: 'Probability, distributions, and inference.' },
       lesson: null, types: null, levels: null, mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    /* ===================== 幾何、座標、應用題（補充） ===================== */
+
+    'prek.word': {
+      id: 'prek.word', stage: 'prek', order: 6,
+      zh: { name: '應用題', goal: '會讀簡單的應用題，用加減解決。' },
+      en: { name: 'Word Problems', goal: 'Solve simple word problems with + and −.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub'], max: 10 }],
+      mastery: { practice: 8, quizPass: 0.8 }
+    },
+    'g4.triangle': {
+      id: 'g4.triangle', stage: 'g4', order: 5,
+      zh: { name: '三角形面積', goal: '會用底 × 高 ÷ 2 計算三角形面積。' },
+      en: { name: 'Triangle Area', goal: 'Find the area of a triangle.' },
+      lesson: 'g4.triangle', types: ['triangle'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'g4.word': {
+      id: 'g4.word', stage: 'g4', order: 6,
+      zh: { name: '應用題', goal: '會用加減乘和面積解決應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve word problems with +, −, × and area.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 100, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'g5.word': {
+      id: 'g5.word', stage: 'g5', order: 4,
+      zh: { name: '應用題', goal: '會解決較複雜的應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve more complex word problems.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 1000, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'g6.circle': {
+      id: 'g6.circle', stage: 'g6', order: 4,
+      zh: { name: '圓的周長與面積', goal: '會計算圓的周長和面積（以 π 表示）。' },
+      en: { name: 'Circles', goal: 'Find circumference and area of a circle (in π).' },
+      lesson: 'g6.circle', types: ['circle'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'g6.volume': {
+      id: 'g6.volume', stage: 'g6', order: 5,
+      zh: { name: '立體圖形的體積', goal: '會計算長方體的體積。' },
+      en: { name: 'Volume of Cuboids', goal: 'Find the volume of a cuboid.' },
+      lesson: 'g6.volume', types: ['volume'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'g6.word': {
+      id: 'g6.word', stage: 'g6', order: 6,
+      zh: { name: '應用題', goal: '會綜合運用所學解決應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve mixed word problems.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 1000, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s1.coord': {
+      id: 'ms.s1.coord', stage: 'ms1', order: 4,
+      zh: { name: '座標', goal: '會求兩點的距離和中點。' },
+      en: { name: 'Coordinates', goal: 'Find distance and midpoint of two points.' },
+      lesson: 'ms.s1.coord', types: ['coord'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s1.word': {
+      id: 'ms.s1.word', stage: 'ms1', order: 5,
+      zh: { name: '應用題', goal: '會用數學解決應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve word problems.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 1000, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s2.word': {
+      id: 'ms.s2.word', stage: 'ms2', order: 3,
+      zh: { name: '應用題', goal: '會解決應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve word problems.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 1000, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.word': {
+      id: 'ms.s3.word', stage: 'ms3', order: 3,
+      zh: { name: '應用題', goal: '會解決應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve word problems.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 1000, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s4.word': {
+      id: 'hs.s4.word', stage: 'hs1', order: 4,
+      zh: { name: '應用題', goal: '會解決應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve word problems.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 1000, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.word': {
+      id: 'hs.s5.word', stage: 'hs2', order: 4,
+      zh: { name: '應用題', goal: '會解決應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve word problems.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 1000, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.word': {
+      id: 'hs.s6.word', stage: 'hs3', order: 3,
+      zh: { name: '應用題', goal: '會解決應用題。' },
+      en: { name: 'Word Problems', goal: 'Solve word problems.' },
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 1000, maxFactor: 9 }],
+      mastery: { practice: 12, quizPass: 0.8 }
     }
   };
 
@@ -520,7 +621,7 @@
     { id: 'prek', zh: '學前', en: 'Pre-K', desc: { zh: '數數、比大小、10 以內的加減', en: 'Counting, comparing, and adding/subtracting within 10' }, color: '#34C759', emoji: '🌱',
       topics: [
         { id: 'prek.num', zh: '認識數字', en: 'Numbers', skills: ['prek.count', 'prek.compare'] },
-        { id: 'prek.calc', zh: '加減啟蒙', en: 'First Addition', skills: ['prek.add10', 'prek.sub10', 'prek.bonds10'] }
+        { id: 'prek.calc', zh: '加減啟蒙', en: 'First Addition', skills: ['prek.add10', 'prek.sub10', 'prek.bonds10', 'prek.word'] }
       ] },
     { id: 'g1', zh: '小一', en: 'Primary 1', desc: { zh: '20 以內加減、100 以內的數', en: 'Add/subtract within 20, numbers within 100' }, color: '#FF9500', emoji: '☀️',
       topics: [
@@ -543,45 +644,56 @@
     { id: 'g4', zh: '小四', en: 'Primary 4', desc: { zh: '多位數乘除、分數、小數、面積', en: 'Multi-digit, fractions, decimals, area' }, color: '#5AC8FA', emoji: '🧭',
       topics: [
         { id: 'g4.num', zh: '數與運算', en: 'Numbers & Operations', skills: ['g4.multidigit', 'g4.fractionadd', 'g4.decimal'] },
-        { id: 'g4.geo', zh: '度量', en: 'Measurement', skills: ['g4.area'] }
+        { id: 'g4.geo', zh: '度量', en: 'Measurement', skills: ['g4.area', 'g4.triangle'] },
+        { id: 'g4.word', zh: '解決問題', en: 'Word Problems', skills: ['g4.word'] }
       ] },
     { id: 'g5', zh: '小五', en: 'Primary 5', desc: { zh: '小數乘除、平均數、分數乘法', en: 'Decimal ×/÷, averages, fraction of a number' }, color: '#5856D6', emoji: '⛰️',
       topics: [
         { id: 'g5.num', zh: '數與運算', en: 'Numbers & Operations', skills: ['g5.decimalmul', 'g5.fractionof'] },
-        { id: 'g5.data', zh: '數據處理', en: 'Data Handling', skills: ['g5.average'] }
+        { id: 'g5.data', zh: '數據處理', en: 'Data Handling', skills: ['g5.average'] },
+        { id: 'g5.word', zh: '解決問題', en: 'Word Problems', skills: ['g5.word'] }
       ] },
     { id: 'g6', zh: '小六', en: 'Primary 6', desc: { zh: '方程、百分數、比與比例', en: 'Equations, percentages, ratio' }, color: '#FF2D55', emoji: '🏆',
       topics: [
         { id: 'g6.alg', zh: '代數', en: 'Algebra', skills: ['g6.equation'] },
-        { id: 'g6.num', zh: '數與比例', en: 'Numbers & Ratio', skills: ['g6.percent', 'g6.ratio'] }
+        { id: 'g6.num', zh: '數與比例', en: 'Numbers & Ratio', skills: ['g6.percent', 'g6.ratio'] },
+        { id: 'g6.geo', zh: '度量', en: 'Measurement', skills: ['g6.circle', 'g6.volume'] },
+        { id: 'g6.word', zh: '解決問題', en: 'Word Problems', skills: ['g6.word'] }
       ] },
     { id: 'ms1', zh: '中一', en: 'S1', desc: { zh: '有向數、代數式求值、一元一次方程', en: 'Directed numbers, substitution, linear equations' }, color: '#FF3B30', emoji: '🎓',
       topics: [
-        { id: 'ms1.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s1.directed', 'ms.s1.exprsub', 'ms.s1.linear'] }
+        { id: 'ms1.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s1.directed', 'ms.s1.exprsub', 'ms.s1.linear'] },
+        { id: 'ms1.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s1.coord'] },
+        { id: 'ms1.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s1.word'] }
       ] },
     { id: 'ms2', zh: '中二', en: 'S2', desc: { zh: '畢氏定理、聯立方程', en: 'Pythagoras, simultaneous equations' }, color: '#FF6B35', emoji: '📐',
       topics: [
         { id: 'ms2.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s2.pythagoras'] },
-        { id: 'ms2.alg', zh: '代數', en: 'Algebra', skills: ['ms.s2.simul'] }
+        { id: 'ms2.alg', zh: '代數', en: 'Algebra', skills: ['ms.s2.simul'] },
+        { id: 'ms2.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s2.word'] }
       ] },
     { id: 'ms3', zh: '中三', en: 'S3', desc: { zh: '指數定律、一元一次不等式', en: 'Laws of indices, linear inequalities' }, color: '#FF8C42', emoji: '🧮',
       topics: [
-        { id: 'ms3.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s3.indices', 'ms.s3.inequality'] }
+        { id: 'ms3.num', zh: '數與代數', en: 'Number & Algebra', skills: ['ms.s3.indices', 'ms.s3.inequality'] },
+        { id: 'ms3.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s3.word'] }
       ] },
     { id: 'hs1', zh: '中四', en: 'S4', desc: { zh: '對數、函數求值、三角比', en: 'Logarithms, function values, trigonometric ratios' }, color: '#A2845E', emoji: '🧠',
       topics: [
         { id: 'hs1.num', zh: '數與代數', en: 'Number & Algebra', skills: ['hs.s4.log', 'hs.s4.fx'] },
-        { id: 'hs1.trig', zh: '三角學', en: 'Trigonometry', skills: ['hs.s4.trig'] }
+        { id: 'hs1.trig', zh: '三角學', en: 'Trigonometry', skills: ['hs.s4.trig'] },
+        { id: 'hs1.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s4.word'] }
       ] },
     { id: 'hs2', zh: '中五', en: 'S5', desc: { zh: '等差、等比數列、概率', en: 'Arithmetic and geometric sequences, probability' }, color: '#8B6F47', emoji: '📈',
       topics: [
         { id: 'hs2.seq', zh: '數列', en: 'Sequences', skills: ['hs.s5.ap', 'hs.s5.gp'] },
-        { id: 'hs2.prob', zh: '概率', en: 'Probability', skills: ['hs.s5.prob'] }
+        { id: 'hs2.prob', zh: '概率', en: 'Probability', skills: ['hs.s5.prob'] },
+        { id: 'hs2.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s5.word'] }
       ] },
     { id: 'hs3', zh: '中六', en: 'S6', desc: { zh: '二次方程的根、中位數', en: 'Roots of quadratics, median' }, color: '#7A5F3C', emoji: '📊',
       topics: [
         { id: 'hs3.alg', zh: '代數', en: 'Algebra', skills: ['hs.s6.quad'] },
-        { id: 'hs3.stats', zh: '統計', en: 'Statistics', skills: ['hs.s6.stats'] }
+        { id: 'hs3.stats', zh: '統計', en: 'Statistics', skills: ['hs.s6.stats'] },
+        { id: 'hs3.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s6.word'] }
       ] },
     { id: 'college', zh: '大學', en: 'University', desc: { zh: '微積分、線性代數、概率統計', en: 'Calculus, linear algebra, statistics' }, color: '#8E8E93', emoji: '🎯',
       topics: [

@@ -99,7 +99,7 @@ async function main() {
   check(w2.__mathApp.getProgress().skills['prek.count'].correct === 4, '預置進度被正確加載');
 
   /* 8. 逐步解鎖：學前全部通過測驗後，一年級解鎖並顯示 */
-  const prekIds = ['prek.count', 'prek.compare', 'prek.add10', 'prek.sub10', 'prek.bonds10'];
+  const prekIds = ['prek.count', 'prek.compare', 'prek.add10', 'prek.sub10', 'prek.bonds10', 'prek.word'];
   const passedSkills = {};
   prekIds.forEach(function (id) {
     passedSkills[id] = { attempts: 0, correct: 0, consecCorrect: 0, consecWrong: 0, difficultyStep: 0, lastSeen: 0, typeAcc: {}, stars: 3, mastered: true, quizStars: 3, quizBest: 100, lastProblems: [] };
