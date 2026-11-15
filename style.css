@@ -136,6 +136,9 @@ h1, h2, h3, p { margin: 0; }
 .lesson-visual { margin: 14px 0 4px; display: flex; justify-content: center; }
 .lesson-actions { display: flex; gap: 10px; margin-top: 8px; }
 .lesson-actions .btn { flex: 1; }
+.prompt-small { font-size: 22px; font-weight: 800; text-align: center; margin: 8px 0 12px; }
+.steps-list { margin: 0 0 8px; padding-left: 24px; }
+.steps-list li { margin: 7px 0; font-size: 16px; line-height: 1.5; }
 
 /* ---------- 按鈕 ---------- */
 .btn {

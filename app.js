@@ -448,7 +448,6 @@
     var skill = getSkill(skillId);
     var info = skill[state.lang === 'zh' ? 'zh' : 'en'];
     var lesson = Lessons[skill.lesson];
-    var ms = masteryOf(skill);
 
     var html = '<h1 class="page-title">' + esc(info.name) + '</h1>' +
       '<p class="page-sub">' + t('stage.goal') + '：' + esc(info.goal) + '</p>';
@@ -462,6 +461,10 @@
       }
       html += '<div class="lesson-label">' + t('lesson.example') + '</div><p class="lesson-text">' + esc(l.example) + '</p>' +
         '<div class="lesson-label">' + t('lesson.tip') + '</div><p class="lesson-text">' + esc(l.tip) + '</p>' +
+        '</div>' +
+        '<div class="lesson-card" style="margin-top:12px">' +
+        '<button class="btn secondary big" id="lessonExample" type="button">📖 ' + t('lesson.showExample') + '</button>' +
+        '<div id="exampleBox" hidden></div>' +
         '</div>';
     } else {
       html += '<div class="lesson-card"><p class="lesson-text">' + t('skill.comingText') + '</p></div>';
@@ -477,8 +480,32 @@
     if (lesson && lesson.visual) {
       renderVisual($('lessonVisual'), lesson.visual, null);
     }
+    if (lesson) {
+      $('lessonExample').addEventListener('click', function () { showWorkedExample(skillId); });
+    }
     $('lessonPractice').addEventListener('click', function () { startPractice(skillId); });
     $('lessonQuiz').addEventListener('click', function () { startQuiz(skillId); });
+  }
+
+  /* 一步步示範：生成一道該技能的題，列出解題步驟 */
+  function showWorkedExample(skillId) {
+    var skill = getSkill(skillId);
+    var box = $('exampleBox');
+    if (!box) return;
+    var p = MathCore.generateProblem(skill, { seed: (Date.now() & 0xffffffff) });
+    var ex = MathCore.explain(p);
+    box.hidden = false;
+    if (!ex) {
+      box.innerHTML = '<div class="lesson-label">' + t('lesson.example') + '</div>' +
+        '<p class="prompt-small">' + esc(L(p.prompt)) + '</p>';
+      return;
+    }
+    var steps = state.lang === 'zh' ? ex.zh : ex.en;
+    var list = '<ol class="steps-list">' + steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>';
+    box.innerHTML = '<div class="lesson-label">' + t('lesson.showExample') + '</div>' +
+      '<p class="prompt-small">' + esc(L(p.prompt)) + '</p>' + list +
+      '<button class="btn secondary" id="exampleNext" type="button" style="margin-top:10px">🔄 ' + t('lesson.nextExample') + '</button>';
+    $('exampleNext').addEventListener('click', function () { showWorkedExample(skillId); });
   }
 
   /* ---------------- 練習 / 測驗 ---------------- */

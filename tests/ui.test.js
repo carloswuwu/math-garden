@@ -131,6 +131,26 @@ async function main() {
   colorCorrect.click();
   check(colorCorrect.classList.contains('correct'), '顏色選擇判對並高亮');
 
+  /* 10. 小課堂：看一步步示範（加法題型有步驟） */
+  const passed = function () {
+    return { attempts: 0, correct: 0, consecCorrect: 0, consecWrong: 0, difficultyStep: 0, lastSeen: 0, typeAcc: {}, stars: 3, mastered: true, quizStars: 3, quizBest: 100, lastProblems: [] };
+  };
+  const seed4 = JSON.stringify({
+    version: 1, lang: 'zh', sound: false, theme: 'light',
+    streak: { lastDay: null, count: 0 }, badges: [], stars: 0,
+    skills: { 'prek.count': passed(), 'prek.compare': passed() }
+  });
+  const ctx5 = boot(seed4);
+  const d5 = ctx5.d;
+  d5.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  d5.querySelector('#screen-stage .skill-card[data-skill="prek.add10"]').click();
+  const exampleBtn = d5.getElementById('lessonExample');
+  check(!!exampleBtn, '小課堂應有「看一步步示範」按鈕');
+  exampleBtn.click();
+  const box = d5.getElementById('exampleBox');
+  check(box && !box.hidden, '點擊後示範區應顯示');
+  check(d5.querySelectorAll('#exampleBox .steps-list li').length >= 1, '示範應列出解題步驟');
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }

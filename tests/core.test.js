@@ -245,4 +245,22 @@ for (let seed = 1; seed <= N; seed++) {
   }
 })();
 
+/* 8. 一步步示範（explain）：支援的題型都應給出步驟 */
+(function () {
+  const supported = ['addition', 'subtraction', 'numberbonds', 'multiplication', 'division',
+    'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average', 'equation', 'percent', 'ratio', 'area', 'fractionof'];
+  supported.forEach((t) => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const p = C.generateProblem(SKILLS[t], { seed });
+      const ex = C.explain(p);
+      check(ex && Array.isArray(ex.zh) && Array.isArray(ex.en), `explain ${t}: 應有 zh/en 步驟`);
+      check(ex.zh.length >= 1 && ex.zh.length === ex.en.length, `explain ${t}: zh/en 步驟數應一致`);
+      ex.zh.forEach((s) => check(typeof s === 'string' && s.trim().length > 0, `explain ${t}: 中文步驟非空`));
+      ex.en.forEach((s) => check(typeof s === 'string' && s.trim().length > 0, `explain ${t}: 英文步驟非空`));
+    }
+  });
+  const c = C.generateProblem(SKILLS.count, { seed: 1 });
+  check(C.explain(c) === null, 'explain: 數一數暫不提供步驟');
+})();
+
 console.log(`✓ math-core 全部通過（${checks} 項斷言）`);
