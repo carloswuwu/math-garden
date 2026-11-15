@@ -58,6 +58,8 @@
 
     colors: { green: '綠色', orange: '橙色' },
 
+    outline: { title: '課程大綱' },
+
     common: {
       cancel: '取消', confirm: '確定', close: '關閉', of: '共', masteredShort: '已掌握'
     }
@@ -115,6 +117,8 @@
     },
 
     colors: { green: 'Green', orange: 'Orange' },
+
+    outline: { title: 'Curriculum Outline' },
 
     common: {
       cancel: 'Cancel', confirm: 'OK', close: 'Close', of: 'of', masteredShort: 'Mastered'

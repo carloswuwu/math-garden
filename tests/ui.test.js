@@ -7,7 +7,7 @@ const { JSDOM } = require('jsdom');
 
 const ROOT = path.join(__dirname, '..');
 const HTML = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-const SCRIPTS = ['math-core.js', 'i18n.js', 'curriculum.js', 'lessons.js', 'app.js'];
+const SCRIPTS = ['math-core.js', 'i18n.js', 'curriculum.js', 'curriculum-outline.js', 'lessons.js', 'app.js'];
 
 let checks = 0;
 function check(cond, msg) { checks++; assert.ok(cond, msg); }
@@ -150,6 +150,17 @@ async function main() {
   const box = d5.getElementById('exampleBox');
   check(box && !box.hidden, '點擊後示範區應顯示');
   check(d5.querySelectorAll('#exampleBox .steps-list li').length >= 1, '示範應列出解題步驟');
+
+  /* 11. 課程大綱（參考） */
+  const ctx6 = boot();
+  const d6 = ctx6.d;
+  const outlineBtn = d6.getElementById('homeOutlineBtn');
+  check(!!outlineBtn, '首頁應有「課程大綱」按鈕');
+  outlineBtn.click();
+  check(!d6.getElementById('screen-outline').hidden, '課程大綱頁應顯示');
+  check(d6.querySelectorAll('#screen-outline .outline-stage').length >= 4, '應列出至少 4 個學習階段');
+  check(d6.body.textContent.includes('第一學習階段'), '應包含第一學習階段');
+  check(d6.body.textContent.includes('第四學習階段'), '應包含第四學習階段');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);

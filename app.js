@@ -8,6 +8,7 @@
   var MathCore = window.MathCore;
   var I18N = window.I18N;
   var Curriculum = window.Curriculum;
+  var CurriculumOutline = window.CurriculumOutline;
   var Lessons = window.Lessons;
 
   var STORE_KEY = 'mathpath.progress.v1';
@@ -38,7 +39,7 @@
 
   /* ---------------- DOM ---------------- */
   var $ = function (id) { return document.getElementById(id); };
-  var screens = ['home', 'stage', 'lesson', 'practice', 'parent', 'settings'];
+  var screens = ['home', 'stage', 'lesson', 'practice', 'parent', 'settings', 'outline'];
 
   /* ---------------- 工具 ---------------- */
   function t(path, tokens) {
@@ -406,6 +407,7 @@
       case 'practice': title = state.mode === 'quiz' ? t('quiz.title') : t('practice.title'); break;
       case 'parent': title = t('parent.title'); break;
       case 'settings': title = t('settings.title'); break;
+      case 'outline': title = t('outline.title'); break;
     }
     $('topbarTitle').textContent = title;
   }
@@ -420,6 +422,7 @@
         break;
       case 'parent': renderHome(); break;
       case 'settings': renderHome(); break;
+      case 'outline': renderHome(); break;
     }
   }
 
@@ -446,6 +449,7 @@
     html += '</div>' +
       '<p class="page-sub" style="margin-top:14px;font-size:13px">' + t('home.unlocked', { u: unlockedCount, t: realStages.length }) + '</p>' +
       '<p class="page-sub" style="font-size:13px;margin-bottom:14px">' + t('home.nextHint') + '</p>' +
+      '<button class="btn secondary big" id="homeOutlineBtn" type="button" style="margin-bottom:10px">📚 ' + t('outline.title') + '</button>' +
       '<button class="btn secondary big" id="homeParentBtn" type="button">👨‍👩‍👦 ' + t('home.parent') + '</button>';
 
     $('screen-home').innerHTML = html;
@@ -453,6 +457,7 @@
     $('screen-home').querySelectorAll('.stage-card').forEach(function (el) {
       el.addEventListener('click', function () { renderStage(el.getAttribute('data-stage')); });
     });
+    $('homeOutlineBtn').addEventListener('click', renderOutline);
     $('homeParentBtn').addEventListener('click', renderParent);
   }
 
@@ -971,6 +976,28 @@
       modal.hidden = true;
       renderHome();
     });
+  }
+
+  /* ---------------- 課程大綱（參考） ---------------- */
+
+  function renderOutline() {
+    show('outline');
+    var o = CurriculumOutline;
+    if (!o) { $('screen-outline').innerHTML = '<p class="page-sub">—</p>'; return; }
+    var lang = state.lang === 'zh' ? 'zh' : 'en';
+    var html = '<h1 class="page-title">📚 ' + t('outline.title') + '</h1>' +
+      '<p class="page-sub">' + esc(o.intro[lang]) + '</p>' +
+      '<p class="page-sub" style="font-size:13px">' + esc(o.note[lang]) + '</p>';
+    o.stages.forEach(function (stage) {
+      html += '<div class="outline-stage"><h2>' + esc(stage[lang]) + '</h2>';
+      stage.strands.forEach(function (strand) {
+        html += '<div class="outline-strand"><div class="outline-strand-title">' + esc(strand[lang]) + '</div><ul class="outline-units">';
+        strand.units.forEach(function (u) { html += '<li>' + esc(u[lang]) + '</li>'; });
+        html += '</ul></div>';
+      });
+      html += '</div>';
+    });
+    $('screen-outline').innerHTML = html;
   }
 
   /* ---------------- 設置 ---------------- */

@@ -1,7 +1,7 @@
 /* Service Worker：離線快取
  * 策略：網路優先（network-first）——上線時永遠取得最新版本；
  *       離線時自動退回快取。快取版本號每次更新時遞增，舊快取會被清除。 */
-const CACHE = 'math-garden-v3';
+const CACHE = 'math-garden-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './math-core.js',
   './i18n.js',
   './curriculum.js',
+  './curriculum-outline.js',
   './lessons.js',
   './manifest.webmanifest',
   './icon-192.png',
