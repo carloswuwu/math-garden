@@ -40,6 +40,12 @@ function computeAnswer(math) {
   if (math.op === 'ratio') return math.q * math.k;
   if (math.op === 'area') return math.mode === 'area' ? math.l * math.w : 2 * (math.l + math.w);
   if (math.op === 'fractionof') return math.n * math.k;
+  if (math.op === 'exprsub') return math.a * math.x + math.b;
+  if (math.op === 'linear') return math.form === '+' ? (math.c - math.b) / math.a : (math.c + math.b) / math.a;
+  if (math.op === 'pythagoras') return math.mode === 'hyp' ? math.c : math.b;
+  if (math.op === 'simul') return (math.s + math.d) / 2;
+  if (math.op === 'indices') return math.e != null ? Math.pow(math.base, math.e) : Math.pow(math.base, math.e1 + math.e2);
+  if (math.op === 'inequality') return 'x ' + math.sign + ' ' + math.x0;
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -78,6 +84,13 @@ const SKILLS = {
   ratio:          { id: 't.ratio',     types: ['ratio'],                     levels: [{}] },
   area:           { id: 't.area',      types: ['area'],                      levels: [{}] },
   fractionof:     { id: 't.frof',      types: ['fractionof'],                levels: [{}] },
+  directed:       { id: 't.dir',       types: ['directed'],                  levels: [{}] },
+  exprsub:        { id: 't.expr',      types: ['exprsub'],                   levels: [{}] },
+  linear:         { id: 't.lin',       types: ['linear'],                    levels: [{}] },
+  pythagoras:     { id: 't.pyth',      types: ['pythagoras'],                levels: [{}] },
+  simul:          { id: 't.simul',     types: ['simul'],                     levels: [{}] },
+  indices:        { id: 't.idx',       types: ['indices'],                   levels: [{}] },
+  inequality:     { id: 't.ineq',      types: ['inequality'],                levels: [{}] },
 };
 
 const N = 400; // 每個類型的抽樣數量
@@ -90,16 +103,16 @@ function validateProblem(skill, p, label) {
   // 答案與 math 元信息一致
   const expected = computeAnswer(p.math);
   const isColor = p.type === 'comparegroup';
-  const isDecimal = p.type === 'decimal' || p.type === 'decimalmul';
+  const isString = typeof p.answer === 'string';
   if (C.isFraction(expected)) {
     check(C.isFraction(p.answer), `${label}: 應為分數答案`);
     check(p.answer.n === expected.n && p.answer.d === expected.d, `${label}: 分數答案不一致 (${p.answer.n}/${p.answer.d} vs ${expected.n}/${expected.d})`);
     check(p.answer.n > 0 && p.answer.n < p.answer.d, `${label}: 分數應真分數`);
-  } else if (isColor || isDecimal) {
-    check(typeof p.answer === 'string', `${label}: 顏色/小數題答案應為字符串`);
+  } else if (isString) {
+    check(typeof p.answer === 'string', `${label}: 字符串題答案應為字符串`);
     check(p.answer === expected, `${label}: 字符串答案不一致 (${p.answer} vs ${expected})`);
   } else {
-    check(isIntNonNeg(p.answer), `${label}: 答案應為非負整數，得到 ${p.answer}`);
+    check(Number.isInteger(p.answer), `${label}: 答案應為整數，得到 ${p.answer}`);
     check(p.answer === expected, `${label}: 答案不一致 (${p.answer} vs ${expected})`);
   }
 
@@ -113,10 +126,10 @@ function validateProblem(skill, p, label) {
   p.choices.forEach((c) => {
     if (C.isFraction(c)) {
       check(c.n > 0 && c.n < c.d, `${label}: 分數選項應為真分數`);
-    } else if (isColor || isDecimal) {
-      check(typeof c === 'string', `${label}: 顏色/小數選項應為字符串`);
+    } else if (isString) {
+      check(typeof c === 'string', `${label}: 字符串選項應為字符串`);
     } else {
-      check(isIntNonNeg(c), `${label}: 選項應為非負整數，得到 ${c}`);
+      check(Number.isInteger(c), `${label}: 選項應為整數，得到 ${c}`);
     }
   });
 
@@ -248,7 +261,8 @@ for (let seed = 1; seed <= N; seed++) {
 /* 8. 一步步示範（explain）：支援的題型都應給出步驟 */
 (function () {
   const supported = ['addition', 'subtraction', 'numberbonds', 'multiplication', 'division',
-    'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average', 'equation', 'percent', 'ratio', 'area', 'fractionof'];
+    'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average', 'equation', 'percent', 'ratio', 'area', 'fractionof',
+    'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality'];
   supported.forEach((t) => {
     for (let seed = 1; seed <= 60; seed++) {
       const p = C.generateProblem(SKILLS[t], { seed });

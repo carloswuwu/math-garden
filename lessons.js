@@ -209,6 +209,50 @@
       zh: { title: '比與比例', intro: '比 a : b 表示 a 份對 b 份，先算出一份是多少。', example: '3 : 2，甲是 12，一份是 4，所以乙是 8。', tip: '先除以自己的份數，再乘另一邊的份數。' },
       en: { title: 'Ratio & Proportion', intro: 'The ratio a : b means a parts to b parts; find one part first.', example: '3 : 2 with A = 12: one part is 4, so B = 8.', tip: 'Divide by your parts, then multiply by the other side.' },
       visual: null
+    },
+
+    /* ---------- 中一（S1） ---------- */
+
+    'ms.s1.directed': {
+      zh: { title: '有向數', intro: '正負數相加減，先看符號；乘除時，同號得正、異號得負。', example: '(-5) + 3 = -2；(-4) × (-3) = 12；12 ÷ (-3) = -4。', tip: '減去一個負數，等於加上它的相反數。' },
+      en: { title: 'Directed Numbers', intro: 'For adding/subtracting, watch the signs; for ×/÷, same signs give +, different signs give −.', example: '(-5) + 3 = -2; (-4) × (-3) = 12; 12 ÷ (-3) = -4.', tip: 'Subtracting a negative is the same as adding its opposite.' },
+      visual: null
+    },
+    'ms.s1.exprsub': {
+      zh: { title: '代數式求值', intro: '把已知的數代入字母，再按運算順序計算。', example: '已知 x = 4，2x + 3 = 2 × 4 + 3 = 11。', tip: '代入後，先乘除後加減。' },
+      en: { title: 'Substitution', intro: 'Replace the letter with the given number, then calculate in the correct order.', example: 'If x = 4, then 2x + 3 = 2 × 4 + 3 = 11.', tip: 'After substituting, multiply/divide before adding/subtracting.' },
+      visual: null
+    },
+    'ms.s1.linear': {
+      zh: { title: '一元一次方程', intro: '把常數移到等號右邊，再兩邊除以 x 的係數，就求得 x。', example: '2x + 3 = 11 → 2x = 8 → x = 4。', tip: '移項要變號：加變減、減變加。' },
+      en: { title: 'Linear Equations', intro: 'Move the constant to the right, then divide both sides by the coefficient of x.', example: '2x + 3 = 11 → 2x = 8 → x = 4.', tip: 'When moving a term, flip its sign.' },
+      visual: null
+    },
+
+    /* ---------- 中二（S2） ---------- */
+
+    'ms.s2.pythagoras': {
+      zh: { title: '畢氏定理', intro: '直角三角形中，斜邊² = 兩條直角邊平方和。', example: '3² + 4² = 9 + 16 = 25，所以斜邊 = 5。', tip: '求直角邊時，用「斜邊² − 另一條邊²」。' },
+      en: { title: 'Pythagoras Theorem', intro: 'In a right triangle, hyp² = sum of the squares of the two legs.', example: '3² + 4² = 9 + 16 = 25, so hyp = 5.', tip: 'For a leg, use hyp² − other leg².' },
+      visual: null
+    },
+    'ms.s2.simul': {
+      zh: { title: '聯立方程', intro: '兩條方程一起解；把兩式相加或相減，消去一個未知數。', example: 'x + y = 5，x − y = 1；相加得 2x = 6，x = 3。', tip: '先消去一個未知數，再求另一個。' },
+      en: { title: 'Simultaneous Equations', intro: 'Solve two equations together; add or subtract to eliminate one unknown.', example: 'x + y = 5, x − y = 1; add: 2x = 6, so x = 3.', tip: 'Eliminate one unknown first, then find the other.' },
+      visual: null
+    },
+
+    /* ---------- 中三（S3） ---------- */
+
+    'ms.s3.indices': {
+      zh: { title: '指數定律', intro: '同底數相乘，指數相加；乘方就是連乘。', example: '2³ = 8；2³ × 2² = 2^(3+2) = 2⁵ = 32。', tip: '底數相同時，指數相加。' },
+      en: { title: 'Laws of Indices', intro: 'For the same base, add the exponents when multiplying; a power is repeated multiplication.', example: '2³ = 8; 2³ × 2² = 2^(3+2) = 2⁵ = 32.', tip: 'Same base → add the exponents.' },
+      visual: null
+    },
+    'ms.s3.inequality': {
+      zh: { title: '一元一次不等式', intro: '解法和方程相似，但兩邊乘或除以負數時，不等號要反向。', example: '2x + 1 > 5 → 2x > 4 → x > 2。', tip: '除以負數時，不等號要轉方向。' },
+      en: { title: 'Linear Inequalities', intro: 'Solve like an equation, but reverse the inequality sign when multiplying or dividing by a negative.', example: '2x + 1 > 5 → 2x > 4 → x > 2.', tip: 'Reverse the sign when dividing by a negative.' },
+      visual: null
     }
   };
 

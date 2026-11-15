@@ -23,7 +23,8 @@
     'count', 'compare', 'comparegroup', 'addition', 'subtraction', 'numberbonds',
     'missing', 'multiplication', 'division', 'fraction', 'word',
     'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average',
-    'equation', 'percent', 'ratio', 'area', 'fractionof'
+    'equation', 'percent', 'ratio', 'area', 'fractionof',
+    'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality'
   ];
 
   /* ---------------- 可播種隨機數 ---------------- */
@@ -584,6 +585,165 @@
     };
   }
 
+  /* ================= 中學題型（中一至中三） ================= */
+
+  function fmtNum(n) { return n < 0 ? '(' + n + ')' : '' + n; }
+
+  var RIGHT_TRIPLES = [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17], [7, 24, 25], [9, 12, 15], [12, 16, 20], [20, 21, 29]];
+
+  /* 有向數四則運算 */
+  function genDirected(rng, o) {
+    var op = pick(rng, ['+', '−', '×', '÷']);
+    var a, b, ans;
+    if (op === '×' || op === '÷') {
+      var mag = randInt(rng, 2, 9);
+      var sb = rng() < 0.5 ? 1 : -1;
+      b = mag * sb;
+      if (op === '×') { a = randInt(rng, 2, 9) * (rng() < 0.5 ? 1 : -1); ans = a * b; }
+      else { ans = randInt(rng, 2, 9) * (rng() < 0.5 ? 1 : -1); a = b * ans; }
+    } else {
+      a = randInt(rng, -10, 10);
+      b = randInt(rng, -10, 10);
+      ans = op === '+' ? a + b : a - b;
+    }
+    var s = fmtNum(a) + ' ' + op + ' ' + fmtNum(b) + ' = ?';
+    return {
+      type: 'directed',
+      prompt: { zh: s, en: s },
+      visual: null,
+      answer: ans,
+      math: { op: op, a: a, b: b },
+      hint: { zh: '先決定正負號，再算絕對值。', en: 'Decide the sign first, then the magnitude.' }
+    };
+  }
+
+  /* 代數式求值（代入法） */
+  function genExprSub(rng, o) {
+    var a = randInt(rng, 1, 6);
+    var b = randInt(rng, 1, 10);
+    var x = randInt(rng, 1, 8);
+    var ans = a * x + b;
+    var expr = (a === 1 ? 'x' : a + 'x') + ' + ' + b;
+    return {
+      type: 'exprsub',
+      prompt: { zh: '已知 x = ' + x + '，求 ' + expr + ' 的值。', en: 'Given x = ' + x + ', find the value of ' + expr + '.' },
+      visual: null,
+      answer: ans,
+      math: { op: 'exprsub', a: a, b: b, x: x },
+      hint: { zh: '把 x 代入，再計算。', en: 'Substitute x, then calculate.' }
+    };
+  }
+
+  /* 一元一次方程（兩步） */
+  function genLinear(rng, o) {
+    var a = randInt(rng, 2, 9);
+    var x = randInt(rng, 1, 15);
+    var b = randInt(rng, 1, 20);
+    var plus = rng() < 0.5;
+    var c = plus ? a * x + b : a * x - b;
+    var s = a + 'x ' + (plus ? '+' : '−') + ' ' + b + ' = ' + c;
+    return {
+      type: 'linear',
+      prompt: { zh: '求 x：' + s, en: 'Solve for x: ' + s },
+      visual: null,
+      answer: x,
+      math: { op: 'linear', a: a, b: b, c: c, x: x, form: plus ? '+' : '−' },
+      hint: { zh: '先把常數移到右邊，再兩邊除以 x 的係數。', en: 'Move the constant to the right, then divide both sides by the coefficient of x.' }
+    };
+  }
+
+  /* 畢氏定理 */
+  function genPythagoras(rng, o) {
+    var t = pick(rng, RIGHT_TRIPLES);
+    var a = t[0], b = t[1], c = t[2];
+    if (rng() < 0.5) {
+      return {
+        type: 'pythagoras',
+        prompt: { zh: '直角三角形的兩條直角邊是 ' + a + ' 和 ' + b + '，斜邊是多少？', en: 'A right triangle has legs ' + a + ' and ' + b + '. What is the hypotenuse?' },
+        visual: null,
+        answer: c,
+        math: { op: 'pythagoras', a: a, b: b, c: c, mode: 'hyp' },
+        hint: { zh: '畢氏定理：斜邊² = ' + a + '² + ' + b + '²。', en: 'Pythagoras: hyp² = ' + a + '² + ' + b + '².' }
+      };
+    }
+    return {
+      type: 'pythagoras',
+      prompt: { zh: '直角三角形的斜邊是 ' + c + '，一條直角邊是 ' + a + '，另一條是多少？', en: 'A right triangle has hypotenuse ' + c + ' and one leg ' + a + '. Find the other leg.' },
+      visual: null,
+      answer: b,
+      math: { op: 'pythagoras', a: a, b: b, c: c, mode: 'leg' },
+      hint: { zh: '另一條直角邊² = 斜邊² − 已知邊²。', en: 'Other leg² = hyp² − known leg².' }
+    };
+  }
+
+  /* 聯立方程 */
+  function genSimul(rng, o) {
+    var x = randInt(rng, 1, 10);
+    var y = randInt(rng, 1, 10);
+    var s = x + y;
+    var d = x - y;
+    return {
+      type: 'simul',
+      prompt: { zh: '已知 x + y = ' + s + '，x − y = ' + d + '，求 x。', en: 'Given x + y = ' + s + ' and x − y = ' + d + ', find x.' },
+      visual: null,
+      answer: x,
+      math: { op: 'simul', x: x, y: y, s: s, d: d },
+      hint: { zh: '兩式相加得 2x = ' + (s + d) + '，再除以 2。', en: 'Add the equations: 2x = ' + (s + d) + ', then divide by 2.' }
+    };
+  }
+
+  /* 指數定律 */
+  function genIndices(rng, o) {
+    var base = pick(rng, [2, 3, 4, 5]);
+    var e1 = randInt(rng, 2, 3);
+    var e2 = randInt(rng, 2, 3);
+    if (rng() < 0.5) {
+      var val = Math.pow(base, e1);
+      return {
+        type: 'indices',
+        prompt: { zh: base + '^' + e1 + ' = ?', en: base + '^' + e1 + ' = ?' },
+        visual: null,
+        answer: val,
+        math: { op: 'indices', base: base, e: e1 },
+        hint: { zh: base + '^' + e1 + ' 表示 ' + Array(e1).fill(base).join(' × ') + '。', en: base + '^' + e1 + ' means ' + Array(e1).fill(base).join(' × ') + '.' }
+      };
+    }
+    return {
+      type: 'indices',
+      prompt: { zh: base + '^' + e1 + ' × ' + base + '^' + e2 + ' = ?', en: base + '^' + e1 + ' × ' + base + '^' + e2 + ' = ?' },
+      visual: null,
+      answer: Math.pow(base, e1 + e2),
+      math: { op: 'indices', base: base, e1: e1, e2: e2 },
+      hint: { zh: '同底數相乘，指數相加：' + base + '^' + (e1 + e2) + '。', en: 'Same base: add the exponents, ' + base + '^' + (e1 + e2) + '.' }
+    };
+  }
+
+  /* 一元一次不等式（答案為「x > k」等字串） */
+  function genInequality(rng, o) {
+    var a = randInt(rng, 2, 5);
+    var b = randInt(rng, 1, 10);
+    var x0 = randInt(rng, 1, 10);
+    var greater = rng() < 0.5;
+    var sign = greater ? '>' : '<';
+    var c = a * x0 + b;
+    var answer = 'x ' + sign + ' ' + x0;
+    var choices = [
+      answer,
+      'x ' + (greater ? '<' : '>') + ' ' + x0,
+      'x ' + sign + ' ' + (x0 + 1),
+      'x ' + sign + ' ' + (x0 - 1)
+    ];
+    return {
+      type: 'inequality',
+      prompt: { zh: '解不等式：' + a + 'x + ' + b + ' ' + sign + ' ' + c, en: 'Solve the inequality: ' + a + 'x + ' + b + ' ' + sign + ' ' + c },
+      visual: null,
+      answer: answer,
+      math: { op: 'inequality', a: a, b: b, x0: x0, sign: sign },
+      choices: shuffle(rng, choices),
+      hint: { zh: '先把 ' + b + ' 移到右邊，再兩邊除以 ' + a + '。', en: 'Move ' + b + ' to the right, then divide both sides by ' + a + '.' }
+    };
+  }
+
   /* ---------------- 解題步驟（小課堂「一步步示範」用） ---------------- */
 
   function explainEquationZh(m) {
@@ -720,6 +880,59 @@
           zh: ['先除以分母：' + m.whole + ' ÷ ' + m.d + ' = ' + (m.whole / m.d) + '。', '再乘分子：' + (m.whole / m.d) + ' × ' + m.n + ' = ' + p.answer + '。'],
           en: ['Divide by the denominator: ' + m.whole + ' ÷ ' + m.d + ' = ' + (m.whole / m.d) + '.', 'Multiply by the numerator: ' + (m.whole / m.d) + ' × ' + m.n + ' = ' + p.answer + '.']
         };
+      case 'directed':
+        return {
+          zh: ['先按四則運算的符號規則決定正負。', fmtNum(m.a) + ' ' + m.op + ' ' + fmtNum(m.b) + ' = ' + p.answer + '。'],
+          en: ['Use the sign rules for directed numbers.', fmtNum(m.a) + ' ' + m.op + ' ' + fmtNum(m.b) + ' = ' + p.answer + '.']
+        };
+      case 'exprsub':
+        return {
+          zh: ['把 x = ' + m.x + ' 代入。', (m.a === 1 ? 'x' : m.a + 'x') + ' + ' + m.b + ' = ' + m.a + ' × ' + m.x + ' + ' + m.b + ' = ' + p.answer + '。'],
+          en: ['Substitute x = ' + m.x + '.', (m.a === 1 ? 'x' : m.a + 'x') + ' + ' + m.b + ' = ' + m.a + ' × ' + m.x + ' + ' + m.b + ' = ' + p.answer + '.']
+        };
+      case 'linear':
+        if (m.form === '+') {
+          return {
+            zh: ['兩邊同時減 ' + m.b + '：' + m.a + 'x = ' + (m.c - m.b) + '。', '兩邊同時除以 ' + m.a + '：x = ' + p.answer + '。'],
+            en: ['Subtract ' + m.b + ' from both sides: ' + m.a + 'x = ' + (m.c - m.b) + '.', 'Divide both sides by ' + m.a + ': x = ' + p.answer + '.']
+          };
+        }
+        return {
+          zh: ['兩邊同時加 ' + m.b + '：' + m.a + 'x = ' + (m.c + m.b) + '。', '兩邊同時除以 ' + m.a + '：x = ' + p.answer + '。'],
+          en: ['Add ' + m.b + ' to both sides: ' + m.a + 'x = ' + (m.c + m.b) + '.', 'Divide both sides by ' + m.a + ': x = ' + p.answer + '.']
+        };
+      case 'pythagoras':
+        if (m.mode === 'hyp') {
+          return {
+            zh: ['斜邊² = ' + m.a + '² + ' + m.b + '² = ' + (m.a * m.a) + ' + ' + (m.b * m.b) + ' = ' + (m.c * m.c) + '。', '斜邊 = ' + m.c + '。'],
+            en: ['hyp² = ' + m.a + '² + ' + m.b + '² = ' + (m.a * m.a) + ' + ' + (m.b * m.b) + ' = ' + (m.c * m.c) + '.', 'hyp = ' + m.c + '.']
+          };
+        }
+        return {
+          zh: ['另一條邊² = ' + m.c + '² − ' + m.a + '² = ' + (m.c * m.c) + ' − ' + (m.a * m.a) + ' = ' + (m.b * m.b) + '。', '另一條直角邊 = ' + m.b + '。'],
+          en: ['leg² = ' + m.c + '² − ' + m.a + '² = ' + (m.c * m.c) + ' − ' + (m.a * m.a) + ' = ' + (m.b * m.b) + '.', 'leg = ' + m.b + '.']
+        };
+      case 'simul':
+        return {
+          zh: ['兩式相加：2x = ' + (m.s + m.d) + '。', '兩邊除以 2：x = ' + p.answer + '。'],
+          en: ['Add the equations: 2x = ' + (m.s + m.d) + '.', 'Divide by 2: x = ' + p.answer + '.']
+        };
+      case 'indices':
+        if (m.e != null) {
+          return {
+            zh: [m.base + '^' + m.e + ' 表示 ' + Array(m.e).fill(m.base).join(' × ') + '。', '= ' + p.answer + '。'],
+            en: [m.base + '^' + m.e + ' means ' + Array(m.e).fill(m.base).join(' × ') + '.', '= ' + p.answer + '.']
+          };
+        }
+        return {
+          zh: ['同底數相乘，指數相加：' + m.base + '^' + (m.e1 + m.e2) + '。', '= ' + p.answer + '。'],
+          en: ['Same base: add the exponents, ' + m.base + '^' + (m.e1 + m.e2) + '.', '= ' + p.answer + '.']
+        };
+      case 'inequality':
+        return {
+          zh: ['兩邊同時減 ' + m.b + '：' + m.a + 'x ' + m.sign + ' ' + (m.a * m.x0) + '。', '兩邊同時除以 ' + m.a + '（正數，不變號）：' + p.answer + '。'],
+          en: ['Subtract ' + m.b + ' from both sides: ' + m.a + 'x ' + m.sign + ' ' + (m.a * m.x0) + '.', 'Divide both sides by ' + m.a + ' (positive, keep the sign): ' + p.answer + '.']
+        };
       default:
         return null;
     }
@@ -746,7 +959,14 @@
     percent: genPercent,
     ratio: genRatio,
     area: genArea,
-    fractionof: genFractionOf
+    fractionof: genFractionOf,
+    directed: genDirected,
+    exprsub: genExprSub,
+    linear: genLinear,
+    pythagoras: genPythagoras,
+    simul: genSimul,
+    indices: genIndices,
+    inequality: genInequality
   };
 
   /* ---------------- 選項（干擾項）生成 ---------------- */
@@ -780,7 +1000,7 @@
         if (cand === answer) cand = answer + pick(rng, [-2, -1, 1, 2]);
         if (cand < min || cand > max) cand = randInt(rng, min, max);
       }
-      if (!frac && cand < 0) continue;
+      if (!frac && cand < min) continue;
       var k = valueKey(cand);
       if (!seen[k]) { seen[k] = true; out.push(cand); }
     }
@@ -811,7 +1031,19 @@
     if (p.type === 'ratio') return 200;
     if (p.type === 'area') return 500;
     if (p.type === 'fractionof') return 200;
+    if (p.type === 'directed') return 100;
+    if (p.type === 'exprsub') return 80;
+    if (p.type === 'linear') return 30;
+    if (p.type === 'pythagoras') return 40;
+    if (p.type === 'simul') return 20;
+    if (p.type === 'indices') return 4000;
     return 99;
+  }
+
+  /* 每個類型合理的干擾項數值下界（有向數可為負） */
+  function distractorMin(p, o) {
+    if (p.type === 'directed') return -100;
+    return 0;
   }
 
   /* ---------------- 技能配置輔助 ---------------- */
@@ -885,7 +1117,7 @@
     p.answerMax = o.max;
     p.answerMin = o.min;
     if (!p.choices) {
-      p.choices = buildChoices(rng, p.answer, { min: 0, max: distractorMax(p, o), base: p.base });
+      p.choices = buildChoices(rng, p.answer, { min: distractorMin(p, o), max: distractorMax(p, o), base: p.base });
     }
     delete p.base;
     p.sig = p.type + ':' + mathSig(p.math);
