@@ -98,6 +98,7 @@
         base.stars = p.stars || 0;
         base.badges = p.badges || [];
         base.skills = p.skills || {};
+        base.stageExams = p.stageExams || {};
         return base;
       }
     } catch (e) { /* 忽略損壞數據 */ }
@@ -140,8 +141,10 @@
     });
   }
   function stageComplete(stage) {
-    var skills = stageSkills(stage).filter(function (s) { return !s.scaffold; });
-    return skills.length > 0 && skills.every(isPassed);
+    var hasReal = stageSkills(stage).some(function (s) { return !s.scaffold; });
+    if (!hasReal) return false;
+    var ex = (progress.stageExams || {})[stage.id];
+    return !!(ex && ex.perfect); // 需於該階段綜合考試取得滿分
   }
   function stageUnlocked(stageId) {
     var real = realStageList();
@@ -493,7 +496,7 @@
     var hasReal = stageSkills(stage).some(function (s) { return !s.scaffold && s.types && s.types.length; });
     var html = '<h1 class="page-title">' + stage.emoji + ' ' + L(stage) + '</h1>' +
       '<p class="page-sub">' + L(stage.desc) + ' · ' + t('stage.unlockedCount', { u: stats.unlocked, t: stats.total }) + '</p>' +
-      (hasReal ? '<button class="btn primary big" id="stageExamBtn" type="button" style="width:100%;margin-bottom:14px">📝 ' + t('exam.title') + '</button>' : '');
+      (hasReal ? '<button class="btn primary big" id="stageExamBtn" type="button" style="width:100%;margin-bottom:6px">📝 ' + t('exam.title') + '</button><p class="page-sub" style="font-size:12px;margin-bottom:14px">' + t('home.nextHint') + '</p>' : '');
 
     var prevMastered = true;
     var idx = 0;
@@ -912,6 +915,18 @@
     var stage = getStage(state.examStage);
     var grade = MathCore.gradeQuiz(state.results);
     var seconds = Math.round((Date.now() - state.quizStart) / 1000);
+
+    // 記錄綜合考試成績；滿分即視為「完成本階段」
+    var perfect = grade.total > 0 && grade.correct === grade.total;
+    progress.stageExams = progress.stageExams || {};
+    var prev = progress.stageExams[state.examStage] || {};
+    progress.stageExams[state.examStage] = {
+      perfect: !!(prev.perfect || perfect),
+      best: Math.max(prev.best || 0, Math.round(grade.percent * 100))
+    };
+    saveProgress();
+    updateTopbar();
+
     var starsHtml = '';
     for (var i = 1; i <= 3; i++) starsHtml += '<span style="opacity:' + (i <= grade.stars ? 1 : 0.2) + '">★</span>';
     $('screen-practice').innerHTML =
@@ -922,6 +937,7 @@
       '<div class="score">' + t('quiz.score', { c: grade.correct, t: grade.total }) + '</div>' +
       '<div class="result-stars">' + starsHtml + '</div>' +
       '<p class="page-sub">' + Math.round(grade.percent * 100) + '% · ' + t('quiz.time') + '：' + Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0') + '</p>' +
+      '<p class="page-sub">' + (perfect ? t('exam.perfectUnlock') : t('exam.needPerfect')) + '</p>' +
       '<div class="result-actions">' +
       '<button class="btn secondary" id="examBack" type="button">' + t('quiz.back') + '</button>' +
       '<button class="btn" id="examRetry" type="button">' + t('quiz.retry') + '</button>' +
@@ -1003,6 +1019,10 @@
         sp.mastered = true;
         sp.stars = Math.max(sp.stars || 0, 3);
       }
+      progress.stageExams = {};
+      realStageList().forEach(function (st) {
+        progress.stageExams[st.id] = { perfect: true, best: 100 };
+      });
       saveProgress();
       modal.hidden = true;
       renderParent();
@@ -1249,6 +1269,9 @@
   window.__mathApp = {
     getState: function () { return state; },
     getProgress: function () { return progress; },
-    currentProblem: function () { return currentProblem(); }
+    currentProblem: function () { return currentProblem(); },
+    renderGradeExam: renderGradeExam,
+    finishExam: finishExam,
+    renderHome: renderHome
   };
 })();

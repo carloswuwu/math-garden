@@ -98,7 +98,7 @@ async function main() {
   const w2 = ctx2.w;
   check(w2.__mathApp.getProgress().skills['prek.count'].correct === 4, '預置進度被正確加載');
 
-  /* 8. 逐步解鎖：學前全部通過測驗後，一年級解鎖並顯示 */
+  /* 8. 逐步解鎖：需綜合考試滿分才能解鎖下一階段 */
   const prekIds = ['prek.count', 'prek.compare', 'prek.add10', 'prek.sub10', 'prek.bonds10', 'prek.word'];
   const passedSkills = {};
   prekIds.forEach(function (id) {
@@ -107,8 +107,13 @@ async function main() {
   const seed2 = JSON.stringify({ version: 1, lang: 'zh', sound: false, theme: 'light', streak: { lastDay: null, count: 0 }, badges: [], stars: 0, skills: passedSkills });
   const ctx3 = boot(seed2);
   const stageCards2 = ctx3.d.querySelectorAll('#screen-home .stage-card');
-  check(stageCards2.length === 2, '學前通過後應顯示 2 個階段（學前 + 一年級）');
-  check(Array.from(stageCards2).some(function (c) { return c.getAttribute('data-stage') === 'g1'; }), '一年級應已解鎖');
+  check(stageCards2.length === 1, '只有技能通過（未考綜合考試）時，一年級仍未解鎖');
+
+  const seed2b = JSON.stringify({ version: 1, lang: 'zh', sound: false, theme: 'light', streak: { lastDay: null, count: 0 }, badges: [], stars: 0, skills: passedSkills, stageExams: { prek: { perfect: true, best: 100 } } });
+  const ctx3b = boot(seed2b);
+  const stageCards2b = ctx3b.d.querySelectorAll('#screen-home .stage-card');
+  check(stageCards2b.length === 2, '綜合考試滿分後應顯示 2 個階段（學前 + 一年級）');
+  check(Array.from(stageCards2b).some(function (c) { return c.getAttribute('data-stage') === 'g1'; }), '一年級應已解鎖');
 
   /* 9. 比大小：顏色選擇題（通過 prek.count 後解鎖 prek.compare） */
   const seed3 = JSON.stringify({
@@ -178,6 +183,21 @@ async function main() {
   examBtn.click();
   check(!d8.getElementById('screen-practice').hidden, '綜合考試應進入作答畫面');
   check(d8.body.textContent.includes('綜合考試'), '作答畫面應顯示「綜合考試」');
+
+  /* 14. 綜合考試滿分會記錄並解鎖下一階段 */
+  const ctx9 = boot();
+  const w9 = ctx9.w, d9 = ctx9.d;
+  const st9 = w9.__mathApp.getState();
+  st9.examStage = 'prek';
+  st9.mode = 'exam';
+  st9.quizStart = Date.now();
+  st9.results = [];
+  for (let i = 0; i < 20; i++) st9.results.push({ correct: true });
+  w9.__mathApp.finishExam();
+  const se = w9.__mathApp.getProgress().stageExams || {};
+  check(se['prek'] && se['prek'].perfect === true, '滿分綜合考試應記錄為 perfect');
+  w9.__mathApp.renderHome();
+  check(d9.querySelectorAll('#screen-home .stage-card').length === 2, '滿分後一年級應解鎖');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
