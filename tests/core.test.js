@@ -68,6 +68,14 @@ function computeAnswer(math) {
   if (math.op === 'wspeed') return math.a * math.b / 60;
   if (math.op === 'wprofit') return math.b;
   if (math.op === 'wcompound') return Math.round(math.a * Math.pow(1 + math.b / 100, math.c));
+  if (math.op === 'perimeter') return 2 * (math.l + math.w);
+  if (math.op === 'polygon') return (math.n - 2) * 180;
+  if (math.op === 'angle') return math.a;
+  if (math.op === 'money') return math.a - math.b;
+  if (math.op === 'fact') return math.a;
+  if (math.op === 'quadsolve') return Math.max(math.p, math.q);
+  if (math.op === 'line') return (math.b[1] - math.a[1]) / (math.b[0] - math.a[0]);
+  if (math.op === 'variation') return math.k * math.c;
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -126,6 +134,14 @@ const SKILLS = {
   volume:         { id: 't.vol',       types: ['volume'],                   levels: [{}] },
   coord:          { id: 't.coord',     types: ['coord'],                    levels: [{}] },
   word2:          { id: 't.word2',     types: ['word'],                     levels: [{ ops: ['area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }] },
+  perimeter:      { id: 't.peri',      types: ['perimeter'],                 levels: [{}] },
+  polygon:        { id: 't.poly',      types: ['polygon'],                   levels: [{}] },
+  angle:          { id: 't.angle',     types: ['angle'],                     levels: [{}] },
+  money:          { id: 't.money',     types: ['money'],                     levels: [{}] },
+  fact:           { id: 't.fact',      types: ['fact'],                      levels: [{}] },
+  quadsolve:      { id: 't.qsolve',    types: ['quadsolve'],                 levels: [{}] },
+  line:           { id: 't.line',      types: ['line'],                      levels: [{}] },
+  variation:      { id: 't.var',       types: ['variation'],                 levels: [{}] },
 };
 
 const N = 400; // 每個類型的抽樣數量
@@ -299,7 +315,8 @@ for (let seed = 1; seed <= N; seed++) {
     'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average', 'equation', 'percent', 'ratio', 'area', 'fractionof',
     'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
     'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
-    'triangle', 'circle', 'volume', 'coord'];
+    'triangle', 'circle', 'volume', 'coord',
+    'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation'];
   supported.forEach((t) => {
     for (let seed = 1; seed <= 60; seed++) {
       const p = C.generateProblem(SKILLS[t], { seed });

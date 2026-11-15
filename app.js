@@ -321,6 +321,9 @@
       case 'plane':
         html = planeSVG(visual.a, visual.b);
         break;
+      case 'rect':
+        html = rectSVG(visual.l, visual.w);
+        break;
     }
     container.innerHTML = html;
   }
@@ -383,6 +386,18 @@
     s += '<text x="' + (px(b[0]) + 6) + '" y="' + (py(b[1]) - 8) + '" font-size="13" fill="#34C759">B(' + b[0] + ',' + b[1] + ')</text>';
     s += '</svg>';
     return s;
+  }
+
+  function rectSVG(l, w) {
+    var W = 280, H = 190, pad = 44;
+    var s = Math.min((W - 2 * pad) / l, (H - 2 * pad) / w);
+    var bw = l * s, hh = w * s;
+    var x0 = (W - bw) / 2, y0 = (H - hh) / 2;
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<rect x="' + x0 + '" y="' + y0 + '" width="' + bw + '" height="' + hh + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
+      '<text x="' + (W / 2) + '" y="' + (y0 + hh + 20) + '" text-anchor="middle" font-size="14" fill="#333">長 ' + l + ' cm</text>' +
+      '<text x="' + (x0 - 8) + '" y="' + (y0 + hh / 2) + '" text-anchor="end" font-size="14" fill="#333">闊 ' + w + ' cm</text>' +
+      '</svg>';
   }
 
   /* ---------------- 導航 ---------------- */

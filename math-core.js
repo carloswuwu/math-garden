@@ -26,7 +26,8 @@
     'equation', 'percent', 'ratio', 'area', 'fractionof',
     'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
     'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
-    'triangle', 'circle', 'volume', 'coord'
+    'triangle', 'circle', 'volume', 'coord',
+    'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation'
   ];
 
   /* ---------------- 可播種隨機數 ---------------- */
@@ -1082,6 +1083,143 @@
     return shuffle(rng, out);
   }
 
+  /* ================= 補缺題型（度量、貨幣、單位、幾何、高中代數） ================= */
+
+  var ANGLE_FACTS = [
+    { zh: '直角是多少度？', en: 'How many degrees is a right angle?', a: 90 },
+    { zh: '平角是多少度？', en: 'How many degrees is a straight angle?', a: 180 },
+    { zh: '一個周角是多少度？', en: 'How many degrees is a full turn?', a: 360 },
+    { zh: '銳角小於多少度？', en: 'An acute angle is less than how many degrees?', a: 90 },
+    { zh: '鈍角大於多少度？', en: 'An obtuse angle is greater than how many degrees?', a: 90 }
+  ];
+
+  var UNIT_FACTS = [
+    { zh: '1 小時 = ? 分鐘', en: '1 hour = ? minutes', a: 60 },
+    { zh: '1 日 = ? 小時', en: '1 day = ? hours', a: 24 },
+    { zh: '1 星期 = ? 日', en: '1 week = ? days', a: 7 },
+    { zh: '1 年 = ? 個月', en: '1 year = ? months', a: 12 },
+    { zh: '1 千克 = ? 克', en: '1 kg = ? g', a: 1000 },
+    { zh: '1 米 = ? 釐米', en: '1 m = ? cm', a: 100 },
+    { zh: '1 打 = ? 個', en: '1 dozen = ? items', a: 12 }
+  ];
+
+  /* 周界 */
+  function genPerimeter(rng, o) {
+    var l = randInt(rng, 2, 15), w = randInt(rng, 2, 15);
+    return {
+      type: 'perimeter',
+      prompt: { zh: '長方形的長 ' + l + ' cm，闊 ' + w + ' cm，周界是多少？', en: 'A rectangle is ' + l + ' cm by ' + w + ' cm. What is its perimeter?' },
+      visual: { kind: 'rect', l: l, w: w },
+      answer: 2 * (l + w),
+      math: { op: 'perimeter', l: l, w: w },
+      hint: { zh: '周界 = 2 × (長 + 闊)。', en: 'Perimeter = 2 × (length + width).' }
+    };
+  }
+
+  /* 多邊形內角和 */
+  function genPolygon(rng, o) {
+    var n = randInt(rng, 3, 8);
+    return {
+      type: 'polygon',
+      prompt: { zh: n + ' 邊形的內角和是多少？', en: 'What is the sum of the interior angles of a ' + n + '-sided polygon?' },
+      visual: null,
+      answer: (n - 2) * 180,
+      math: { op: 'polygon', n: n },
+      hint: { zh: '內角和 = (n − 2) × 180°。', en: 'Sum = (n − 2) × 180°.' }
+    };
+  }
+
+  /* 角（事實） */
+  function genAngle(rng, o) {
+    var i = Math.floor(rng() * ANGLE_FACTS.length);
+    var q = ANGLE_FACTS[i];
+    return {
+      type: 'angle',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'angle', a: q.a, k: i },
+      hint: { zh: '記住：直角 = 90°。', en: 'Remember: a right angle is 90°.' }
+    };
+  }
+
+  /* 貨幣找續 */
+  function genMoney(rng, o) {
+    var price = randInt(rng, 1, 50);
+    var paid = price + randInt(rng, 1, 50);
+    return {
+      type: 'money',
+      prompt: { zh: '買了一樣 $' + price + ' 的東西，付了 $' + paid + '，應找續多少？', en: 'An item costs $' + price + ' and you pay $' + paid + '. How much change?' },
+      visual: null,
+      answer: paid - price,
+      math: { op: 'money', a: paid, b: price },
+      hint: { zh: '找續 = 付的錢 − 價錢。', en: 'Change = paid − price.' }
+    };
+  }
+
+  /* 單位換算（事實） */
+  function genFact(rng, o) {
+    var i = Math.floor(rng() * UNIT_FACTS.length);
+    var q = UNIT_FACTS[i];
+    return {
+      type: 'fact',
+      prompt: { zh: q.zh, en: q.en },
+      visual: null,
+      answer: q.a,
+      math: { op: 'fact', a: q.a, k: i },
+      hint: { zh: '想一想常用的換算。', en: 'Recall the common conversion.' }
+    };
+  }
+
+  /* 二次方程求根（較大的根） */
+  function genQuadsolve(rng, o) {
+    var p = randInt(rng, 1, 9), q = randInt(rng, 1, 9);
+    while (q === p) q = randInt(rng, 1, 9);
+    var b = -(p + q), c = p * q;
+    var bx = (b > 0 ? '+ ' + b : '- ' + (-b));
+    var cs = (c > 0 ? '+ ' + c : '- ' + (-c));
+    var eq = 'x^2 ' + bx + 'x ' + cs + ' = 0';
+    return {
+      type: 'quadsolve',
+      prompt: { zh: '解方程 $' + eq + '$，較大的根是多少？', en: 'Solve $' + eq + '$. What is the larger root?' },
+      visual: null,
+      answer: Math.max(p, q),
+      math: { op: 'quadsolve', p: p, q: q },
+      hint: { zh: '因式分解：(x − ' + p + ')(x − ' + q + ') = 0，根是 ' + p + ' 和 ' + q + '。', en: 'Factorise: (x − ' + p + ')(x − ' + q + ') = 0; roots ' + p + ' and ' + q + '.' }
+    };
+  }
+
+  /* 直線斜率 */
+  function genLine(rng, o) {
+    var x1 = randInt(rng, 0, 5), y1 = randInt(rng, 0, 5);
+    var dx = randInt(rng, 1, 4), m = randInt(rng, 1, 4);
+    var x2 = x1 + dx, y2 = y1 + m * dx;
+    return {
+      type: 'line',
+      prompt: { zh: '直線經過 A(' + x1 + ', ' + y1 + ') 和 B(' + x2 + ', ' + y2 + ')，求斜率。', en: 'A line passes through A(' + x1 + ', ' + y1 + ') and B(' + x2 + ', ' + y2 + '). Find its slope.' },
+      visual: { kind: 'plane', a: [x1, y1], b: [x2, y2] },
+      answer: m,
+      math: { op: 'line', a: [x1, y1], b: [x2, y2] },
+      hint: { zh: '斜率 = (y2 − y1) ÷ (x2 − x1)。', en: 'Slope = (y2 − y1) ÷ (x2 − x1).' }
+    };
+  }
+
+  /* 正變 */
+  function genVariation(rng, o) {
+    var k = randInt(rng, 2, 5);
+    var a = randInt(rng, 1, 5);
+    var b = k * a;
+    var c = randInt(rng, 2, 6);
+    return {
+      type: 'variation',
+      prompt: { zh: '已知 $y$ 隨 $x$ 正變。當 $x = ' + a + '$ 時 $y = ' + b + '$，求 $x = ' + c + '$ 時的 $y$。', en: '$y$ varies directly as $x$. When $x = ' + a + '$, $y = ' + b + '$. Find $y$ when $x = ' + c + '$.' },
+      visual: null,
+      answer: k * c,
+      math: { op: 'variation', k: k, a: a, c: c },
+      hint: { zh: 'y = kx，先求 k。', en: 'y = kx; find k first.' }
+    };
+  }
+
   /* 回傳 { zh: [步驟...], en: [步驟...] }；不支援的題型回傳 null */
   function explain(p) {
     if (!p || !p.math) return null;
@@ -1367,6 +1505,46 @@
           };
         }
         return null;
+      case 'perimeter':
+        return {
+          zh: ['周界 = 2 × (長 + 闊)。', '= 2 × (' + m.l + ' + ' + m.w + ') = ' + p.answer + '。'],
+          en: ['Perimeter = 2 × (length + width).', '= 2 × (' + m.l + ' + ' + m.w + ') = ' + p.answer + '.']
+        };
+      case 'polygon':
+        return {
+          zh: ['內角和 = (n − 2) × 180°。', '= (' + m.n + ' − 2) × 180° = ' + p.answer + '°。'],
+          en: ['Sum = (n − 2) × 180°.', '= (' + m.n + ' − 2) × 180° = ' + p.answer + '°.']
+        };
+      case 'angle':
+        return {
+          zh: ['記住：直角 = 90°。', '所以答案是 ' + p.answer + '°。'],
+          en: ['Remember: a right angle is 90°.', 'So the answer is ' + p.answer + '°.']
+        };
+      case 'money':
+        return {
+          zh: ['找續 = 付的錢 − 價錢。', '= ' + m.a + ' − ' + m.b + ' = ' + p.answer + '。'],
+          en: ['Change = paid − price.', '= ' + m.a + ' − ' + m.b + ' = ' + p.answer + '.']
+        };
+      case 'fact':
+        return {
+          zh: ['想一想常用的單位換算。', '答案是 ' + p.answer + '。'],
+          en: ['Recall the common conversion.', 'The answer is ' + p.answer + '.']
+        };
+      case 'quadsolve':
+        return {
+          zh: ['因式分解：(x − ' + m.p + ')(x − ' + m.q + ') = 0。', '根是 ' + m.p + ' 和 ' + m.q + '，較大的根 = ' + p.answer + '。'],
+          en: ['Factorise: (x − ' + m.p + ')(x − ' + m.q + ') = 0.', 'Roots are ' + m.p + ' and ' + m.q + '; larger root = ' + p.answer + '.']
+        };
+      case 'line':
+        return {
+          zh: ['斜率 = (y2 − y1) ÷ (x2 − x1)。', '= (' + m.b[1] + ' − ' + m.a[1] + ') ÷ (' + m.b[0] + ' − ' + m.a[0] + ') = ' + p.answer + '。'],
+          en: ['Slope = (y2 − y1) ÷ (x2 − x1).', '= (' + m.b[1] + ' − ' + m.a[1] + ') ÷ (' + m.b[0] + ' − ' + m.a[0] + ') = ' + p.answer + '.']
+        };
+      case 'variation':
+        return {
+          zh: ['y = kx；由 x = ' + m.a + '、y = ' + (m.k * m.a) + ' 得 k = ' + m.k + '。', '所以 y = ' + m.k + ' × ' + m.c + ' = ' + p.answer + '。'],
+          en: ['y = kx; from x = ' + m.a + ', y = ' + (m.k * m.a) + ' we get k = ' + m.k + '.', 'So y = ' + m.k + ' × ' + m.c + ' = ' + p.answer + '.']
+        };
       default:
         return null;
     }
@@ -1412,7 +1590,15 @@
     triangle: genTriangle,
     circle: genCircle,
     volume: genVolume,
-    coord: genCoord
+    coord: genCoord,
+    perimeter: genPerimeter,
+    polygon: genPolygon,
+    angle: genAngle,
+    money: genMoney,
+    fact: genFact,
+    quadsolve: genQuadsolve,
+    line: genLine,
+    variation: genVariation
   };
 
   /* ---------------- 選項（干擾項）生成 ---------------- */
@@ -1492,6 +1678,14 @@
     if (p.type === 'triangle') return 200;
     if (p.type === 'volume') return 300;
     if (p.type === 'coord') return p.math && p.math.mode === 'dist' ? 20 : 80;
+    if (p.type === 'perimeter') return 100;
+    if (p.type === 'polygon') return 2000;
+    if (p.type === 'angle') return 400;
+    if (p.type === 'money') return 100;
+    if (p.type === 'fact') return 2000;
+    if (p.type === 'quadsolve') return 20;
+    if (p.type === 'line') return 10;
+    if (p.type === 'variation') return 50;
     return 99;
   }
 

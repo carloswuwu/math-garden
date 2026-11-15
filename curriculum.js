@@ -614,6 +614,65 @@
       en: { name: 'Word Problems', goal: 'Solve word problems.' },
       lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    /* ===================== 補缺課題 ===================== */
+
+    'g1.money': {
+      id: 'g1.money', stage: 'g1', order: 6,
+      zh: { name: '貨幣與找續', goal: '會計算購物的找續。' },
+      en: { name: 'Money & Change', goal: 'Work out change when shopping.' },
+      lesson: 'g1.money', types: ['money'], levels: [{}],
+      mastery: { practice: 10, quizPass: 0.8 }
+    },
+    'g2.fact': {
+      id: 'g2.fact', stage: 'g2', order: 6,
+      zh: { name: '單位換算', goal: '記住常用的時間與長度換算。' },
+      en: { name: 'Units', goal: 'Recall common time and length conversions.' },
+      lesson: 'g2.fact', types: ['fact'], levels: [{}],
+      mastery: { practice: 10, quizPass: 0.8 }
+    },
+    'g3.angle': {
+      id: 'g3.angle', stage: 'g3', order: 7,
+      zh: { name: '角', goal: '認識直角、銳角和鈍角。' },
+      en: { name: 'Angles', goal: 'Know right, acute and obtuse angles.' },
+      lesson: 'g3.angle', types: ['angle'], levels: [{}],
+      mastery: { practice: 10, quizPass: 0.8 }
+    },
+    'g4.perimeter': {
+      id: 'g4.perimeter', stage: 'g4', order: 7,
+      zh: { name: '周界', goal: '會計算長方形的周界。' },
+      en: { name: 'Perimeter', goal: 'Find the perimeter of a rectangle.' },
+      lesson: 'g4.perimeter', types: ['perimeter'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s2.polygon': {
+      id: 'ms.s2.polygon', stage: 'ms2', order: 4,
+      zh: { name: '多邊形內角和', goal: '會用 (n−2)×180° 求內角和。' },
+      en: { name: 'Polygon Angle Sum', goal: 'Use (n−2)×180° for interior angle sum.' },
+      lesson: 'ms.s2.polygon', types: ['polygon'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s4.quadsolve': {
+      id: 'hs.s4.quadsolve', stage: 'hs1', order: 5,
+      zh: { name: '二次方程求根', goal: '會因式分解並求二次方程的根。' },
+      en: { name: 'Solving Quadratics', goal: 'Factorise and find the roots of a quadratic.' },
+      lesson: 'hs.s4.quadsolve', types: ['quadsolve'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s4.line': {
+      id: 'hs.s4.line', stage: 'hs1', order: 6,
+      zh: { name: '直線的斜率', goal: '會由兩點求直線的斜率。' },
+      en: { name: 'Slope of a Line', goal: 'Find the slope from two points.' },
+      lesson: 'hs.s4.line', types: ['line'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.variation': {
+      id: 'hs.s5.variation', stage: 'hs2', order: 5,
+      zh: { name: '正變', goal: '會解 y = kx 的正變問題。' },
+      en: { name: 'Direct Variation', goal: 'Solve y = kx variation problems.' },
+      lesson: 'hs.s5.variation', types: ['variation'], levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
     }
   };
 
@@ -627,25 +686,29 @@
       topics: [
         { id: 'g1.calc', zh: '加減運算', en: 'Add & Subtract', skills: ['g1.add20', 'g1.sub20'] },
         { id: 'g1.num', zh: '更大的數', en: 'Bigger Numbers', skills: ['g1.place100', 'g1.addsub100'] },
-        { id: 'g1.word', zh: '解決問題', en: 'Word Problems', skills: ['g1.word'] }
+        { id: 'g1.word', zh: '解決問題', en: 'Word Problems', skills: ['g1.word'] },
+        { id: 'g1.money', zh: '貨幣', en: 'Money', skills: ['g1.money'] }
       ] },
     { id: 'g2', zh: '小二', en: 'Primary 2', desc: { zh: '100 以內進退位、乘法啟蒙', en: 'Regrouping within 100, intro to multiplication' }, color: '#007AFF', emoji: '🌈',
       topics: [
         { id: 'g2.calc', zh: '進退位加減', en: 'Add & Subtract', skills: ['g2.addsub100r'] },
         { id: 'g2.mul', zh: '乘法啟蒙', en: 'Multiplication', skills: ['g2.mul25', 'g2.mul34'] },
-        { id: 'g2.div', zh: '除法', en: 'Division', skills: ['g2.div', 'g2.word'] }
+        { id: 'g2.div', zh: '除法', en: 'Division', skills: ['g2.div', 'g2.word'] },
+        { id: 'g2.unit', zh: '度量', en: 'Measures', skills: ['g2.fact'] }
       ] },
     { id: 'g3', zh: '小三', en: 'Primary 3', desc: { zh: '乘法表、多位數、分數入門', en: 'Times tables, multi-digit, intro to fractions' }, color: '#AF52DE', emoji: '🚀',
       topics: [
         { id: 'g3.mul', zh: '乘法表', en: 'Times Tables', skills: ['g3.multable', 'g3.mulfree'] },
         { id: 'g3.calc', zh: '多位數與乘除', en: 'Big Numbers', skills: ['g3.addsubbig', 'g3.muldiv'] },
-        { id: 'g3.frac', zh: '分數', en: 'Fractions', skills: ['g3.fraction', 'g3.word'] }
+        { id: 'g3.frac', zh: '分數', en: 'Fractions', skills: ['g3.fraction', 'g3.word'] },
+        { id: 'g3.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['g3.angle'] }
       ] },
     { id: 'g4', zh: '小四', en: 'Primary 4', desc: { zh: '多位數乘除、分數、小數、面積', en: 'Multi-digit, fractions, decimals, area' }, color: '#5AC8FA', emoji: '🧭',
       topics: [
         { id: 'g4.num', zh: '數與運算', en: 'Numbers & Operations', skills: ['g4.multidigit', 'g4.fractionadd', 'g4.decimal'] },
         { id: 'g4.geo', zh: '度量', en: 'Measurement', skills: ['g4.area', 'g4.triangle'] },
-        { id: 'g4.word', zh: '解決問題', en: 'Word Problems', skills: ['g4.word'] }
+        { id: 'g4.word', zh: '解決問題', en: 'Word Problems', skills: ['g4.word'] },
+        { id: 'g4.peri', zh: '度量（續）', en: 'Measurement (cont.)', skills: ['g4.perimeter'] }
       ] },
     { id: 'g5', zh: '小五', en: 'Primary 5', desc: { zh: '小數乘除、平均數、分數乘法', en: 'Decimal ×/÷, averages, fraction of a number' }, color: '#5856D6', emoji: '⛰️',
       topics: [
@@ -670,7 +733,8 @@
       topics: [
         { id: 'ms2.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s2.pythagoras'] },
         { id: 'ms2.alg', zh: '代數', en: 'Algebra', skills: ['ms.s2.simul'] },
-        { id: 'ms2.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s2.word'] }
+        { id: 'ms2.word', zh: '解決問題', en: 'Word Problems', skills: ['ms.s2.word'] },
+        { id: 'ms2.poly', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['ms.s2.polygon'] }
       ] },
     { id: 'ms3', zh: '中三', en: 'S3', desc: { zh: '指數定律、一元一次不等式', en: 'Laws of indices, linear inequalities' }, color: '#FF8C42', emoji: '🧮',
       topics: [
@@ -681,13 +745,16 @@
       topics: [
         { id: 'hs1.num', zh: '數與代數', en: 'Number & Algebra', skills: ['hs.s4.log', 'hs.s4.fx'] },
         { id: 'hs1.trig', zh: '三角學', en: 'Trigonometry', skills: ['hs.s4.trig'] },
-        { id: 'hs1.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s4.word'] }
+        { id: 'hs1.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s4.word'] },
+        { id: 'hs1.quad', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s4.quadsolve'] },
+        { id: 'hs1.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['hs.s4.line'] }
       ] },
     { id: 'hs2', zh: '中五', en: 'S5', desc: { zh: '等差、等比數列、概率', en: 'Arithmetic and geometric sequences, probability' }, color: '#8B6F47', emoji: '📈',
       topics: [
         { id: 'hs2.seq', zh: '數列', en: 'Sequences', skills: ['hs.s5.ap', 'hs.s5.gp'] },
         { id: 'hs2.prob', zh: '概率', en: 'Probability', skills: ['hs.s5.prob'] },
-        { id: 'hs2.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s5.word'] }
+        { id: 'hs2.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s5.word'] },
+        { id: 'hs2.alg', zh: '代數', en: 'Algebra', skills: ['hs.s5.variation'] }
       ] },
     { id: 'hs3', zh: '中六', en: 'S6', desc: { zh: '二次方程的根、中位數', en: 'Roots of quadratics, median' }, color: '#7A5F3C', emoji: '📊',
       topics: [

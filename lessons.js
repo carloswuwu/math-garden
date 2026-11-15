@@ -330,6 +330,47 @@
       zh: { title: '應用題', intro: '先讀懂題目，找出已知數和要求的量，再選合適的運算。', example: '小明有 8 個，吃了 3 個，還剩幾個？8 − 3 = 5。', tip: '圈出數字和關鍵詞（「一共」「還剩」「每」等）。' },
       en: { title: 'Word Problems', intro: 'Read carefully, find the numbers and what is asked, then choose the operation.', example: 'Sam has 8, eats 3. How many left? 8 − 3 = 5.', tip: 'Circle the numbers and key words.' },
       visual: null
+    },
+
+    'g1.money': {
+      zh: { title: '貨幣與找續', intro: '找續 = 付的錢 − 價錢。', example: '買了 $6 的東西，付 $10，找續 = 10 − 6 = $4。', tip: '用減法計算找續。' },
+      en: { title: 'Money & Change', intro: 'Change = money paid − price.', example: 'Item $6, paid $10 → change = 10 − 6 = $4.', tip: 'Use subtraction for change.' },
+      visual: null
+    },
+    'g2.fact': {
+      zh: { title: '單位換算', intro: '記住常用的換算：1 小時 = 60 分鐘、1 米 = 100 釐米、1 千克 = 1000 克。', example: '1 日 = 24 小時。', tip: '多讀幾次就記住。' },
+      en: { title: 'Units', intro: 'Remember: 1 hour = 60 min, 1 m = 100 cm, 1 kg = 1000 g.', example: '1 day = 24 hours.', tip: 'Read them a few times to remember.' },
+      visual: null
+    },
+    'g3.angle': {
+      zh: { title: '角', intro: '直角 = 90°，銳角 < 90°，鈍角 > 90°。', example: '直角是 90°，平角是 180°。', tip: '先記住直角是 90°。' },
+      en: { title: 'Angles', intro: 'Right = 90°, acute < 90°, obtuse > 90°.', example: 'A right angle is 90°, a straight angle is 180°.', tip: 'Remember the right angle is 90° first.' },
+      visual: null
+    },
+    'g4.perimeter': {
+      zh: { title: '周界', intro: '周界 = 圖形外圍一圈的總長度；長方形周界 = 2 × (長 + 闊)。', example: '長 8 cm、闊 5 cm，周界 = 2 × (8 + 5) = 26 cm。', tip: '先把長和闊加起來，再乘 2。' },
+      en: { title: 'Perimeter', intro: 'Perimeter is the total length around a shape; rectangle = 2 × (length + width).', example: '8 cm by 5 cm → perimeter = 2 × (8 + 5) = 26 cm.', tip: 'Add length and width, then double it.' },
+      visual: { kind: 'rect', l: 8, w: 5 }
+    },
+    'ms.s2.polygon': {
+      zh: { title: '多邊形內角和', intro: 'n 邊形的內角和 = (n − 2) × 180°。', example: '五邊形：內角和 = (5 − 2) × 180° = 540°。', tip: '邊數減 2，再乘 180°。' },
+      en: { title: 'Polygon Angle Sum', intro: 'Sum of interior angles of an n-gon = (n − 2) × 180°.', example: 'Pentagon: sum = (5 − 2) × 180° = 540°.', tip: 'Take sides minus 2, times 180°.' },
+      visual: null
+    },
+    'hs.s4.quadsolve': {
+      zh: { title: '二次方程求根', intro: '把 x² + bx + c = 0 因式分解成 (x − p)(x − q) = 0，根就是 p 和 q。', example: 'x² − 5x + 6 = 0 → (x − 2)(x − 3) = 0，根是 2 和 3。', tip: '找兩個數，和是 −b、積是 c。' },
+      en: { title: 'Solving Quadratics', intro: 'Factorise x² + bx + c = 0 into (x − p)(x − q) = 0; roots are p and q.', example: 'x² − 5x + 6 = 0 → (x − 2)(x − 3) = 0, roots 2 and 3.', tip: 'Find two numbers with sum −b and product c.' },
+      visual: null
+    },
+    'hs.s4.line': {
+      zh: { title: '直線的斜率', intro: '兩點 (x₁,y₁)、(x₂,y₂) 的斜率 = (y₂ − y₁) ÷ (x₂ − x₁)。', example: '(0,0) 和 (3,4)：斜率 = (4 − 0) ÷ (3 − 0) = 4/3。', tip: '先算 y 的差，再除以 x 的差。' },
+      en: { title: 'Slope of a Line', intro: 'Slope between (x₁,y₁) and (x₂,y₂) = (y₂ − y₁) ÷ (x₂ − x₁).', example: '(0,0) and (3,4): slope = (4 − 0) ÷ (3 − 0) = 4/3.', tip: 'Take the y difference over the x difference.' },
+      visual: { kind: 'plane', a: [0, 0], b: [3, 4] }
+    },
+    'hs.s5.variation': {
+      zh: { title: '正變', intro: '若 y 隨 x 正變，則 y = kx，k 是常數。', example: 'x = 2 時 y = 6，k = 3；x = 5 時 y = 3 × 5 = 15。', tip: '先由已知一組 x、y 求 k。' },
+      en: { title: 'Direct Variation', intro: 'If y varies directly as x, then y = kx for a constant k.', example: 'x = 2 gives y = 6, so k = 3; at x = 5, y = 3 × 5 = 15.', tip: 'Find k from a known pair first.' },
+      visual: null
     }
   };
 
