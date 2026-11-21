@@ -7,13 +7,13 @@
 | Item | Value |
 |---|---|
 | Repo | `C:\Users\Carlos\Documents\deepseek-harness\math` |
-| Branch / HEAD | `main` @ `a488c02` (Phase 3 A–B landed; docs commit on top) |
+| Branch / HEAD | `main` @ `56bdd85` (Phase 3 A–B + assessment-depth tranche landed; docs commit on top) |
 | Live | https://carloswuwu.github.io/math-garden/ — legacy branch deploy (repo root) is live; `.github/workflows/pages.yml` publishes `dist/` once Settings → Pages → Source is switched to “GitHub Actions” (one-time manual step) |
 | CI | `.github/workflows/tests.yml` — build, stale-`dist` check, then four node suites on every push/PR |
-| Content | 14 stages, **111 skills**, 102 lessons, 127 type entries, **85 generator types**; Pre-K → university |
-| Code size | `math-core.js` 4,062 lines · `app.js` 2,315 · `curriculum.js` 1,086 · `lessons.js` 597 · `style.css` 746 · `formulas.js` 91 · `i18n.js` 169 |
-| Build | `tools/build.js` (177) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.<buildHash>.js` **281 KB raw / 85.6 KB gzip**, generated `dist/sw.js`; `dist/` is committed and CI fails on drift |
-| Tests | core **574,377** assertions · ui **199** · generators **116,818** · contract **9,681** (111 skills) |
+| Content | 14 stages, **111 skills**, 102 lessons, 127 type entries, **85 generator types**, `word` now has 20 modes (10 basic + 10 multi-step); Pre-K → university |
+| Code size | `math-core.js` 4,728 lines · `app.js` 2,296 · `curriculum.js` 1,086 · `lessons.js` 597 · `style.css` 746 · `formulas.js` 91 · `i18n.js` 169 |
+| Build | `tools/build.js` (177) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.bd8fddd55cd6.js` **303.8 KB raw / 91.8 KB gzip**, generated `dist/sw.js`; `dist/` is committed and CI fails on drift |
+| Tests | core **575,422** assertions · ui **206** · generators **130,693** · contract **10,725** (111 skills) |
 | Persistence | progress schema **v2** (`mathpath.progress`), legacy v1 key migrated, sanitized import |
 | In-flight session | `sessionStorage['mathpath.session.v1']` (24 h TTL, practice/quiz/exam only, never in progress) |
 | Offline | `dist/sw.js` generated cache `math-garden-<buildHash>`: 30 precache entries incl. 20 KaTeX woff2, nav network-first → cached shell, immutable assets cache-first, user-confirmed “new version” chip (root legacy `sw.js` stays v12 until the Pages switch) |
@@ -28,7 +28,8 @@
 - Engine: seeded generators, choice building, answer equivalence (fractions by value), mastery/adaptive selection, `explain()` worked solutions.
 - UI: screen switching over `<section hidden>`, `innerHTML` rendering, hand-made paper/storybook CSS, dark chalkboard theme.
 - Recent content depth: S4 discriminant + nature of roots, line equations, circle properties; S5 GP sums, IQR; S6 two-dice/complement probability, general binomial; university calculus (derivative value/integral), 2×2 matrices, expectation/binomial.
-- Assessment: 10-item skill quiz (≥80% = 2 stars = mastered), 20-item stage exam (≥90% unlocks next stage), adaptive difficulty rises after 3 consecutive correct.
+- Assessment: 10-item skill quiz (≥80% = 2 stars = mastered), 20-item stage exam (≥90% unlocks next stage), adaptive difficulty rises after 3 consecutive correct. Composition now guarantees full length with no identical repeats, caps template reuse and mixes difficulty levels (see Phase 3.5).
+- Word problems: 20 `word` modes — 10 basic/one-step and 10 multi-step cross-topic archetypes (unit price, change with two items, reverse discount, batch profit, ratio difference, rate scaling, flooring cost, missing test score, price-list change, reverse equation), 8 names × 10 item contexts and several prompt templates; stage-level op tables from g3 to hs6.
 
 ### Fixed in this cycle (do not re-report)
 
@@ -66,6 +67,16 @@
 23. `.github/workflows/pages.yml` builds and deploys `dist/` when the repo Pages source is “GitHub Actions”; it detects the legacy branch source and warns/skips instead of failing. `play-math.bat` prefers `dist/index.html`. Root dev entry, root `index.html` and legacy root `sw.js` (v12) remain for the current branch deployment and `file://` development.
 24. `tests/ui.test.js` dist smoke test loads the built bundle in jsdom (KaTeX + bundle only, all globals, home render, routing, chip element); `tests/contract.test.js` validates dist self-consistency (build meta/filename, relative refs, generated SW cache/precache/update protocol, gzip budget).
 
+### Landed in this cycle: assessment depth & word problems (mathematician audit)
+
+25. A read-only professional-mathematician audit (`docs/PLAN.md` request) quantified the complaint: 101/111 skills had a single level (adaptive difficulty dead from g4 up); `buildQuiz`'s 3-item exact-`sig` window allowed exact repeats from item 5 and silently returned **3** items for the `congruent`/`approx` pools; 10-item quizzes had up to 10 items on one template for `g3.multable`, `hs.s4.quadsolve`, `hs.s5.ap`, `ms.s3.prob`; exams repeated heavily (college up to 86%).
+26. Engine: `templateSig`/`contextSig` (numbers blanked, mode/context kept) + `composeSet`/`composeExam` — a quiz/exam always returns the full 10/20 items, never repeats an identical item, caps template/context reuse and per-skill exam share, and prefers varied templates; `generateSet` stays exact-unique. `levelFor` forwards **all** level options (modes/nMax/sign/…) instead of a whitelist; practice `nextProblem` avoids the current session's templates.
+27. Difficulty: quiz starts at difficulty step ≥1 for multi-level skills; exams use the top level for ~2/3 of items and the learner's step for the rest; new 3-level ladders for percentages (reverse/change), ratio (share/three-part), arithmetic sequences (sum/find-n) and statistics (mean); word skills g3–hs6 gained stage-appropriate two-level op tables.
+28. Word problems: 10 new multi-step cross-topic archetypes (unit price, two-item change, reverse discount, batch profit, ratio difference, rate scaling, flooring cost, missing test score, price-list change, reverse equation), all with integer answers, MATH_SPEC + explain last-step answer + plausible distractors; 8 names × 10 item contexts and several prompt templates for add/sub/mul/div (and multiplication/division drills) so drills no longer read as the same sentence with different numbers.
+29. Measured impact (20 seeded quiz sets per skill): every skill now yields 10/10 unique items; word quizzes reach 10/10 distinct math templates (was 3–6.6); arithmetic drill prompts reach ~3.8 distinct wordings; every one of the 14 stages builds a 20-item exam with 20 unique items. Bundle grew to 91.8 KB gzip (still under 120 KB advisory).
+30. Suites: core **575,422** (+template/composition invariants), generators **130,693** (new modes + ladders), contract **10,725** (typeIndex sampling now covers duplicate type specs, deep ops reachable through curriculum, stage-exam uniqueness), ui **206** (fixed-seed quiz/exam composition).
+31. Audit remainder (P1/P2, not done): the other ~89 single-level skills' ladders; remaining word archetypes (percentage-chain, box/remainder, unit conversion, 3-part modelling); `mastery.quizPass` is dead config and 2-star gate is hard-coded 0.8; practice credits a correct answer after a wrong click; tiny pools (`congruent`/`approx`/`direction`) still repeat structurally; college exam has only 3 skills; per-mode `typeAcc`.
+
 ## 2. Architecture map
 
 ```
@@ -98,6 +109,7 @@ tests/              core, ui (jsdom), generators, contract, serve.js
 - In-flight session: `sessionStorage['mathpath.session.v1']` for practice/quiz/exam; `readSession()/saveSession()/clearSession()/restoreSession()`; home Continue card. It is never written to the progress schema.
 - Content parity: every `formulas.js` item carries `skills` (real playable skill ids); `FORMULA_SKILL_TYPES` in `tests/contract.test.js` lists the types the sheet promises, and every skill using one of those types must be tagged.
 - Build: `dist/` is generated and committed; CI rebuilds and requires a clean tree under `dist/`. `dist/sw.js` cache name/precache must match the build hash and the actual dist file list. The SW is the only file allowed to bypass the manifest — update UX depends on no auto-`skipWaiting`.
+- Assessment composition: `MathCore.templateSig(problem)` (math shape with numerals blanked) / `contextSig` (prompt shape) are the diversity keys; `composeSet(skill, count, opts)` and `composeExam(skills, count, opts)` guarantee the requested length with no identical repeats, cap template/context reuse and exam per-skill share. `levelFor` forwards **every** level option (not a whitelist); app quiz uses step ≥1 for multi-level skills and exams use top level for ~2/3 of items. `word` has 20 modes; every new mode needs MATH_SPEC + explain + distractor handling + contract coverage (`tests/contract.test.js` asserts all deep ops are reachable through curriculum `ops`).
 
 **Verification commands**
 
@@ -134,6 +146,7 @@ CI additionally does `npm ci`, the build, the stale-`dist` check, `npm ci --pref
 - **Build remainder:** Stage A–B are done (deterministic single-IIFE bundle, generated SW/precache, hashed asset, committed dist, Actions Pages workflow). The source modules are still 7 order-dependent globals (no ESM/tree-shaking; KaTeX stays unpinned in-tree) — Stages C–E (ESM modules, split core/app, drop globals) remain as Phase 5.
 - **Pages switch:** the repo’s Pages source is still “Deploy from a branch”, so the legacy root deployment is what is live; `pages.yml` only publishes `dist/` after a one-time Settings → Pages → Source = “GitHub Actions” change. Until then the root `sw.js` (v12, manual list) remains the legacy SW.
 - **SW lifecycle remainder:** generated dist SW is user-confirmed but has no periodic update poll beyond registration/`reg.update()` on load; the legacy root SW still auto-`skipWaiting`.
+- **Difficulty/word-problem remainder (P1/P2, from the mathematician audit):** ~89 skills still have a single difficulty level; remaining word archetypes (percentage chains, unit conversion, remainder/box problems, 3-part modelling); `mastery.quizPass` is dead config (2-star gate hard-coded 0.8); practice still credits a correct answer after a wrong click; tiny pools (`congruent`/`approx`/`direction`) remain structurally repetitive; college exam spans only 3 skills; `typeAcc` is per type rather than per mode.
 - **i18n split:** UI strings in `i18n.js`, item/lesson strings hardcoded `{zh,en}` in generators/lessons; ARIA strings inline in `app.js`.
 - **Error boundary/observability:** route renders are wrapped (`renderRouteSafely`) but a failure inside a direct event handler still surfaces via the console; no global `window.onerror` handler or telemetry.
 - **A11y remainder:** informative SVG visuals have no text alternative; background not `inert` when dialog open; targets are 42 px (WCAG suggests 44); no `tests/a11y.test.js`/axe subset.
@@ -193,6 +206,16 @@ Decisions / deviations:
 
 **Acceptance:** stale-dist check + four suites in CI (≈5 s local); no manual precache list/cache version in the shipped artifact; update chip verified in jsdom; bundle gzip under the 120 KB advisory. Remaining manual checks: switch Pages source to Actions then confirm the deployed `dist/` and a cold offline start in a real browser.
 
+### Phase 3.5 — Assessment depth & word problems — ✅ landed (mathematician audit; `9e0508d` engine/content, `be24636` tests, `56bdd85` dist)
+
+Driven by a read-only professional-mathematician audit of difficulty, duplication and word-problem depth (see items 25–31 above for findings/impact). Shipped:
+1. **Composition:** `templateSig`/`contextSig` + `composeSet`/`composeExam`; full 10/20-item sets, no identical repeats, template/context caps, exam per-skill cap; narrow pools now repeat instead of silently under-filling.
+2. **Difficulty:** all level options forwarded by `levelFor`; quiz/exam step policy raised; 3-level ladders for percent/ratio/AP/stats; two-level word tables for g3–hs6.
+3. **Word problems:** 10 new multi-step integer-answer archetypes with MATH_SPEC/explain/distractors; 8×10 contexts; prompt variants for basic arithmetic/multiplication/division.
+4. **Verification:** composition/diversity/word-depth contracts in core, generators and contract suites plus fixed-seed ui composition tests; dist rebuilt (91.8 KB gzip).
+
+Remaining P1/P2 from the audit (items 31, 89 single-level skills, remaining archetypes, mastery.quizPass dead config, practice credit, tiny pools, college exam width) are queued behind the a11y phase unless reprioritised.
+
 ### Phase 4 — Accessibility remainder
 - One `tests/a11y.test.js` boot: every screen has exactly one `h1`; every button/switch has an accessible name; no duplicate ids after `innerHTML`; navigation moves focus to heading; dialog trap/restore; live-region text changes; decorative SVG hidden; `lang` attr.
 - Add `axe-core` restricted to jsdom-supported rules (`aria-*`, `name-role-value`, `duplicate-id`, `label`); exclude contrast/layout. Target 0 serious violations on 8 screens.
@@ -206,8 +229,8 @@ Decisions / deviations:
 ### 30 / 60 / 90-day shape
 | Window | Ship |
 |---|---|
-| 0–30 d | **Phase 1 routing & resume (landed)**; **Phase 2 contract tests (landed)**; **Phase 3 A–B build/SW/update chip (landed)**; Phase 4 a11y test boot + ARIA string centralization |
-| 31–60 d | Phase 4 remainder (axe subset, inert background, text alternatives, 44 px targets); switch Pages source to Actions and verify dist deploy + cold offline; result routes / history polish |
+| 0–30 d | **Phase 1 routing & resume (landed)**; **Phase 2 contract tests (landed)**; **Phase 3 A–B build/SW/update chip (landed)**; **Phase 3.5 assessment depth & word problems (landed)**; Phase 4 a11y test boot + ARIA string centralization |
+| 31–60 d | Phase 4 remainder (axe subset, inert background, text alternatives, 44 px targets); audit P1 content follow-ups (single-level ladders, remaining word archetypes, mastery.quizPass, practice credit, tiny pools); switch Pages source to Actions and verify dist deploy + cold offline |
 | 61–90 d | Phase 5 Stages C–E modular split, perf/Lighthouse gates, formula depth fixes, docs/ADRs |
 
 ## 5. Agent playbook (proven in this repo)
@@ -246,13 +269,13 @@ Then: wait for the `tests` workflow (GitHub Actions) to go green; if Pages sourc
 
 ## 7. Bootstrap prompt for the new session
 
-> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Phases 1 (routing & resume), 2 (contract tests) and 3 A–B (esbuild bundle, generated SW, update chip) are landed — do not redo them. Then continue with **Phase 4 — Accessibility remainder**: add one `tests/a11y.test.js` jsdom boot (exactly one h1 per screen, accessible names, no duplicate ids after `innerHTML`, focus-to-heading on navigation, dialog trap/restore, live-region updates, decorative SVG hidden, `lang`), add an `axe-core` subset restricted to jsdom-supported rules with 0 serious violations, move ARIA strings into `i18n.js` (`a11y.*`) and re-apply them on language change, make topbar title a heading, add `aria-labelledby` to screens, set the background `inert`/`aria-hidden` while a dialog is open, enlarge icon buttons to 44 px, and add text alternatives for informative visuals. Keep all four suites green (plus the new a11y suite), and if you changed shipped sources run `npm run build` and commit `dist/`. Commit by scope, push, confirm CI, and remind the user about the one-time Pages source switch if it is still on “Deploy from a branch”.
+> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Phases 1 (routing & resume), 2 (contract tests), 3 A–B (esbuild bundle, generated SW, update chip) and 3.5 (assessment depth & multi-step word problems, from the mathematician audit) are landed — do not redo them. Then continue with **Phase 4 — Accessibility remainder**: add one `tests/a11y.test.js` jsdom boot (exactly one h1 per screen, accessible names, no duplicate ids after `innerHTML`, focus-to-heading on navigation, dialog trap/restore, live-region updates, decorative SVG hidden, `lang`), add an `axe-core` subset restricted to jsdom-supported rules with 0 serious violations, move ARIA strings into `i18n.js` (`a11y.*`) and re-apply them on language change, make topbar title a heading, add `aria-labelledby` to screens, set the background `inert`/`aria-hidden` while a dialog is open, enlarge icon buttons to 44 px, and add text alternatives for informative visuals. If the user prioritises content instead, the mathematician audit's P1 list (item 31/§3: ~89 single-level skills, remaining word archetypes, `mastery.quizPass`, first-attempt practice credit, tiny pools, exam width) is the queue. Keep all suites green (plus the new a11y suite), and if you changed shipped sources run `npm run build` and commit `dist/`. Commit by scope, push, confirm CI, and remind the user about the one-time Pages source switch if it is still on “Deploy from a branch”.
 
 ## 8. Key references
 
-- Engine: `math-core.js` — `GENERATORS`, `MATH_SPEC`, `answerFromMath`, `SOLVERS`, `generateProblem` (`{selfCheck}`), `generateSet`, `explain`, `sanitizeProgress`, `mathSig`.
-- UI/state: `app.js` — `state`, `show()`, `navigate()`, `parseHash/serializeRoute/resolveRoute/parentOf/currentRoute`, `readSession/saveSession/restoreSession`, `renderQuestion`, `startPractice/Quiz`, `finishExam`, `showModal/closeModal`, `registerSW`/`showUpdateChip`/`acceptUpdate`, `applyLang`.
-- Content: `curriculum.js` (skills/types/levels), `lessons.js` (teaching text), `i18n.js` (UI strings), `formulas.js` (items tagged with `skills`), `curriculum-outline.js`.
+- Engine: `math-core.js` — `GENERATORS`, `MATH_SPEC`, `answerFromMath`, `SOLVERS`, `generateProblem` (`{selfCheck}`), `generateSet`, `templateSig`/`contextSig`, `composeSet`/`composeExam`, `nextProblem` (`{avoid}`), `explain`, `sanitizeProgress`, `mathSig`; `word` modes (10 basic + 10 deep: `wunit/wmoney2/wreverse/wprofit2/wratio2/wrate2/wgeo2/wdata2/wtable/wequation`).
+- UI/state: `app.js` — `state`, `show()`, `navigate()`, `parseHash/serializeRoute/resolveRoute/parentOf/currentRoute`, `readSession/saveSession/restoreSession`, `renderQuestion`, `startPractice/Quiz` (`composeSet`), `buildGradeExam` (`composeExam`), `finishExam`, `showModal/closeModal`, `registerSW`/`showUpdateChip`/`acceptUpdate`, `applyLang`.
+- Content: `curriculum.js` (skills/types/levels incl. word ops tables and percent/ratio/AP/stats ladders), `lessons.js` (teaching text), `i18n.js` (UI strings), `formulas.js` (items tagged with `skills`), `curriculum-outline.js`.
 - Build: `tools/build.js` (deterministic bundle + dist + SW generation), `tools/sw-template.js` (SW strategy/update protocol), `package.json` (esbuild), `dist/` (committed artifact; `dist/sw.js` generated).
-- Tests: `tests/core.test.js` (MATH_SPEC oracle + invariants + schema fuzz), `tests/generators.test.js` (contracts, pool floors, explain), `tests/ui.test.js` (jsdom flows, router/Back-Forward, session resume, a11y, keyboard, import, update chip, dist smoke), `tests/contract.test.js` (MATH_SPEC self-check, assets, i18n, solver coverage, formulas, dist/SW consistency).
+- Tests: `tests/core.test.js` (MATH_SPEC oracle, invariants, schema fuzz, composition/diversity), `tests/generators.test.js` (contracts, pool floors, explain across all modes), `tests/ui.test.js` (jsdom flows, router/Back-Forward, session resume, a11y, keyboard, import, update chip, fixed-seed quiz/exam composition, dist smoke), `tests/contract.test.js` (MATH_SPEC self-check by typeIndex, assets, i18n, solver coverage, deep word ops, formula parity, stage-exam uniqueness, dist/SW consistency).
 - CI/deploy: `.github/workflows/tests.yml` (build + stale-dist check + four suites), `.github/workflows/pages.yml` (dist deploy when Pages source is GitHub Actions); test deps: `tests/package.json` + `tests/package-lock.json`.
