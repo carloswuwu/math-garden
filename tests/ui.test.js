@@ -43,7 +43,7 @@ async function main() {
   let ctx = boot();
   let w = ctx.w, d = ctx.d;
   check(!!w.Curriculum && !!w.MathCore && !!w.I18N && !!w.Lessons, '全局模塊已加載');
-  check(w.Curriculum.stages.length === 14, '應有 14 個階段');
+  check(w.Curriculum.stages.length === 15, '應有 15 個階段（14 個年級 + 挑戰區）');
   const stageCards = d.querySelectorAll('#screen-home .stage-card');
   check(stageCards.length === 1, '首頁初始只顯示 1 個已解鎖階段（學前）');
   check(stageCards[0].getAttribute('data-stage') === 'prek', '第一個可見階段應為學前');
@@ -540,6 +540,25 @@ async function main() {
   check(new Set(stExam.problems.map((p) => p.sig)).size === 20, '綜合考試題目互不重複');
   check(new Set(stExam.problems.map((p) => p.skillId)).size >= 4, '綜合考試覆蓋多個技能');
   check(!dComp.getElementById('screen-practice').hidden, '綜合考試已渲染');
+
+  /* 32. 挑戰區：首頁入口、永遠解鎖、6 個挑戰技能、可直接測驗 */
+  const ctxCh = boot();
+  const dCh = ctxCh.d, wCh = ctxCh.w;
+  const challengeBtn = dCh.getElementById('homeChallengeBtn');
+  check(!!challengeBtn, '首頁有挑戰區入口卡');
+  check(dCh.querySelectorAll('#screen-home .stage-card').length === 1, '挑戰卡不影響年級卡片數量');
+  challengeBtn.click();
+  check(!dCh.getElementById('screen-stage').hidden, '進入挑戰區');
+  check((dCh.body.textContent || '').includes('挑戰'), '挑戰區標題顯示');
+  const challengeCards = dCh.querySelectorAll('#screen-stage .skill-card');
+  check(challengeCards.length === 6, '挑戰區有 6 個技能卡片');
+  check(Array.from(challengeCards).every((c) => c.getAttribute('data-locked') === '0'), '挑戰技能全部解鎖');
+  check(!!dCh.getElementById('stageExamBtn'), '挑戰區有綜合考試按鈕');
+  wCh.__mathApp.navigate({ screen: 'quiz', skillId: 'challenge.nt' });
+  const stCh = wCh.__mathApp.getState();
+  check(stCh.mode === 'quiz' && stCh.problems.length === 10, '挑戰測驗固定 10 題');
+  check(stCh.problems.every((p) => ['modpow', 'gcdlcm', 'remainderSystem'].indexOf(p.math.op) !== -1), '數論挑戰題型正確');
+  check(wCh.location.hash === '#/quiz/challenge.nt', '挑戰 quiz route 同步');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);

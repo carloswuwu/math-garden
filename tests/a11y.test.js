@@ -63,6 +63,8 @@ const ROUTES = [
   ['home', null, 'home'],
   ['stage', { screen: 'stage', stageId: 'prek' }, 'stage'],
   ['lesson', { screen: 'lesson', skillId: 'prek.count' }, 'lesson'],
+  ['challenge', { screen: 'stage', stageId: 'challenge' }, 'stage'],
+  ['challenge-quiz', { screen: 'quiz', skillId: 'challenge.nt' }, 'practice'],
   ['practice', { screen: 'practice', skillId: 'prek.count' }, 'practice'],
   ['quiz', { screen: 'quiz', skillId: 'prek.count' }, 'practice'],
   ['exam', { screen: 'exam', stageId: 'prek' }, 'practice'],
