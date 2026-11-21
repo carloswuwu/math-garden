@@ -31,9 +31,9 @@
 
 任選一種方式：
 
-1. **雙擊 `play-math.bat`**（Windows）：在干淨的桌面應用窗口裡打開，無需聯網。
-2. **雙擊 `index.html`**：用任意瀏覽器直接打開。
-3. **安裝成 App（PWA）**：部署到 HTTPS（如 GitHub Pages）後，在 Chrome/Edge 裡點「安裝」，即可離線全屏使用；手機 / 平板也能添加到主屏幕。
+1. **雙擊 `play-math.bat`**（Windows）：優先打開建置後的 `dist/index.html`（沒有 dist 時退回開發用 `index.html`），在乾淨的桌面應用窗口裡打開，無需聯網。
+2. **雙擊 `dist/index.html` 或 `index.html`**：用任意瀏覽器直接打開（建置版是單一 bundle，載入更快）。
+3. **安裝成 App（PWA）**：部署到 HTTPS（如 GitHub Pages）後，在 Chrome/Edge 裡點「安裝」，即可離線全屏使用；手機 / 平板也能添加到主屏幕。有新版本時會顯示「新版本」按鈕，確認後才重新載入。
 
 > 進度保存在瀏覽器本地（`localStorage`）；家長中心支持**導出 / 導入**進度，方便備份或換設備。
 
@@ -66,21 +66,37 @@
 | `curriculum.js` | 課程體系（階段 → 主題 → 技能） |
 | `lessons.js` | 每個技能的雙語講解內容 |
 | `i18n.js` | 界面文案（中 / 英） |
-| `manifest.webmanifest` / `sw.js` | PWA 清單與離線緩存 |
+| `manifest.webmanifest` / `sw.js` | PWA 清單與離線緩存（`sw.js` 是舊的分支部署入口；`dist/sw.js` 由建置生成） |
 | `icon-*.png` / `icon.ico` | 應用圖標 |
-| `play-math.bat` | Windows 啟動器 |
+| `play-math.bat` | Windows 啟動器（優先使用 `dist/`） |
+| `package.json` / `package-lock.json` | 建置工具（esbuild）依賴 |
+| `tools/build.js` / `tools/sw-template.js` | 建置腳本與 Service Worker 範本 |
+| `dist/` | 建置產物（單一 bundle、生成的 SW、複製的字型／圖標；已提交，CI 驗證沒有漂移） |
 | `tests/` | 開發測試（普通用戶不需要） |
 
 ## 開發與測試
 
 > 交接文件與完整路線圖：**[docs/PLAN.md](docs/PLAN.md)**（目前狀態、架構、待辦與新對話的啟動提示）。
 
-不需要額外依賴的純邏輯／內容契約測試：
+### 建置（esbuild）
+
+```bash
+npm ci               # 安裝建置依賴（esbuild）
+npm run build        # 輸出 dist/app.<hash>.js、dist/index.html、dist/sw.js
+```
+
+- 建置是**決定性**的（文字檔先統一 LF、esbuild 版本納入 hash）：同一份 repo 在任何平台都產生相同的 `dist/`，CI 會用 `git status --porcelain -- dist` 檢查是否忘記提交建置結果。
+- 改完 `math-core.js` / `app.js` / `style.css` 等源碼後，記得 `npm run build` 並把 `dist/` 一併提交。
+- Service Worker 的 precache 清單與 cache 版本由建置產出，不再手動維護。
+
+### 測試
+
+純邏輯／內容契約測試（不需要 jsdom；`contract`／`ui` 的 dist 檢查需要先建置）：
 
 ```bash
 node tests/core.test.js         # 答案 oracle（MATH_SPEC）、判分、掌握度、進度清洗
 node tests/generators.test.js   # 生成器性質、題庫池大小、解題步驟不變量
-node tests/contract.test.js     # MATH_SPEC 自檢、素材清單、i18n、解題覆蓋、公式／技能對齊
+node tests/contract.test.js     # MATH_SPEC 自檢、素材清單、i18n、解題覆蓋、公式／技能對齊、dist 一致性
 ```
 
 界面邏輯測試（需先安裝測試依賴）：
@@ -91,13 +107,17 @@ node tests/ui.test.js
 ```
 
 - `tests/core.test.js`：對所有題型做大量抽樣，用 `MathCore.answerFromMath`（唯一的 MATH_SPEC）交叉驗證答案、選項唯一性、掌握度、自適應與 `sanitizeProgress` 模糊測試。
-- `tests/ui.test.js`：用 jsdom 加載整個應用，驗證首頁渲染、語言切換、路由／Back-Forward、練習與測驗、session 恢復、進度持久化與匯入。
+- `tests/ui.test.js`：用 jsdom 加載整個應用，驗證首頁渲染、語言切換、路由／Back-Forward、練習與測驗、session 恢復、進度持久化與匯入、更新 chip；另外對 `dist/` 打包版做一次冒煙測試（沒有 dist 時自動跳過）。
 - `tests/generators.test.js`：生成器性質（選項、分數、概率、題幹）、題庫池下限、難度階梯與解題步驟。
-- `tests/contract.test.js`：跨層契約——`MATH_SPEC` 自檢、HTML/manifest/SW 素材存在且相對、`t()` 字面量與技能／課堂中英齊全、每個題型都有解題步驟並以答案收尾、公式與技能標記對齊。
+- `tests/contract.test.js`：跨層契約——`MATH_SPEC` 自檢、HTML/manifest/SW 素材存在且相對、`t()` 字面量與技能／課堂中英齊全、每個題型都有解題步驟並以答案收尾、公式與技能標記對齊、`dist/` 與生成的 SW 自我一致（hash、precache 清單、更新流程、gzip 體積）。
 - `tests/make_icon.py`：重新生成應用圖標（需要 Pillow）。
+
+### 部署
+
+`.github/workflows/pages.yml` 會建置並發佈 `dist/` 到 GitHub Pages。**需要一次性的 repo 設定**：Settings → Pages → Build and deployment → Source 選「GitHub Actions」。在切換之前，偵測步驟會發出 warning 並跳過部署，現有的「Deploy from a branch」仍然服務 repo 根目錄（舊入口，仍可正常使用）。
 
 ## 說明
 
 - 應用名「數學樂園 · Math Garden」為暫定名，可隨時在 `i18n.js`、`manifest.webmanifest` 和 `index.html` 的 `<title>` 中修改。
 - 語音朗讀暫未內置（v1 為文字講解）；如需語音，可後續接入瀏覽器 TTS。
-- 直接雙擊 `index.html` 的本地文件模式不支持 Service Worker（無需聯網本身可運行）；離線安裝需通過 HTTPS 或 localhost 部署。
+- 直接雙擊的本地文件模式不支持 Service Worker（無需聯網本身可運行）；離線安裝需通過 HTTPS 或 localhost 部署。

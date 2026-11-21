@@ -7,21 +7,23 @@
 | Item | Value |
 |---|---|
 | Repo | `C:\Users\Carlos\Documents\deepseek-harness\math` |
-| Branch / HEAD | `main` @ `efb2c3e` (Phase 2 landed; docs commit on top) |
-| Live | https://carloswuwu.github.io/math-garden/ (GitHub Pages, deploy from `main` root) |
-| CI | `.github/workflows/tests.yml` — four node suites on every push/PR |
+| Branch / HEAD | `main` @ `a488c02` (Phase 3 A–B landed; docs commit on top) |
+| Live | https://carloswuwu.github.io/math-garden/ — legacy branch deploy (repo root) is live; `.github/workflows/pages.yml` publishes `dist/` once Settings → Pages → Source is switched to “GitHub Actions” (one-time manual step) |
+| CI | `.github/workflows/tests.yml` — build, stale-`dist` check, then four node suites on every push/PR |
 | Content | 14 stages, **111 skills**, 102 lessons, 127 type entries, **85 generator types**; Pre-K → university |
-| Code size | `math-core.js` 4,062 lines · `app.js` 2,274 · `curriculum.js` 1,086 · `lessons.js` 597 · `style.css` 729 · `formulas.js` 91 |
-| Tests | core **574,377** assertions · ui **189** · generators **116,818** · contract **9,649** (111 skills) |
+| Code size | `math-core.js` 4,062 lines · `app.js` 2,315 · `curriculum.js` 1,086 · `lessons.js` 597 · `style.css` 746 · `formulas.js` 91 · `i18n.js` 169 |
+| Build | `tools/build.js` (177) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.<buildHash>.js` **281 KB raw / 85.6 KB gzip**, generated `dist/sw.js`; `dist/` is committed and CI fails on drift |
+| Tests | core **574,377** assertions · ui **199** · generators **116,818** · contract **9,681** (111 skills) |
 | Persistence | progress schema **v2** (`mathpath.progress`), legacy v1 key migrated, sanitized import |
 | In-flight session | `sessionStorage['mathpath.session.v1']` (24 h TTL, practice/quiz/exam only, never in progress) |
-| Offline | SW cache `math-garden-v11`, 20 KaTeX woff2 precached, nav-only shell fallback |
-| Local preview | `$env:PORT=8080; node tests/serve.js` → http://localhost:8080 (also LAN/tailnet) |
-| Dev env | Windows, PowerShell 5.1, Node 20; tests deps in `tests/` with `package-lock.json` |
+| Offline | `dist/sw.js` generated cache `math-garden-<buildHash>`: 30 precache entries incl. 20 KaTeX woff2, nav network-first → cached shell, immutable assets cache-first, user-confirmed “new version” chip (root legacy `sw.js` stays v12 until the Pages switch) |
+| Local preview | `$env:PORT=8080; node tests/serve.js` → http://localhost:8080 (dev entry) and http://localhost:8080/dist/ (built app) |
+| Dev env | Windows, PowerShell 5.1, Node 20; build deps at repo root, test deps in `tests/` (both with lockfiles) |
 
 ## 1. Product & content state
 
 - Static offline-first PWA, no backend, no accounts, no telemetry. Kid-safe by design.
+- Ship shape: source stays seven ordered classic scripts for dev/file://; `tools/build.js` bundles them (esbuild, minified IIFE) into `dist/app.<buildHash>.js` with a generated `dist/index.html` + `dist/sw.js`. `dist/` is committed and CI-verified for drift.
 - Curriculum is data: `curriculum.js` (stages → topics → skills, types/levels/mastery) and `lessons.js` (bilingual lesson per lesson key).
 - Engine: seeded generators, choice building, answer equivalence (fractions by value), mastery/adaptive selection, `explain()` worked solutions.
 - UI: screen switching over `<section hidden>`, `innerHTML` rendering, hand-made paper/storybook CSS, dark chalkboard theme.
@@ -56,19 +58,35 @@
 18. `formulas.js` items now carry the supported skill ids; a `FORMULA_SKILL_TYPES` contract ensures every skill whose type is promised by the sheet is tagged, and tags resolve to playable skills.
 19. CI runs four suites (local total ≈5 s); `npm test --prefix tests` matches CI.
 
+### Landed in this cycle: Phase 3 A–B — build + SW lifecycle (do not re-report)
+
+20. `tools/build.js`: deterministic build (all text inputs LF-normalized, esbuild version folded into the content hash) that pulls the seven scripts in load order through `esbuild.transformSync` into one minified IIFE `dist/app.<hash>.js`; `dist/index.html` keeps KaTeX as a classic script and only references the bundle; vendor copy is limited to `katex.min.js`, `katex.min.css` and the 20 woff2 fonts. Committed `dist/`; CI runs the build and fails when `git status --porcelain -- dist` is dirty. Bundle 281 KB raw / 85.6 KB gzip (advisory limit 120 KB).
+21. `tools/sw-template.js` + build: generated `dist/sw.js` with cache name `math-garden-<buildHash>` and a precache list derived from the build manifest (30 entries; no manual list or version). Strategy: navigation network-first with timeout → cached shell; versioned app bundle and KaTeX fonts cache-first; other same-origin network-first with `Response.error()` on miss; install uses `Promise.allSettled` and does **not** auto-`skipWaiting`.
+22. Update UX: app receives `SKIP_WAITING`-aware waiting workers, shows a localized “新版本 · 重新載入” chip (`#updateChip`), posts `{type:'SKIP_WAITING'}` on confirm and reloads on `controllerchange`; the settings force-update action is kept. Covered by jsdom tests (chip + postMessage) and the generated-SW contract checks.
+23. `.github/workflows/pages.yml` builds and deploys `dist/` when the repo Pages source is “GitHub Actions”; it detects the legacy branch source and warns/skips instead of failing. `play-math.bat` prefers `dist/index.html`. Root dev entry, root `index.html` and legacy root `sw.js` (v12) remain for the current branch deployment and `file://` development.
+24. `tests/ui.test.js` dist smoke test loads the built bundle in jsdom (KaTeX + bundle only, all globals, home render, routing, chip element); `tests/contract.test.js` validates dist self-consistency (build meta/filename, relative refs, generated SW cache/precache/update protocol, gzip budget).
+
 ## 2. Architecture map
 
 ```
-index.html  (7 ordered <script> globals + KaTeX vendor)
-  ├─ math-core.js   pure engine: GENERATORS, choices, checking, mastery, explain/SOLVERS, progress sanitizer
+SOURCE (dev, file://, tests load these directly)
+index.html  (7 ordered <script> globals + KaTeX vendor)  ← dev entry
+  ├─ math-core.js   pure engine: GENERATORS, MATH_SPEC, choices, checking, mastery, explain/SOLVERS
   ├─ curriculum.js  content graph (stages/topics/skills)
   ├─ lessons.js     lesson text keyed by lesson id
   ├─ i18n.js        UI strings (zh/en)
   ├─ formulas.js, curriculum-outline.js   reference data
-  ├─ vendor/katex   math rendering
-  └─ app.js         state, screens, rendering, storage, dialogs, keyboard, SW registration
-sw.js               cache + offline
-tests/              core.test.js, ui.test.js (jsdom), generators.test.js, contract.test.js, serve.js
+  ├─ vendor/katex   math rendering (JS/CSS/woff2)
+  └─ app.js         state, screens, rendering, storage, dialogs, keyboard, SW registration/update chip
+sw.js               legacy branch-deploy SW (v12); superseded by generated dist/sw.js
+
+BUILD (tools/build.js, esbuild)
+dist/index.html     generated: KaTeX classic script + single app.<buildHash>.js
+dist/app.<hash>.js  minified IIFE of the seven scripts in order
+dist/sw.js          generated from tools/sw-template.js (cache/precache from build manifest)
+dist/style.css, manifest, icons, vendor/katex (woff2 only), .nojekyll
+package.json/lock   esbuild; tools/  build scripts
+tests/              core, ui (jsdom), generators, contract, serve.js
 ```
 
 **Contracts (informal but load-bearing):**
@@ -79,19 +97,23 @@ tests/              core.test.js, ui.test.js (jsdom), generators.test.js, contra
 - Navigation: pure `parseHash(hash)`/`serializeRoute(route)` + `parentOf(route)`/`currentRoute()`; `resolveRoute()` validates against `Curriculum` and unlock rules (unknown → home, locked → nearest ancestor). `show(screen)` toggles `hidden`, syncs the hash (replace on re-render / push on screen change), moves focus to the heading and announces via `#announcer`. `hashchange`/`popstate` re-render from the URL; all click entries go through `navigate(route)` so the error boundary in `renderRouteSafely()` applies. Hash routes only — path routes would 404 on Pages reload and break `file://`.
 - In-flight session: `sessionStorage['mathpath.session.v1']` for practice/quiz/exam; `readSession()/saveSession()/clearSession()/restoreSession()`; home Continue card. It is never written to the progress schema.
 - Content parity: every `formulas.js` item carries `skills` (real playable skill ids); `FORMULA_SKILL_TYPES` in `tests/contract.test.js` lists the types the sheet promises, and every skill using one of those types must be tagged.
+- Build: `dist/` is generated and committed; CI rebuilds and requires a clean tree under `dist/`. `dist/sw.js` cache name/precache must match the build hash and the actual dist file list. The SW is the only file allowed to bypass the manifest — update UX depends on no auto-`skipWaiting`.
 
 **Verification commands**
 
 ```powershell
 cd C:\Users\Carlos\Documents\deepseek-harness\math
-node tests/core.test.js        # engine, MATH_SPEC oracle, schema fuzz
-node tests/ui.test.js          # jsdom UI behaviour, router/resume
-node tests/generators.test.js  # generator/explain/content contracts
-node tests/contract.test.js    # MATH_SPEC, assets, i18n, solver coverage, formulas
+npm ci                              # build deps (esbuild)
+npm run build                       # regenerate dist/
+git status --porcelain -- dist      # must be empty before committing
+node tests/core.test.js             # engine, MATH_SPEC oracle, schema fuzz
+node tests/ui.test.js               # jsdom UI behaviour, router/resume, dist smoke
+node tests/generators.test.js       # generator/explain/content contracts
+node tests/contract.test.js         # MATH_SPEC, assets, i18n, solvers, formulas, dist/SW
 node --check app.js; node --check math-core.js
 ```
 
-CI additionally does `npm ci --prefix tests` then the four suites (~5 s local total).
+CI additionally does `npm ci`, the build, the stale-`dist` check, `npm ci --prefix tests`, then the four suites (~5 s local total).
 
 ## 3. Known open debt (not fixed)
 
@@ -109,8 +131,9 @@ CI additionally does `npm ci --prefix tests` then the four suites (~5 s local to
 
 ### Architecture (P1/P2)
 - **Routing remainder:** finished quiz/exam results have no dedicated route (coming Back to the same quiz route re-shows the last result card; a reload at that URL starts a fresh run). Topbar back navigates to `parentOf()` and therefore pushes a history entry instead of calling `history.back()`.
-- **No build:** 7 globals, script-order coupling, no minification/tree-shaking, unhashed assets; file:// double-click is a supported path.
-- **SW lifecycle:** manual `CACHE` version, no user-visible update prompt (auto-reload removed), `skipWaiting` still immediate.
+- **Build remainder:** Stage A–B are done (deterministic single-IIFE bundle, generated SW/precache, hashed asset, committed dist, Actions Pages workflow). The source modules are still 7 order-dependent globals (no ESM/tree-shaking; KaTeX stays unpinned in-tree) — Stages C–E (ESM modules, split core/app, drop globals) remain as Phase 5.
+- **Pages switch:** the repo’s Pages source is still “Deploy from a branch”, so the legacy root deployment is what is live; `pages.yml` only publishes `dist/` after a one-time Settings → Pages → Source = “GitHub Actions” change. Until then the root `sw.js` (v12, manual list) remains the legacy SW.
+- **SW lifecycle remainder:** generated dist SW is user-confirmed but has no periodic update poll beyond registration/`reg.update()` on load; the legacy root SW still auto-`skipWaiting`.
 - **i18n split:** UI strings in `i18n.js`, item/lesson strings hardcoded `{zh,en}` in generators/lessons; ARIA strings inline in `app.js`.
 - **Error boundary/observability:** route renders are wrapped (`renderRouteSafely`) but a failure inside a direct event handler still surfaces via the console; no global `window.onerror` handler or telemetry.
 - **A11y remainder:** informative SVG visuals have no text alternative; background not `inert` when dialog open; targets are 42 px (WCAG suggests 44); no `tests/a11y.test.js`/axe subset.
@@ -155,13 +178,20 @@ Decisions / deviations from the sketch:
 
 **Acceptance met:** no duplicated `computeAnswer` remains and coverage grew (core 571,764 → 574,377 assertions; ui 183 → 189; generators 111,680 → 116,818; contract 9,649 new). Four suites total ≈5 s locally, so CI stays well under 10 s.
 
-### Phase 3 — Build + SW lifecycle
-1. **esbuild, not Vite** (preserve static/file:// model). Stage A: bundle the existing seven files in order into one IIFE `dist/app.<hash>.js` with zero source edits; `dist/index.html` keeps vendor KaTeX as a classic script. Stage B: generate `sw.js` precache list + cache version from the build manifest. Then C–E: convert data modules to ESM behind the unchanged `window.*` API, split `math-core.js` into `core/` modules, split `app.js` (router/screens/dialog/visual/a11y), drop globals.
-2. SW: hashed assets cache-first (immutable); navigation network-first with timeout → cached shell; fonts cache-first; non-navigation miss → `Response.error()`; `Promise.allSettled` install; cache name `math-garden-<buildHash>`.
-3. Update UX: no auto-reload; detect `reg.waiting`, show a localized “New version” chip; user accepts → `SKIP_WAITING` → reload. Keep the existing force-update action.
-4. `play-math.bat` points at the built `index.html`; Pages publishes `dist/`.
+### Phase 3 — Build + SW lifecycle — ✅ A–B landed (`3f3b2a8` build/pwa, `a488c02` tests; C–E folded into Phase 5)
 
-**Acceptance:** cold offline start works; `git diff --exit-code dist` in CI; no manual asset list/cache version; update banner verified; bundle gzip ≤ 120 KB (advisory).
+Implemented:
+1. **esbuild, not Vite:** `tools/build.js` bundles the seven ordered scripts into one minified IIFE `dist/app.<buildHash>.js` with zero source edits (concatenation order preserved; KaTeX stays a separate classic script in `dist/index.html`). Deterministic: LF-normalized text inputs + esbuild version in the hash; committed dist; CI rebuilds and rejects drift. Vendor copy limited to KaTeX JS/CSS + 20 woff2. Bundle 281 KB raw / **85.6 KB gzip**.
+2. **Generated SW:** `tools/sw-template.js` + build emit `dist/sw.js` with `CACHE = math-garden-<buildHash>` and a precache list derived from the build manifest (30 entries, sorted, relative). Navigation network-first → cached shell; versioned bundle + KaTeX fonts cache-first; other same-origin network-first; miss → `Response.error()`; install uses `Promise.allSettled` and does **not** auto-`skipWaiting`.
+3. **Update UX:** `#updateChip` appears localized when a waiting worker exists, posts `{type:'SKIP_WAITING'}`, then reloads on `controllerchange`; Settings force-update kept. jsdom tests cover chip visibility/message; contract tests cover the SW protocol.
+4. **Deploy:** `play-math.bat` prefers `dist/index.html`; `.github/workflows/pages.yml` builds + uploads dist and deploys only when the Pages source is “GitHub Actions”, otherwise warns/skips (legacy branch deployment stays live). Root dev entry and legacy root `sw.js` (bumped to v12 for the current branch deployment) remain.
+
+Decisions / deviations:
+- “Pages publishes dist/” is wired but requires a one-time repo Settings switch (not expressible in git); until then the root branch deployment remains and is updated by the network-first root SW.
+- “Cold offline start works” is covered by construction/contracts (complete precache incl. shell, navigation fallback, cache-first immutable assets, dist smoke in jsdom) rather than a real browser SW test — a manual offline/Lighthouse check is still listed below.
+- Stages C–E (ESM conversion, module split, dropping globals) move to Phase 5 by design; Stage A–B deliberately keeps zero source edits.
+
+**Acceptance:** stale-dist check + four suites in CI (≈5 s local); no manual precache list/cache version in the shipped artifact; update chip verified in jsdom; bundle gzip under the 120 KB advisory. Remaining manual checks: switch Pages source to Actions then confirm the deployed `dist/` and a cold offline start in a real browser.
 
 ### Phase 4 — Accessibility remainder
 - One `tests/a11y.test.js` boot: every screen has exactly one `h1`; every button/switch has an accessible name; no duplicate ids after `innerHTML`; navigation moves focus to heading; dialog trap/restore; live-region text changes; decorative SVG hidden; `lang` attr.
@@ -176,9 +206,9 @@ Decisions / deviations from the sketch:
 ### 30 / 60 / 90-day shape
 | Window | Ship |
 |---|---|
-| 0–30 d | **Phase 1 routing & resume (landed)**; **Phase 2 contract tests (landed)**; SW font precache + safe fallback (done); Phase 4 a11y test boot + ARIA string centralization |
-| 31–60 d | Phase 3 esbuild A–B, generated SW, hashed assets, update banner; result routes / history polish for finished runs |
-| 61–90 d | Phases C–E modular split, text alternatives, perf/Lighthouse gates, formula depth fixes, docs/ADRs |
+| 0–30 d | **Phase 1 routing & resume (landed)**; **Phase 2 contract tests (landed)**; **Phase 3 A–B build/SW/update chip (landed)**; Phase 4 a11y test boot + ARIA string centralization |
+| 31–60 d | Phase 4 remainder (axe subset, inert background, text alternatives, 44 px targets); switch Pages source to Actions and verify dist deploy + cold offline; result routes / history polish |
+| 61–90 d | Phase 5 Stages C–E modular split, perf/Lighthouse gates, formula depth fixes, docs/ADRs |
 
 ## 5. Agent playbook (proven in this repo)
 
@@ -198,27 +228,31 @@ Coordination rules:
 
 ```powershell
 cd C:\Users\Carlos\Documents\deepseek-harness\math
+npm ci
+npm run build
+git status --porcelain -- dist        # must be empty (dist committed & current)
 node --check app.js
 node --check math-core.js
 node tests/core.test.js
 node tests/ui.test.js
 node tests/generators.test.js
 node tests/contract.test.js
-git status --short            # expect only intended files
+git status --short                    # expect only intended files
 git add -A; git commit -m "…"
-git push origin main          # needs credential store; run outside sandbox if needed
+git push origin main                  # needs credential store; run outside sandbox if needed
 ```
 
-Then: wait for the `tests` workflow (GitHub Actions) to go green, confirm Pages deployed, hard-refresh the live site. Bump the SW cache whenever shipped assets change (currently `math-garden-v11`); if the build pipeline lands, this becomes generated.
+Then: wait for the `tests` workflow (GitHub Actions) to go green; if Pages source is “GitHub Actions”, confirm the `pages` workflow deployed `dist/`, then hard-refresh the live site and do a cold offline check. If it is still “Deploy from a branch”, the root deployment updates online without a manual SW bump; the generated `dist/sw.js` cache name comes from the build hash. `play-math.bat` runs the built app locally.
 
 ## 7. Bootstrap prompt for the new session
 
-> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Phases 1 (routing & resume) and 2 (contract tests) are landed — do not redo them. Then continue with **Phase 3 — Build + SW lifecycle**: use esbuild (not Vite) to bundle the existing seven scripts in load order into one hashed IIFE `dist/app.<hash>.js` with zero source edits while keeping vendor KaTeX as a classic script and preserving file:// support; generate `sw.js` precache + cache name from the build manifest; add the “new version” chip (no auto-reload) and point `play-math.bat`/Pages at `dist/`. Keep all four suites green (CI ≤ 10 s), commit by scope and push, then confirm CI and Pages. Do not introduce path-based routes or a module-only build that breaks double-click.
+> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Phases 1 (routing & resume), 2 (contract tests) and 3 A–B (esbuild bundle, generated SW, update chip) are landed — do not redo them. Then continue with **Phase 4 — Accessibility remainder**: add one `tests/a11y.test.js` jsdom boot (exactly one h1 per screen, accessible names, no duplicate ids after `innerHTML`, focus-to-heading on navigation, dialog trap/restore, live-region updates, decorative SVG hidden, `lang`), add an `axe-core` subset restricted to jsdom-supported rules with 0 serious violations, move ARIA strings into `i18n.js` (`a11y.*`) and re-apply them on language change, make topbar title a heading, add `aria-labelledby` to screens, set the background `inert`/`aria-hidden` while a dialog is open, enlarge icon buttons to 44 px, and add text alternatives for informative visuals. Keep all four suites green (plus the new a11y suite), and if you changed shipped sources run `npm run build` and commit `dist/`. Commit by scope, push, confirm CI, and remind the user about the one-time Pages source switch if it is still on “Deploy from a branch”.
 
 ## 8. Key references
 
 - Engine: `math-core.js` — `GENERATORS`, `MATH_SPEC`, `answerFromMath`, `SOLVERS`, `generateProblem` (`{selfCheck}`), `generateSet`, `explain`, `sanitizeProgress`, `mathSig`.
-- UI/state: `app.js` — `state`, `show()`, `navigate()`, `parseHash/serializeRoute/resolveRoute/parentOf/currentRoute`, `readSession/saveSession/restoreSession`, `renderQuestion`, `startPractice/Quiz`, `finishExam`, `showModal/closeModal`, `registerSW`, `applyLang`.
+- UI/state: `app.js` — `state`, `show()`, `navigate()`, `parseHash/serializeRoute/resolveRoute/parentOf/currentRoute`, `readSession/saveSession/restoreSession`, `renderQuestion`, `startPractice/Quiz`, `finishExam`, `showModal/closeModal`, `registerSW`/`showUpdateChip`/`acceptUpdate`, `applyLang`.
 - Content: `curriculum.js` (skills/types/levels), `lessons.js` (teaching text), `i18n.js` (UI strings), `formulas.js` (items tagged with `skills`), `curriculum-outline.js`.
-- Tests: `tests/core.test.js` (MATH_SPEC oracle + invariants + schema fuzz), `tests/generators.test.js` (contracts, pool floors, explain), `tests/ui.test.js` (jsdom flows, router/Back-Forward, session resume, a11y, keyboard, import), `tests/contract.test.js` (MATH_SPEC self-check, assets, i18n, solver coverage, formulas).
-- CI: `.github/workflows/tests.yml`; test deps: `tests/package.json` + `tests/package-lock.json`.
+- Build: `tools/build.js` (deterministic bundle + dist + SW generation), `tools/sw-template.js` (SW strategy/update protocol), `package.json` (esbuild), `dist/` (committed artifact; `dist/sw.js` generated).
+- Tests: `tests/core.test.js` (MATH_SPEC oracle + invariants + schema fuzz), `tests/generators.test.js` (contracts, pool floors, explain), `tests/ui.test.js` (jsdom flows, router/Back-Forward, session resume, a11y, keyboard, import, update chip, dist smoke), `tests/contract.test.js` (MATH_SPEC self-check, assets, i18n, solver coverage, formulas, dist/SW consistency).
+- CI/deploy: `.github/workflows/tests.yml` (build + stale-dist check + four suites), `.github/workflows/pages.yml` (dist deploy when Pages source is GitHub Actions); test deps: `tests/package.json` + `tests/package-lock.json`.
