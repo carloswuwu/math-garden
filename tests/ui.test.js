@@ -541,6 +541,26 @@ async function main() {
   check(new Set(stExam.problems.map((p) => p.skillId)).size >= 4, '綜合考試覆蓋多個技能');
   check(!dComp.getElementById('screen-practice').hidden, '綜合考試已渲染');
 
+  check(stExam.problems.every((p) => !p.input), '小學階段考試維持選擇題');
+
+  /* 33. 中學起的考試：每 3 題 1 題改為鍵入答案，不能只靠猜 */
+  const seniorSeed = JSON.stringify({
+    version: 2, lang: 'zh', sound: false, theme: 'light', skills: {},
+    stageExams: {
+      prek: { passed: true }, g1: { passed: true }, g2: { passed: true }, g3: { passed: true },
+      g4: { passed: true }, g5: { passed: true }, g6: { passed: true }
+    }
+  });
+  const ctxSec = boot(seniorSeed);
+  const wSec = ctxSec.w, dSec = ctxSec.d;
+  wSec.__mathApp.navigate({ screen: 'exam', stageId: 'ms1' });
+  const stSec = wSec.__mathApp.getState();
+  check(stSec.mode === 'exam' && stSec.problems.length === 20, '中一考試仍為 20 題');
+  const typedSec = stSec.problems.filter((p) => p.input === 'text');
+  check(typedSec.length >= 4, '中一考試有鍵入答案題（至少 4 題），得到 ' + typedSec.length);
+  check(typedSec.every((p) => typeof p.answer === 'number' || wSec.MathCore.isFraction(p.answer)), '鍵入答案題只出現在數值答案');
+  check(stSec.problems.some((p) => !p.input), '中一考試仍混合選擇題');
+
   /* 32. 挑戰區：首頁入口、永遠解鎖、6 個挑戰技能、可直接測驗 */
   const ctxCh = boot();
   const dCh = ctxCh.d, wCh = ctxCh.w;
@@ -559,6 +579,36 @@ async function main() {
   check(stCh.mode === 'quiz' && stCh.problems.length === 10, '挑戰測驗固定 10 題');
   check(stCh.problems.every((p) => ['modpow', 'gcdlcm', 'remainderSystem'].indexOf(p.math.op) !== -1), '數論挑戰題型正確');
   check(wCh.location.hash === '#/quiz/challenge.nt', '挑戰 quiz route 同步');
+  check(!dCh.querySelector('#screen-practice .choice'), '挑戰測驗不提供選項（不能靠猜）');
+  const typedField = dCh.getElementById('typedAnswer');
+  check(!!typedField, '挑戰測驗有鍵入答案欄');
+  check((typedField.getAttribute('aria-describedby') || '') === 'answerHint', '鍵入答案欄有提示關聯');
+  const challengeQ = wCh.__mathApp.currentProblem();
+  check(challengeQ.input === 'text', '挑戰題目標記為鍵入答案');
+  typedField.value = wCh.MathCore.renderValue(challengeQ.answer);
+  dCh.getElementById('typedSubmit').click();
+  check(dCh.getElementById('feedback').className.indexOf('ok') !== -1, '鍵入正確答案有正確回饋');
+  await sleep(1000);
+  check(wCh.__mathApp.getState().index === 1, '鍵入答對後前進到第 2 題');
+
+  /* 鍵入答案的練習：答錯可重試，答對後可下一題；session 可恢復輸入題 */
+  wCh.__mathApp.navigate({ screen: 'practice', skillId: 'challenge.geo' });
+  check(!!dCh.getElementById('typedAnswer'), '挑戰練習也是鍵入答案');
+  const geoQ = wCh.__mathApp.currentProblem();
+  const geoField = dCh.getElementById('typedAnswer');
+  geoField.value = String(Number(wCh.MathCore.renderValue(geoQ.answer)) + 1);
+  dCh.getElementById('typedSubmit').click();
+  check(dCh.getElementById('feedback').className.indexOf('no') !== -1, '鍵入錯誤答案有錯誤回饋');
+  check(!geoField.disabled, '練習答錯後仍可修改再試');
+  geoField.value = wCh.MathCore.renderValue(geoQ.answer);
+  dCh.getElementById('typedSubmit').click();
+  check(dCh.getElementById('feedback').className.indexOf('ok') !== -1, '重試答對有正確回饋');
+  check(!dCh.getElementById('nextBtn').hidden, '鍵入練習答對後出現下一題');
+  const typedSession = wCh.sessionStorage.getItem('mathpath.session.v1');
+  check(!!typedSession && JSON.parse(typedSession).problems[0].input === 'text', 'session 記錄鍵入答案題');
+  const ctxTypedReload = boot(null, { url: 'http://localhost/#/practice/challenge.geo', session: typedSession });
+  check(!!ctxTypedReload.d.getElementById('typedAnswer'), '重新載入後仍是鍵入答案題');
+  check(ctxTypedReload.w.__mathApp.getState().index === 0, '重新載入後題號一致');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);

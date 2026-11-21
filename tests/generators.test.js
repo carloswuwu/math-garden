@@ -71,16 +71,23 @@ for (const skill of skills) {
         /* 1. 結構 */
         check(p.answer !== undefined && p.answer !== null, '缺少答案 ' + tag);
         if (typeof p.answer === 'number') check(Number.isFinite(p.answer), '答案非有限數 ' + tag);
-        /* 比大小（顏色版）刻意只有兩個選項（綠組／橙組），其餘題型一律 4 個 */
-        const expectedChoices = spec.t === 'comparegroup' ? 2 : 4;
-        check(Array.isArray(p.choices) && p.choices.length === expectedChoices, '選項數不是 ' + expectedChoices + ' ' + tag);
-        for (let x = 0; x < p.choices.length; x++) {
-          for (let y = x + 1; y < p.choices.length; y++) {
-            check(!M.valuesEqual(p.choices[x], p.choices[y]), '選項等值重複 ' + tag + ' ' + JSON.stringify(p.choices));
+        /* 鍵入答案題（挑戰區）不提供選項；其餘題型固定選項數 */
+        if (p.input) {
+          check(typeof p.input === 'string', 'input 題應標記型別 ' + tag);
+          check(!Array.isArray(p.choices) || p.choices.length === 0, '鍵入答案題不應提供選項 ' + tag);
+          check(M.checkAnswer(p, String(M.renderValue(p.answer))).correct, '鍵入答案題自己的答案應判對 ' + tag);
+        } else {
+          /* 比大小（顏色版）刻意只有兩個選項（綠組／橙組），其餘題型一律 4 個 */
+          const expectedChoices = spec.t === 'comparegroup' ? 2 : 4;
+          check(Array.isArray(p.choices) && p.choices.length === expectedChoices, '選項數不是 ' + expectedChoices + ' ' + tag);
+          for (let x = 0; x < p.choices.length; x++) {
+            for (let y = x + 1; y < p.choices.length; y++) {
+              check(!M.valuesEqual(p.choices[x], p.choices[y]), '選項等值重複 ' + tag + ' ' + JSON.stringify(p.choices));
+            }
           }
+          const correct = p.choices.filter((c) => M.valuesEqual(c, p.answer));
+          check(correct.length === 1, '正解在選項中出現 ' + correct.length + ' 次 ' + tag);
         }
-        const correct = p.choices.filter((c) => M.valuesEqual(c, p.answer));
-        check(correct.length === 1, '正解在選項中出現 ' + correct.length + ' 次 ' + tag);
         check(!GARBAGE.test(p.prompt.zh) && !GARBAGE.test(p.prompt.en), '題幹含垃圾值 ' + tag);
         check(!!p.prompt.zh && !!p.prompt.en, '題幹缺語言 ' + tag);
 
@@ -130,7 +137,7 @@ for (const skill of skills) {
 
         /* 4c. π 一律寫成 π，不是 1π */
         const piPieces = (typeof p.answer === 'string' && p.answer.indexOf('π') >= 0 ? [p.answer] : []).concat(
-          p.choices.filter((c) => typeof c === 'string' && c.indexOf('π') >= 0)
+          (p.choices || []).filter((c) => typeof c === 'string' && c.indexOf('π') >= 0)
         );
         piPieces.forEach((v) => check(v !== '1π', 'π 標籤不應寫成 1π ' + tag));
 
@@ -149,6 +156,23 @@ for (const skill of skills) {
       }
     }
   }
+}
+
+/* 2b. 挑戰區：所有題目都必須是鍵入答案（無選項、答案可辨識），避免用猜的 */
+{
+  const challengeSkills = Object.values(C.skills).filter((sk) => sk.stage === 'challenge');
+  check(challengeSkills.length === 6, '挑戰區應有 6 個技能，得到 ' + challengeSkills.length);
+  let typedCount = 0;
+  challengeSkills.forEach((skill) => {
+    for (let i = 0; i < 40; i++) {
+      const p = M.generateProblem(skill, { seed: 3000 + i * 17, difficultyStep: i % 2 });
+      check(p.input === 'text', '挑戰題應為鍵入答案 ' + skill.id + '#' + i);
+      check(!Array.isArray(p.choices) || p.choices.length === 0, '挑戰題不應有選項 ' + skill.id + '#' + i);
+      check(M.checkAnswer(p, String(M.renderValue(p.answer))).correct, '挑戰題答案可判對 ' + skill.id + '#' + i);
+      typedCount++;
+    }
+  });
+  check(typedCount === 240, '挑戰題抽樣數應為 240，得到 ' + typedCount);
 }
 
 /* 6b. 曾出錯／新加入的模式：解題步驟必須存在，且最後一步要交代答案 */
