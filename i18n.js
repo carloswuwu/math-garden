@@ -30,6 +30,8 @@
     practice: {
       title: '練習', progress: '進度', question: '第 {i} / {n} 題',
       hint: '提示', next: '下一題', done: '完成練習',
+      submit: '提交答案', enterAnswer: '請先輸入答案', answerWas: '正確答案是 {answer}。',
+      answerHint: '輸入數字或分數（例如 12、3/4），按 Enter 提交。',
       correct: ['太棒了！', '真厲害！', '答對啦！', '好樣的！', '真聰明！'],
       wrong: ['再試一次', '差一點', '再想一想'],
       chooseAnswer: '選一個答案', typeAnswer: '輸入答案'
@@ -167,6 +169,8 @@
     practice: {
       title: 'Practice', progress: 'Progress', question: 'Question {i} / {n}',
       hint: 'Hint', next: 'Next', done: 'Finish Practice',
+      submit: 'Submit', enterAnswer: 'Please enter an answer first', answerWas: 'The correct answer is {answer}.',
+      answerHint: 'Type a number or fraction (e.g. 12, 3/4) and press Enter.',
       correct: ['Great job!', 'Awesome!', 'Correct!', 'Well done!', 'Smart!'],
       wrong: ['Try again', 'Almost', 'Think again'],
       chooseAnswer: 'Choose an answer', typeAnswer: 'Type the answer'

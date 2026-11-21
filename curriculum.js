@@ -963,8 +963,8 @@
       lesson: 'challenge.nt',
       types: ['modpow', 'gcdlcm', 'remainderSystem'],
       levels: [
-        { maxBase: 6, maxExp: 3, maxMod: 10, maxNum: 24 },
-        { maxBase: 9, maxExp: 5, maxMod: 13, maxNum: 36 }
+        { maxBase: 6, maxExp: 3, maxMod: 10, maxNum: 24 , input: true },
+        { maxBase: 9, maxExp: 5, maxMod: 13, maxNum: 36 , input: true }
       ],
       mastery: { practice: 8, quizPass: 0.8 }
     },
@@ -975,8 +975,8 @@
       lesson: 'challenge.count',
       types: ['pathcount', 'handshake', 'arrange', 'inclusion'],
       levels: [
-        { maxSteps: 5, maxPeople: 20, maxNum: 120 },
-        { maxSteps: 6, maxPeople: 30, maxNum: 200 }
+        { maxSteps: 5, maxPeople: 20, maxNum: 120 , input: true },
+        { maxSteps: 6, maxPeople: 30, maxNum: 200 , input: true }
       ],
       mastery: { practice: 8, quizPass: 0.8 }
     },
@@ -986,7 +986,7 @@
       en: { name: 'Geometry & Time Challenge', goal: 'Work out clock-hand angles and trapezium areas.' },
       lesson: 'challenge.geo',
       types: ['clockangle', 'trapezoid'],
-      levels: [{ maxSide: 10, maxHeight: 8 }, { maxSide: 12, maxHeight: 10 }],
+      levels: [{ maxSide: 10, maxHeight: 8 , input: true }, { maxSide: 12, maxHeight: 10 , input: true }],
       mastery: { practice: 8, quizPass: 0.8 }
     },
     'challenge.logic': {
@@ -995,7 +995,7 @@
       en: { name: 'Logic & Patterns Challenge', goal: 'Crack number patterns and reason with the pigeonhole principle.' },
       lesson: 'challenge.logic',
       types: ['seqnext', 'pigeon'],
-      levels: [{ maxColors: 4, maxSame: 3 }, { maxColors: 5, maxSame: 4 }],
+      levels: [{ maxColors: 4, maxSame: 3 , input: true }, { maxColors: 5, maxSame: 4 , input: true }],
       mastery: { practice: 8, quizPass: 0.8 }
     },
     'challenge.algebra': {
@@ -1004,7 +1004,7 @@
       en: { name: 'Algebra & Applied Challenge', goal: 'Solve multi-step work-rate and mixture problems.' },
       lesson: 'challenge.algebra',
       types: ['workrate', 'mixture'],
-      levels: [{}, {}],
+      levels: [{ input: true }, { input: true }],
       mastery: { practice: 8, quizPass: 0.8 }
     },
     'challenge.prob': {
@@ -1013,7 +1013,7 @@
       en: { name: 'Probability Games', goal: 'Compute dice-sum and coin-toss classical probabilities.' },
       lesson: 'challenge.prob',
       types: ['diceprob', 'coinprob'],
-      levels: [{}, {}],
+      levels: [{ input: true }, { input: true }],
       mastery: { practice: 8, quizPass: 0.8 }
     }
   };

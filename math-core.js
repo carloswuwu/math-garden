@@ -4920,7 +4920,12 @@
     p.difficultyStep = step;
     p.answerMax = o.max;
     p.answerMin = o.min;
-    if (!p.choices) {
+    /* 題級別可設 input:true → 鍵入答案（不提供選項，避免用猜的）。
+     * 引擎仍用同一個 checkAnswer，所以等值分數、小數、負數都照常判分。 */
+    if (o.input) p.input = 'text';
+    if (p.input) {
+      delete p.choices;
+    } else if (!p.choices) {
       p.choices = buildChoices(rng, p.answer, { min: distractorMin(p, o), max: distractorMax(p, o), base: p.base });
     }
     delete p.base;
@@ -5178,6 +5183,7 @@
     contextSig: contextSig,
     composeSet: composeSet,
     composeExam: composeExam,
+    isInputProblem: function (p) { return !!(p && p.input); },
     seedRandom: seedRandom,
     randInt: randInt,
     pick: pick,

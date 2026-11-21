@@ -138,7 +138,12 @@
     for (i = 0; i < s.problems.length; i++) {
       var p = s.problems[i];
       if (!p || typeof p !== 'object') return false;
-      if (!Array.isArray(p.choices) || p.answer === undefined || p.answer === null) return false;
+      if (p.answer === undefined || p.answer === null) return false;
+      if (p.input) {
+        if (typeof p.input !== 'string') return false;
+      } else if (!Array.isArray(p.choices)) {
+        return false;
+      }
       if (!p.prompt || typeof p.prompt !== 'object') return false;
       var res = null;
       try { res = MathCore.checkAnswer(p, p.answer); } catch (e) { return false; }
@@ -1496,6 +1501,20 @@
     saveSession();
   }
 
+  /* 中學起的測驗/考試：每 3 題有 1 題改為鍵入答案（不提供選項），令評估不能只靠猜；
+   * 小學階段與練習維持選擇題，避免年幼學生因輸入格式而失分。 */
+  var TYPED_ASSESSMENT_STAGES = ['ms1', 'ms2', 'ms3', 'hs1', 'hs2', 'hs3', 'college'];
+
+  function applyTypedAssessment(problems, stageId) {
+    if (TYPED_ASSESSMENT_STAGES.indexOf(stageId) === -1) return problems;
+    problems.forEach(function (p, i) {
+      if (p.input) return;
+      var numericAnswer = typeof p.answer === 'number' || MathCore.isFraction(p.answer);
+      if (numericAnswer && i % 3 === 2) p.input = 'text';
+    });
+    return problems;
+  }
+
   /* 測驗組卷：交給引擎的 composeSet（同模板最多 2 題、不重複整題、保證 n 題），
    * 難度至少取 1（多級別技能），避免整份測驗都停在最淺一級。 */
   function buildQuiz(skill, n) {
@@ -1503,7 +1522,7 @@
     var baseStep = skillProgress(skill.id).difficultyStep || 0;
     var step = Math.min(Math.max(1, baseStep), levels - 1);
     var rng = MathCore.seedRandom(Date.now() & 0xffffffff);
-    return MathCore.composeSet(skill, n, { rng: rng, difficultyStep: step });
+    return applyTypedAssessment(MathCore.composeSet(skill, n, { rng: rng, difficultyStep: step }), skill.stage);
   }
 
   function currentProblem() { return state.problems[state.index]; }
@@ -1547,22 +1566,32 @@
     var bodyHtml = '<div class="prompt-card"><div class="prompt-text">' + renderMath(L(p.prompt)) + '</div>' +
       '<div class="prompt-visual" id="qVisual"></div></div>';
 
-    // 選項（button 自帶 aria-label 與 aria-disabled，方便鍵盤/讀屏使用）
-    var choiceHtml = '<div class="choices" id="choices" role="group" aria-label="' + esc(t('practice.chooseAnswer')) + '">';
-    if (p.type === 'comparegroup') {
-      p.choices.forEach(function (c, i) {
-        var colorLabel = t('colors.' + c);
-        choiceHtml += '<button class="choice color-choice" type="button" data-value="' + c + '" data-key="' + c + '" aria-label="' + esc(choiceAriaLabel(i, colorLabel)) + '" aria-disabled="false">' +
-          '<span class="swatch" style="background:' + swatchColor(c) + '"></span>' +
-          '<span>' + colorLabel + '</span></button>';
-      });
+    /* 選項（button 自帶 aria-label 與 aria-disabled）或鍵入答案（挑戰區：
+     * 不提供選項，避免用猜的；等值分數／小數照樣判對） */
+    var choiceHtml;
+    if (p.input) {
+      choiceHtml = '<div class="answer-row">' +
+        '<label class="sr-only" for="typedAnswer">' + esc(t('practice.typeAnswer')) + '</label>' +
+        '<input class="answer-input" id="typedAnswer" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="answerHint">' +
+        '<button class="btn" id="typedSubmit" type="button">' + esc(t('practice.submit')) + '</button>' +
+        '</div><p class="answer-hint" id="answerHint">' + esc(t('practice.answerHint')) + '</p>';
     } else {
-      p.choices.forEach(function (c, i) {
-        var label = choiceLabel(p, c);
-        choiceHtml += '<button class="choice" type="button" data-value="' + MathCore.renderValue(c) + '" data-key="' + MathCore.valueKey(c) + '" aria-label="' + esc(choiceAriaLabel(i, label)) + '" aria-disabled="false">' + label + '</button>';
-      });
+      choiceHtml = '<div class="choices" id="choices" role="group" aria-label="' + esc(t('practice.chooseAnswer')) + '">';
+      if (p.type === 'comparegroup') {
+        p.choices.forEach(function (c, i) {
+          var colorLabel = t('colors.' + c);
+          choiceHtml += '<button class="choice color-choice" type="button" data-value="' + c + '" data-key="' + c + '" aria-label="' + esc(choiceAriaLabel(i, colorLabel)) + '" aria-disabled="false">' +
+            '<span class="swatch" style="background:' + swatchColor(c) + '"></span>' +
+            '<span>' + colorLabel + '</span></button>';
+        });
+      } else {
+        p.choices.forEach(function (c, i) {
+          var label = choiceLabel(p, c);
+          choiceHtml += '<button class="choice" type="button" data-value="' + MathCore.renderValue(c) + '" data-key="' + MathCore.valueKey(c) + '" aria-label="' + esc(choiceAriaLabel(i, label)) + '" aria-disabled="false">' + label + '</button>';
+        });
+      }
+      choiceHtml += '</div>';
     }
-    choiceHtml += '</div>';
 
     var footerHtml = '<div class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>';
     if (!isQuiz) {
@@ -1578,13 +1607,22 @@
 
     var feedback = $('feedback');
     var choicesEl = $('choices');
-
-    choicesEl.querySelectorAll('.choice').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        if (state.locked) return;
-        handleAnswer(btn, p);
+    if (choicesEl) {
+      choicesEl.querySelectorAll('.choice').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          if (state.locked) return;
+          handleAnswer(btn, p);
+        });
       });
-    });
+    }
+    if (p.input) {
+      var typedSubmit = $('typedSubmit');
+      if (typedSubmit) typedSubmit.addEventListener('click', function () { handleTypedAnswer(p); });
+      var typedField = $('typedAnswer');
+      if (typedField) typedField.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); handleTypedAnswer(p); }
+      });
+    }
 
     if (!isQuiz) {
       $('hintBtn').addEventListener('click', function () {
@@ -1597,17 +1635,12 @@
     }
   }
 
-  function handleAnswer(btn, p) {
-    var inputStr = btn.getAttribute('data-value');
-    var correct = MathCore.checkAnswer(p, inputStr).correct;
-
+  /* 作答後的共用流程：計分、練習給回饋並顯示下一題、測驗/考試排程前進 */
+  function gradeAnswered(p, correct, delayMs) {
     if (correct) {
       state.locked = true;
       state.correct++;
       touchStreak();
-      btn.classList.add('correct');
-      disableChoices();
-      setFeedback(pick(t('practice.correct')), 'ok');
       playTone(true);
       confetti();
       if (state.mode === 'practice') {
@@ -1617,28 +1650,75 @@
         $('nextBtn').hidden = false;
       } else {
         state.results.push({ correct: true, problem: p });
-        setTimeout(advanceQuiz, 900);
+        setTimeout(advanceQuiz, delayMs || 900);
       }
     } else {
-      btn.classList.add('wrong');
-      btn.disabled = true;
-      btn.setAttribute('aria-disabled', 'true');
-      setFeedback(pick(t('practice.wrong')), 'no');
       playTone(false);
       if (state.mode === 'practice') {
         MathCore.applyResult(progress, getSkill(state.skillId), p, false);
         saveProgress();
-        // 允許繼續嘗試
+        // 練習答錯可以再試，不鎖定
       } else {
         state.results.push({ correct: false, problem: p });
-        disableChoices();
-        // 高亮正確答案
-        $('screen-practice').querySelectorAll('.choice').forEach(function (b) {
-          if (MathCore.checkAnswer(p, b.getAttribute('data-value')).correct) b.classList.add('correct');
-        });
-        setTimeout(advanceQuiz, 1100);
+        setTimeout(advanceQuiz, delayMs || 1100);
       }
     }
+  }
+
+  function handleAnswer(btn, p) {
+    var correct = MathCore.checkAnswer(p, btn.getAttribute('data-value')).correct;
+    if (correct) {
+      btn.classList.add('correct');
+      disableChoices();
+      setFeedback(pick(t('practice.correct')), 'ok');
+      gradeAnswered(p, true);
+      return;
+    }
+    btn.classList.add('wrong');
+    btn.disabled = true;
+    btn.setAttribute('aria-disabled', 'true');
+    setFeedback(pick(t('practice.wrong')), 'no');
+    if (state.mode === 'practice') {
+      gradeAnswered(p, false);
+      return;
+    }
+    disableChoices();
+    $('screen-practice').querySelectorAll('.choice').forEach(function (b) {
+      if (MathCore.checkAnswer(p, b.getAttribute('data-value')).correct) b.classList.add('correct');
+    });
+    gradeAnswered(p, false, 1100);
+  }
+
+  /* 鍵入答案：空白提示；練習可重試；測驗/考試答錯會顯示正確答案再前進 */
+  function handleTypedAnswer(p) {
+    if (state.locked) return;
+    var field = $('typedAnswer');
+    if (!field) return;
+    var raw = String(field.value || '').trim();
+    if (!raw) {
+      setFeedback(t('practice.enterAnswer'), 'no');
+      try { field.focus(); } catch (e) { /* 忽略 */ }
+      return;
+    }
+    var submit = $('typedSubmit');
+    var correct = MathCore.checkAnswer(p, raw).correct;
+    if (correct) {
+      field.disabled = true;
+      if (submit) submit.disabled = true;
+      setFeedback(pick(t('practice.correct')), 'ok');
+      gradeAnswered(p, true);
+      return;
+    }
+    if (state.mode === 'practice') {
+      setFeedback(pick(t('practice.wrong')), 'no');
+      gradeAnswered(p, false);
+      try { field.select(); } catch (e) { /* 忽略 */ }
+      return;
+    }
+    field.disabled = true;
+    if (submit) submit.disabled = true;
+    setFeedback(t('practice.answerWas', { answer: MathCore.renderValue(p.answer) }), 'no');
+    gradeAnswered(p, false, 1700);
   }
 
   function disableChoices() {
@@ -1847,7 +1927,7 @@
     var skills = stageSkills(stage).filter(function (s) { return !s.scaffold && s.types && s.types.length; });
     if (!skills.length) return [];
     var rng = MathCore.seedRandom(Date.now() & 0xffffffff);
-    return MathCore.composeExam(skills, n, {
+    var exam = MathCore.composeExam(skills, n, {
       rng: rng,
       maxPerSkill: 3,
       stepFor: function (skill) {
@@ -1858,6 +1938,7 @@
         return rng() < 0.67 ? Math.max(1, top) : Math.max(1, Math.min(sp, top));
       }
     });
+    return applyTypedAssessment(exam, stage.id);
   }
 
   function finishExam() {
