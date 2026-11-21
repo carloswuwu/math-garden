@@ -6,3 +6,5 @@ tests/_shots/
 
 # CodeGraph local index (machine-specific, not for committing)
 .codegraph/
+
+.npm-cache/
