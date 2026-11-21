@@ -1387,7 +1387,7 @@
   function nextPracticeProblem() {
     var skill = getSkill(state.skillId);
     var rng = MathCore.seedRandom((Date.now() & 0xffffffff) ^ Math.floor(Math.random() * 0xffff));
-    var p = MathCore.nextProblem(skill, progress, { rng: rng });
+    var p = MathCore.nextProblem(skill, progress, { rng: rng, avoid: state.problems.slice(-4) });
     state.problems.push(p);
     state.index = state.problems.length - 1;
     state.locked = false;
@@ -1413,23 +1413,14 @@
     saveSession();
   }
 
+  /* 測驗組卷：交給引擎的 composeSet（同模板最多 2 題、不重複整題、保證 n 題），
+   * 難度至少取 1（多級別技能），避免整份測驗都停在最淺一級。 */
   function buildQuiz(skill, n) {
+    var levels = Math.max(1, (skill.levels || []).length);
+    var baseStep = skillProgress(skill.id).difficultyStep || 0;
+    var step = Math.min(Math.max(1, baseStep), levels - 1);
     var rng = MathCore.seedRandom(Date.now() & 0xffffffff);
-    var step = skillProgress(skill.id).difficultyStep || 0;
-    var types = (skill.types || []).map(function (x) { return typeof x === 'string' ? x : x.t; });
-    var out = [];
-    var lastSigs = [];
-    var guard = 0;
-    while (out.length < n && guard++ < n * 120) {
-      var idx = Math.floor(rng() * types.length);
-      var p = MathCore.generateProblem(skill, { rng: rng, difficultyStep: step, typeIndex: idx });
-      if (lastSigs.indexOf(p.sig) === -1) {
-        out.push(p);
-        lastSigs.push(p.sig);
-        if (lastSigs.length > 3) lastSigs.shift();
-      }
-    }
-    return out;
+    return MathCore.composeSet(skill, n, { rng: rng, difficultyStep: step });
   }
 
   function currentProblem() { return state.problems[state.index]; }
@@ -1764,33 +1755,23 @@
     saveSession();
   }
 
+  /* 綜合考試組卷：跨技能、每技能最多 3 題、同模板最多 2 題；
+   * 約 2/3 題目用最高難度級別，其餘用學習者目前級別（至少 1），令試卷不再全部最淺。 */
   function buildGradeExam(stage, n) {
     var skills = stageSkills(stage).filter(function (s) { return !s.scaffold && s.types && s.types.length; });
     if (!skills.length) return [];
     var rng = MathCore.seedRandom(Date.now() & 0xffffffff);
-    var out = [];
-    var lastSigs = [];
-    var guard = 0;
-    var k = 0;
-    while (out.length < n && guard++ < n * 200) {
-      var skill = skills[k % skills.length];
-      k++;
-      var types = skill.types.map(function (x) { return typeof x === 'string' ? x : x.t; });
-      var ti = Math.floor(rng() * types.length);
-      var step = skillProgress(skill.id).difficultyStep || 0;
-      var p = MathCore.generateProblem(skill, { rng: rng, difficultyStep: step, typeIndex: ti });
-      if (lastSigs.indexOf(p.sig) === -1) {
-        p.skillId = skill.id;
-        out.push(p);
-        lastSigs.push(p.sig);
-        if (lastSigs.length > 4) lastSigs.shift();
+    return MathCore.composeExam(skills, n, {
+      rng: rng,
+      maxPerSkill: 3,
+      stepFor: function (skill) {
+        var levels = Math.max(1, (skill.levels || []).length);
+        var top = levels - 1;
+        if (top <= 0) return 0;
+        var sp = skillProgress(skill.id).difficultyStep || 0;
+        return rng() < 0.67 ? Math.max(1, top) : Math.max(1, Math.min(sp, top));
       }
-    }
-    for (var i = out.length - 1; i > 0; i--) {
-      var j = Math.floor(rng() * (i + 1));
-      var tmp = out[i]; out[i] = out[j]; out[j] = tmp;
-    }
-    return out;
+    });
   }
 
   function finishExam() {

@@ -192,7 +192,11 @@
     var visual = (max <= 20) ? { kind: 'counters', a: a, b: b } : null;
     return {
       type: 'addition',
-      prompt: eqPrompt(a, '+', b),
+      prompt: pick(rng, [
+        eqPrompt(a, '+', b),
+        { zh: a + ' 再加 ' + b + ' 等於多少？', en: 'What is ' + a + ' plus ' + b + '?' },
+        { zh: '有 ' + a + ' 個，再來 ' + b + ' 個，一共幾個？', en: 'There are ' + a + ' and ' + b + ' more arrive. How many in all?' }
+      ]),
       visual: visual,
       answer: a + b,
       math: { op: '+', a: a, b: b },
@@ -207,7 +211,11 @@
     var visual = (max <= 20) ? { kind: 'counters', a: a, b: b } : null;
     return {
       type: 'subtraction',
-      prompt: eqPrompt(a, '−', b),
+      prompt: pick(rng, [
+        eqPrompt(a, '−', b),
+        { zh: a + ' 減 ' + b + ' 等於多少？', en: 'What is ' + a + ' minus ' + b + '?' },
+        { zh: '有 ' + a + ' 個，拿走 ' + b + ' 個，還剩幾個？', en: 'There are ' + a + ' and ' + b + ' are taken away. How many are left?' }
+      ]),
       visual: visual,
       answer: a - b,
       math: { op: '−', a: a, b: b },
@@ -273,7 +281,12 @@
     var visual = (a <= 10 && b <= 10) ? { kind: 'grid', a: a, b: b } : null;
     return {
       type: 'multiplication',
-      prompt: eqPrompt(a, '×', b),
+      prompt: pick(rng, [
+        eqPrompt(a, '×', b),
+        { zh: '每盒 ' + a + ' 個，共 ' + b + ' 盒，一共有幾個？', en: 'There are ' + a + ' in each box and ' + b + ' boxes. How many in all?' },
+        { zh: '有 ' + a + ' 排，每排 ' + b + ' 個，一共有幾個？', en: 'There are ' + a + ' rows with ' + b + ' in each row. How many in all?' },
+        { zh: '求 ' + a + ' 和 ' + b + ' 的積。', en: 'What is the product of ' + a + ' and ' + b + '?' }
+      ]),
       visual: visual,
       answer: a * b,
       math: { op: '×', a: a, b: b },
@@ -287,7 +300,11 @@
     var a = b * q;
     return {
       type: 'division',
-      prompt: eqPrompt(a, '÷', b),
+      prompt: pick(rng, [
+        eqPrompt(a, '÷', b),
+        { zh: '把 ' + a + ' 個平均分成 ' + b + ' 份，每份幾個？', en: 'Share ' + a + ' equally into ' + b + ' groups. How many in each group?' },
+        { zh: a + ' 個，每 ' + b + ' 個一份，可以分成幾份？', en: 'How many groups of ' + b + ' can be made from ' + a + '?' }
+      ]),
       visual: null,
       answer: q,
       math: { op: '÷', a: a, b: b },
@@ -310,17 +327,25 @@
 
   var WORD_NAMES = [
     { zh: '小明', en: 'Sam' }, { zh: '小美', en: 'Mia' },
-    { zh: '志強', en: 'Kai' }, { zh: '家寶', en: 'Bo' }
+    { zh: '志強', en: 'Kai' }, { zh: '家寶', en: 'Bo' },
+    { zh: '小欣', en: 'Ann' }, { zh: '子軒', en: 'Jay' },
+    { zh: '嘉怡', en: 'Eva' }, { zh: '浩然', en: 'Leo' }
   ];
   var WORD_ITEMS = [
     { zh: '蘋果', en: 'apples', en1: 'apple' },
     { zh: '貼紙', en: 'stickers', en1: 'sticker' },
     { zh: '波子', en: 'marbles', en1: 'marble' },
-    { zh: '書', en: 'books', en1: 'book' }
+    { zh: '書', en: 'books', en1: 'book' },
+    { zh: '鉛筆', en: 'pencils', en1: 'pencil' },
+    { zh: '郵票', en: 'stamps', en1: 'stamp' },
+    { zh: '糖果', en: 'sweets', en1: 'sweet' },
+    { zh: '卡片', en: 'cards', en1: 'card' },
+    { zh: '貝殼', en: 'shells', en1: 'shell' },
+    { zh: '玻璃珠', en: 'beads', en1: 'bead' }
   ];
 
-  function genWord(rng, o) {
-    var op = pick(rng, o.ops || ['add', 'sub', 'mul']);
+  function genWordBasic(rng, o, forcedOp) {
+    var op = forcedOp || pick(rng, o.ops || ['add', 'sub', 'mul']);
     var a, b, c = null, answer, prompt, mathOp;
     var who = pick(rng, WORD_NAMES);
     var item = pick(rng, WORD_ITEMS);
@@ -330,28 +355,58 @@
       b = randInt(rng, 1, o.max != null ? o.max : 20);
       answer = a + b;
       mathOp = 'add';
-      prompt = {
-        zh: who.zh + '有 ' + a + ' 個' + item.zh + '，又得到了 ' + b + ' 個，一共有幾個？',
-        en: who.en + ' has ' + a + ' ' + pl(a) + ' and gets ' + b + ' more. How many in all?'
-      };
+      prompt = pick(rng, [
+        {
+          zh: who.zh + '有 ' + a + ' 個' + item.zh + '，又得到了 ' + b + ' 個，一共有幾個？',
+          en: who.en + ' has ' + a + ' ' + pl(a) + ' and gets ' + b + ' more. How many in all?'
+        },
+        {
+          zh: '盒子裡有 ' + a + ' 個' + item.zh + '，再放入 ' + b + ' 個，現在共有幾個？',
+          en: 'A box has ' + a + ' ' + pl(a) + ' and ' + b + ' more are added. How many are there now?'
+        },
+        {
+          zh: who.zh + '上午用了 ' + a + ' 個' + item.zh + '，下午用了 ' + b + ' 個，一共用了幾個？',
+          en: who.en + ' uses ' + a + ' ' + pl(a) + ' in the morning and ' + b + ' in the afternoon. How many in all?'
+        }
+      ]);
     } else if (op === 'sub') {
       a = randInt(rng, 2, o.max != null ? o.max : 20);
       b = randInt(rng, 1, a);
       answer = a - b;
       mathOp = 'sub';
-      prompt = {
-        zh: who.zh + '有 ' + a + ' 個' + item.zh + '，用掉了 ' + b + ' 個，還剩幾個？',
-        en: who.en + ' has ' + a + ' ' + pl(a) + ' and uses ' + b + '. How many are left?'
-      };
+      prompt = pick(rng, [
+        {
+          zh: who.zh + '有 ' + a + ' 個' + item.zh + '，用掉了 ' + b + ' 個，還剩幾個？',
+          en: who.en + ' has ' + a + ' ' + pl(a) + ' and uses ' + b + '. How many are left?'
+        },
+        {
+          zh: '一共有 ' + a + ' 個' + item.zh + '，送出了 ' + b + ' 個，還剩幾個？',
+          en: 'There are ' + a + ' ' + pl(a) + ' and ' + b + ' are given away. How many are left?'
+        },
+        {
+          zh: who.zh + '要收集 ' + a + ' 張' + item.zh + '，已經有 ' + b + ' 張，還差幾張？',
+          en: who.en + ' needs ' + a + ' ' + pl(a) + ' and already has ' + b + '. How many more are needed?'
+        }
+      ]);
     } else if (op === 'mul') {
       a = randInt(rng, 2, o.maxFactor != null ? o.maxFactor : 9);
       b = randInt(rng, 2, o.maxFactor != null ? o.maxFactor : 9);
       answer = a * b;
       mathOp = 'mul';
-      prompt = {
-        zh: '每盒有 ' + a + ' 個' + item.zh + '，共有 ' + b + ' 盒，一共有幾個？',
-        en: 'There are ' + a + ' ' + pl(a) + ' in each box and ' + b + ' boxes. How many in all?'
-      };
+      prompt = pick(rng, [
+        {
+          zh: '每盒有 ' + a + ' 個' + item.zh + '，共有 ' + b + ' 盒，一共有幾個？',
+          en: 'There are ' + a + ' ' + pl(a) + ' in each box and ' + b + ' boxes. How many in all?'
+        },
+        {
+          zh: '有 ' + b + ' 排座位，每排 ' + a + ' 個，一共多少個座位？',
+          en: 'There are ' + b + ' rows with ' + a + ' seats in each row. How many seats in all?'
+        },
+        {
+          zh: who.zh + '每天做 ' + a + ' 個' + item.zh + '，做了 ' + b + ' 天，一共做了幾個？',
+          en: who.en + ' makes ' + a + ' ' + pl(a) + ' each day for ' + b + ' days. How many in all?'
+        }
+      ]);
     } else if (op === 'area') {
       a = randInt(rng, 2, 12);
       b = randInt(rng, 2, 12);
@@ -432,6 +487,217 @@
       math: { op: mathOp, a: a, b: b, c: c },
       hint: { zh: '先想想用哪種運算。', en: 'Decide which operation to use.' }
     };
+  }
+
+  /* ---------------- 深度應用題（多步／跨概念，仍然只有 type 'word'） ----------------
+   * 與基本題共用同一題型；以 math.op 區分，答案一律為整數。
+   * 每個 op 都必須同時出現在 MATH_SPEC、explain() 的 word 分支與 distractorMax。 */
+  var DEEP_WORD_OPS = ['wunit', 'wmoney2', 'wreverse', 'wprofit2', 'wratio2', 'wrate2', 'wgeo2', 'wdata2', 'wtable', 'wequation'];
+  var BASIC_WORD_OPS = ['add', 'sub', 'mul', 'area', 'percent', 'speed', 'profit', 'compound', 'twoStep', 'ratio'];
+
+  function genWord(rng, o) {
+    var ops = (o.ops || ['add', 'sub', 'mul']).slice();
+    var op = pick(rng, ops);
+    if (DEEP_WORD_OPS.indexOf(op) !== -1) return genWordDeep(rng, o, op);
+    if (BASIC_WORD_OPS.indexOf(op) === -1) throw new Error('未知 word 模式: ' + op);
+    return genWordBasic(rng, o, op);
+  }
+
+  function genWordDeep(rng, o, op) {
+    var who = pick(rng, WORD_NAMES);
+    var item = pick(rng, WORD_ITEMS);
+    function money(n) { return '$' + n; }
+    if (op === 'wunit') {
+      var unit = randInt(rng, 2, 25);
+      var n1 = randInt(rng, 2, 8);
+      var n2 = randInt(rng, 2, 12);
+      while (n2 === n1) n2 = randInt(rng, 2, 12);
+      var cost1 = unit * n1;
+      var unitAnswer = unit * n2;
+      return {
+        type: 'word',
+        prompt: {
+          zh: n1 + ' 件相同的' + item.zh + '共 ' + money(cost1) + '，買 ' + n2 + ' 件要付多少錢？',
+          en: n1 + ' identical ' + item.en + ' cost ' + money(cost1) + ' in total. How much do ' + n2 + ' of them cost?'
+        },
+        visual: null,
+        answer: unitAnswer,
+        math: { op: 'wunit', n1: n1, n2: n2, cost1: cost1, unit: unit },
+        hint: { zh: '先求一件的價錢（總價 ÷ 件數），再乘要買的件數。', en: 'Find the price of one first, then multiply by how many you buy.' }
+      };
+    }
+    if (op === 'wmoney2') {
+      var pen = randInt(rng, 2, 15);
+      var pens = randInt(rng, 2, 5);
+      var ruler = randInt(rng, 1, 10);
+      var rulers = randInt(rng, 2, 5);
+      var totalCost = pen * pens + ruler * rulers;
+      var change = randInt(rng, 1, 20);
+      var paid = totalCost + change;
+      return {
+        type: 'word',
+        prompt: {
+          zh: '一支筆 ' + money(pen) + '，一把尺 ' + money(ruler) + '。' + who.zh + '買了 ' + pens + ' 支筆和 ' + rulers + ' 把尺，付了 ' + money(paid) + '，應找回多少錢？',
+          en: 'A pen costs ' + money(pen) + ' and a ruler costs ' + money(ruler) + '. ' + who.en + ' buys ' + pens + ' pens and ' + rulers + ' rulers and pays ' + money(paid) + '. How much change is there?'
+        },
+        visual: null,
+        answer: change,
+        math: { op: 'wmoney2', p1: pen, n1: pens, p2: ruler, n2: rulers, paid: paid, total: totalCost },
+        hint: { zh: '先算兩樣貨品的總價，再用付的錢減去總價。', en: 'Find the total cost first, then subtract it from what was paid.' },
+        base: [change, paid - pen * pens, paid - ruler * rulers, totalCost]
+      };
+    }
+    if (op === 'wreverse') {
+      var discPick = pick(rng, [{ p: 20, m: 5, r: 40 }, { p: 25, m: 4, r: 40 }, { p: 50, m: 2, r: 60 }]);
+      var original = discPick.m * randInt(rng, 8, discPick.r);
+      var salePrice = original * (100 - discPick.p) / 100;
+      return {
+        type: 'word',
+        prompt: {
+          zh: '一件' + item.zh + '減價 ' + discPick.p + '% 後售 ' + money(salePrice) + '，原價是多少？',
+          en: 'After a ' + discPick.p + '% discount, an item costs ' + money(salePrice) + '. What was the original price?'
+        },
+        visual: null,
+        answer: original,
+        math: { op: 'wreverse', disc: discPick.p, price: salePrice },
+        hint: { zh: '售價 = 原價 × (100 − 折扣)%，所以原價 = 售價 ÷ (100 − 折扣)%。', en: 'Sale price = original × (100 − discount)%, so original = sale price ÷ (100 − discount)%.' }
+      };
+    }
+    if (op === 'wprofit2') {
+      var pcs = randInt(rng, 2, 8);
+      var unitCost = randInt(rng, 10, 50);
+      var profit = randInt(rng, 5, 60);
+      var income = pcs * unitCost + profit;
+      return {
+        type: 'word',
+        prompt: {
+          zh: '店鋪以每件 ' + money(unitCost) + ' 買入 ' + pcs + ' 件貨品，全部售出共得 ' + money(income) + '。盈利是多少？',
+          en: 'A shop buys ' + pcs + ' items at ' + money(unitCost) + ' each and sells them all for ' + money(income) + '. What is the profit?'
+        },
+        visual: null,
+        answer: profit,
+        math: { op: 'wprofit2', n: pcs, cost: unitCost, sell: income },
+        hint: { zh: '盈利 = 全部售價 − 全部成本。', en: 'Profit = total selling price − total cost.' }
+      };
+    }
+    if (op === 'wratio2') {
+      var rp = randInt(rng, 1, 3);
+      var rq = randInt(rng, rp + 1, 6);
+      var rk = randInt(rng, 2, 8);
+      var diff = (rq - rp) * rk;
+      var totalStudents = (rp + rq) * rk;
+      return {
+        type: 'word',
+        prompt: {
+          zh: '男、女生人數的比是 ' + rp + ' : ' + rq + '，女生比男生多 ' + diff + ' 人。男女生共有多少人？',
+          en: 'The ratio of boys to girls is ' + rp + ' : ' + rq + '. There are ' + diff + ' more girls than boys. How many students are there in total?'
+        },
+        visual: null,
+        answer: totalStudents,
+        math: { op: 'wratio2', p: rp, q: rq, k: rk, diff: diff },
+        hint: { zh: '相差 ' + (rq - rp) + ' 份 = ' + diff + ' 人，先求一份。', en: 'The difference is ' + (rq - rp) + ' parts = ' + diff + ', so find one part first.' }
+      };
+    }
+    if (op === 'wrate2') {
+      var rate = randInt(rng, 30, 90);
+      var t1 = randInt(rng, 2, 4);
+      var t2 = randInt(rng, 2, 6);
+      while (t2 === t1) t2 = randInt(rng, 2, 6);
+      var distance = rate * t1;
+      return {
+        type: 'word',
+        prompt: {
+          zh: '汽車 ' + t1 + ' 小時行了 ' + distance + ' km（速率固定），' + t2 + ' 小時可行多少 km？',
+          en: 'A car travels ' + distance + ' km in ' + t1 + ' hours at a steady speed. How far does it travel in ' + t2 + ' hours?'
+        },
+        visual: null,
+        answer: rate * t2,
+        math: { op: 'wrate2', rate: rate, t1: t1, t2: t2 },
+        hint: { zh: '先求速率（距離 ÷ 時間），再乘新的時間。', en: 'Find the speed first, then multiply by the new time.' }
+      };
+    }
+    if (op === 'wgeo2') {
+      var len = randInt(rng, 3, 12);
+      var wid = randInt(rng, 3, 12);
+      var perSqm = randInt(rng, 5, 20);
+      return {
+        type: 'word',
+        prompt: {
+          zh: '長方形房間長 ' + len + ' m、闊 ' + wid + ' m，鋪地磚每平方米 ' + money(perSqm) + '，共需多少錢？',
+          en: 'A rectangular room is ' + len + ' m by ' + wid + ' m. Flooring costs ' + money(perSqm) + ' per square metre. What is the total cost?'
+        },
+        visual: null,
+        answer: len * wid * perSqm,
+        math: { op: 'wgeo2', l: len, w: wid, cost: perSqm },
+        hint: { zh: '先求面積，再乘每平方米的費用。', en: 'Find the area first, then multiply by the cost per square metre.' }
+      };
+    }
+    if (op === 'wdata2') {
+      var testCount = 5;
+      var targetMean = randInt(rng, 60, 90);
+      var prior = [];
+      var priorSum = 0;
+      var needed = 0;
+      var guard = 0;
+      do {
+        prior = [];
+        priorSum = 0;
+        for (var pi = 0; pi < testCount - 1; pi++) {
+          var sc = randInt(rng, 50, 90);
+          prior.push(sc);
+          priorSum += sc;
+        }
+        needed = targetMean * testCount - priorSum;
+        guard++;
+      } while ((needed < 0 || needed > 100) && guard < 60);
+      return {
+        type: 'word',
+        prompt: {
+          zh: who.zh + ' 首 ' + (testCount - 1) + ' 次測驗的分數是 ' + prior.join('、') + ' 分。他想 ' + testCount + ' 次測驗的平均分是 ' + targetMean + ' 分，第 ' + testCount + ' 次要考多少分？',
+          en: who.en + "'s scores in the first " + (testCount - 1) + ' tests are ' + prior.join(', ') + '. What score does ' + who.en + ' need in test ' + testCount + ' for a mean of ' + targetMean + '?'
+        },
+        visual: null,
+        answer: needed,
+        math: { op: 'wdata2', scores: prior, n: testCount, target: targetMean },
+        hint: { zh: '先求總分目標（平均 × 次數），再減去已有的總分。', en: 'Find the target total (mean × number of tests), then subtract the scores so far.' }
+      };
+    }
+    if (op === 'wtable') {
+      var prices = [randInt(rng, 2, 12), randInt(rng, 2, 12), randInt(rng, 2, 12)];
+      var qty = [randInt(rng, 1, 3), randInt(rng, 1, 3), randInt(rng, 1, 3)];
+      var tableTotal = prices[0] * qty[0] + prices[1] * qty[1] + prices[2] * qty[2];
+      var tableChange = randInt(rng, 1, 25);
+      var tablePaid = tableTotal + tableChange;
+      return {
+        type: 'word',
+        prompt: {
+          zh: '價目表：鉛筆 ' + money(prices[0]) + '、橡皮 ' + money(prices[1]) + '、記事簿 ' + money(prices[2]) + '。' + who.zh + '買鉛筆 ' + qty[0] + ' 支、橡皮 ' + qty[1] + ' 塊、記事簿 ' + qty[2] + ' 本，付了 ' + money(tablePaid) + '，應找回多少錢？',
+          en: 'Price list: pencil ' + money(prices[0]) + ', eraser ' + money(prices[1]) + ', notebook ' + money(prices[2]) + '. ' + who.en + ' buys ' + qty[0] + ' pencils, ' + qty[1] + ' erasers and ' + qty[2] + ' notebooks and pays ' + money(tablePaid) + '. How much change is there?'
+        },
+        visual: null,
+        answer: tableChange,
+        math: { op: 'wtable', prices: prices, qty: qty, paid: tablePaid, total: tableTotal },
+        hint: { zh: '逐項計價後加起來，再用付的錢減去總價。', en: 'Price each line, add them up, then subtract from what was paid.' }
+      };
+    }
+    if (op === 'wequation') {
+      var coef = randInt(rng, 2, 9);
+      var unknown = randInt(rng, 2, 12);
+      var addend = randInt(rng, 1, 20);
+      var result = coef * unknown + addend;
+      return {
+        type: 'word',
+        prompt: {
+          zh: '一個數的 ' + coef + ' 倍加 ' + addend + ' 等於 ' + result + '，求這個數。',
+          en: 'When ' + coef + ' times a number is increased by ' + addend + ', the result is ' + result + '. Find the number.'
+        },
+        visual: null,
+        answer: unknown,
+        math: { op: 'wequation', a: coef, b: addend, result: result },
+        hint: { zh: '先減去 ' + addend + '，再除以 ' + coef + '。', en: 'Subtract ' + addend + ' first, then divide by ' + coef + '.' }
+      };
+    }
+    throw new Error('未知 word 模式: ' + op);
   }
 
   /* ================= 進階題型（小四～小六） ================= */
@@ -609,24 +875,44 @@
     };
   }
 
-  /* 百分數 */
+  /* 百分數（難度級別可指定 modes：of/what/increase/decrease/change/reverse） */
   function genPercent(rng, o) {
-    var roll = rng();
-    if (roll < 0.4) {
-      var p = pick(rng, [5, 10, 15, 20, 25, 30, 40, 50, 60, 75]);
-      var k = randInt(rng, 1, 3);
-      var whole = 100 * k;
-      var result = p * k;
+    var modes = (o.modes && o.modes.length) ? o.modes : ['of', 'what', 'increase', 'decrease'];
+    var mode = pick(rng, modes);
+    if (mode === 'reverse') {
+      var disc = pick(rng, [20, 25, 50]);
+      var mult = disc === 20 ? 5 : disc === 25 ? 4 : 2;
+      var original = mult * randInt(rng, 8, 60);
+      var salePrice = original * (100 - disc) / 100;
       return {
         type: 'percent',
-        prompt: { zh: whole + ' 的 ' + p + '% 是多少？', en: 'What is ' + p + '% of ' + whole + '?' },
-        visual: { kind: 'percentgrid', pct: p },
-        answer: result,
-        math: { op: 'percent', kind: 'of', p: p, whole: whole, result: result },
-        hint: { zh: '先算 1%（除以 100），再乘以 ' + p + '。', en: 'Find 1% (divide by 100), then multiply by ' + p + '.' }
+        prompt: {
+          zh: '一件貨品減價 ' + disc + '% 後售 $' + salePrice + '，原價是多少？',
+          en: 'After a ' + disc + '% discount, an item costs $' + salePrice + '. What was the original price?'
+        },
+        visual: null,
+        answer: original,
+        math: { op: 'percent', kind: 'reverse', p: disc, price: salePrice },
+        hint: { zh: '原價 = 售價 ÷ (100 − 折扣)%。', en: 'Original = sale price ÷ (100 − discount)%.' }
       };
     }
-    if (roll < 0.7) {
+    if (mode === 'change') {
+      var rate = pick(rng, [10, 20, 25, 50]);
+      var whole = pick(rng, [100, 200, 400, 500]);
+      var changed = whole * (100 + rate) / 100;
+      return {
+        type: 'percent',
+        prompt: {
+          zh: '某數由 ' + whole + ' 變成 ' + changed + '，增加了百分之幾？',
+          en: 'A number changes from ' + whole + ' to ' + changed + '. What is the percentage increase?'
+        },
+        visual: { kind: 'percentgrid', pct: rate },
+        answer: rate,
+        math: { op: 'percent', kind: 'change', whole: whole, result: changed },
+        hint: { zh: '百分率 = (新值 − 舊值) ÷ 舊值 × 100%。', en: 'Percentage change = (new − old) ÷ old × 100%.' }
+      };
+    }
+    if (mode === 'what') {
       var pct = pick(rng, [10, 20, 25, 50, 75]);
       var whole2 = pick(rng, [40, 60, 80, 120, 200]);
       var part = whole2 * pct / 100;
@@ -639,40 +925,85 @@
         hint: { zh: '用「部分 ÷ 整體 × 100%」。', en: 'Use part ÷ whole × 100%.' }
       };
     }
-    /* 增加／減少百分率（P6 百分數應用） */
-    var base = pick(rng, [40, 80, 120, 200, 500]);
-    var rate = pick(rng, [10, 20, 25, 50]);
-    var up = rng() < 0.5;
-    var changed = base * (up ? 100 + rate : 100 - rate) / 100;
+    if (mode === 'increase' || mode === 'decrease') {
+      var base = pick(rng, [40, 80, 120, 200, 500]);
+      var pct2 = pick(rng, [10, 20, 25, 50]);
+      var up = mode === 'increase';
+      var result = base * (up ? 100 + pct2 : 100 - pct2) / 100;
+      return {
+        type: 'percent',
+        prompt: {
+          zh: '某數是 ' + base + '，' + (up ? '增加' : '減少') + ' ' + pct2 + '% 後是多少？',
+          en: 'A number is ' + base + '. What is it after a ' + pct2 + '% ' + (up ? 'increase' : 'decrease') + '?'
+        },
+        visual: { kind: 'percentgrid', pct: pct2 },
+        answer: result,
+        math: { op: 'percent', kind: up ? 'increase' : 'decrease', p: pct2, whole: base, result: result },
+        hint: {
+          zh: up ? '增加 ' + pct2 + '%：原數 × (1 + ' + pct2 + '/100)。' : '減少 ' + pct2 + '%：原數 × (1 − ' + pct2 + '/100)。',
+          en: up ? 'Increase: multiply by (1 + ' + pct2 + '/100).' : 'Decrease: multiply by (1 − ' + pct2 + '/100).'
+        }
+      };
+    }
+    var pof = pick(rng, [5, 10, 15, 20, 25, 30, 40, 50, 60, 75]);
+    var k = randInt(rng, 1, 3);
+    var wholeOf = 100 * k;
     return {
       type: 'percent',
-      prompt: {
-        zh: '某數是 ' + base + '，' + (up ? '增加' : '減少') + ' ' + rate + '% 後是多少？',
-        en: 'A number is ' + base + '. What is it after a ' + rate + '% ' + (up ? 'increase' : 'decrease') + '?'
-      },
-      visual: { kind: 'percentgrid', pct: rate },
-      answer: changed,
-      math: { op: 'percent', kind: up ? 'increase' : 'decrease', p: rate, whole: base, result: changed },
-      hint: {
-        zh: up ? '增加 ' + rate + '%：原數 × (1 + ' + rate + '/100)。' : '減少 ' + rate + '%：原數 × (1 − ' + rate + '/100)。',
-        en: up ? 'Increase: multiply by (1 + ' + rate + '/100).' : 'Decrease: multiply by (1 − ' + rate + '/100).'
-      }
+      prompt: { zh: wholeOf + ' 的 ' + pof + '% 是多少？', en: 'What is ' + pof + '% of ' + wholeOf + '?' },
+      visual: { kind: 'percentgrid', pct: pof },
+      answer: pof * k,
+      math: { op: 'percent', kind: 'of', p: pof, whole: wholeOf, result: pof * k },
+      hint: { zh: '先算 1%（除以 100），再乘以 ' + pof + '。', en: 'Find 1% (divide by 100), then multiply by ' + pof + '.' }
     };
   }
 
-  /* 比與比例 */
+  /* 比與比例（modes: findB/share/threePart） */
   function genRatio(rng, o) {
+    var modes = (o.modes && o.modes.length) ? o.modes : ['findB'];
+    var mode = pick(rng, modes);
     var p = randInt(rng, 2, 9);
     var q = randInt(rng, 2, 9);
     while (q === p) q = randInt(rng, 2, 9);
     var k = randInt(rng, 2, 12);
+    if (mode === 'threePart') {
+      var r = randInt(rng, 2, 9);
+      while (r === p || r === q) r = randInt(rng, 2, 9);
+      var k3 = randInt(rng, 2, 8);
+      var total3 = (p + q + r) * k3;
+      return {
+        type: 'ratio',
+        prompt: {
+          zh: '把 $' + total3 + ' 按 ' + p + ' : ' + q + ' : ' + r + ' 分給甲、乙、丙，丙得多少？',
+          en: 'Share $' + total3 + ' among A, B and C in the ratio ' + p + ' : ' + q + ' : ' + r + '. How much does C get?'
+        },
+        visual: null,
+        answer: r * k3,
+        math: { op: 'ratio', mode: 'threePart', p: p, q: q, r: r, k: k3, total: total3 },
+        hint: { zh: '總共 ' + p + '+' + q + '+' + r + ' 份，先求一份。', en: 'There are ' + p + '+' + q + '+' + r + ' parts in total; find one part.' }
+      };
+    }
+    if (mode === 'share') {
+      var total2 = (p + q) * k;
+      return {
+        type: 'ratio',
+        prompt: {
+          zh: '甲、乙兩數的比是 ' + p + ' : ' + q + '，兩數之和是 ' + total2 + '，甲是多少？',
+          en: 'A : B = ' + p + ' : ' + q + ' and A + B = ' + total2 + '. What is A?'
+        },
+        visual: null,
+        answer: p * k,
+        math: { op: 'ratio', mode: 'share', p: p, q: q, k: k, total: total2 },
+        hint: { zh: '共有 ' + (p + q) + ' 份，先求一份。', en: 'There are ' + (p + q) + ' parts in total; find one part.' }
+      };
+    }
     var a = p * k;
     return {
       type: 'ratio',
       prompt: { zh: '甲、乙兩數的比是 ' + p + ' : ' + q + '，甲是 ' + a + '，乙是多少？', en: 'The ratio of A to B is ' + p + ' : ' + q + '. If A is ' + a + ', what is B?' },
       visual: null,
       answer: q * k,
-      math: { op: 'ratio', p: p, q: q, k: k, a: a },
+      math: { op: 'ratio', mode: 'findB', p: p, q: q, k: k, a: a },
       hint: { zh: '甲分成 ' + p + ' 份，每份是 ' + k + '。', en: 'A is ' + p + ' parts; each part is ' + k + '.' }
     };
   }
@@ -984,17 +1315,48 @@
     };
   }
 
-  /* 等差數列 */
+  /* 等差數列（modes: term/sum/findN） */
   function genAp(rng, o) {
+    var modes = (o.modes && o.modes.length) ? o.modes : ['term'];
+    var mode = pick(rng, modes);
     var a = randInt(rng, 1, 10);
     var d = randInt(rng, 2, 6);
     var n = randInt(rng, 5, 12);
+    if (mode === 'sum') {
+      n = pick(rng, [6, 8, 10, 12]);
+      var sum = n * (2 * a + (n - 1) * d) / 2;
+      return {
+        type: 'ap',
+        prompt: {
+          zh: '等差數列首項是 ' + a + '，公差是 ' + d + '。求前 ' + n + ' 項之和。',
+          en: 'An arithmetic sequence has first term ' + a + ' and common difference ' + d + '. Find the sum of the first ' + n + ' terms.'
+        },
+        visual: null,
+        answer: sum,
+        math: { op: 'ap', mode: 'sum', a: a, d: d, n: n },
+        hint: { zh: '和 = n/2 × (首項 + 末項)。', en: 'Sum = n/2 × (first + last).' }
+      };
+    }
+    if (mode === 'findN') {
+      var value = a + (n - 1) * d;
+      return {
+        type: 'ap',
+        prompt: {
+          zh: '等差數列首項是 ' + a + '，公差是 ' + d + '。第幾項是 ' + value + '？',
+          en: 'An arithmetic sequence has first term ' + a + ' and common difference ' + d + '. Which term equals ' + value + '?'
+        },
+        visual: null,
+        answer: n,
+        math: { op: 'ap', mode: 'findN', a: a, d: d, value: value, n: n },
+        hint: { zh: '由 a + (n − 1)d = value 解出 n。', en: 'Solve a + (n − 1)d = value for n.' }
+      };
+    }
     return {
       type: 'ap',
       prompt: { zh: '等差數列首項是 ' + a + '，公差是 ' + d + '。求第 ' + n + ' 項。', en: 'An arithmetic sequence has first term ' + a + ' and common difference ' + d + '. Find the ' + n + 'th term.' },
       visual: null,
       answer: a + (n - 1) * d,
-      math: { op: 'ap', a: a, d: d, n: n },
+      math: { op: 'ap', mode: 'term', a: a, d: d, n: n },
       hint: { zh: '第 n 項 = 首項 + (n − 1) × 公差。', en: 'nth term = first + (n − 1) × difference.' }
     };
   }
@@ -1126,8 +1488,33 @@
     };
   }
 
-  /* 中位數 */
+  /* 統計（modes: median/mean） */
   function genStats(rng, o) {
+    var modes = (o.modes && o.modes.length) ? o.modes : ['median'];
+    var mode = pick(rng, modes);
+    if (mode === 'mean') {
+      var mn = pick(rng, [4, 5, 6]);
+      var numsMean = [];
+      var sumMean = 0;
+      for (var mi = 0; mi < mn; mi++) {
+        var mv = randInt(rng, 1, 20);
+        numsMean.push(mv);
+        sumMean += mv;
+      }
+      while (sumMean % mn !== 0) { numsMean[mn - 1] += 1; sumMean += 1; }
+      var mean = sumMean / mn;
+      return {
+        type: 'stats',
+        prompt: {
+          zh: '求 ' + numsMean.join('、') + ' 的平均數。',
+          en: 'Find the mean of ' + numsMean.join(', ') + '.'
+        },
+        visual: { kind: 'barchart' },
+        answer: mean,
+        math: { op: 'stats', mode: 'mean', nums: numsMean, sorted: numsMean.slice().sort(function (x, y) { return x - y; }), mean: mean },
+        hint: { zh: '全部加起來，再除以數據的個數。', en: 'Add all the values, then divide by how many there are.' }
+      };
+    }
     var n = pick(rng, [5, 6, 7]);
     var nums;
     if (n === 6) {
@@ -2586,6 +2973,7 @@
     },
     stats: function (p) {
       var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'mean') return null; // 平均數由 explain() 的 stats 分支處理
       if (m.mode === 'even') {
         var a1 = m.sorted[m.sorted.length / 2 - 1], a2 = m.sorted[m.sorted.length / 2];
         return {
@@ -2827,6 +3215,18 @@
           en: [explainEquationEn(m), 'x = ' + p.answer + '.']
         };
       case 'percent':
+        if (m.kind === 'reverse') {
+          return {
+            zh: ['售價 = 原價 × (100 − ' + m.p + ')% = 原價 × ' + (100 - m.p) + '%。', '原價 = ' + m.price + ' ÷ ' + (100 - m.p) + '% = ' + p.answer + '。'],
+            en: ['Sale price = original × (100 − ' + m.p + ')% = original × ' + (100 - m.p) + '%.', 'Original = ' + m.price + ' ÷ ' + (100 - m.p) + '% = ' + p.answer + '.']
+          };
+        }
+        if (m.kind === 'change') {
+          return {
+            zh: ['增加了 ' + (m.result - m.whole) + '。', '百分率 = (' + m.result + ' − ' + m.whole + ') ÷ ' + m.whole + ' × 100% = ' + p.answer + '%。'],
+            en: ['The increase is ' + (m.result - m.whole) + '.', 'Percentage change = (' + m.result + ' − ' + m.whole + ') ÷ ' + m.whole + ' × 100% = ' + p.answer + '%.']
+          };
+        }
         if (m.kind === 'of') {
           return {
             zh: ['先算 1%：' + m.whole + ' ÷ 100 = ' + (m.whole / 100) + '。', '再乘 ' + m.p + '：' + (m.whole / 100) + ' × ' + m.p + ' = ' + p.answer + '。'],
@@ -2838,6 +3238,18 @@
           en: ['Use part ÷ whole × 100%.', m.part + ' ÷ ' + m.whole + ' × 100% = ' + p.answer + '%.']
         };
       case 'ratio':
+        if (m.mode === 'threePart') {
+          return {
+            zh: ['三部分共 ' + (m.p + m.q + m.r) + ' 份，總額 $' + m.total + '。', '一份 = $' + m.total + ' ÷ ' + (m.p + m.q + m.r) + ' = $' + m.k + '。', '丙 = ' + m.r + ' 份 = ' + m.k + ' × ' + m.r + ' = ' + p.answer + '。'],
+            en: ['There are ' + (m.p + m.q + m.r) + ' parts in total, $' + m.total + '.', 'One part = $' + m.total + ' ÷ ' + (m.p + m.q + m.r) + ' = $' + m.k + '.', 'C = ' + m.r + ' parts = ' + m.k + ' × ' + m.r + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.mode === 'share') {
+          return {
+            zh: ['共有 ' + (m.p + m.q) + ' 份，總和是 ' + m.total + '。', '一份 = ' + m.total + ' ÷ ' + (m.p + m.q) + ' = ' + m.k + '。', '甲 = ' + m.p + ' 份 = ' + m.p + ' × ' + m.k + ' = ' + p.answer + '。'],
+            en: ['There are ' + (m.p + m.q) + ' parts; the total is ' + m.total + '.', 'One part = ' + m.total + ' ÷ ' + (m.p + m.q) + ' = ' + m.k + '.', 'A = ' + m.p + ' parts = ' + m.p + ' × ' + m.k + ' = ' + p.answer + '.']
+          };
+        }
         return {
           zh: ['比是 ' + m.p + ' : ' + m.q + '，甲有 ' + m.p + ' 份。', '一份 = ' + m.a + ' ÷ ' + m.p + ' = ' + m.k + '。', '乙 = ' + m.q + ' 份 = ' + m.k + ' × ' + m.q + ' = ' + p.answer + '。'],
           en: ['The ratio is ' + m.p + ' : ' + m.q + '; A has ' + m.p + ' parts.', 'One part = ' + m.a + ' ÷ ' + m.p + ' = ' + m.k + '.', 'B = ' + m.q + ' parts = ' + m.k + ' × ' + m.q + ' = ' + p.answer + '.']
@@ -2927,6 +3339,18 @@
           en: [m.which + ' θ = ' + (m.which === 'sin' ? 'opposite ÷ hypotenuse' : m.which === 'cos' ? 'adjacent ÷ hypotenuse' : 'opposite ÷ adjacent') + '.', '= ' + p.answer.n + '/' + p.answer.d + '.']
         };
       case 'ap':
+        if (m.mode === 'sum') {
+          return {
+            zh: ['末項 = ' + m.a + ' + (' + m.n + ' − 1) × ' + m.d + ' = ' + (m.a + (m.n - 1) * m.d) + '。', '和 = n/2 × (首項 + 末項) = ' + m.n + '/2 × (' + m.a + ' + ' + (m.a + (m.n - 1) * m.d) + ') = ' + p.answer + '。'],
+            en: ['Last term = ' + m.a + ' + (' + m.n + ' − 1) × ' + m.d + ' = ' + (m.a + (m.n - 1) * m.d) + '.', 'Sum = n/2 × (first + last) = ' + m.n + '/2 × (' + m.a + ' + ' + (m.a + (m.n - 1) * m.d) + ') = ' + p.answer + '.']
+          };
+        }
+        if (m.mode === 'findN') {
+          return {
+            zh: ['由 ' + m.a + ' + (n − 1) × ' + m.d + ' = ' + m.value + '，得 (n − 1) × ' + m.d + ' = ' + (m.value - m.a) + '。', 'n − 1 = ' + ((m.value - m.a) / m.d) + '，所以 n = ' + p.answer + '。'],
+            en: ['From ' + m.a + ' + (n − 1) × ' + m.d + ' = ' + m.value + ', (n − 1) × ' + m.d + ' = ' + (m.value - m.a) + '.', 'n − 1 = ' + ((m.value - m.a) / m.d) + ', so n = ' + p.answer + '.']
+          };
+        }
         return {
           zh: ['第 n 項 = 首項 + (n − 1) × 公差。', '= ' + m.a + ' + (' + m.n + ' − 1) × ' + m.d + ' = ' + p.answer + '。'],
           en: ['nth term = first + (n − 1) × difference.', '= ' + m.a + ' + (' + m.n + ' − 1) × ' + m.d + ' = ' + p.answer + '.']
@@ -2947,6 +3371,13 @@
           en: [m.askSum ? 'Sum of roots = −(coefficient of x).' : 'Product of roots = constant term.', '= ' + p.answer + '.']
         };
       case 'stats':
+        if (m.mode === 'mean') {
+          var totalStats = m.nums.reduce(function (s, x) { return s + x; }, 0);
+          return {
+            zh: ['全部加起來：' + m.nums.join(' + ') + ' = ' + totalStats + '。', '平均數 = ' + totalStats + ' ÷ ' + m.nums.length + ' = ' + p.answer + '。'],
+            en: ['Add them all: ' + m.nums.join(' + ') + ' = ' + totalStats + '.', 'Mean = ' + totalStats + ' ÷ ' + m.nums.length + ' = ' + p.answer + '.']
+          };
+        }
         return {
           zh: ['把數字由小到大排列：' + m.sorted.join('、') + '。', '取中間那個 = ' + p.answer + '。'],
           en: ['Sort the numbers: ' + m.sorted.join(', ') + '.', 'Take the middle one = ' + p.answer + '.']
@@ -3043,6 +3474,67 @@
           return {
             zh: ['本利和 = 本金 × (1 + 利率)^年數。', '= ' + m.a + ' × (1 + ' + m.b + '%)² = ' + p.answer + '。'],
             en: ['Amount = principal × (1 + rate)^years.', '= ' + m.a + ' × (1 + ' + m.b + '%)² = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wunit') {
+          return {
+            zh: ['先求一件的價錢：' + m.cost1 + ' ÷ ' + m.n1 + ' = ' + m.unit + '。', m.n2 + ' 件 = ' + m.unit + ' × ' + m.n2 + ' = ' + p.answer + '。'],
+            en: ['One item costs ' + m.cost1 + ' ÷ ' + m.n1 + ' = ' + m.unit + '.', m.n2 + ' items cost ' + m.unit + ' × ' + m.n2 + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wmoney2') {
+          return {
+            zh: ['筆：' + m.p1 + ' × ' + m.n1 + ' = ' + (m.p1 * m.n1) + '；尺：' + m.p2 + ' × ' + m.n2 + ' = ' + (m.p2 * m.n2) + '。', '共 ' + m.total + '，找續 = ' + m.paid + ' − ' + m.total + ' = ' + p.answer + '。'],
+            en: ['Pens: ' + m.p1 + ' × ' + m.n1 + ' = ' + (m.p1 * m.n1) + '; rulers: ' + m.p2 + ' × ' + m.n2 + ' = ' + (m.p2 * m.n2) + '.', 'Total ' + m.total + ', change = ' + m.paid + ' − ' + m.total + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wreverse') {
+          return {
+            zh: ['售價 = 原價 × (100 − ' + m.disc + ')% = 原價 × ' + (100 - m.disc) + '%。', '原價 = ' + m.price + ' ÷ ' + (100 - m.disc) + '% = ' + p.answer + '。'],
+            en: ['Sale price = original × (100 − ' + m.disc + ')% = original × ' + (100 - m.disc) + '%.', 'Original = ' + m.price + ' ÷ ' + (100 - m.disc) + '% = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wprofit2') {
+          return {
+            zh: ['總成本 = ' + m.n + ' × ' + m.cost + ' = ' + (m.n * m.cost) + '。', '盈利 = 售價 − 成本 = ' + m.sell + ' − ' + (m.n * m.cost) + ' = ' + p.answer + '。'],
+            en: ['Total cost = ' + m.n + ' × ' + m.cost + ' = ' + (m.n * m.cost) + '.', 'Profit = selling − cost = ' + m.sell + ' − ' + (m.n * m.cost) + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wratio2') {
+          return {
+            zh: ['相差 ' + (m.q - m.p) + ' 份 = ' + m.diff + ' 人，所以一份 = ' + m.k + ' 人。', '共有 (' + m.p + ' + ' + m.q + ') × ' + m.k + ' = ' + p.answer + ' 人。'],
+            en: ['The difference is ' + (m.q - m.p) + ' parts = ' + m.diff + ', so one part = ' + m.k + '.', 'Total = (' + m.p + ' + ' + m.q + ') × ' + m.k + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wrate2') {
+          return {
+            zh: ['速率 = 距離 ÷ 時間 = ' + (m.rate * m.t1) + ' ÷ ' + m.t1 + ' = ' + m.rate + ' km/h。', m.t2 + ' 小時 = ' + m.rate + ' × ' + m.t2 + ' = ' + p.answer + ' km。'],
+            en: ['Speed = distance ÷ time = ' + (m.rate * m.t1) + ' ÷ ' + m.t1 + ' = ' + m.rate + ' km/h.', 'In ' + m.t2 + ' hours: ' + m.rate + ' × ' + m.t2 + ' = ' + p.answer + ' km.']
+          };
+        }
+        if (m.op === 'wgeo2') {
+          return {
+            zh: ['面積 = ' + m.l + ' × ' + m.w + ' = ' + (m.l * m.w) + ' m²。', '費用 = ' + (m.l * m.w) + ' × ' + m.cost + ' = ' + p.answer + '。'],
+            en: ['Area = ' + m.l + ' × ' + m.w + ' = ' + (m.l * m.w) + ' m².', 'Cost = ' + (m.l * m.w) + ' × ' + m.cost + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wdata2') {
+          var priorTotal = m.scores.reduce(function (s, x) { return s + x; }, 0);
+          return {
+            zh: ['目標總分 = ' + m.target + ' × ' + m.n + ' = ' + (m.target * m.n) + '。', '現有總分 = ' + priorTotal + '。', '所需分數 = ' + (m.target * m.n) + ' − ' + priorTotal + ' = ' + p.answer + ' 分。'],
+            en: ['Target total = ' + m.target + ' × ' + m.n + ' = ' + (m.target * m.n) + '.', 'Current total = ' + priorTotal + '.', 'Needed score = ' + (m.target * m.n) + ' − ' + priorTotal + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wtable') {
+          return {
+            zh: ['逐項計價：' + m.prices[0] + '×' + m.qty[0] + ' + ' + m.prices[1] + '×' + m.qty[1] + ' + ' + m.prices[2] + '×' + m.qty[2] + ' = ' + m.total + '。', '找續 = ' + m.paid + ' − ' + m.total + ' = ' + p.answer + '。'],
+            en: ['Price each line: ' + m.prices[0] + '×' + m.qty[0] + ' + ' + m.prices[1] + '×' + m.qty[1] + ' + ' + m.prices[2] + '×' + m.qty[2] + ' = ' + m.total + '.', 'Change = ' + m.paid + ' − ' + m.total + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wequation') {
+          return {
+            zh: ['先減去 ' + m.b + '：' + m.a + 'x = ' + (m.result - m.b) + '。', '兩邊除以 ' + m.a + '：x = ' + p.answer + '。'],
+            en: ['Subtract ' + m.b + ' first: ' + m.a + 'x = ' + (m.result - m.b) + '.', 'Divide by ' + m.a + ': x = ' + p.answer + '.']
           };
         }
         return null;
@@ -3419,12 +3911,18 @@
       return m.a * m.c; // x/a=c
     },
     percent: function (m) {
+      if (m.kind === 'reverse') return m.price * 100 / (100 - m.p);
+      if (m.kind === 'change') return (m.result - m.whole) / m.whole * 100;
       if (m.kind === 'of') return m.p * m.whole / 100;
       if (m.kind === 'increase') return m.whole * (100 + m.p) / 100;
       if (m.kind === 'decrease') return m.whole * (100 - m.p) / 100;
       return m.pct;
     },
-    ratio: function (m) { return m.q * m.k; },
+    ratio: function (m) {
+      if (m.mode === 'threePart') return m.r * m.k;
+      if (m.mode === 'share') return m.p * m.k;
+      return m.q * m.k;
+    },
     area: function (m) { return m.mode === 'area' ? m.l * m.w : 2 * (m.l + m.w); },
     fractionof: function (m) { return m.n * m.k; },
     exprsub: function (m) { return m.a * m.x + m.b; },
@@ -3448,7 +3946,11 @@
       if (m.which === 'cos') return { n: m.b, d: m.c };
       return { n: m.a, d: m.b };
     },
-    ap: function (m) { return m.a + (m.n - 1) * m.d; },
+    ap: function (m) {
+      if (m.mode === 'sum') return m.n * (2 * m.a + (m.n - 1) * m.d) / 2;
+      if (m.mode === 'findN') return m.n;
+      return m.a + (m.n - 1) * m.d;
+    },
     gp: function (m) {
       if (m.mode === 'sum') return m.a * (Math.pow(m.r, m.n) - 1) / (m.r - 1);
       if (m.mode === 'inf') return m.a / (1 - m.r);
@@ -3457,6 +3959,7 @@
     prob: function (m) { return { n: m.good, d: m.total }; },
     quad: function (m) { return m.askSum ? m.sum : m.prod; },
     stats: function (m) {
+      if (m.mode === 'mean') return m.mean;
       var s = m.nums.slice().sort(function (x, y) { return x - y; });
       if (s.length % 2 === 0) return (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
       return s[(s.length - 1) / 2];
@@ -3472,6 +3975,22 @@
     wprofit: function (m) { return m.b; },
     wcompound: function (m) { return Math.round(m.a * Math.pow(1 + m.b / 100, m.c)); },
     wtwostep: function (m) { return m.a * m.b - m.c; },
+    wunit: function (m) { return m.cost1 / m.n1 * m.n2; },
+    wmoney2: function (m) { return m.paid - (m.p1 * m.n1 + m.p2 * m.n2); },
+    wreverse: function (m) { return m.price * 100 / (100 - m.disc); },
+    wprofit2: function (m) { return m.sell - m.n * m.cost; },
+    wratio2: function (m) { return (m.p + m.q) * m.k; },
+    wrate2: function (m) { return m.rate * m.t2; },
+    wgeo2: function (m) { return m.l * m.w * m.cost; },
+    wdata2: function (m) {
+      return m.target * m.n - m.scores.reduce(function (s, x) { return s + x; }, 0);
+    },
+    wtable: function (m) {
+      var sum = 0;
+      for (var i = 0; i < m.prices.length; i++) sum += m.prices[i] * m.qty[i];
+      return m.paid - sum;
+    },
+    wequation: function (m) { return (m.result - m.b) / m.a; },
     placevalue: function (m) {
       if (m.mode === 'tens') return m.tens;
       if (m.mode === 'ones') return m.ones;
@@ -3647,12 +4166,9 @@
       return f * f;
     }
     if (p.type === 'word') {
-      var ops = o.ops || ['add', 'sub', 'mul'];
-      var bound = 0;
-      if (ops.indexOf('add') >= 0) bound = Math.max(bound, (o.max != null ? o.max : 20) * 2);
-      if (ops.indexOf('sub') >= 0) bound = Math.max(bound, o.max != null ? o.max : 20);
-      if (ops.indexOf('mul') >= 0) bound = Math.max(bound, Math.pow(o.maxFactor != null ? o.maxFactor : 9, 2));
-      return bound || 99;
+      var ansNum = Number(p.answer);
+      if (!isFinite(ansNum)) return 99;
+      return Math.max(40, Math.ceil(Math.abs(ansNum) * 1.6) + 10);
     }
     if (o.max != null) return o.max;
     if (p.type === 'multidigit') return 999;
@@ -3737,18 +4253,155 @@
     return stableStringify(math);
   }
 
+  /* 結構 key：把 math 裡的數字換成 '#'，保留運算／模式／情境欄位。
+   * 兩個題目 templateSig 相同 = 同一個模板，只是換了數字（正是使用者抱怨的重複）。 */
+  function blankNumerals(value) {
+    if (typeof value === 'number') return '#';
+    if (typeof value === 'string') return value.replace(/\d+(?:\.\d+)?/g, '#');
+    if (value === null || typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map(blankNumerals);
+    var out = {};
+    Object.keys(value).sort().forEach(function (k) { out[k] = blankNumerals(value[k]); });
+    return out;
+  }
+
+  function templateSig(problem) {
+    if (!problem || !problem.math) return '';
+    return problem.type + ':' + stableStringify(blankNumerals(problem.math));
+  }
+
+  /* 題幹模板 key：把英文題幹的數字換成 '#'（用於區分同一 template 的不同情境句子）。 */
+  function contextSig(problem) {
+    if (!problem) return '';
+    var text = problem.prompt && problem.prompt.en ? String(problem.prompt.en) : '';
+    return problem.type + ':' + text.replace(/\d+(?:\.\d+)?/g, '#').replace(/\s+/g, ' ').trim();
+  }
+
+  /* 組成一份題組：同題不重複；同一模板/題幹最多 maxTpl 次；候選不足時逐級放寬，
+   * 但保證長度 = count（修復舊 buildQuiz 在窄題庫上只出 3 題的問題）。 */
+  function composeSet(skill, count, opts) {
+    opts = opts || {};
+    var rng = opts.rng || seedRandom(opts.seed != null ? opts.seed : 1);
+    var step = opts.difficultyStep != null ? opts.difficultyStep : 0;
+    var types = typeList(skill);
+    if (!types.length) return [];
+    var out = [];
+    var seenSig = {};
+    var tCount = {}, cCount = {};
+    var avoid = {};
+    (opts.avoid || []).forEach(function (s) { avoid[s] = true; });
+    function draw() {
+      var ti = types.length > 1 ? Math.floor(rng() * types.length) : 0;
+      return generateProblem(skill, { rng: rng, difficultyStep: step, typeIndex: ti });
+    }
+    function pass(maxTpl, uniqueSig) {
+      var guard = 0;
+      while (out.length < count && guard++ < count * 300) {
+        var p = draw();
+        var t = templateSig(p), c = contextSig(p);
+        if (uniqueSig && (avoid[p.sig] || seenSig[p.sig])) continue;
+        if (seenSig[p.sig]) continue; // 任何情況都不容許完全相同的題目
+        if ((tCount[t] || 0) >= maxTpl || (cCount[c] || 0) >= maxTpl) continue;
+        seenSig[p.sig] = true;
+        tCount[t] = (tCount[t] || 0) + 1;
+        cCount[c] = (cCount[c] || 0) + 1;
+        out.push(p);
+      }
+    }
+    pass(1, true);
+    pass(2, true);
+    /* 同一模板最多 4 題，但仍要求整題不同：讓「同結構不同問法」也有空間 */
+    pass(4, true);
+    /* 題庫太小：只保證不重複，允許模板重複 */
+    var guard = 0;
+    while (out.length < count && guard++ < count * 400) {
+      var p = draw();
+      if (seenSig[p.sig]) continue;
+      seenSig[p.sig] = true;
+      out.push(p);
+    }
+    /* 真·超小題庫（< count 個不同題目）：寧可重複也要補滿 count 題 */
+    guard = 0;
+    while (out.length < count && guard++ < count * 200) out.push(draw());
+    return out;
+  }
+
+  /* 綜合考試組卷：跨技能抽題，每技能最多 maxPerSkill 題、同一模板最多 2 次；
+   * stepFor(skill, rng) 決定每題難度級別（預設隨機 0..max）。 */
+  function composeExam(skills, count, opts) {
+    opts = opts || {};
+    var rng = opts.rng || seedRandom(opts.seed != null ? opts.seed : 1);
+    var maxPerSkill = opts.maxPerSkill != null ? opts.maxPerSkill : 3;
+    var stepFor = opts.stepFor;
+    var out = [], seenSig = {}, tCount = {}, cCount = {}, sCount = {};
+    var cursor = 0;
+    function stepOf(skill) {
+      var levels = Math.max(1, (skill.levels || []).length);
+      if (stepFor) return stepFor(skill, rng);
+      return randInt(rng, 0, levels - 1);
+    }
+    function draw(relax) {
+      for (var tries = 0; tries < skills.length * 10; tries++) {
+        var skill = skills[cursor++ % skills.length];
+        var types = typeList(skill);
+        if (!types.length) continue;
+        var p = generateProblem(skill, {
+          rng: rng,
+          difficultyStep: stepOf(skill),
+          typeIndex: Math.floor(rng() * types.length)
+        });
+        if (seenSig[p.sig]) continue;
+        var t = templateSig(p), c = contextSig(p);
+        if (!relax && ((tCount[t] || 0) >= 2 || (cCount[c] || 0) >= 2 || (sCount[skill.id] || 0) >= maxPerSkill)) continue;
+        seenSig[p.sig] = true;
+        tCount[t] = (tCount[t] || 0) + 1;
+        cCount[c] = (cCount[c] || 0) + 1;
+        sCount[skill.id] = (sCount[skill.id] || 0) + 1;
+        p.skillId = skill.id;
+        return p;
+      }
+      return null;
+    }
+    var guard = 0;
+    while (out.length < count && guard++ < count * 40) { var p = draw(false); if (p) out.push(p); }
+    guard = 0;
+    while (out.length < count && guard++ < count * 40) { p = draw(true); if (p) out.push(p); }
+    /* 仍不足：跨技能抽不重複的題（放寬每技能題數），最後才容許重複 */
+    guard = 0;
+    while (out.length < count && guard++ < count * 400) {
+      var skill = skills[cursor++ % skills.length];
+      var types = typeList(skill);
+      if (!types.length) continue;
+      p = generateProblem(skill, { rng: rng, difficultyStep: stepOf(skill), typeIndex: Math.floor(rng() * types.length) });
+      if (seenSig[p.sig]) continue;
+      seenSig[p.sig] = true;
+      p.skillId = skill.id;
+      out.push(p);
+    }
+    guard = 0;
+    while (out.length < count && guard++ < count * 200) {
+      var fallbackSkill = skills[cursor++ % skills.length];
+      var fallbackTypes = typeList(fallbackSkill);
+      if (!fallbackTypes.length) continue;
+      p = generateProblem(fallbackSkill, { rng: rng, difficultyStep: stepOf(fallbackSkill), typeIndex: Math.floor(rng() * fallbackTypes.length) });
+      p.skillId = fallbackSkill.id;
+      out.push(p);
+    }
+    return opts.shuffle === false ? out : shuffle(rng, out);
+  }
+
   function levelFor(skill, difficultyStep) {
     var levels = skill.levels || [{ min: skill.min, max: skill.max }];
     var idx = Math.max(0, Math.min(difficultyStep || 0, levels.length - 1));
     var lvl = levels[idx] || {};
-    return {
-      min: lvl.min != null ? lvl.min : skill.min,
-      max: lvl.max != null ? lvl.max : skill.max,
-      table: lvl.table, minFactor: lvl.minFactor, maxFactor: lvl.maxFactor,
-      maxDivisor: lvl.maxDivisor, maxQuotient: lvl.maxQuotient,
-      minDen: lvl.minDen, maxDen: lvl.maxDen, minSum: lvl.minSum,
-      forms: lvl.forms || skill.forms, ops: lvl.ops || skill.ops
-    };
+    var out = {};
+    /* 轉發題級別提供的所有選項（modes/nMax/sign/maxScale… 不再靠白名單而漏掉） */
+    Object.keys(lvl).forEach(function (k) { out[k] = lvl[k]; });
+    if (out.min == null) out.min = skill.min;
+    if (out.max == null) out.max = skill.max;
+    out.forms = out.forms || skill.forms;
+    out.ops = out.ops || skill.ops;
+    return out;
   }
 
   function typeList(skill) {
@@ -4018,12 +4671,21 @@
     }
 
     var recent = sp.lastProblems || [];
+    var avoidSig = {}, avoidTpl = {};
+    (opts.avoid || []).forEach(function (q) {
+      if (!q) return;
+      if (q.sig) avoidSig[q.sig] = true;
+      if (q.math) avoidTpl[templateSig(q)] = true;
+    });
     var p = null;
     var guard = 0;
-    while (guard++ < 12) {
+    while (guard++ < 20) {
       p = generateProblem(skill, { rng: rng, difficultyStep: step, typeIndex: chosenIdx });
       var seenRecent = recent.some(function (r) { return r.sig === p.sig; });
-      if (!seenRecent) break;
+      if (seenRecent || avoidSig[p.sig]) continue;
+      /* 先嘗試避開整節練習用過的模板；真的沒有別的模板時才接受 */
+      if (guard < 16 && avoidTpl[templateSig(p)]) continue;
+      break;
     }
     return p;
   }
@@ -4034,6 +4696,10 @@
     GENERATOR_TYPES: GENERATOR_TYPES,
     MATH_SPEC: MATH_SPEC,
     answerFromMath: answerFromMath,
+    templateSig: templateSig,
+    contextSig: contextSig,
+    composeSet: composeSet,
+    composeExam: composeExam,
     seedRandom: seedRandom,
     randInt: randInt,
     pick: pick,
