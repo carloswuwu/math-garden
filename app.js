@@ -176,6 +176,12 @@
     document.documentElement.setAttribute('data-theme', state.theme || 'light');
   }
 
+  /* 語言切換時同步 <html lang>，讓屏幕閱讀器用正確的語言發音 */
+  function applyLang() {
+    var code = state.lang === 'en' ? 'en' : 'zh-Hant-HK';
+    document.documentElement.setAttribute('lang', code);
+  }
+
   /* ---------------- 音效 ---------------- */
   var audioCtx = null;
   function playTone(ok) {
@@ -741,6 +747,9 @@
     var onHome = state.screen === 'home';
     back.hidden = onHome;
     $('langBtn').textContent = state.lang === 'zh' ? 'EN' : '繁體';
+    $('langBtn').setAttribute('aria-label', state.lang === 'zh'
+      ? '切換語言（英文）'
+      : 'Switch language (Traditional Chinese)');
     $('topbarStars').textContent = '⭐ ' + totalStars();
 
     var title = '';
@@ -961,6 +970,21 @@
 
   /* ---------------- 練習 / 測驗 ---------------- */
 
+  /* 進度條以 ARIA progressbar 語意呈現，數值與視覺寬度一致 */
+  function progressBarHTML(pct, label) {
+    var now = Math.max(0, Math.min(100, Math.round(pct || 0)));
+    return '<div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + now + '"' +
+      (label ? ' aria-label="' + esc(label) + '"' : '') +
+      '><i style="width:' + now + '%"></i></div>';
+  }
+
+  /* 選項的無障礙名稱：例如「選項 2：5」/「Choice 2: 5」 */
+  function choiceAriaLabel(index, text) {
+    return state.lang === 'zh'
+      ? '選項 ' + (index + 1) + '：' + text
+      : 'Choice ' + (index + 1) + ': ' + text;
+  }
+
   function startPractice(skillId) {
     state.skillId = skillId;
     state.mode = 'practice';
@@ -1030,47 +1054,52 @@
     var isQuiz = state.mode === 'quiz' || state.mode === 'exam';
     var skill = state.mode === 'exam' ? null : getSkill(state.skillId);
 
-    // 頭部
+    // 頭部（進度條以 ARIA progressbar 呈現）
     var headHtml;
+    var pctNow;
     if (state.mode === 'exam') {
       var examStage = getStage(state.examStage);
+      pctNow = Math.round(state.index / state.problems.length * 100);
       headHtml = '<div class="practice-head"><span class="p-title">📝 ' + t('exam.title') + ' · ' + L(examStage) + '</span>' +
         '<span class="p-count">' + t('practice.question', { i: state.index + 1, n: state.problems.length }) + '</span></div>' +
-        '<div class="progress-bar"><i style="width:' + Math.round(state.index / state.problems.length * 100) + '%"></i></div>';
+        progressBarHTML(pctNow, t('practice.question', { i: state.index + 1, n: state.problems.length }));
     } else if (isQuiz) {
       var done = state.index;
+      pctNow = Math.round(done / state.problems.length * 100);
       headHtml = '<div class="practice-head"><span class="p-title">' + t('quiz.title') + '</span>' +
         '<span class="p-count">' + t('practice.question', { i: state.index + 1, n: state.problems.length }) + '</span></div>' +
-        '<div class="progress-bar"><i style="width:' + Math.round(done / state.problems.length * 100) + '%"></i></div>';
+        progressBarHTML(pctNow, t('practice.question', { i: state.index + 1, n: state.problems.length }));
     } else {
       var practice = (skill.mastery && skill.mastery.practice) || 10;
       var c = skillProgress(skill.id).correct;
+      pctNow = Math.min(100, Math.round(c / practice * 100));
       headHtml = '<div class="practice-head"><span class="p-title">' + nameOf(skill) + '</span>' +
         '<span class="p-count">' + t('practice.progress') + ' ' + c + '/' + practice + '</span></div>' +
-        '<div class="progress-bar"><i style="width:' + Math.min(100, Math.round(c / practice * 100)) + '%"></i></div>';
+        progressBarHTML(pctNow, t('practice.progress') + ' ' + c + '/' + practice);
     }
 
     // 題干 + 視覺
     var bodyHtml = '<div class="prompt-card"><div class="prompt-text">' + renderMath(L(p.prompt)) + '</div>' +
       '<div class="prompt-visual" id="qVisual"></div></div>';
 
-    // 選項
-    var choiceHtml = '<div class="choices" id="choices">';
+    // 選項（button 自帶 aria-label 與 aria-disabled，方便鍵盤/讀屏使用）
+    var choiceHtml = '<div class="choices" id="choices" role="group" aria-label="' + esc(t('practice.chooseAnswer')) + '">';
     if (p.type === 'comparegroup') {
-      p.choices.forEach(function (c) {
-        choiceHtml += '<button class="choice color-choice" type="button" data-value="' + c + '" data-key="' + c + '">' +
+      p.choices.forEach(function (c, i) {
+        var colorLabel = t('colors.' + c);
+        choiceHtml += '<button class="choice color-choice" type="button" data-value="' + c + '" data-key="' + c + '" aria-label="' + esc(choiceAriaLabel(i, colorLabel)) + '" aria-disabled="false">' +
           '<span class="swatch" style="background:' + swatchColor(c) + '"></span>' +
-          '<span>' + t('colors.' + c) + '</span></button>';
+          '<span>' + colorLabel + '</span></button>';
       });
     } else {
-      p.choices.forEach(function (c) {
+      p.choices.forEach(function (c, i) {
         var label = choiceLabel(p, c);
-        choiceHtml += '<button class="choice" type="button" data-value="' + MathCore.renderValue(c) + '" data-key="' + MathCore.valueKey(c) + '">' + label + '</button>';
+        choiceHtml += '<button class="choice" type="button" data-value="' + MathCore.renderValue(c) + '" data-key="' + MathCore.valueKey(c) + '" aria-label="' + esc(choiceAriaLabel(i, label)) + '" aria-disabled="false">' + label + '</button>';
       });
     }
     choiceHtml += '</div>';
 
-    var footerHtml = '<div class="feedback" id="feedback"></div>';
+    var footerHtml = '<div class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>';
     if (!isQuiz) {
       footerHtml += '<div class="practice-footer">' +
         '<button class="btn hint" id="hintBtn" type="button">💡 ' + t('practice.hint') + '</button>' +
@@ -1128,6 +1157,7 @@
     } else {
       btn.classList.add('wrong');
       btn.disabled = true;
+      btn.setAttribute('aria-disabled', 'true');
       setFeedback(pick(t('practice.wrong')), 'no');
       playTone(false);
       if (state.mode === 'practice') {
@@ -1147,13 +1177,137 @@
   }
 
   function disableChoices() {
-    $('screen-practice').querySelectorAll('.choice').forEach(function (b) { b.disabled = true; });
+    $('screen-practice').querySelectorAll('.choice').forEach(function (b) {
+      b.disabled = true;
+      b.setAttribute('aria-disabled', 'true');
+    });
   }
 
   function setFeedback(msg, cls) {
     var f = $('feedback');
     f.textContent = msg;
     f.className = 'feedback ' + cls;
+  }
+
+  /* ---------------- 鍵盤操作（數字選答 / 方向鍵 / Esc / Tab 陷阱） ---------------- */
+
+  function focusEl(el) {
+    if (!el || typeof el.focus !== 'function') return false;
+    try { el.focus(); } catch (e) { return false; }
+    return document.activeElement === el;
+  }
+
+  /* 元素是否仍可見（父層 hidden / display:none 時不應搶焦點） */
+  function isVisible(el) {
+    if (!el || !document.contains(el)) return false;
+    var node = el;
+    while (node && node.nodeType === 1) {
+      if (node.hidden === true) return false;
+      if (typeof window.getComputedStyle === 'function') {
+        try {
+          var st = window.getComputedStyle(node);
+          if (st && st.display === 'none') return false;
+        } catch (e) { /* 忽略 */ }
+      }
+      node = node.parentNode;
+    }
+    return true;
+  }
+
+  function restoreFocus(el) {
+    if (isVisible(el)) return focusEl(el);
+    return false;
+  }
+
+  /* 重新渲染後把焦點放回當前屏幕的第一個可聚焦元素，避免焦點掉到 body */
+  function focusScreen() {
+    var screen = $('screen-' + state.screen);
+    if (!screen) return false;
+    var node = screen.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    return focusEl(node);
+  }
+
+  function isTypingTarget(el) {
+    if (!el) return false;
+    var tag = (el.tagName || '').toUpperCase();
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable === true;
+  }
+
+  function choiceButtons() {
+    var box = $('choices');
+    if (!box) return [];
+    return Array.prototype.slice.call(box.querySelectorAll('.choice'));
+  }
+
+  function handlePracticeKeys(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (isTypingTarget(e.target)) return;
+    var choices = choiceButtons();
+    if (!choices.length) return;
+    var key = e.key;
+
+    // Enter / Space 啟用目前聚焦的選項
+    if (key === 'Enter' || key === ' ' || key === 'Spacebar') {
+      var activeBtn = document.activeElement;
+      if (activeBtn && choices.indexOf(activeBtn) !== -1 && !activeBtn.disabled) {
+        e.preventDefault();
+        if (!state.locked) activeBtn.click();
+      }
+      return;
+    }
+
+    // 數字鍵 1–4 選取對應選項
+    if (/^[1-9]$/.test(key)) {
+      var idx = Number(key) - 1;
+      if (idx >= choices.length) return;
+      var btn = choices[idx];
+      if (btn.disabled || btn.getAttribute('aria-disabled') === 'true') return;
+      e.preventDefault();
+      focusEl(btn);
+      if (!state.locked) btn.click();
+      return;
+    }
+
+    // 方向鍵在選項之間移動焦點（跳過已禁用選項，循環）
+    var isNext = key === 'ArrowRight' || key === 'ArrowDown';
+    var isPrev = key === 'ArrowLeft' || key === 'ArrowUp';
+    if (!isNext && !isPrev) return;
+    e.preventDefault();
+    var n = choices.length;
+    var dir = isNext ? 1 : -1;
+    var cur = choices.indexOf(document.activeElement);
+    if (cur === -1) {
+      for (var j = 0; j < n; j++) {
+        var cand = choices[dir === 1 ? j : n - 1 - j];
+        if (!cand.disabled) { focusEl(cand); break; }
+      }
+      return;
+    }
+    var nextIdx = cur;
+    for (var k = 0; k < n; k++) {
+      nextIdx = (nextIdx + dir + n) % n;
+      if (!choices[nextIdx].disabled) { focusEl(choices[nextIdx]); break; }
+    }
+  }
+
+  /* 全局鍵盤事件：對話框開啟時處理 Esc / Tab 陷阱，否則處理作答畫面快捷鍵 */
+  function onGlobalKeydown(e) {
+    if (modalState.open) {
+      if (e.key === 'Escape' || e.key === 'Esc') {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+      if (e.key === 'Tab') {
+        trapModalTab(e);
+        return;
+      }
+      return; // 對話框開啟時不觸發作答快捷鍵
+    }
+    if (state.screen !== 'practice') return;
+    var screen = $('screen-practice');
+    if (!screen || screen.hidden) return;
+    handlePracticeKeys(e);
   }
 
   function advanceQuiz() {
@@ -1331,17 +1485,89 @@
     $('parentReset').addEventListener('click', confirmReset);
   }
 
-  function confirmUnlockAll() {
+  /* ---------------- 對話框（角色 / 焦點管理 / Tab 陷阱 / Esc 關閉） ---------------- */
+
+  var modalState = { open: false, opener: null };
+
+  function modalFocusables() {
     var modal = $('modal');
+    if (!modal) return [];
+    var nodes = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    return Array.prototype.filter.call(nodes, function (el) {
+      if (el.disabled) return false;
+      if (el.hasAttribute('hidden')) return false;
+      if (el.getAttribute('aria-hidden') === 'true') return false;
+      return true;
+    });
+  }
+
+  function showModal(innerHTML, opener) {
+    var modal = $('modal');
+    if (!modal) return;
+    var active = document.activeElement;
+    modalState.opener = opener || (active && active !== document.body && isVisible(active) ? active : null);
+    modal.innerHTML = innerHTML;
     modal.hidden = false;
-    modal.innerHTML = '<div class="modal">' +
-      '<h3>' + t('parent.unlockAll') + '</h3>' +
+    var heading = modal.querySelector('h2, h3, h4') || modal.querySelector('#modalTitle');
+    if (heading && !heading.id) heading.id = 'modalTitle';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', heading ? heading.id : 'modalTitle');
+    modalState.open = true;
+    var items = modalFocusables();
+    if (!focusEl(items[0])) focusEl(modal);
+  }
+
+  /* 關閉對話框；預設把焦點交還開啟它的元素。restore:false 時由調用方重新渲染後自行恢復 */
+  function closeModal(opts) {
+    var modal = $('modal');
+    if (!modal) return null;
+    var opener = modalState.opener;
+    var wasOpen = modalState.open;
+    modal.hidden = true;
+    modal.innerHTML = '';
+    modalState.open = false;
+    modalState.opener = null;
+    if (wasOpen && !(opts && opts.restore === false)) {
+      if (!restoreFocus(opener)) focusScreen();
+    }
+    return opener;
+  }
+
+  function trapModalTab(e) {
+    var modal = $('modal');
+    var items = modalFocusables();
+    if (!items.length) {
+      e.preventDefault();
+      focusEl(modal);
+      return;
+    }
+    var first = items[0];
+    var last = items[items.length - 1];
+    var idx = items.indexOf(document.activeElement);
+    if (idx === -1) {
+      e.preventDefault();
+      focusEl(e.shiftKey ? last : first);
+      return;
+    }
+    if (!e.shiftKey && idx === items.length - 1) {
+      e.preventDefault();
+      focusEl(first);
+    } else if (e.shiftKey && idx === 0) {
+      e.preventDefault();
+      focusEl(last);
+    }
+  }
+
+  function confirmUnlockAll(ev) {
+    showModal('<div class="modal">' +
+      '<h3 id="modalTitle">' + t('parent.unlockAll') + '</h3>' +
       '<p>' + t('parent.unlockAllConfirm') + '</p>' +
       '<div class="btn-row">' +
       '<button class="btn secondary" id="unlockCancel" type="button">' + t('common.cancel') + '</button>' +
       '<button class="btn" id="unlockOk" type="button">' + t('parent.unlockAll') + '</button>' +
-      '</div></div>';
-    $('unlockCancel').addEventListener('click', function () { modal.hidden = true; });
+      '</div></div>', ev && ev.currentTarget);
+    $('unlockCancel').addEventListener('click', function () { closeModal(); });
     $('unlockOk').addEventListener('click', function () {
       for (var id in Curriculum.skills) {
         var skill = Curriculum.skills[id];
@@ -1358,40 +1584,40 @@
         progress.stageExams[st.id] = { passed: true, perfect: true, best: 100 };
       });
       saveProgress();
-      modal.hidden = true;
+      var opener = closeModal({ restore: false });
       renderParent();
+      if (!restoreFocus(opener)) focusScreen();
       toast(t('parent.unlockAllDone'));
     });
   }
 
-  function exportProgress() {
+  function exportProgress(ev) {
+    var opener = ev && ev.currentTarget;
     var json = JSON.stringify(progress);
     var done = function () { toast(t('parent.exported')); };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(json).then(done).catch(function () { showJsonModal(json); });
+      navigator.clipboard.writeText(json).then(done).catch(function () { showJsonModal(json, false, opener); });
     } else {
-      showJsonModal(json);
+      showJsonModal(json, false, opener);
     }
   }
 
-  function importProgress() {
-    showJsonModal(null, true);
+  function importProgress(ev) {
+    showJsonModal(null, true, ev && ev.currentTarget);
   }
 
-  function showJsonModal(existingJson, isImport) {
-    var modal = $('modal');
-    modal.hidden = false;
+  function showJsonModal(existingJson, isImport, opener) {
     var text = existingJson || '';
-    modal.innerHTML = '<div class="modal">' +
-      '<h3>' + (isImport ? t('parent.import') : t('parent.export')) + '</h3>' +
+    showModal('<div class="modal">' +
+      '<h3 id="modalTitle">' + (isImport ? t('parent.import') : t('parent.export')) + '</h3>' +
       '<p>' + (isImport ? t('parent.import') : t('parent.export')) + '</p>' +
       '<textarea id="jsonArea" rows="6" style="width:100%;border:1px solid var(--sep);border-radius:10px;padding:10px;font-family:monospace;background:var(--card-2);color:var(--text)">' + esc(text) + '</textarea>' +
       '<div class="btn-row" style="margin-top:14px">' +
       '<button class="btn secondary" id="jsonCancel" type="button">' + t('common.cancel') + '</button>' +
       (isImport ? '<button class="btn" id="jsonOk" type="button">' + t('parent.import') + '</button>'
                 : '<button class="btn" id="jsonOk" type="button">' + t('common.close') + '</button>') +
-      '</div></div>';
-    $('jsonCancel').addEventListener('click', function () { modal.hidden = true; });
+      '</div></div>', opener);
+    $('jsonCancel').addEventListener('click', function () { closeModal(); });
     $('jsonOk').addEventListener('click', function () {
       if (isImport) {
         try {
@@ -1405,35 +1631,36 @@
           state.theme = progress.theme || state.theme;
           state.sound = progress.sound !== false;
           applyTheme();
+          applyLang();
           toast(t('parent.imported'));
-          modal.hidden = true;
+          var importOpener = closeModal({ restore: false });
           renderParent();
+          if (!restoreFocus(importOpener)) focusScreen();
         } catch (e) { toast('⚠ ' + e.message); }
       } else {
-        modal.hidden = true;
+        closeModal();
       }
     });
   }
 
-  function confirmReset() {
-    var modal = $('modal');
-    modal.hidden = false;
-    modal.innerHTML = '<div class="modal">' +
-      '<h3>' + t('parent.reset') + '</h3>' +
+  function confirmReset(ev) {
+    showModal('<div class="modal">' +
+      '<h3 id="modalTitle">' + t('parent.reset') + '</h3>' +
       '<p>' + t('parent.resetConfirm') + '</p>' +
       '<div class="btn-row">' +
       '<button class="btn secondary" id="resetCancel" type="button">' + t('common.cancel') + '</button>' +
       '<button class="btn danger-btn" id="resetOk" type="button">' + t('parent.reset') + '</button>' +
-      '</div></div>';
-    $('resetCancel').addEventListener('click', function () { modal.hidden = true; });
+      '</div></div>', ev && ev.currentTarget);
+    $('resetCancel').addEventListener('click', function () { closeModal(); });
     $('resetOk').addEventListener('click', function () {
       progress = MathCore.newProgress();
       progress.lang = state.lang;
       progress.sound = state.sound;
       progress.theme = state.theme;
       saveProgress();
-      modal.hidden = true;
+      var opener = closeModal({ restore: false });
       renderHome();
+      if (!restoreFocus(opener)) focusScreen();
     });
   }
 
@@ -1500,7 +1727,7 @@
       '<div class="settings-row"><span class="k">' + t('settings.language') + '</span>' +
       '<button class="btn secondary" id="setLangBtn" type="button">' + t('langName') + ' ⇄</button></div>' +
       '<div class="settings-row"><span class="k">' + t('settings.sound') + '</span>' +
-      '<div class="switch' + (state.sound ? ' on' : '') + '" id="soundSwitch" role="switch" aria-checked="' + state.sound + '"></div></div>' +
+      '<div class="switch' + (state.sound ? ' on' : '') + '" id="soundSwitch" role="switch" tabindex="0" aria-label="' + esc(t('settings.sound')) + '" aria-checked="' + state.sound + '"></div></div>' +
       '<div class="settings-row"><span class="k">' + t('settings.theme') + '</span>' +
       '<div class="seg">' +
         themeSegBtn('light', t('settings.themeLight')) +
@@ -1513,12 +1740,19 @@
 
     $('screen-settings').innerHTML = html;
     $('setLangBtn').addEventListener('click', function () { toggleLang(); });
-    $('soundSwitch').addEventListener('click', function () {
+    var toggleSound = function () {
       state.sound = !state.sound;
       progress.sound = state.sound;
       saveProgress();
       renderSettings();
       updateTopbar();
+    };
+    $('soundSwitch').addEventListener('click', toggleSound);
+    $('soundSwitch').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        toggleSound();
+      }
     });
     $('screen-settings').querySelectorAll('.seg-btn').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -1541,12 +1775,16 @@
     state.lang = state.lang === 'zh' ? 'en' : 'zh';
     progress.lang = state.lang;
     saveProgress();
+    applyLang();
     // 重新渲染當前屏幕
     switch (state.screen) {
       case 'home': renderHome(); break;
       case 'stage': renderStage(state.stageId); break;
       case 'lesson': renderLesson(state.skillId); break;
-      case 'practice': renderQuestion(currentProblem()); break;
+      case 'practice':
+        var cur = currentProblem();
+        if (cur) renderQuestion(cur);
+        break;
       case 'parent': renderParent(); break;
       case 'settings': renderSettings(); break;
     }
@@ -1596,6 +1834,8 @@
   function init() {
     bindTopbar();
     applyTheme();
+    applyLang();
+    document.addEventListener('keydown', onGlobalKeydown);
     registerSW();
     renderHome();
   }

@@ -130,6 +130,25 @@ h1, h2, h3, p { margin: 0; }
   outline-offset: 3px;
 }
 
+/* 自訂按鈕 / 控件：加大焦點環，保持手繪虛線語言但更清楚可見 */
+.btn:focus-visible,
+.icon-btn:focus-visible,
+.choice:focus-visible,
+.stage-card:focus-visible,
+.seg-btn:focus-visible,
+.switch:focus-visible,
+.skill-card .go:focus-visible {
+  outline: 3px dashed var(--blue);
+  outline-offset: 4px;
+}
+:root[data-theme="dark"] :focus-visible { outline-color: #8FB9E8; }
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="auto"] :focus-visible { outline-color: #8FB9E8; }
+}
+/* 對話框容器只是焦點兜底，不需要在整個遮罩上畫焦點環 */
+#modal:focus,
+#modal:focus-visible { outline: none; }
+
 /* ?鼓銝???閫?*/
 .wobble-a { border-radius: 24px 18px 26px 20px / 20px 26px 18px 24px; }
 .wobble-b { border-radius: 18px 26px 20px 24px / 26px 20px 24px 18px; }
@@ -541,6 +560,7 @@ h1, h2, h3, p { margin: 0; }
   border: 2.5px solid var(--line);
   position: relative; transition: background 0.2s;
   flex: none;
+  cursor: pointer;
 }
 .switch.on { background: var(--green); }
 .switch::after {

@@ -22,6 +22,20 @@ function boot(seedProgress) {
   return { dom, w, d: w.document };
 }
 
+/* 在目前聚焦元素（或指定元素）上派發鍵盤事件，模擬真實按鍵 */
+function pressKey(w, d, key, opts) {
+  opts = opts || {};
+  const ev = new w.KeyboardEvent('keydown', {
+    key: key,
+    bubbles: true,
+    cancelable: true,
+    shiftKey: !!opts.shiftKey
+  });
+  const target = opts.target || d.activeElement || d.body;
+  target.dispatchEvent(ev);
+  return ev;
+}
+
 async function main() {
   /* 1. 應用初始化 + 首頁渲染 */
   let ctx = boot();
@@ -205,6 +219,87 @@ async function main() {
   check(se['prek'] && se['prek'].perfect === true, '滿分綜合考試應記錄為 perfect');
   w9.__mathApp.renderHome();
   check(d9.querySelectorAll('#screen-home .stage-card').length === 2, '滿分後一年級應解鎖');
+
+  /* 15. 對話框可訪問性：role / aria-modal / aria-labelledby、開啟聚焦、Esc 關閉並交還焦點 */
+  const ctxM = boot();
+  const wM = ctxM.w, dM = ctxM.d;
+  dM.getElementById('homeParentBtn').click();
+  check(!dM.getElementById('screen-parent').hidden, '家長中心應顯示（對話框測試前置）');
+  const resetOpener = dM.getElementById('parentReset');
+  resetOpener.focus();
+  check(dM.activeElement === resetOpener, '重置按鈕可取得焦點');
+  resetOpener.click();
+  const modalEl = dM.getElementById('modal');
+  check(!modalEl.hidden, '重置對話框已開啟');
+  check(modalEl.getAttribute('role') === 'dialog', '對話框 role="dialog"');
+  check(modalEl.getAttribute('aria-modal') === 'true', '對話框 aria-modal="true"');
+  const labelledby = modalEl.getAttribute('aria-labelledby');
+  check(!!labelledby && !!dM.getElementById(labelledby), '對話框 aria-labelledby 指向存在的標題');
+  check(!!labelledby && dM.getElementById(labelledby).textContent.length > 0, '對話框標題有文字');
+  const resetCancel = dM.getElementById('resetCancel');
+  check(dM.activeElement === resetCancel, '開啟時焦點移入對話框（第一個可聚焦元素）');
+  pressKey(wM, dM, 'Escape');
+  check(modalEl.hidden, 'Esc 關閉對話框');
+  check(dM.activeElement === resetOpener, '關閉後焦點回到開啟者');
+  check(!dM.getElementById('resetOk'), '關閉後對話框內容已清空');
+
+  /* 16. Tab 鍵在對話框內循環（焦點陷阱） */
+  resetOpener.click();
+  const resetOk = dM.getElementById('resetOk');
+  resetOk.focus();
+  pressKey(wM, dM, 'Tab');
+  check(dM.activeElement === dM.getElementById('resetCancel'), 'Tab 由最後一個按鈕繞回第一個（不逃出對話框）');
+  pressKey(wM, dM, 'Tab', { shiftKey: true });
+  check(dM.activeElement === resetOk, 'Shift+Tab 由第一個按鈕繞回最後一個');
+  check(modalEl.contains(dM.activeElement), '焦點保持於對話框內');
+  pressKey(wM, dM, 'Escape');
+  check(modalEl.hidden, '測試後對話框已關閉（清理）');
+
+  /* 17. 作答畫面鍵盤操作：數字鍵選答、方向鍵移動焦點、ARIA 語意 */
+  const ctxK = boot();
+  const wK = ctxK.w, dK = ctxK.d;
+  dK.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  dK.querySelector('#screen-stage .skill-card[data-skill="prek.count"]').click();
+  dK.getElementById('lessonPractice').click();
+  const choiceEls = dK.querySelectorAll('#screen-practice .choice');
+  check(choiceEls.length === 4, '鍵盤測試：練習應有 4 個選項');
+  check((choiceEls[0].getAttribute('aria-label') || '').indexOf('選項 1') === 0, '第一個選項有「選項 1：…」aria-label');
+  const pbarK = dK.querySelector('#screen-practice .progress-bar');
+  check(!!pbarK && pbarK.getAttribute('role') === 'progressbar', '進度條有 role="progressbar"');
+  check(pbarK.getAttribute('aria-valuemin') === '0' && pbarK.getAttribute('aria-valuemax') === '100' &&
+    pbarK.getAttribute('aria-valuenow') !== null, '進度條有 aria-valuemin/max/now');
+  const feedbackK = dK.getElementById('feedback');
+  check(feedbackK.getAttribute('aria-live') === 'polite', '回饋區 aria-live="polite"');
+
+  pressKey(wK, dK, 'ArrowRight');
+  check(dK.activeElement === choiceEls[0], 'ArrowRight 由無焦點移到第一個選項');
+  pressKey(wK, dK, 'ArrowRight');
+  check(dK.activeElement === choiceEls[1], 'ArrowRight 移到第二個選項');
+  pressKey(wK, dK, 'ArrowLeft');
+  check(dK.activeElement === choiceEls[0], 'ArrowLeft 移回第一個選項');
+
+  pressKey(wK, dK, '1');
+  check(choiceEls[0].classList.contains('correct') || choiceEls[0].classList.contains('wrong'),
+    '按數字鍵 "1" 選中第一個選項');
+  check(feedbackK.textContent.length > 0, '按 "1" 作答後有回饋訊息');
+  check(Array.from(choiceEls).some(function (b) { return b.disabled; }),
+    '作答後選項進入禁用 / 鎖定狀態');
+  check(Array.from(choiceEls).every(function (b) {
+    return !b.disabled || b.getAttribute('aria-disabled') === 'true';
+  }), '禁用選項標示 aria-disabled="true"');
+
+  /* 18. 語言切換同步 <html lang> 與語言按鈕無障礙名稱 */
+  const ctxL = boot();
+  const wL = ctxL.w, dL = ctxL.d;
+  check(dL.documentElement.getAttribute('lang') === 'zh-Hant-HK', '啟動時 <html lang="zh-Hant-HK">');
+  check((dL.getElementById('langBtn').getAttribute('aria-label') || '').length > 0, '語言切換按鈕有無障礙名稱');
+  dL.getElementById('langBtn').click();
+  check(dL.documentElement.getAttribute('lang') === 'en', '切換英文後 <html lang="en">');
+  check(dL.body.textContent.includes('Choose a Grade'), '切換英文後頁面文案更新');
+  dL.getElementById('langBtn').click();
+  check(dL.documentElement.getAttribute('lang') === 'zh-Hant-HK', '切回中文後 <html lang> 還原');
+  const ctxLe = boot(JSON.stringify({ version: 2, lang: 'en', sound: false, theme: 'light' }));
+  check(ctxLe.d.documentElement.getAttribute('lang') === 'en', '載入英文存檔時 <html lang="en">');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
