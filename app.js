@@ -39,6 +39,7 @@
     locked: false,
     hintShown: false,
     quizStart: 0,
+    attemptWrong: false,
     /* 進行中題組：{ mode, key }；只在真正開始/恢復題組時設定，離開作答畫面即清除。
      * 不能只用 state.mode/state.skillId 判斷，因為 renderLesson 會更新 skillId。 */
     run: null
@@ -203,6 +204,7 @@
     state.quizStart = s.quizStart || Date.now();
     state.locked = false;
     state.hintShown = false;
+    state.attemptWrong = false;
     state.run = { mode: parsed.screen, key: parsed.screen === 'exam' ? parsed.stageId : parsed.skillId };
     renderQuestion(state.problems[state.index]);
     show('practice');
@@ -1471,6 +1473,7 @@
     state.quizStart = 0;
     state.locked = false;
     state.hintShown = false;
+    state.attemptWrong = false;
     state.run = { mode: 'practice', key: skillId };
     nextPracticeProblem();
     show('practice');
@@ -1485,6 +1488,7 @@
     state.index = state.problems.length - 1;
     state.locked = false;
     state.hintShown = false;
+    state.attemptWrong = false;
     renderQuestion(p);
     saveSession();
   }
@@ -1650,7 +1654,7 @@
       playTone(true);
       confetti();
       if (state.mode === 'practice') {
-        MathCore.applyResult(progress, getSkill(state.skillId), p, true);
+        MathCore.applyResult(progress, getSkill(state.skillId), p, true, { credit: !state.attemptWrong });
         saveProgress();
         updateTopbar();
         $('nextBtn').hidden = false;
@@ -1676,7 +1680,7 @@
     if (correct) {
       btn.classList.add('correct');
       disableChoices();
-      setFeedback(pick(t('practice.correct')), 'ok');
+      setFeedback(state.mode === 'practice' && state.attemptWrong ? t('practice.correctRetry') : pick(t('practice.correct')), 'ok');
       gradeAnswered(p, true);
       return;
     }
@@ -1685,6 +1689,7 @@
     btn.setAttribute('aria-disabled', 'true');
     setFeedback(pick(t('practice.wrong')), 'no');
     if (state.mode === 'practice') {
+      state.attemptWrong = true;
       gradeAnswered(p, false);
       return;
     }
@@ -1711,11 +1716,12 @@
     if (correct) {
       field.disabled = true;
       if (submit) submit.disabled = true;
-      setFeedback(pick(t('practice.correct')), 'ok');
+      setFeedback(state.mode === 'practice' && state.attemptWrong ? t('practice.correctRetry') : pick(t('practice.correct')), 'ok');
       gradeAnswered(p, true);
       return;
     }
     if (state.mode === 'practice') {
+      state.attemptWrong = true;
       setFeedback(pick(t('practice.wrong')), 'no');
       gradeAnswered(p, false);
       try { field.select(); } catch (e) { /* 忽略 */ }
@@ -1865,6 +1871,7 @@
     state.index++;
     if (state.index < state.problems.length) {
       state.locked = false;
+      state.attemptWrong = false;
       renderQuestion(state.problems[state.index]);
       saveSession();
     } else if (state.mode === 'exam') {
@@ -1876,7 +1883,8 @@
 
   function finishQuiz() {
     var skill = getSkill(state.skillId);
-    var grade = MathCore.gradeQuiz(state.results);
+    var quizPass = (skill.mastery && skill.mastery.quizPass) || 0.8;
+    var grade = MathCore.gradeQuiz(state.results, quizPass);
     var seconds = Math.round((Date.now() - state.quizStart) / 1000);
     clearSession();
     MathCore.applyQuizResult(progress, skill, grade.percent);

@@ -3853,6 +3853,50 @@
           en: ['There are C(' + m.n + ',' + m.k + ') = ' + succ + ' ways to get exactly ' + m.k + ' heads.', 'Probability = ' + succ + '/2^' + m.n + ' = ' + renderValue(p.answer) + '.']
         };
       }
+      case 'lastdigit': {
+        var ld = 1;
+        var ldZh = ['只看個位：每次乘 ' + m.a + ' 後取個位。'];
+        var ldEn = ['Keep only the units digit: multiply by ' + m.a + ' and take the last digit each step.'];
+        for (var li = 0; li < m.b; li++) {
+          ld = (ld * m.a) % 10;
+          ldZh.push('第 ' + (li + 1) + ' 次：個位 ' + ld + '。');
+          ldEn.push('Step ' + (li + 1) + ': units digit ' + ld + '.');
+        }
+        ldZh.push('所以 ' + m.a + '^' + m.b + ' 的個位數字 = ' + renderValue(p.answer) + '。');
+        ldEn.push('So the units digit of ' + m.a + '^' + m.b + ' is ' + renderValue(p.answer) + '.');
+        return { zh: ldZh, en: ldEn };
+      }
+      case 'gridrect':
+        return {
+          zh: ['選兩條橫線：C(' + (m.m + 1) + ',2) = ' + (m.m * (m.m + 1) / 2) + ' 種。', '選兩條直線：C(' + (m.n + 1) + ',2) = ' + (m.n * (m.n + 1) / 2) + ' 種。', '長方形總數 = 兩者相乘 = ' + renderValue(p.answer) + '。'],
+          en: ['Choose two horizontal lines: C(' + (m.m + 1) + ',2) = ' + (m.m * (m.m + 1) / 2) + '.', 'Choose two vertical lines: C(' + (m.n + 1) + ',2) = ' + (m.n * (m.n + 1) / 2) + '.', 'Total rectangles = product = ' + renderValue(p.answer) + '.']
+        };
+      case 'polygonsum':
+        if (m.mode === 'sum') {
+          return {
+            zh: ['n 邊形可分成 (n − 2) 個三角形。', '(' + m.n + ' − 2) × 180° = ' + renderValue(p.answer) + '°。'],
+            en: ['An n-gon can be split into (n − 2) triangles.', '(' + m.n + ' − 2) × 180° = ' + renderValue(p.answer) + '°.']
+          };
+        }
+        return {
+          zh: ['內角和 = (' + m.n + ' − 2) × 180° = ' + ((m.n - 2) * 180) + '°。', '正多邊形每個內角 = 內角和 ÷ ' + m.n + ' = ' + renderValue(p.answer) + '°。'],
+          en: ['Sum = (' + m.n + ' − 2) × 180° = ' + ((m.n - 2) * 180) + '°.', 'Each angle of a regular polygon = sum ÷ ' + m.n + ' = ' + renderValue(p.answer) + '°.']
+        };
+      case 'train': {
+        var rel = m.mode === 'towards' ? m.s1 + m.s2 : m.s1 - m.s2;
+        return {
+          zh: ['相對速率 = ' + (m.mode === 'towards' ? m.s1 + ' + ' + m.s2 : m.s1 + ' − ' + m.s2) + ' = ' + rel + ' km/h。', '時間 = 距離 ÷ 相對速率 = ' + m.d + ' ÷ ' + rel + ' = ' + renderValue(p.answer) + ' 小時。'],
+          en: ['Relative speed = ' + (m.mode === 'towards' ? m.s1 + ' + ' + m.s2 : m.s1 + ' − ' + m.s2) + ' = ' + rel + ' km/h.', 'Time = distance ÷ relative speed = ' + m.d + ' ÷ ' + rel + ' = ' + renderValue(p.answer) + ' hours.']
+        };
+      }
+      case 'dicecompare': {
+        var dcWays = 0;
+        for (var di = 1; di <= 6; di++) for (var dj = 1; dj <= 6; dj++) if (di + dj > m.k) dcWays++;
+        return {
+          zh: ['點數和大於 ' + m.k + ' 的組合有 ' + dcWays + ' 個（全部 36 個）。', '概率 = ' + dcWays + '/36 = ' + renderValue(p.answer) + '。'],
+          en: ['There are ' + dcWays + ' outcomes with sum greater than ' + m.k + ' out of 36.', 'Probability = ' + dcWays + '/36 = ' + renderValue(p.answer) + '.']
+        };
+      }
       default:
         return null;
     }
@@ -4212,6 +4256,105 @@
     };
   }
 
+  /* ---------------- 挑戰區第二階：再 5 個奧林匹克題型 ---------------- */
+
+  function genLastdigit(rng, o) {
+    var a = randInt(rng, 2, o.maxBase || 9);
+    var b = randInt(rng, 2, o.maxExp || 6);
+    var r = 1;
+    for (var i = 0; i < b; i++) r = (r * a) % 10;
+    return {
+      type: 'lastdigit',
+      prompt: { zh: a + '^' + b + ' 的個位數字是多少？', en: 'What is the units digit of ' + a + '^' + b + '?' },
+      visual: null,
+      answer: r,
+      math: { op: 'lastdigit', a: a, b: b },
+      hint: { zh: '每次只保留個位相乘，觀察個位的循環。', en: 'Keep only the units digit when multiplying and look for a cycle.' }
+    };
+  }
+
+  function genGridrect(rng, o) {
+    var m = randInt(rng, 2, o.maxDim || 8);
+    var n = randInt(rng, 2, o.maxDim || 8);
+    var rcount = (m * (m + 1) / 2) * (n * (n + 1) / 2);
+    return {
+      type: 'gridrect',
+      prompt: {
+        zh: '在 ' + m + ' × ' + n + ' 的方格紙上，可以數出多少個長方形（包括正方形）？',
+        en: 'How many rectangles (including squares) can be found in an ' + m + ' by ' + n + ' grid?'
+      },
+      visual: null,
+      answer: rcount,
+      math: { op: 'gridrect', m: m, n: n },
+      hint: { zh: '先選兩條橫線、再選兩條直線：C(' + (m + 1) + ',2) × C(' + (n + 1) + ',2)。', en: 'Choose two horizontal lines and two vertical lines: C(' + (m + 1) + ',2) × C(' + (n + 1) + ',2).' }
+    };
+  }
+
+  function genPolygonsum(rng, o) {
+    var n = pick(rng, [5, 6, 8, 9, 10, 12]);
+    var mode = pick(rng, ['sum', 'each']);
+    var answer = mode === 'sum' ? (n - 2) * 180 : (n - 2) * 180 / n;
+    return {
+      type: 'polygonsum',
+      prompt: mode === 'sum'
+        ? { zh: n + ' 邊形的內角和是多少度？', en: 'What is the sum of the interior angles of an ' + n + '-sided polygon?' }
+        : { zh: '正 ' + n + ' 邊形的每一個內角是多少度？', en: 'What is each interior angle of a regular ' + n + '-sided polygon?' },
+      visual: null,
+      answer: answer,
+      math: { op: 'polygonsum', n: n, mode: mode },
+      hint: { zh: '內角和 = (n − 2) × 180°。', en: 'Sum of interior angles = (n − 2) × 180°.' }
+    };
+  }
+
+  var TRAIN_PAIRS = [[60, 40], [50, 30], [45, 35], [70, 50], [80, 55], [90, 60], [75, 45], [80, 60]];
+
+  function genTrain(rng, o) {
+    var pair = pick(rng, TRAIN_PAIRS);
+    var s1 = pair[0], s2 = pair[1];
+    var mode = pick(rng, ['towards', 'chase']);
+    var relative = mode === 'towards' ? s1 + s2 : s1 - s2;
+    var t = randInt(rng, 2, 6);
+    var d = relative * t;
+    return {
+      type: 'train',
+      prompt: mode === 'towards'
+        ? {
+          zh: '兩地相距 ' + d + ' km，A 車以 ' + s1 + ' km/h、B 車以 ' + s2 + ' km/h 同時相向而行，多少小時後相遇？',
+          en: 'Two towns are ' + d + ' km apart. Car A travels at ' + s1 + ' km/h and car B at ' + s2 + ' km/h towards each other. In how many hours do they meet?'
+        }
+        : {
+          zh: 'A 車以 ' + s1 + ' km/h 追前方 ' + d + ' km 的 B 車（' + s2 + ' km/h），多少小時後追上？',
+          en: 'Car A travels at ' + s1 + ' km/h chasing car B, which is ' + d + ' km ahead travelling at ' + s2 + ' km/h. In how many hours does A catch B?'
+        },
+      visual: null,
+      answer: t,
+      math: { op: 'train', mode: mode, d: d, s1: s1, s2: s2 },
+      hint: {
+        zh: mode === 'towards' ? '相向而行：相對速率 = s1 + s2。' : '追及問題：相對速率 = s1 − s2。',
+        en: mode === 'towards' ? 'Towards: relative speed = s1 + s2.' : 'Chasing: relative speed = s1 − s2.'
+      }
+    };
+  }
+
+  function genDicecompare(rng, o) {
+    var k = randInt(rng, 4, 10);
+    var ways = 0;
+    for (var i = 1; i <= 6; i++) {
+      for (var j = 1; j <= 6; j++) if (i + j > k) ways++;
+    }
+    return {
+      type: 'dicecompare',
+      prompt: {
+        zh: '擲兩粒公平骰子，點數和大於 ' + k + ' 的概率是多少？',
+        en: 'Two fair dice are rolled. What is the probability that the sum is greater than ' + k + '?'
+      },
+      visual: null,
+      answer: { n: ways, d: 36 },
+      math: { op: 'dicecompare', k: k },
+      hint: { zh: '數出點數和大於 ' + k + ' 的組合數，再除以 36。', en: 'Count the outcomes with sum greater than ' + k + ', then divide by 36.' }
+    };
+  }
+
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -4312,7 +4455,12 @@
     workrate: genWorkrate,
     mixture: genMixture,
     diceprob: genDiceprob,
-    coinprob: genCoinprob
+    coinprob: genCoinprob,
+    lastdigit: genLastdigit,
+    gridrect: genGridrect,
+    polygonsum: genPolygonsum,
+    train: genTrain,
+    dicecompare: genDicecompare
   };
 
   /* 題型目錄：直接由註冊表產生，新增生成器即自動納入 */
@@ -4465,6 +4613,25 @@
     diceprob: function (m) { return { n: 6 - Math.abs(m.s - 7), d: 36 }; },
     coinprob: function (m) {
       return { n: factInt(m.n) / (factInt(m.k) * factInt(m.n - m.k)), d: Math.pow(2, m.n) };
+    },
+    lastdigit: function (m) {
+      var r = 1;
+      for (var i = 0; i < m.b; i++) r = (r * m.a) % 10;
+      return r;
+    },
+    gridrect: function (m) {
+      return (m.m * (m.m + 1) / 2) * (m.n * (m.n + 1) / 2);
+    },
+    polygonsum: function (m) {
+      return m.mode === 'sum' ? (m.n - 2) * 180 : (m.n - 2) * 180 / m.n;
+    },
+    train: function (m) {
+      return m.d / (m.mode === 'towards' ? m.s1 + m.s2 : m.s1 - m.s2);
+    },
+    dicecompare: function (m) {
+      var ways = 0;
+      for (var i = 1; i <= 6; i++) for (var j = 1; j <= 6; j++) if (i + j > m.k) ways++;
+      return { n: ways, d: 36 };
     },
     placevalue: function (m) {
       if (m.mode === 'tens') return m.tens;
@@ -4630,7 +4797,7 @@
   /* 每個類型合理的干擾項數值上界 */
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
-    if (['modpow', 'gcdlcm', 'remainderSystem', 'pathcount', 'handshake', 'arrange', 'inclusion', 'clockangle', 'trapezoid', 'seqnext', 'pigeon', 'workrate', 'mixture'].indexOf(p.type) !== -1) {
+    if (['modpow', 'gcdlcm', 'remainderSystem', 'pathcount', 'handshake', 'arrange', 'inclusion', 'clockangle', 'trapezoid', 'seqnext', 'pigeon', 'workrate', 'mixture', 'lastdigit', 'gridrect', 'polygonsum', 'train'].indexOf(p.type) !== -1) {
       return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
     }
     if (p.type === 'quadsolve') return 120;
@@ -5059,10 +5226,13 @@
     return 0;
   }
 
-  function quizStars(percent) {
-    if (percent >= 0.95) return 3;
-    if (percent >= 0.8) return 2;
-    if (percent >= 0.6) return 1;
+  /* pass 預設 0.8（舊行為）：2 星 = 及格、3 星 = ≥95%、1 星 = ≥75% 及格線。
+   * 每個技能可用 mastery.quizPass 覆寫及格線（以前是死設定）。 */
+  function quizStars(percent, pass) {
+    var threshold = (typeof pass === 'number' && pass > 0 && pass <= 1) ? pass : 0.8;
+    if (percent >= Math.min(0.95, threshold + 0.15)) return 3;
+    if (percent >= threshold) return 2;
+    if (percent >= threshold * 0.75) return 1;
     return 0;
   }
 
@@ -5076,14 +5246,16 @@
     return { practiceStars: pStars, quizStars: qStars, stars: stars, mastered: mastered, practice: practice };
   }
 
-  function applyResult(progress, skill, problem, correct) {
+  function applyResult(progress, skill, problem, correct, opts) {
+    opts = opts || {};
     if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
     var sp = progress.skills[skill.id];
     sp.attempts += 1;
     sp.lastSeen = Date.now();
     var acc = sp.typeAcc[problem.type] || { a: 0, c: 0 };
     acc.a += 1;
-    if (correct) {
+    var credit = opts.credit !== false;
+    if (correct && credit) {
       acc.c += 1;
       sp.correct += 1;
       sp.consecCorrect += 1;
@@ -5092,6 +5264,9 @@
         sp.difficultyStep += 1;
         sp.consecCorrect = 0;
       }
+    } else if (correct) {
+      /* 重試後答對：只記一次嘗試，不計掌握度、不推高難度（first-attempt-only 練習計分） */
+      sp.consecCorrect = 0;
     } else {
       sp.consecWrong += 1;
       sp.consecCorrect = 0;
@@ -5114,7 +5289,8 @@
   function applyQuizResult(progress, skill, percent) {
     if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
     var sp = progress.skills[skill.id];
-    var qs = quizStars(percent);
+    var pass = (skill.mastery && skill.mastery.quizPass) || 0.8;
+    var qs = quizStars(percent, pass);
     sp.quizStars = Math.max(sp.quizStars || 0, qs);
     sp.quizBest = Math.max(sp.quizBest || 0, Math.round(percent * 100));
     var st = masteryStatus(progress, skill);
@@ -5123,11 +5299,11 @@
     return progress;
   }
 
-  function gradeQuiz(results) {
+  function gradeQuiz(results, pass) {
     var correct = 0, total = results.length;
     results.forEach(function (r) { if (r.correct) correct++; });
     var percent = total ? correct / total : 0;
-    return { correct: correct, total: total, percent: percent, stars: quizStars(percent) };
+    return { correct: correct, total: total, percent: percent, stars: quizStars(percent, pass) };
   }
 
   /* ---------------- 自適應選題 ---------------- */

@@ -30,7 +30,7 @@
     practice: {
       title: '練習', progress: '進度', question: '第 {i} / {n} 題',
       hint: '提示', next: '下一題', done: '完成練習',
-      submit: '提交答案', enterAnswer: '請先輸入答案', answerWas: '正確答案是 {answer}。',
+      submit: '提交答案', enterAnswer: '請先輸入答案', answerWas: '正確答案是 {answer}。', correctRetry: '答對了！下次試著第一次就答對，就能計分。',
       answerHint: '輸入數字或分數（例如 12、3/4），按 Enter 提交。',
       correct: ['太棒了！', '真厲害！', '答對啦！', '好樣的！', '真聰明！'],
       wrong: ['再試一次', '差一點', '再想一想'],
@@ -169,7 +169,7 @@
     practice: {
       title: 'Practice', progress: 'Progress', question: 'Question {i} / {n}',
       hint: 'Hint', next: 'Next', done: 'Finish Practice',
-      submit: 'Submit', enterAnswer: 'Please enter an answer first', answerWas: 'The correct answer is {answer}.',
+      submit: 'Submit', enterAnswer: 'Please enter an answer first', answerWas: 'The correct answer is {answer}.', correctRetry: 'Correct! Try to get it right first time next round to earn credit.',
       answerHint: 'Type a number or fraction (e.g. 12, 3/4) and press Enter.',
       correct: ['Great job!', 'Awesome!', 'Correct!', 'Well done!', 'Smart!'],
       wrong: ['Try again', 'Almost', 'Think again'],

@@ -961,10 +961,11 @@
       zh: { name: '數論挑戰', goal: '用餘數、因數倍數與同餘解決競賽數論題。' },
       en: { name: 'Number Theory Challenge', goal: 'Use remainders, factors and congruences to solve olympiad-style number theory.' },
       lesson: 'challenge.nt',
-      types: ['modpow', 'gcdlcm', 'remainderSystem'],
+      types: ['modpow', 'gcdlcm', 'remainderSystem', 'lastdigit'],
       levels: [
         { maxBase: 6, maxExp: 3, maxMod: 10, maxNum: 24 , input: true },
-        { maxBase: 9, maxExp: 5, maxMod: 13, maxNum: 36 , input: true }
+        { maxBase: 9, maxExp: 5, maxMod: 13, maxNum: 36 , input: true },
+        { maxBase: 9, maxExp: 9, maxMod: 19, maxNum: 60, input: true }
       ],
       mastery: { practice: 8, quizPass: 0.8 }
     },
@@ -973,10 +974,11 @@
       zh: { name: '組合計數', goal: '用排列組合、路徑數與容斥原理計數。' },
       en: { name: 'Counting Challenge', goal: 'Count with permutations, paths and inclusion–exclusion.' },
       lesson: 'challenge.count',
-      types: ['pathcount', 'handshake', 'arrange', 'inclusion'],
+      types: ['pathcount', 'handshake', 'arrange', 'inclusion', 'gridrect'],
       levels: [
         { maxSteps: 5, maxPeople: 20, maxNum: 120 , input: true },
-        { maxSteps: 6, maxPeople: 30, maxNum: 200 , input: true }
+        { maxSteps: 6, maxPeople: 30, maxNum: 200 , input: true },
+        { maxSteps: 7, maxPeople: 40, maxNum: 300, maxDim: 8, input: true }
       ],
       mastery: { practice: 8, quizPass: 0.8 }
     },
@@ -985,8 +987,8 @@
       zh: { name: '幾何與時間', goal: '計算時針分針夾角與梯形面積等競賽幾何題。' },
       en: { name: 'Geometry & Time Challenge', goal: 'Work out clock-hand angles and trapezium areas.' },
       lesson: 'challenge.geo',
-      types: ['clockangle', 'trapezoid'],
-      levels: [{ maxSide: 10, maxHeight: 8 , input: true }, { maxSide: 12, maxHeight: 10 , input: true }],
+      types: ['clockangle', 'trapezoid', 'polygonsum'],
+      levels: [{ maxSide: 10, maxHeight: 8 , input: true }, { maxSide: 12, maxHeight: 10 , input: true }, { maxSide: 15, maxHeight: 12, input: true }],
       mastery: { practice: 8, quizPass: 0.8 }
     },
     'challenge.logic': {
@@ -995,7 +997,7 @@
       en: { name: 'Logic & Patterns Challenge', goal: 'Crack number patterns and reason with the pigeonhole principle.' },
       lesson: 'challenge.logic',
       types: ['seqnext', 'pigeon'],
-      levels: [{ maxColors: 4, maxSame: 3 , input: true }, { maxColors: 5, maxSame: 4 , input: true }],
+      levels: [{ maxColors: 4, maxSame: 3 , input: true }, { maxColors: 5, maxSame: 4 , input: true }, { maxColors: 6, maxSame: 5, input: true }],
       mastery: { practice: 8, quizPass: 0.8 }
     },
     'challenge.algebra': {
@@ -1003,8 +1005,8 @@
       zh: { name: '代數與應用', goal: '解決工程合作與混合濃度等多步應用題。' },
       en: { name: 'Algebra & Applied Challenge', goal: 'Solve multi-step work-rate and mixture problems.' },
       lesson: 'challenge.algebra',
-      types: ['workrate', 'mixture'],
-      levels: [{ input: true }, { input: true }],
+      types: ['workrate', 'mixture', 'train'],
+      levels: [{ input: true }, { input: true }, { input: true }],
       mastery: { practice: 8, quizPass: 0.8 }
     },
     'challenge.prob': {
@@ -1012,8 +1014,8 @@
       zh: { name: '概率遊戲', goal: '計算骰子點數和與硬幣正面的古典概率。' },
       en: { name: 'Probability Games', goal: 'Compute dice-sum and coin-toss classical probabilities.' },
       lesson: 'challenge.prob',
-      types: ['diceprob', 'coinprob'],
-      levels: [{ input: true }, { input: true }],
+      types: ['diceprob', 'coinprob', 'dicecompare'],
+      levels: [{ input: true }, { input: true }, { input: true }],
       mastery: { practice: 8, quizPass: 0.8 }
     }
   };
