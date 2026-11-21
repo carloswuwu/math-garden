@@ -5,7 +5,9 @@ rem  雙擊此文件即可，無需聯網。
 rem ============================================================
 setlocal
 
-set "GAME=%~dp0index.html"
+rem 優先使用建置後的 dist（單一 bundle + 生成的 SW）；沒有 dist 時退回開發用 index.html
+set "GAME=%~dp0dist\index.html"
+if not exist "%GAME%" set "GAME=%~dp0index.html"
 if not exist "%GAME%" (
   echo [數學樂園] 找不到應用文件：
   echo %GAME%

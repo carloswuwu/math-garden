@@ -62,6 +62,12 @@
 
     formulas: { title: '公式一覽' },
 
+    update: {
+      available: '有新版本',
+      reload: '重新載入',
+      hint: '更新到最新版本（會重新載入頁面）'
+    },
+
     error: {
       title: '這個畫面暫時打不開',
       body: '別擔心，你的學習進度仍然安全。可以先匯出進度作備份，再回到首頁。',
@@ -135,6 +141,12 @@
     outline: { title: 'Curriculum Outline', covered: 'covered in this app' },
 
     formulas: { title: 'Formula Sheet' },
+
+    update: {
+      available: 'New version',
+      reload: 'Reload',
+      hint: 'Update to the latest version (the page will reload)'
+    },
 
     error: {
       title: 'This screen could not be shown',

@@ -2186,18 +2186,57 @@
     $('backBtn').addEventListener('click', back);
     $('langBtn').addEventListener('click', toggleLang);
     $('settingsBtn').addEventListener('click', function () { navigate({ screen: 'settings' }); });
+    var chip = $('updateChip');
+    if (chip) chip.addEventListener('click', acceptUpdate);
   }
 
-  /* 註冊 Service Worker（僅在 http/https 下，供離線與安裝成 App） */
+  /* 註冊 Service Worker（僅在 http/https 下，供離線與安裝成 App）。
+   * 更新策略：不自動重新載入；偵測到 waiting worker 時顯示「新版本」chip，
+   * 使用者按下才送 SKIP_WAITING（sw.js 收到後 skipWaiting），controllerchange 才 reload。 */
+  var updateState = { worker: null, accepted: false };
+
+  function showUpdateChip(waiting) {
+    updateState.worker = waiting || null;
+    var chip = $('updateChip');
+    if (!chip) return;
+    chip.textContent = '🔄 ' + t('update.available') + ' · ' + t('update.reload');
+    chip.title = t('update.hint');
+    chip.hidden = false;
+  }
+
+  function acceptUpdate() {
+    var chip = $('updateChip');
+    if (chip) chip.hidden = true;
+    var worker = updateState.worker;
+    if (worker && typeof worker.postMessage === 'function') {
+      updateState.accepted = true;
+      worker.postMessage({ type: 'SKIP_WAITING' });
+      return;
+    }
+    try { window.location.reload(); } catch (e) { /* 忽略 */ }
+  }
+
   function registerSW() {
     if (!('serviceWorker' in navigator)) return;
     if (location.protocol !== 'http:' && location.protocol !== 'https:') return;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (updateState.accepted) {
+        try { window.location.reload(); } catch (e) { /* 忽略 */ }
+      }
+    });
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').then(function (reg) {
+        if (reg.waiting && navigator.serviceWorker.controller) showUpdateChip(reg.waiting);
+        reg.addEventListener('updatefound', function () {
+          var installing = reg.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', function () {
+            if (installing.state !== 'installed') return;
+            if (navigator.serviceWorker.controller) showUpdateChip(reg.waiting || installing);
+          });
+        });
         reg.update().catch(function () { /* 忽略 */ });
       }).catch(function () { /* 忽略 */ });
-      /* 不再在 controllerchange 時自動重新載入：更新可能在測驗中途發生，
-       * 交由下一次導航（網路優先）或設定頁的「強制更新」處理。 */
     });
   }
 
@@ -2265,6 +2304,8 @@
     parentOf: parentOf,
     currentRoute: currentRoute,
     navigate: navigate,
+    showUpdateChip: showUpdateChip,
+    acceptUpdate: acceptUpdate,
     session: {
       key: SESSION_KEY,
       read: readSession,

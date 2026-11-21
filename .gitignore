@@ -1,4 +1,5 @@
 tests/node_modules/
+/node_modules/
 tests/_dump.html
 tests/_dump.err
 tests/.edge-profile*/

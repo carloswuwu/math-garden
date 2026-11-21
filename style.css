@@ -696,6 +696,23 @@ h1, h2, h3, p { margin: 0; }
 .color-choice { flex-direction: row; gap: 10px; justify-content: center; }
 .big-num { font-family: var(--font-display); font-size: 46px; font-weight: 800; }
 
+/* ---------- 新版本提示（Service Worker waiting） ---------- */
+.update-chip {
+  position: fixed;
+  top: 62px; left: 50%; transform: translateX(-50%) rotate(-0.6deg);
+  z-index: 55;
+  padding: 10px 16px;
+  border: 2.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--yellow);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 14px; font-weight: 800;
+  box-shadow: 0 4px 0 rgba(51, 46, 38, 0.55);
+  white-space: nowrap;
+}
+.update-chip:hover { filter: brightness(1.05); }
+
 /* ---------- 繼續上次（首頁 Continue 卡） ---------- */
 .continue-card {
   display: flex; align-items: center; gap: 14px;

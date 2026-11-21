@@ -13,6 +13,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Install build dependencies
+        run: npm ci
+      - name: Build dist
+        run: npm run build
+      - name: Verify committed dist is current
+        run: |
+          if [ -n "$(git status --porcelain -- dist)" ]; then
+            echo "::error::dist/ is out of date — run 'npm run build' and commit the result."
+            git status --porcelain -- dist
+            exit 1
+          fi
       - name: Install test dependencies
         run: npm ci --prefix tests
       - name: Engine property tests
@@ -21,5 +32,5 @@ jobs:
         run: node tests/ui.test.js
       - name: Generator / content contract tests
         run: node tests/generators.test.js
-      - name: Cross-layer contract tests (MATH_SPEC, assets, i18n, solvers, formulas)
+      - name: Cross-layer contract tests (MATH_SPEC, assets, i18n, solvers, formulas, dist)
         run: node tests/contract.test.js

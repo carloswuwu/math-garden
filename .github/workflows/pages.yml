@@ -1,0 +1,61 @@
+name: pages
+
+# 把建置後的 dist/ 發佈到 GitHub Pages。
+#
+# 注意：repo Settings → Pages → Build and deployment → Source 必須是
+# 「GitHub Actions」，這個 workflow 才會實際部署；若仍是「Deploy from a branch」
+# （舊設定），偵測步驟會發出 warning 並跳過部署，分支部署會繼續服務 repo 根目錄。
+# 這是一次性的人工設定，程式碼無法代為切換。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install build dependencies
+        run: npm ci
+      - name: Build dist
+        run: npm run build
+      - name: Detect Pages source
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          build_type=$(gh api "repos/${{ github.repository }}/pages" --jq '.build_type' 2>/dev/null)
+          set -e
+          echo "build_type=${build_type:-none}" >> "$GITHUB_OUTPUT"
+          if [ "${build_type:-none}" != "workflow" ]; then
+            echo "::warning::Pages source is '${build_type:-none}', not 'GitHub Actions'. Skipping dist deploy; set Settings → Pages → Source to 'GitHub Actions' to publish dist/."
+          fi
+      - name: Configure Pages
+        if: steps.detect.outputs.build_type == 'workflow'
+        uses: actions/configure-pages@v5
+      - name: Upload dist artifact
+        if: steps.detect.outputs.build_type == 'workflow'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Deploy to GitHub Pages
+        if: steps.detect.outputs.build_type == 'workflow'
+        id: deployment
+        uses: actions/deploy-pages@v4
