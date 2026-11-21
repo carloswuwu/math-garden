@@ -38,7 +38,10 @@
     results: [],
     locked: false,
     hintShown: false,
-    quizStart: 0
+    quizStart: 0,
+    /* 進行中題組：{ mode, key }；只在真正開始/恢復題組時設定，離開作答畫面即清除。
+     * 不能只用 state.mode/state.skillId 判斷，因為 renderLesson 會更新 skillId。 */
+    run: null
   };
 
   var progress = loadProgress();
@@ -200,6 +203,7 @@
     state.quizStart = s.quizStart || Date.now();
     state.locked = false;
     state.hintShown = false;
+    state.run = { mode: parsed.screen, key: parsed.screen === 'exam' ? parsed.stageId : parsed.skillId };
     renderQuestion(state.problems[state.index]);
     show('practice');
     saveSession(); // 刷新 savedAt：繼續學習後再給 24 小時
@@ -1069,6 +1073,7 @@
    * 更新頂欄、把焦點移到畫面標題，並透過 #announcer 宣告。 */
   function show(screen) {
     state.screen = screen;
+    if (screen !== 'practice') state.run = null;
     screens.forEach(function (s) { $('screen-' + s).hidden = (s !== screen); });
     try { window.scrollTo(0, 0); } catch (e) { /* jsdom 無此實現 */ }
     updateTopbar();
@@ -1172,8 +1177,7 @@
   function renderAssessmentRoute(route) {
     var mode = route.screen;
     var key = mode === 'exam' ? route.stageId : route.skillId;
-    var currentKey = mode === 'exam' ? state.examStage : state.skillId;
-    var sameRun = state.mode === mode && currentKey === key && state.problems.length > 0;
+    var sameRun = !!(state.run && state.run.mode === mode && state.run.key === key && state.problems.length > 0);
     if (sameRun && state.index >= state.problems.length) {
       // 已完成的題組：保留結果卡（從別的畫面 Back 回來時只切換顯示）
       if (state.screen !== 'practice') show('practice');
@@ -1467,6 +1471,7 @@
     state.quizStart = 0;
     state.locked = false;
     state.hintShown = false;
+    state.run = { mode: 'practice', key: skillId };
     nextPracticeProblem();
     show('practice');
     saveSession();
@@ -1496,6 +1501,7 @@
     state.locked = false;
     state.hintShown = false;
     state.quizStart = Date.now();
+    state.run = { mode: 'quiz', key: skillId };
     renderQuestion(state.problems[0]);
     show('practice');
     saveSession();
@@ -1915,6 +1921,7 @@
     state.locked = false;
     state.hintShown = false;
     state.quizStart = Date.now();
+    state.run = { mode: 'exam', key: stageId };
     if (!state.problems.length) { toast(t('exam.empty')); renderStage(stageId); return; }
     renderQuestion(state.problems[0]);
     show('practice');
