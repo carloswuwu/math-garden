@@ -2,6 +2,7 @@ tests/node_modules/
 tests/_dump.html
 tests/_dump.err
 tests/.edge-profile*/
+tests/_shots/
 
 # CodeGraph local index (machine-specific, not for committing)
 .codegraph/

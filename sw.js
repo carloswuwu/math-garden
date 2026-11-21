@@ -1,7 +1,7 @@
 /* Service Worker：離線快取
  * 策略：網路優先（network-first）——上線時永遠取得最新版本；
  *       離線時自動退回快取。快取版本號每次更新時遞增，舊快取會被清除。 */
-const CACHE = 'math-garden-v5';
+const CACHE = 'math-garden-v6';
 const ASSETS = [
   './',
   './index.html',
