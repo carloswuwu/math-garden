@@ -14,6 +14,7 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+const zlib = require('zlib');
 const M = require('../math-core.js');
 
 const ROOT = path.join(__dirname, '..');
@@ -262,6 +263,67 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
 
   /* 被公式標記的技能至少出現在一個「同類題型」的項目分區（基本健全性） */
   check([...tagged].every((id) => !!C.skills[id]), '公式技能標記全部有效');
+})();
+
+/* ---------------- 6. 建置產物：dist 自我一致（hash、SW 清單、體積） ---------------- */
+(() => {
+  const DIST = path.join(ROOT, 'dist');
+  check(fs.existsSync(path.join(DIST, 'index.html')), 'dist/index.html 不存在（先執行 npm run build）');
+  if (!fs.existsSync(path.join(DIST, 'index.html'))) return;
+
+  const distIndex = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
+  const buildMeta = (distIndex.match(/name="math-garden-build" content="([0-9a-f]+)"/) || [])[1];
+  check(/^[0-9a-f]{12}$/.test(buildMeta || ''), 'dist/index.html 應帶 12 位 build hash meta');
+  const appRef = (distIndex.match(/src="(app\.[0-9a-f]+\.js)"/) || [])[1];
+  check(!!appRef, 'dist/index.html 應引用 hashed bundle');
+  check(appRef === 'app.' + buildMeta + '.js', 'bundle 檔名必須等於 app.<buildHash>.js');
+  check(fs.existsSync(path.join(DIST, appRef)), 'hashed bundle 不存在：' + appRef);
+  check(distIndex.indexOf('src="math-core.js"') === -1 && distIndex.indexOf('src="app.js"') === -1,
+    'dist/index.html 不應再引用未打包的源碼');
+  check(distIndex.indexOf('vendor/katex/katex.min.js') !== -1, 'dist 應保留 KaTeX classic script');
+
+  const distRefs = [...distIndex.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1]);
+  distRefs.forEach((ref) => {
+    if (ref.startsWith('#') || ref.startsWith('data:')) return;
+    check(!/^(?:[a-z]+:|\/\/|\/)/i.test(ref), 'dist 資源引用必須相對：' + ref);
+    check(fs.existsSync(path.join(DIST, ref)), 'dist 缺少被引用的檔案：' + ref);
+  });
+
+  const swSrc = fs.readFileSync(path.join(DIST, 'sw.js'), 'utf8');
+  const cacheName = (swSrc.match(/const CACHE = '([^']+)'/) || [])[1];
+  check(cacheName === 'math-garden-' + buildMeta, 'SW cache 版本應由 build hash 產生，實際 ' + cacheName);
+  const assetsBlock = (swSrc.match(/const ASSETS = \[([\s\S]*?)\];/) || [])[1] || '';
+  const precache = [...assetsBlock.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  check(precache.length >= 25, 'SW precache 應有 25+ 項，實際 ' + precache.length);
+  check(new Set(precache).size === precache.length, 'SW precache 不應重複');
+  const runtimeFiles = [];
+  (function walk(dir) {
+    fs.readdirSync(dir, { withFileTypes: true }).forEach((entry) => {
+      const abs = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(abs);
+      else runtimeFiles.push(path.relative(DIST, abs).split(path.sep).join('/'));
+    });
+  })(DIST);
+  const expectedPrecache = runtimeFiles.filter((f) => f !== 'sw.js' && f !== '.nojekyll').sort();
+  const precacheRel = precache.map((a) => a.replace(/^\.\//, ''));
+  check(JSON.stringify(precacheRel) === JSON.stringify(expectedPrecache),
+    'SW precache 清單應與 dist 實際檔案一致且排序（漏了：' +
+    expectedPrecache.filter((f) => precacheRel.indexOf(f) === -1).join(', ') +
+    '；多了：' + precacheRel.filter((f) => expectedPrecache.indexOf(f) === -1).join(', ') + '）');
+  check(precache.every((a) => a.startsWith('./')), 'SW precache 必須是相對路徑');
+  const fontAssets = precache.filter((a) => a.indexOf('fonts/') !== -1);
+  check(fontAssets.length === 20, '應 precache 20 個 woff2 字型，實際 ' + fontAssets.length);
+  check(fontAssets.every((a) => a.endsWith('.woff2')), '字型 precache 只保留 woff2');
+  check(swSrc.indexOf("e.data.type === 'SKIP_WAITING'") !== -1, 'SW 應支援 SKIP_WAITING 訊息');
+  check(swSrc.indexOf('Promise.allSettled') !== -1, 'SW 安裝應使用 Promise.allSettled');
+  check(swSrc.indexOf("caches.match('./index.html')") !== -1, 'SW 導覽失敗應回退快取外殼');
+  check(swSrc.indexOf('Response.error()') !== -1, '非導覽資源 miss 應回傳錯誤而非 HTML');
+  const installBlock = (swSrc.match(/addEventListener\('install',[\s\S]*?\}\);/g) || []).join('');
+  check(installBlock.indexOf('self.skipWaiting()') === -1, '安裝時不應自動 skipWaiting（更新要等使用者確認）');
+
+  /* 體積：advisory 上限 120 KB gzip */
+  const gzipBytes = zlib.gzipSync(fs.readFileSync(path.join(DIST, appRef))).length;
+  check(gzipBytes <= 120 * 1024, 'bundle gzip 應 ≤ 120 KB，實際 ' + (gzipBytes / 1024).toFixed(1) + ' KB');
 })();
 
 console.log('✓ 契約測試全部通過（' + checks + ' 項斷言，' + skills.length + ' 個技能）');

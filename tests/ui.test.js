@@ -485,6 +485,41 @@ async function main() {
   check(dI.documentElement.getAttribute('lang') === 'en', '導入後 <html lang> 同步為英文');
   check(dI.getElementById('modal').hidden, '導入成功後關閉對話框');
 
+  /* 29. 新版本 chip：只在有 waiting worker 時顯示，確認後送 SKIP_WAITING */
+  const ctxU = boot();
+  const dU = ctxU.d, wU = ctxU.w;
+  const chipU = dU.getElementById('updateChip');
+  check(!!chipU && chipU.hidden, '更新 chip 預設隱藏');
+  const postedMessages = [];
+  wU.__mathApp.showUpdateChip({ postMessage: function (msg) { postedMessages.push(msg); } });
+  check(!chipU.hidden && chipU.textContent.includes('新版本'), '有 waiting worker 時顯示新版本 chip');
+  check(chipU.title.length > 0, '更新 chip 有 title 說明');
+  chipU.click();
+  check(postedMessages.length === 1 && postedMessages[0].type === 'SKIP_WAITING', '確認更新送出 SKIP_WAITING');
+  check(chipU.hidden, '確認後 chip 收起');
+
+  /* 30. dist 建置冒煙：成品只用 KaTeX + 單一 app bundle，全局與路由仍可用 */
+  const distIndexPath = path.join(ROOT, 'dist', 'index.html');
+  if (!fs.existsSync(distIndexPath)) {
+    console.log('… 跳過 dist 冒煙測試（先執行 npm run build）');
+  } else {
+    const distHtml = fs.readFileSync(distIndexPath, 'utf8');
+    const distDom = new JSDOM(distHtml, { runScripts: 'dangerously', url: 'http://localhost/' });
+    const dw = distDom.window;
+    dw.scrollTo = function () {};
+    const scriptRefs = [...distHtml.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
+    check(scriptRefs.length === 2, 'dist index 應只有 KaTeX 與單一 app bundle 兩個 script');
+    scriptRefs.forEach((src) => {
+      dw.eval(fs.readFileSync(path.join(ROOT, 'dist', src), 'utf8'));
+    });
+    const dd = dw.document;
+    check(!!dw.__mathApp && !!dw.MathCore && !!dw.Curriculum && !!dw.Lessons, 'dist bundle 提供全部全局');
+    check(dd.querySelectorAll('#screen-home .stage-card').length === 1, 'dist bundle 能渲染首頁');
+    dw.__mathApp.navigate({ screen: 'stage', stageId: 'prek' });
+    check(!dd.getElementById('screen-stage').hidden, 'dist bundle 的路由可用');
+    check(!!dd.getElementById('updateChip'), 'dist index 帶更新 chip');
+  }
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }
