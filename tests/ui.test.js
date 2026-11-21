@@ -13,11 +13,13 @@ let checks = 0;
 function check(cond, msg) { checks++; assert.ok(cond, msg); }
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
-function boot(seedProgress) {
-  const dom = new JSDOM(HTML, { runScripts: 'dangerously', url: 'http://localhost/' });
+function boot(seedProgress, opts) {
+  opts = opts || {};
+  const dom = new JSDOM(HTML, { runScripts: 'dangerously', url: opts.url || 'http://localhost/' });
   const w = dom.window;
   w.scrollTo = function () {}; // jsdom 未實現，樁掉
   if (seedProgress) w.localStorage.setItem('mathpath.progress.v1', seedProgress);
+  if (opts.session) w.sessionStorage.setItem('mathpath.session.v1', opts.session);
   SCRIPTS.forEach((f) => w.eval(fs.readFileSync(path.join(ROOT, f), 'utf8')));
   return { dom, w, d: w.document };
 }
@@ -300,6 +302,169 @@ async function main() {
   check(dL.documentElement.getAttribute('lang') === 'zh-Hant-HK', '切回中文後 <html lang> 還原');
   const ctxLe = boot(JSON.stringify({ version: 2, lang: 'en', sound: false, theme: 'light' }));
   check(ctxLe.d.documentElement.getAttribute('lang') === 'en', '載入英文存檔時 <html lang="en">');
+
+  /* 19. 路由純函數：parseHash / serializeRoute / parentOf 往返一致 */
+  const ctxR = boot();
+  const appR = ctxR.w.__mathApp;
+  const json = (v) => JSON.stringify(v);
+  const routes = [
+    ['#/home', { screen: 'home' }],
+    ['#/stage/prek', { screen: 'stage', stageId: 'prek' }],
+    ['#/exam/prek', { screen: 'exam', stageId: 'prek' }],
+    ['#/lesson/prek.count', { screen: 'lesson', skillId: 'prek.count' }],
+    ['#/practice/prek.count', { screen: 'practice', skillId: 'prek.count' }],
+    ['#/quiz/prek.count', { screen: 'quiz', skillId: 'prek.count' }],
+    ['#/parent', { screen: 'parent' }],
+    ['#/settings', { screen: 'settings' }],
+    ['#/outline', { screen: 'outline' }],
+    ['#/formulas', { screen: 'formulas' }]
+  ];
+  routes.forEach(([hash, route]) => {
+    check(json(appR.parseHash(hash)) === json(route), 'parseHash ' + hash);
+    check(appR.serializeRoute(route) === hash, 'serializeRoute ' + hash);
+    check(json(appR.parseHash(appR.serializeRoute(route))) === json(route), 'route 往返一致 ' + hash);
+  });
+  ['', '#', '#/', '#main', '#/bogus', '#/stage', '#/stage/nope/extra', '#/lesson/', '#/parent/1', '#/home?x=1'].forEach((h) => {
+    check(appR.parseHash(h) === null, '非法 hash 應回傳 null：' + JSON.stringify(h));
+  });
+  check(json(appR.parentOf({ screen: 'lesson', skillId: 'prek.count' })) === json({ screen: 'stage', stageId: 'prek' }), 'lesson 的父層是 stage');
+  check(json(appR.parentOf({ screen: 'practice', skillId: 'prek.count' })) === json({ screen: 'lesson', skillId: 'prek.count' }), 'practice 的父層是 lesson');
+  check(json(appR.parentOf({ screen: 'exam', stageId: 'prek' })) === json({ screen: 'stage', stageId: 'prek' }), 'exam 的父層是 stage');
+  check(appR.parentOf({ screen: 'home' }) === null, 'home 沒有父層');
+
+  /* 20. 失效 / 未解鎖 deep link：改寫成合法 route 再渲染 */
+  const g1Boot = boot(null, { url: 'http://localhost/#/stage/g1' });
+  check(!g1Boot.d.getElementById('screen-home').hidden, '未解鎖階段的 deep link 應回到首頁');
+  check(g1Boot.w.location.hash === '#/home', '未解鎖階段 hash 被替換為 #/home');
+  const lockedSkillBoot = boot(null, { url: 'http://localhost/#/lesson/prek.compare' });
+  check(!lockedSkillBoot.d.getElementById('screen-stage').hidden, '未解鎖技能的 deep link 應回到所屬階段');
+  check(lockedSkillBoot.w.location.hash === '#/stage/prek', '未解鎖技能 hash 被替換為 #/stage/prek');
+  const bogusBoot = boot(null, { url: 'http://localhost/#/nonsense' });
+  check(!bogusBoot.d.getElementById('screen-home').hidden, '未知 route 應回到首頁');
+  check(bogusBoot.w.location.hash === '#/home', '未知 route hash 被替換為 #/home');
+  const quizBoot = boot(null, { url: 'http://localhost/#/quiz/prek.count' });
+  check(!quizBoot.d.getElementById('screen-practice').hidden, '合法 quiz deep link 直接開始測驗');
+  check(quizBoot.w.__mathApp.getState().problems.length === 10, 'deep link 測驗應有 10 題');
+  check(quizBoot.w.location.hash === '#/quiz/prek.count', '合法 quiz hash 保持不變');
+  const lessonBoot = boot(null, { url: 'http://localhost/#/lesson/prek.count' });
+  check(!lessonBoot.d.getElementById('screen-lesson').hidden, '合法 lesson deep link 進入小課堂');
+
+  /* 21. show() 是焦點/宣告的唯一入口；Back / Forward 可回到前一畫面 */
+  const ctxB = boot();
+  const wB = ctxB.w, dB = ctxB.d;
+  dB.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  check(wB.location.hash === '#/stage/prek', '進入階段後 hash 同步');
+  const stageHeading = dB.querySelector('#screen-stage h1.page-title');
+  check(!!stageHeading && dB.activeElement === stageHeading, '導航後焦點移到畫面標題');
+  check((dB.getElementById('announcer').textContent || '').length > 0, '導航後 live region 宣告畫面標題');
+  dB.querySelector('#screen-stage .skill-card[data-skill="prek.count"]').click();
+  check(wB.location.hash === '#/lesson/prek.count', '進入小課堂後 hash 同步');
+  wB.history.back();
+  await sleep(100);
+  check(wB.location.hash === '#/stage/prek', 'Back 回到 stage 的 hash');
+  check(!dB.getElementById('screen-stage').hidden && dB.getElementById('screen-lesson').hidden, 'Back 回到階段畫面');
+  check(dB.activeElement === dB.querySelector('#screen-stage h1.page-title'), 'Back 後焦點仍在標題');
+  wB.history.forward();
+  await sleep(100);
+  check(wB.location.hash === '#/lesson/prek.count', 'Forward 回到 lesson 的 hash');
+  check(!dB.getElementById('screen-lesson').hidden, 'Forward 回到小課堂畫面');
+
+  /* 22. 測驗中途重新載入：同題、同進度、同結果 */
+  const ctxQ = boot();
+  const wQ = ctxQ.w, dQ = ctxQ.d;
+  dQ.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  dQ.querySelector('#screen-stage .skill-card[data-skill="prek.count"]').click();
+  dQ.getElementById('lessonQuiz').click();
+  const qp0 = wQ.__mathApp.currentProblem();
+  const qCorrect0 = Array.from(dQ.querySelectorAll('#screen-practice .choice'))
+    .find((b) => b.getAttribute('data-key') === wQ.MathCore.valueKey(qp0.answer));
+  qCorrect0.click();
+  await sleep(1200);
+  const stQ1 = wQ.__mathApp.getState();
+  check(stQ1.index === 1 && stQ1.results.length === 1, '測驗答對第一題後前進到第 2 題');
+  const savedSession = wQ.sessionStorage.getItem('mathpath.session.v1');
+  check(!!savedSession, '測驗進行中已寫入 sessionStorage');
+  const sessionObj = JSON.parse(savedSession);
+  check(sessionObj.v === 1 && sessionObj.mode === 'quiz', 'session 具備版本與模式');
+  check(sessionObj.route === '#/quiz/prek.count', 'session 記錄 quiz route');
+  check(sessionObj.index === 1 && sessionObj.problems.length === 10, 'session 記錄題號與 10 道題');
+  const sigQ2 = stQ1.problems[1].sig;
+  const reloadQ = boot(null, { url: 'http://localhost/#/quiz/prek.count', session: savedSession });
+  const wQ2 = reloadQ.w, dQ2 = reloadQ.d;
+  const stQ2 = wQ2.__mathApp.getState();
+  check(stQ2.screen === 'practice' && stQ2.mode === 'quiz', '重新載入後回到測驗畫面');
+  check(stQ2.index === 1, '重新載入後停在同一題號');
+  check(stQ2.problems[1].sig === sigQ2, '重新載入後是同一道題');
+  check(stQ2.results.length === 1, '重新載入後保留已答結果');
+  check(dQ2.body.textContent.includes('2 /'), '重新載入後渲染第 2 題');
+  check(!dQ2.getElementById('screen-practice').hidden, '重新載入後作答畫面可見');
+  const progressQ = wQ.__mathApp.getProgress();
+  check(progressQ.version === 2, '進度 schema 版本不變（v2）');
+  check(!('route' in progressQ) && !('session' in progressQ) && !('screen' in progressQ), 'progress schema 沒有加入任何路由/session 狀態');
+
+  /* 23. 首頁 Continue 卡：恢復未完成的測驗 */
+  const ctxC = boot(null, { session: savedSession });
+  const dC = ctxC.d, wC = ctxC.w;
+  const continueBtn = dC.getElementById('homeContinue');
+  check(!!continueBtn, '首頁顯示 Continue 卡');
+  check(continueBtn.textContent.includes('繼續'), 'Continue 卡有「繼續」文案');
+  continueBtn.click();
+  const stC = wC.__mathApp.getState();
+  check(stC.screen === 'practice' && stC.mode === 'quiz' && stC.index === 1, 'Continue 卡恢復到第 2 題');
+  check(wC.location.hash === '#/quiz/prek.count', 'Continue 卡同步 quiz route');
+  check(!!dC.querySelector('#screen-practice .choice'), 'Continue 卡恢復後可繼續作答');
+
+  /* 24. session 驗證：過期、題目被竄改都不會自動恢復 */
+  const expired = JSON.parse(savedSession);
+  expired.savedAt = Date.now() - 25 * 60 * 60 * 1000;
+  const ctxExpired = boot(null, { session: JSON.stringify(expired) });
+  check(!ctxExpired.d.getElementById('homeContinue'), '過期 session 不顯示 Continue 卡');
+  const tampered = JSON.parse(savedSession);
+  tampered.problems[0].choices = null; // 結構被破壞：checkAnswer 無法驗證，整份 session 作廢
+  const ctxTampered = boot(null, { url: 'http://localhost/#/quiz/prek.count', session: JSON.stringify(tampered) });
+  const stTampered = ctxTampered.w.__mathApp.getState();
+  check(Array.isArray(stTampered.problems[0].choices), '結構損壞的 session 題目不會被採用');
+  check(stTampered.index === 0 && stTampered.results.length === 0, '損壞 session 後改為開始新測驗');
+
+  /* 25. 練習也可恢復：下一題後重新載入仍是同一道題 */
+  const ctxP = boot();
+  const wP = ctxP.w, dP = ctxP.d;
+  dP.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  dP.querySelector('#screen-stage .skill-card[data-skill="prek.count"]').click();
+  dP.getElementById('lessonPractice').click();
+  const pp0 = wP.__mathApp.currentProblem();
+  const pCorrect0 = Array.from(dP.querySelectorAll('#screen-practice .choice'))
+    .find((b) => b.getAttribute('data-key') === wP.MathCore.valueKey(pp0.answer));
+  pCorrect0.click();
+  dP.getElementById('nextBtn').click();
+  const stP1 = wP.__mathApp.getState();
+  check(stP1.index === 1, '練習按下一題後 index 前進');
+  const practiceSession = wP.sessionStorage.getItem('mathpath.session.v1');
+  check(!!practiceSession, '練習進行中已寫入 sessionStorage');
+  check(JSON.parse(practiceSession).route === '#/practice/prek.count', '練習 session 記錄 practice route');
+  const sigP2 = stP1.problems[1].sig;
+  const reloadP = boot(null, { url: 'http://localhost/#/practice/prek.count', session: practiceSession });
+  const stP2 = reloadP.w.__mathApp.getState();
+  check(stP2.mode === 'practice' && stP2.index === 1, '重新載入後恢復練習題號');
+  check(stP2.problems[1].sig === sigP2, '重新載入後練習是同一道題');
+
+  /* 26. navigate() 會拒絕並改寫未解鎖 route */
+  const ctxN = boot();
+  ctxN.w.__mathApp.navigate({ screen: 'stage', stageId: 'g1' });
+  check(ctxN.w.__mathApp.getState().screen === 'home', 'navigate() 拒絕未解鎖階段');
+  check(ctxN.w.location.hash === '#/home', 'navigate() 把未解鎖 route 改寫為 #/home');
+
+  /* 27. 錯誤邊界：渲染例外時顯示可恢復卡片，並可先匯出進度 */
+  const ctxErr = boot();
+  const dErr = ctxErr.d, wErr = ctxErr.w;
+  wErr.console.error = function () {}; // 預期會記錄例外，測試時靜音
+  wErr.Curriculum.stages = null; // 模擬渲染資料損壞
+  dErr.querySelector('#screen-home .stage-card').click();
+  check(!dErr.getElementById('screen-home').hidden, '錯誤卡顯示在首頁畫面');
+  check(!!dErr.getElementById('errorExport'), '渲染例外時顯示錯誤卡（先可匯出進度）');
+  check(!!dErr.getElementById('errorHome'), '錯誤卡提供回到首頁');
+  dErr.getElementById('errorExport').click();
+  check(!dErr.getElementById('modal').hidden, '錯誤卡的匯出進度可開啟對話框');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
