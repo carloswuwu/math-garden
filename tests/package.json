@@ -4,9 +4,10 @@
   "private": true,
   "description": "數學樂園 · Math Garden 的開發測試依賴",
   "scripts": {
-    "test": "node core.test.js && node ui.test.js && node generators.test.js && node contract.test.js"
+    "test": "node core.test.js && node ui.test.js && node generators.test.js && node contract.test.js && node a11y.test.js"
   },
   "devDependencies": {
+    "axe-core": "^4.10.2",
     "jsdom": "25.0.1"
   },
   "dependencies": {

@@ -34,3 +34,5 @@ jobs:
         run: node tests/generators.test.js
       - name: Cross-layer contract tests (MATH_SPEC, assets, i18n, solvers, formulas, dist)
         run: node tests/contract.test.js
+      - name: Accessibility tests (jsdom + axe-core)
+        run: node tests/a11y.test.js
