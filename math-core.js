@@ -80,7 +80,9 @@
   }
 
   function renderValue(v) {
-    return isFraction(v) ? v.n + '/' + v.d : String(v);
+    if (!isFraction(v)) return String(v);
+    var r = reduceFraction(v);
+    return r.d === 1 ? String(r.n) : r.n + '/' + r.d;
   }
 
   /* 等值分數視為相等：2/4 = 1/2 */
@@ -1120,7 +1122,7 @@
       visual: null,
       answer: askSum ? sum : prod,
       math: { op: 'quad', p: p, q: q, sum: sum, prod: prod, askSum: askSum },
-      hint: { zh: '兩根之和 = −(x 的係數)；兩根之積 = 常數項。', en: 'Sum = −(coefficient of x); product = constant term.' }
+      hint: { zh: '兩根之和 = −(x 的係數)；兩根之積 = 常數項（本題首項係數為 1）。', en: 'Sum = −(coefficient of x); product = constant term (the leading coefficient is 1 here).' }
     };
   }
 
@@ -1130,7 +1132,7 @@
     var nums;
     if (n === 6) {
       var m1 = randInt(rng, 4, 14);
-      var m2 = m1 + 2 * randInt(rng, 0, 2);
+      var m2 = m1 + 2 * randInt(rng, 0, 2) + 1;
       nums = [m1 - 2, m1 - 1, m1, m2, m2 + 1, m2 + 2];
     } else {
       nums = [];
@@ -1139,12 +1141,13 @@
     }
     var sorted = nums.slice().sort(function (x, y) { return x - y; });
     var median = n % 2 === 1 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
+    var display = shuffle(rng, nums.slice());
     return {
       type: 'stats',
-      prompt: { zh: '求 ' + nums.join('、') + ' 的中位數。', en: 'Find the median of ' + nums.join(', ') + '.' },
+      prompt: { zh: '求 ' + display.join('、') + ' 的中位數。', en: 'Find the median of ' + display.join(', ') + '.' },
       visual: { kind: 'barchart' },
       answer: median,
-      math: { op: 'stats', mode: n % 2 === 1 ? 'odd' : 'even', nums: nums, sorted: sorted },
+      math: { op: 'stats', mode: n % 2 === 1 ? 'odd' : 'even', nums: display, sorted: sorted },
       hint: n % 2 === 1
         ? { zh: '先把數字由小到大排列，再取中間那個。', en: 'Sort the numbers, then take the middle one.' }
         : { zh: '先把數字排序；共 6 個，取中間兩個的平均。', en: 'Sort the numbers; with 6 values, average the two middle ones.' }
@@ -1420,6 +1423,38 @@
         hint: { zh: '判別式 = b² − 4ac；本題 a = 1。', en: 'Discriminant = b² − 4ac; here a = 1.' }
       };
     }
+    if (o && o.mode === 'nature') {
+      var kind = pick(rng, ['two', 'one', 'none']);
+      var nb, nc, nans;
+      if (kind === 'two') {
+        var p1 = randInt(rng, 1, 9), q1 = randInt(rng, 1, 9);
+        while (q1 === p1) q1 = randInt(rng, 1, 9);
+        nb = -(p1 + q1); nc = p1 * q1; nans = 2;
+      } else if (kind === 'one') {
+        var r = randInt(rng, 1, 9);
+        nb = -2 * r; nc = r * r; nans = 1;
+      } else {
+        nb = randInt(rng, -3, 3);
+        nc = randInt(rng, Math.ceil(nb * nb / 4) + 1, 20);
+        nans = 0;
+      }
+      var nbx = (nb > 0 ? '+ ' + nb : '- ' + (-nb));
+      var ncs = (nc > 0 ? '+ ' + nc : '- ' + (-nc));
+      return {
+        type: 'quadsolve',
+        prompt: {
+          zh: '方程 $x^2 ' + nbx + 'x ' + ncs + ' = 0$ 有幾個實根？',
+          en: 'How many real roots does $x^2 ' + nbx + 'x ' + ncs + ' = 0$ have?'
+        },
+        visual: null,
+        answer: nans,
+        math: { op: 'quadsolve', mode: 'nature', a: 1, b: nb, c: nc },
+        hint: {
+          zh: '判別式 = b² − 4ac：大於 0 有兩個實根，等於 0 有一個，小於 0 沒有實根。',
+          en: 'Discriminant b² − 4ac: > 0 gives two real roots, = 0 one, < 0 none.'
+        }
+      };
+    }
     var p = randInt(rng, 1, 9), q = randInt(rng, 1, 9);
     while (q === p) q = randInt(rng, 1, 9);
     var b = -(p + q), c = p * q;
@@ -1641,14 +1676,14 @@
       var v = randInt(rng, 1, 30);
       if (nums.indexOf(v) === -1) nums.push(v);
     }
-    nums.sort(function (x, y) { return x - y; });
-    var q1 = nums[1], q3 = nums[5];
+    var sorted = nums.slice().sort(function (x, y) { return x - y; });
+    var q1 = sorted[1], q3 = sorted[5];
     return {
       type: 'dispersion',
       prompt: { zh: '求 ' + nums.join('、') + ' 的四分位距（IQR）。', en: 'Find the interquartile range (IQR) of ' + nums.join(', ') + '.' },
       visual: null,
       answer: q3 - q1,
-      math: { op: 'dispersion', nums: nums, q1: q1, q3: q3 },
+      math: { op: 'dispersion', nums: nums, sorted: sorted, q1: q1, q3: q3 },
       hint: { zh: '先排序；Q1 是下半部的中位數，Q3 是上半部的中位數，IQR = Q3 − Q1。', en: 'Sort first; Q1 is the lower-half median, Q3 the upper-half median, IQR = Q3 − Q1.' }
     };
   }
@@ -1674,12 +1709,14 @@
       prompt = { zh: '同一弓形上的兩個圓周角，其中一個是 ' + x + '°，另一個是多少度？', en: 'Two angles in the same segment: one is ' + x + '°. What is the other?' };
       hint = { zh: '同弓形內的圓周角相等。', en: 'Angles in the same segment are equal.' };
     }
+    var mm = { op: 'circleprop', mode: mode };
+    if (mode === 'cyclic' || mode === 'sameseg') mm.a = x;
     return {
       type: 'circleprop',
       prompt: prompt,
       visual: { kind: 'circleang' },
       answer: answer,
-      math: { op: 'circleprop', mode: mode, a: x },
+      math: mm,
       hint: hint
     };
   }
@@ -1810,12 +1847,14 @@
   /* 期望值與二項概率 */
   function genExpectation(rng, o) {
     var mode = pick(rng, ['die', 'spinner', 'binomial']);
+    function half(k) { return k % 2 === 0 ? k / 2 : { n: k, d: 2 }; }
     if (mode === 'die') {
       return {
         type: 'expectation',
         prompt: { zh: '擲一枚均勻骰子，點數的期望值是多少？', en: 'A fair die is rolled. What is the expected value?' },
         visual: null,
         answer: { n: 7, d: 2 },
+        choices: shuffle(rng, [{ n: 7, d: 2 }, { n: 5, d: 2 }, 3, 4]),
         math: { op: 'expectation', mode: 'die' },
         hint: { zh: 'E(X) = (1 + 2 + … + 6) ÷ 6 = 7/2。', en: 'E(X) = (1 + 2 + … + 6) ÷ 6 = 7/2.' }
       };
@@ -1829,7 +1868,8 @@
           en: 'A spinner has ' + n + ' equally likely sectors numbered 1 to ' + n + '. What is the expected value?'
         },
         visual: null,
-        answer: { n: n + 1, d: 2 },
+        answer: half(n + 1),
+        choices: shuffle(rng, [half(n + 1), half(n), half(n + 3), n]),
         math: { op: 'expectation', mode: 'spinner', n: n },
         hint: { zh: 'E(X) = (1 + … + n) ÷ n = (n + 1)/2。', en: 'E(X) = (1 + … + n) ÷ n = (n + 1)/2.' }
       };
@@ -2419,8 +2459,16 @@
       if (m.mode === 'disc') {
         var ans = renderValue(p.answer);
         return {
-          zh: ['判別式 = b² − 4ac，本題 a = 1。', 'b = ' + m.b + '，c = ' + m.c + '：b² − 4ac = ' + m.b + '² − 4 × 1 × ' + m.c + ' = ' + ans + '。'],
+          zh: ['判別式 = b² − 4ac，本題 a = 1。', 'b = ' + m.b + '，c = ' + m.c + '：b² − 4ac = ' + (m.b < 0 ? '(' + m.b + ')²' : m.b + '²') + ' − 4 × 1 × ' + m.c + ' = ' + ans + '。'],
           en: ['Discriminant = b² − 4ac; here a = 1.', 'b = ' + m.b + ', c = ' + m.c + ': b² − 4ac = ' + m.b + '² − 4 × 1 × ' + m.c + ' = ' + ans + '.']
+        };
+      }
+      if (m.mode === 'nature') {
+        var D = m.b * m.b - 4 * m.a * m.c;
+        var cnt = renderValue(p.answer);
+        return {
+          zh: ['判別式 D = b² − 4ac。', 'D = ' + (m.b < 0 ? '(' + m.b + ')²' : m.b + '²') + ' − 4 × 1 × ' + m.c + ' = ' + D + '，所以有 ' + cnt + ' 個實根。'],
+          en: ['Discriminant D = b² − 4ac.', 'D = ' + (m.b < 0 ? '(' + m.b + ')²' : m.b + '²') + ' − 4 × 1 × ' + m.c + ' = ' + D + ', so there are ' + cnt + ' real roots.']
         };
       }
       return null;
@@ -2430,8 +2478,8 @@
       if (m.mode === 'eq') {
         var ans = renderValue(p.answer);
         return {
-          zh: ['把點 (' + m.x + ', ' + m.y + ') 代入 y = ' + m.m + 'x + c。', '= ' + m.m + ' × ' + m.x + ' + c，所以 c = ' + ans + '。'],
-          en: ['Substitute (' + m.x + ', ' + m.y + ') into y = ' + m.m + 'x + c.', '= ' + m.m + ' × ' + m.x + ' + c, so c = ' + ans + '.']
+          zh: ['把點 (' + m.x + ', ' + m.y + ') 代入 y = ' + m.m + 'x + c：' + m.y + ' = ' + m.m + ' × ' + m.x + ' + c。', '所以 c = ' + ans + '。'],
+          en: ['Substitute (' + m.x + ', ' + m.y + ') into y = ' + m.m + 'x + c: ' + m.y + ' = ' + m.m + ' × ' + m.x + ' + c.', 'So c = ' + ans + '.']
         };
       }
       return null;
@@ -2440,8 +2488,8 @@
       var m = p.math, ans = renderValue(p.answer);
       if (m.mode === 'twoDice') {
         return {
-          zh: ['兩枚骰子共有 36 個等可能結果。', '和為 ' + m.s + ' 的組合有 ' + m.good + ' 個，概率 = ' + m.good + '/36 = ' + ans + '。'],
-          en: ['Two dice have 36 equally likely outcomes.', m.good + ' pairs give a sum of ' + m.s + ', so P = ' + m.good + '/36 = ' + ans + '.']
+          zh: ['兩枚骰子共有 36 個等可能結果。', '和為 ' + m.s + ' 的結果（有序數對）有 ' + m.good + ' 個，概率 = ' + m.good + '/36 = ' + ans + '。'],
+          en: ['Two dice have 36 equally likely outcomes.', m.good + ' ordered outcomes give a sum of ' + m.s + ', so P = ' + m.good + '/36 = ' + ans + '.']
         };
       }
       if (m.mode === 'complement') {
@@ -2484,6 +2532,16 @@
       }
       return null;
     },
+    binomial: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'gen') {
+        return {
+          zh: ['(x + a)ⁿ 中 xʳ 的係數 = C(n,r) × a^(n−r)。', '= C(' + m.n + ', ' + m.r + ') × ' + m.a + '^' + (m.n - m.r) + ' = ' + ans + '。'],
+          en: ['In (x + a)ⁿ, the coefficient of xʳ is C(n,r) × a^(n−r).', '= C(' + m.n + ', ' + m.r + ') × ' + m.a + '^' + (m.n - m.r) + ' = ' + ans + '.']
+        };
+      }
+      return null;
+    },
     indices: function (p) {
       var m = p.math, ans = renderValue(p.answer);
       if (m.mode === 'power') {
@@ -2509,10 +2567,11 @@
     },
     simul: function (p) {
       var m = p.math, ans = renderValue(p.answer);
-      var det = m.a * m.d - m.b * m.c;
       return {
-        zh: ['用消元法解二元一次方程組。', 'x = (' + m.s + ' × ' + m.d + ' − ' + m.b + ' × ' + m.t + ') ÷ (' + m.a + ' × ' + m.d + ' − ' + m.b + ' × ' + m.c + ') = ' + ans + '。'],
-        en: ['Solve the simultaneous equations by elimination.', 'x = (' + m.s + ' × ' + m.d + ' − ' + m.b + ' × ' + m.t + ') ÷ (' + m.a + ' × ' + m.d + ' − ' + m.b + ' × ' + m.c + ') = ' + ans + '.']
+        zh: ['用消元法：把兩式乘以適當倍數，消去 y。',
+          '一式 × ' + m.d + '、二式 × ' + m.b + ' 後相減：(' + m.a + '×' + m.d + ' − ' + m.c + '×' + m.b + ')x = ' + m.s + '×' + m.d + ' − ' + m.t + '×' + m.b + ' → x = ' + ans + '。'],
+        en: ['Use elimination: multiply the equations so the y terms cancel.',
+          'Eq1 × ' + m.d + ', Eq2 × ' + m.b + ', then subtract: (' + m.a + '×' + m.d + ' − ' + m.c + '×' + m.b + ')x = ' + m.s + '×' + m.d + ' − ' + m.t + '×' + m.b + ' → x = ' + ans + '.']
       };
     },
     log: function (p) {
@@ -3301,6 +3360,11 @@
   /* 每個類型合理的干擾項數值上界 */
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
+    if (p.type === 'quadsolve') return 120;
+    if (p.type === 'binomial') return 500;
+    if (p.type === 'circleprop') return 200;
+    if (p.type === 'calculus') return 400;
+    if (p.type === 'expectation') return 10;
     if (p.type === 'division') return o.maxQuotient != null ? o.maxQuotient : 9;
     if (p.type === 'multiplication') {
       var f = o.maxFactor != null ? o.maxFactor : 9;
@@ -3461,11 +3525,13 @@
     opts = opts || {};
     var rng = opts.rng || seedRandom(opts.seed != null ? opts.seed : 1);
     var step = opts.difficultyStep != null ? opts.difficultyStep : 0;
+    var types = typeList(skill);
     var out = [];
     var seen = {};
     var guardTotal = 0;
     while (out.length < count && guardTotal++ < count * 200) {
-      var p = generateProblem(skill, { rng: rng, difficultyStep: step });
+      var idx = types.length > 1 ? Math.floor(rng() * types.length) : 0;
+      var p = generateProblem(skill, { rng: rng, difficultyStep: step, typeIndex: idx });
       if (!seen[p.sig]) {
         seen[p.sig] = true;
         out.push(p);

@@ -237,8 +237,8 @@
       visual: { kind: 'righttri' }
     },
     'ms.s2.simul': {
-      zh: { title: '聯立方程', intro: '兩條方程一起解；用消元法把一條方程乘以適當倍數，消去一個未知數。', example: '2x + y = 7，x − y = 2；相加得 3x = 9，x = 3。', tip: '先消去一個未知數，再求另一個。' },
-      en: { title: 'Simultaneous Equations', intro: 'Solve two equations by elimination: multiply one equation so a variable cancels.', example: '2x + y = 7, x − y = 2; add: 3x = 9, so x = 3.', tip: 'Eliminate one unknown first, then find the other.' },
+      zh: { title: '聯立方程', intro: '兩條方程一起解；用消元法把一條方程乘以適當倍數，消去一個未知數。', example: '2x + 3y = 12，3x + 2y = 13；一式×3、二式×2 後相減得 5y = 10，y = 2，代回得 x = 3。', tip: '先消去一個未知數，再求另一個。' },
+      en: { title: 'Simultaneous Equations', intro: 'Solve two equations by elimination: multiply one equation so a variable cancels.', example: '2x + 3y = 12, 3x + 2y = 13; multiply eq1 by 3 and eq2 by 2, subtract to get 5y = 10, then y = 2 and x = 3.', tip: 'Eliminate one unknown first, then find the other.' },
       visual: null
     },
 
@@ -294,8 +294,8 @@
     /* ---------- 中六（S6） ---------- */
 
     'hs.s6.quad': {
-      zh: { title: '二次方程的根', intro: '二次方程 $x^2 + bx + c = 0$ 的兩根 α、β：兩根之和 = −b，兩根之積 = c。', example: '$x^2 - 7x + 12 = 0$：兩根之和 = 7，積 = 12。', tip: '和 = −(x 的係數)，積 = 常數項。' },
-      en: { title: 'Roots of Quadratics', intro: 'For $x^2 + bx + c = 0$ with roots α, β: sum = −b, product = c.', example: '$x^2 - 7x + 12 = 0$: sum = 7, product = 12.', tip: 'Sum = −(coefficient of x); product = constant.' },
+      zh: { title: '二次方程的根', intro: '二次方程 $x^2 + bx + c = 0$（首項係數為 1）的兩根 α、β：兩根之和 = −b，兩根之積 = c。', example: '$x^2 - 7x + 12 = 0$：兩根之和 = 7，積 = 12。', tip: '和 = −(x 的係數)，積 = 常數項（首項係數為 1）。' },
+      en: { title: 'Roots of Quadratics', intro: 'For $x^2 + bx + c = 0$ (leading coefficient 1) with roots α, β: sum = −b, product = c.', example: '$x^2 - 7x + 12 = 0$: sum = 7, product = 12.', tip: 'Sum = −(coefficient of x); product = constant term (leading coefficient 1).' },
       visual: null
     },
     'hs.s6.stats': {
@@ -542,8 +542,8 @@
       visual: null
     },
     'hs.s4.quad2': {
-      zh: { title: '判別式', intro: '二次方程 ax² + bx + c = 0 的判別式是 b² − 4ac。', example: 'x² − 5x + 6 = 0：b² − 4ac = 25 − 24 = 1。', tip: '先讀出 a、b、c 的值（注意正負號）。' },
-      en: { title: 'Discriminant', intro: 'For ax² + bx + c = 0, the discriminant is b² − 4ac.', example: 'x² − 5x + 6 = 0: 25 − 24 = 1.', tip: 'Read a, b and c carefully, including signs.' },
+      zh: { title: '判別式', intro: '二次方程 ax² + bx + c = 0 的判別式是 b² − 4ac：大於 0 有兩個實根，等於 0 有一個，小於 0 沒有實根。', example: 'x² − 5x + 6 = 0：b² − 4ac = 25 − 24 = 1 > 0，所以有兩個實根。', tip: '先讀出 a、b、c 的值（注意正負號），再判斷符號。' },
+      en: { title: 'Discriminant', intro: 'For ax² + bx + c = 0, the discriminant is b² − 4ac: > 0 gives two real roots, = 0 gives one, < 0 gives none.', example: 'x² − 5x + 6 = 0: 25 − 24 = 1 > 0, so there are two real roots.', tip: 'Read a, b and c carefully, then check the sign.' },
       visual: null
     },
     'hs.s4.line2': {
@@ -567,8 +567,8 @@
       visual: null
     },
     'hs.s6.prob2': {
-      zh: { title: '續概率', intro: '兩枚骰子共有 36 個等可能結果；P(不是 A) = 1 − P(A)。', example: '兩枚骰子點數和為 7 的組合有 6 個，概率 = 6/36 = 1/6。', tip: '先數總結果數，再數符合條件的結果數。' },
-      en: { title: 'More Probability', intro: 'Two dice give 36 equally likely outcomes; P(not A) = 1 − P(A).', example: 'There are 6 ways to get a sum of 7, so P = 6/36 = 1/6.', tip: 'Count the total outcomes, then the favourable ones.' },
+      zh: { title: '續概率', intro: '兩枚骰子共有 36 個等可能結果（有序數對）；P(不是 A) = 1 − P(A)。', example: '兩枚骰子點數和為 7 的結果有 6 個，概率 = 6/36 = 1/6。', tip: '先數總結果數，再數符合條件的結果數。' },
+      en: { title: 'More Probability', intro: 'Two dice give 36 equally likely ordered outcomes; P(not A) = 1 − P(A).', example: 'There are 6 outcomes with a sum of 7, so P = 6/36 = 1/6.', tip: 'Count the total outcomes, then the favourable ones.' },
       visual: null
     },
     'hs.s6.binomial2': {

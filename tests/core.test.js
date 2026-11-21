@@ -92,7 +92,11 @@ function computeAnswer(math) {
   if (math.op === 'angle') return math.a;
   if (math.op === 'money') return math.a - math.b;
   if (math.op === 'fact') return math.a;
-  if (math.op === 'quadsolve') return math.mode === 'disc' ? Math.pow(math.p - math.q, 2) : Math.max(math.p, math.q);
+  if (math.op === 'quadsolve') {
+    if (math.mode === 'disc') return Math.pow(math.p - math.q, 2);
+    if (math.mode === 'nature') { var qD = math.b * math.b - 4 * math.a * math.c; return qD > 0 ? 2 : (qD === 0 ? 1 : 0); }
+    return Math.max(math.p, math.q);
+  }
   if (math.op === 'line') return math.mode === 'eq' ? math.y - math.m * math.x : (math.b[1] - math.a[1]) / (math.b[0] - math.a[0]);
   if (math.op === 'variation') return math.k * math.c;
   if (math.op === 'oddeven') {
@@ -160,7 +164,7 @@ function computeAnswer(math) {
   }
   if (math.op === 'expectation') {
     if (math.mode === 'die') return { n: 7, d: 2 };
-    if (math.mode === 'spinner') return { n: math.n + 1, d: 2 };
+    if (math.mode === 'spinner') { var sp = math.n + 1; return sp % 2 === 0 ? sp / 2 : { n: sp, d: 2 }; }
     var ef = function (x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; };
     return { n: ef(math.n) / (ef(math.k) * ef(math.n - math.k)), d: Math.pow(2, math.n) };
   }
@@ -302,7 +306,7 @@ function validateProblem(skill, p, label) {
     check(typeof p.answer === 'string', `${label}: 字符串題答案應為字符串`);
     check(p.answer === expected, `${label}: 字符串答案不一致 (${p.answer} vs ${expected})`);
   } else {
-    check(Number.isInteger(p.answer), `${label}: 答案應為整數，得到 ${p.answer}`);
+    check(Number.isInteger(p.answer) || (p.math.op === 'stats' && Math.abs(p.answer * 2 - Math.round(p.answer * 2)) < 1e-9), `${label}: 答案應為整數（中位數可為 .5），得到 ${p.answer}`);
     check(p.answer === expected, `${label}: 答案不一致 (${p.answer} vs ${expected})`);
   }
 
@@ -319,7 +323,7 @@ function validateProblem(skill, p, label) {
     } else if (isString) {
       check(typeof c === 'string', `${label}: 字符串選項應為字符串`);
     } else {
-      check(Number.isInteger(c), `${label}: 選項應為整數，得到 ${c}`);
+      check(Number.isInteger(c) || (p.math.op === 'stats' && Math.abs(c * 2 - Math.round(c * 2)) < 1e-9), `${label}: 選項應為整數（中位數可為 .5），得到 ${c}`);
     }
   });
 

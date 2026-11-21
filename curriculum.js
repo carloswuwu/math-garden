@@ -537,9 +537,9 @@
     },
     'hs.s4.quad2': {
       id: 'hs.s4.quad2', stage: 'hs1', order: 9,
-      zh: { name: '判別式', goal: '會計算二次方程的判別式 b² − 4ac。' },
-      en: { name: 'Discriminant', goal: 'Compute the discriminant b² − 4ac.' },
-      lesson: 'hs.s4.quad2', types: [{ t: 'quadsolve', opts: { mode: 'disc' } }], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+      zh: { name: '判別式與實根數目', goal: '會計算判別式，並判斷二次方程有幾個實根。' },
+      en: { name: 'Discriminant & Number of Roots', goal: 'Compute the discriminant and decide how many real roots a quadratic has.' },
+      lesson: 'hs.s4.quad2', types: [{ t: 'quadsolve', opts: { mode: 'disc' } }, { t: 'quadsolve', opts: { mode: 'nature' } }], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
     },
     'hs.s4.line2': {
       id: 'hs.s4.line2', stage: 'hs1', order: 10,

@@ -159,7 +159,8 @@ for (const skill of skills) {
  ['hs.s5.dispersion', 'dispersion'], ['g1.place100', 'placevalue'],
  ['g4.fractionadd', 'fractionadd'], ['ms.s3.prob', 'prob'], ['g6.percent', 'percent'],
  ['ms.s3.indices', 'indices'], ['ms.s3.inequality', 'inequality'], ['ms.s2.simul', 'simul'],
- ['hs.s4.log', 'log'], ['hs.s6.stats', 'stats'], ['hs.s6.derivative', 'derivative']].forEach(([sid, type]) => {
+ ['hs.s4.log', 'log'], ['hs.s6.stats', 'stats'], ['hs.s6.derivative', 'derivative'],
+ ['hs.s6.binomial2', 'binomial']].forEach(([sid, type]) => {
   const skill = C.skills[sid];
   check(!!skill, '缺少技能 ' + sid);
   for (let i = 0; i < 20; i++) {
@@ -170,6 +171,10 @@ for (const skill of skills) {
     const shown = M.renderValue(p.answer);
     check(ex.zh[ex.zh.length - 1].indexOf(shown) >= 0, '解題最後一步未包含答案 ' + sid + '/' + type + ' ans=' + shown + ' step=' + ex.zh[ex.zh.length - 1]);
     check(ex.en[ex.en.length - 1].indexOf(shown) >= 0, '解題最後一步未包含答案(en) ' + sid + '/' + type + ' ans=' + shown);
+    if (sid === 'hs.s6.binomial2') {
+      check(ex.zh.join(' ').indexOf('C(') >= 0 && ex.zh.join(' ').indexOf('×') >= 0,
+        '一般二項式解題須顯示 C(n,r) × a^(n−r)');
+    }
   }
 });
 
