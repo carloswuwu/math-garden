@@ -127,10 +127,40 @@ for (const skill of skills) {
 
         /* 5. 英文提示不得是中文 */
         check(!(p.hint && p.hint.en && CJK.test(p.hint.en)), '英文提示含中文 ' + tag);
+
+        /* 6. 解題步驟：不得拋錯、不得為空、不得含垃圾值 */
+        let ex = null;
+        try { ex = M.explain(p); } catch (e) { check(false, 'explain 拋錯 ' + tag + ' :: ' + e.message); }
+        if (ex) {
+          ['zh', 'en'].forEach((lang) => {
+            check(Array.isArray(ex[lang]) && ex[lang].length > 0, '解題步驟為空 ' + lang + ' ' + tag);
+            ex[lang].forEach((s) => check(typeof s === 'string' && s.trim().length > 0 && !GARBAGE.test(s), '解題步驟含垃圾值 ' + lang + ' ' + tag));
+          });
+        }
       }
     }
   }
 }
+
+/* 6b. 曾出錯／新加入的模式：解題步驟必須存在，且最後一步要交代答案 */
+[['hs.s5.gpsum', 'gp'], ['ms.s3.sector', 'arclen'], ['hs.s4.quad2', 'quadsolve'],
+ ['hs.s4.line2', 'line'], ['hs.s6.prob2', 'prob'], ['ms.s2.identity', 'identity'],
+ ['ms.s3.prism', 'prism'], ['col.linalg', 'matrix'], ['col.calculus', 'calculus'],
+ ['col.prob', 'expectation'], ['hs.s4.circleprop', 'circleprop'],
+ ['hs.s5.dispersion', 'dispersion'], ['g1.place100', 'placevalue'],
+ ['g4.fractionadd', 'fractionadd'], ['ms.s3.prob', 'prob'], ['g6.percent', 'percent']].forEach(([sid, type]) => {
+  const skill = C.skills[sid];
+  check(!!skill, '缺少技能 ' + sid);
+  for (let i = 0; i < 20; i++) {
+    const p = M.generateProblem(skill, { type, seed: 500 + i });
+    const ex = M.explain(p);
+    check(!!ex, '應有解題步驟 ' + sid + '/' + type);
+    if (!ex) continue;
+    const shown = M.renderValue(p.answer);
+    check(ex.zh[ex.zh.length - 1].indexOf(shown) >= 0, '解題最後一步未包含答案 ' + sid + '/' + type + ' ans=' + shown + ' step=' + ex.zh[ex.zh.length - 1]);
+    check(ex.en[ex.en.length - 1].indexOf(shown) >= 0, '解題最後一步未包含答案(en) ' + sid + '/' + type + ' ans=' + shown);
+  }
+});
 
 /* 6. 題庫池大小：把該技能所有題型合併，最高難度下應能出 10 道不重複的題 */
 for (const skill of skills) {

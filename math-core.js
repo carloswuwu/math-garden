@@ -2341,9 +2341,197 @@
     };
   }
 
+  /* 逐題型（含 mode）的解題步驟；題目可自帶 p.solution，否則用這裡的 solver。
+   * 這是 explain() 的正式延伸點：新增題型／模式時在這裡補一個 solver，並由
+   * tests/generators.test.js 驗證每個題型都不會拋錯、步驟不得為空。 */
+  var SOLVERS = {
+    gp: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'sum') {
+        return {
+          zh: ['前 n 項和 = a(rⁿ − 1) ÷ (r − 1)。', '= ' + m.a + ' × (' + m.r + '^' + m.n + ' − 1) ÷ (' + m.r + ' − 1) = ' + ans + '。'],
+          en: ['Sum of n terms = a(rⁿ − 1) ÷ (r − 1).', '= ' + m.a + ' × (' + m.r + '^' + m.n + ' − 1) ÷ (' + m.r + ' − 1) = ' + ans + '.']
+        };
+      }
+      if (m.mode === 'inf') {
+        return {
+          zh: ['無限項之和 S∞ = a ÷ (1 − r)。', '= ' + m.a + ' ÷ (1 − 1/2) = ' + ans + '。'],
+          en: ['Sum to infinity S∞ = a ÷ (1 − r).', '= ' + m.a + ' ÷ (1 − 1/2) = ' + ans + '.']
+        };
+      }
+      return null;
+    },
+    arclen: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'sector') {
+        return {
+          zh: ['扇形面積 = πr² × (圓心角 ÷ 360°)。', '= π × ' + m.r + '² × (' + m.angle + ' ÷ 360) = ' + ans + '。'],
+          en: ['Sector area = πr² × (angle ÷ 360°).', '= π × ' + m.r + '² × (' + m.angle + ' ÷ 360) = ' + ans + '.']
+        };
+      }
+      return null;
+    },
+    quadsolve: function (p) {
+      var m = p.math;
+      if (m.mode === 'disc') {
+        var ans = renderValue(p.answer);
+        return {
+          zh: ['判別式 = b² − 4ac，本題 a = 1。', 'b = ' + m.b + '，c = ' + m.c + '：b² − 4ac = ' + m.b + '² − 4 × 1 × ' + m.c + ' = ' + ans + '。'],
+          en: ['Discriminant = b² − 4ac; here a = 1.', 'b = ' + m.b + ', c = ' + m.c + ': b² − 4ac = ' + m.b + '² − 4 × 1 × ' + m.c + ' = ' + ans + '.']
+        };
+      }
+      return null;
+    },
+    line: function (p) {
+      var m = p.math;
+      if (m.mode === 'eq') {
+        var ans = renderValue(p.answer);
+        return {
+          zh: ['把點 (' + m.x + ', ' + m.y + ') 代入 y = ' + m.m + 'x + c。', '= ' + m.m + ' × ' + m.x + ' + c，所以 c = ' + ans + '。'],
+          en: ['Substitute (' + m.x + ', ' + m.y + ') into y = ' + m.m + 'x + c.', '= ' + m.m + ' × ' + m.x + ' + c, so c = ' + ans + '.']
+        };
+      }
+      return null;
+    },
+    prob: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'twoDice') {
+        return {
+          zh: ['兩枚骰子共有 36 個等可能結果。', '和為 ' + m.s + ' 的組合有 ' + m.good + ' 個，概率 = ' + m.good + '/36 = ' + ans + '。'],
+          en: ['Two dice have 36 equally likely outcomes.', m.good + ' pairs give a sum of ' + m.s + ', so P = ' + m.good + '/36 = ' + ans + '.']
+        };
+      }
+      if (m.mode === 'complement') {
+        return {
+          zh: ['P(不是紅球) = 1 − P(紅球)。', '= 1 − ' + (m.total - m.good) + '/' + m.total + ' = ' + ans + '。'],
+          en: ['P(not red) = 1 − P(red).', '= 1 − ' + (m.total - m.good) + '/' + m.total + ' = ' + ans + '.']
+        };
+      }
+      var raw = m.good + '/' + m.total;
+      return {
+        zh: ['概率 = 紅球數 ÷ 總數。', '= ' + m.good + ' ÷ ' + m.total + ' = ' + raw + (raw === ans ? '。' : ' = ' + ans + '。')],
+        en: ['Probability = red ÷ total.', '= ' + m.good + ' ÷ ' + m.total + ' = ' + raw + (raw === ans ? '.' : ' = ' + ans + '.')]
+      };
+    },
+    fractionadd: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      var add = m.op === 'fadd';
+      var rawN = add ? m.a + m.b : m.a - m.b;
+      var raw = rawN + '/' + m.d;
+      var tail = (rawN === p.answer.n && m.d === p.answer.d) ? raw + '。' : raw + ' = ' + ans + '。';
+      return {
+        zh: ['分母相同（都是 ' + m.d + '），分子直接' + (add ? '相加' : '相減') + '。', m.a + ' ' + (add ? '+' : '−') + ' ' + m.b + ' = ' + rawN + '。', '分母不變：' + tail],
+        en: ['Same denominator (' + m.d + '): ' + (add ? 'add' : 'subtract') + ' the numerators.', m.a + ' ' + (add ? '+' : '−') + ' ' + m.b + ' = ' + rawN + '.', 'Keep the denominator: ' + tail]
+      };
+    },
+    percent: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.kind === 'of') {
+        return { zh: ['百分數 = 除以 100。', m.whole + ' × ' + m.p + '% = ' + m.whole + ' × ' + m.p + ' ÷ 100 = ' + ans + '。'], en: ['Percent means divide by 100.', m.whole + ' × ' + m.p + '% = ' + m.whole + ' × ' + m.p + ' ÷ 100 = ' + ans + '.'] };
+      }
+      if (m.kind === 'what') {
+        return { zh: ['百分率 = 部分 ÷ 整體 × 100%。', m.part + ' ÷ ' + m.whole + ' × 100% = ' + ans + '%。'], en: ['Percentage = part ÷ whole × 100%.', m.part + ' ÷ ' + m.whole + ' × 100% = ' + ans + '%.'] };
+      }
+      if (m.kind === 'increase' || m.kind === 'decrease') {
+        var sign = m.kind === 'increase' ? '+' : '−';
+        return {
+          zh: ['新值 = 原值 × (1 ' + sign + ' 百分率)。', '= ' + m.whole + ' × (1 ' + sign + ' ' + m.p + '/100) = ' + ans + '。'],
+          en: ['New value = original × (1 ' + sign + ' rate).', '= ' + m.whole + ' × (1 ' + sign + ' ' + m.p + '/100) = ' + ans + '.']
+        };
+      }
+      return null;
+    },
+    placevalue: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      var zh, en;
+      if (m.mode === 'tens') {
+        zh = ['十位數字在左邊第二位。', '在 ' + m.n + ' 中，十位數字是 ' + ans + '。'];
+        en = ['The tens digit is the second digit from the right.', 'In ' + m.n + ', the tens digit is ' + ans + '.'];
+      } else if (m.mode === 'ones') {
+        zh = ['個位數字在右邊第一位。', '在 ' + m.n + ' 中，個位數字是 ' + ans + '。'];
+        en = ['The ones digit is the rightmost digit.', 'In ' + m.n + ', the ones digit is ' + ans + '.'];
+      } else if (m.mode === 'value') {
+        zh = ['十位上的數字代表幾個十。', m.n + ' 的十位是 ' + m.tens + '，代表 ' + ans + '。'];
+        en = ['The tens digit counts tens.', 'The tens digit of ' + m.n + ' is ' + m.tens + ', worth ' + ans + '.'];
+      } else {
+        zh = ['十位和個位合起來就是這個數。', m.tens + ' 個十和 ' + m.ones + ' 個一 = ' + ans + '。'];
+        en = ['Tens and ones together give the number.', m.tens + ' tens and ' + m.ones + ' ones = ' + ans + '.'];
+      }
+      return { zh: zh, en: en };
+    },
+    identity: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'mid') {
+        return { zh: ['(x + a)(x + b) = x² + (a + b)x + ab。', 'x 的係數 = ' + m.a + ' + ' + m.b + ' = ' + ans + '。'], en: ['(x + a)(x + b) = x² + (a + b)x + ab.', 'Coefficient of x = ' + m.a + ' + ' + m.b + ' = ' + ans + '.'] };
+      }
+      if (m.mode === 'const') {
+        return { zh: ['常數項 = a × b。', '= ' + m.a + ' × ' + m.b + ' = ' + ans + '。'], en: ['Constant term = a × b.', '= ' + m.a + ' × ' + m.b + ' = ' + ans + '.'] };
+      }
+      if (m.mode === 'square') {
+        return { zh: ['(x + a)² = x² + 2ax + a²。', 'x 的係數 = 2 × ' + m.a + ' = ' + ans + '。'], en: ['(x + a)² = x² + 2ax + a².', 'Coefficient of x = 2 × ' + m.a + ' = ' + ans + '.'] };
+      }
+      return { zh: ['平方差：(a + b)(a − b) = a² − b²。', '= ' + (m.a + m.b) + ' × ' + (m.a - m.b) + ' = ' + ans + '。'], en: ['Difference of squares: (a + b)(a − b) = a² − b².', '= ' + (m.a + m.b) + ' × ' + (m.a - m.b) + ' = ' + ans + '.'] };
+    },
+    prism: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'pyramid') {
+        return { zh: ['錐體體積 = 底面積 × 高 ÷ 3。', '= ' + m.area + ' × ' + m.h + ' ÷ 3 = ' + ans + ' cm³。'], en: ['Pyramid volume = base area × height ÷ 3.', '= ' + m.area + ' × ' + m.h + ' ÷ 3 = ' + ans + ' cm³.'] };
+      }
+      return { zh: ['柱體體積 = 底面積 × 高。', '= ' + m.area + ' × ' + m.h + ' = ' + ans + ' cm³。'], en: ['Prism volume = base area × height.', '= ' + m.area + ' × ' + m.h + ' = ' + ans + ' cm³.'] };
+    },
+    matrix: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'det') {
+        return { zh: ['二階行列式 = ad − bc。', '= ' + m.a + ' × ' + m.d + ' − ' + m.b + ' × ' + m.c + ' = ' + ans + '。'], en: ['2×2 determinant = ad − bc.', '= ' + m.a + ' × ' + m.d + ' − ' + m.b + ' × ' + m.c + ' = ' + ans + '.'] };
+      }
+      var A = m.A, B = m.B;
+      return { zh: ['(AB)₁₁ = A₁₁B₁₁ + A₁₂B₂₁。', '= ' + A[0][0] + '×' + B[0][0] + ' + ' + A[0][1] + '×' + B[1][0] + ' = ' + ans + '。'], en: ['(AB)₁₁ = A₁₁B₁₁ + A₁₂B₂₁.', '= ' + A[0][0] + '×' + B[0][0] + ' + ' + A[0][1] + '×' + B[1][0] + ' = ' + ans + '.'] };
+    },
+    calculus: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'dval') {
+        return { zh: ['f′(x) = a·n·x^(n−1)。', 'f′(' + m.x + ') = ' + m.a + ' × ' + m.n + ' × ' + m.x + '^' + (m.n - 1) + ' = ' + ans + '。'], en: ['f′(x) = a·n·x^(n−1).', "f′(" + m.x + ') = ' + m.a + ' × ' + m.n + ' × ' + m.x + '^' + (m.n - 1) + ' = ' + ans + '.'] };
+      }
+      return { zh: ['∫ ax dx = a x² ÷ 2。', '由 0 到 ' + m.b + '：' + m.a + ' × ' + m.b + '² ÷ 2 = ' + ans + '。'], en: ['∫ ax dx = a x² ÷ 2.', 'From 0 to ' + m.b + ': ' + m.a + ' × ' + m.b + '² ÷ 2 = ' + ans + '.'] };
+    },
+    expectation: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'die') {
+        return { zh: ['E(X) = (1 + 2 + … + 6) ÷ 6。', '= 21 ÷ 6 = ' + ans + '。'], en: ['E(X) = (1 + 2 + … + 6) ÷ 6.', '= 21 ÷ 6 = ' + ans + '.'] };
+      }
+      if (m.mode === 'spinner') {
+        return { zh: ['E(X) = (1 + … + n) ÷ n。', '= (1 + … + ' + m.n + ') ÷ ' + m.n + ' = ' + ans + '。'], en: ['E(X) = (1 + … + n) ÷ n.', '= (1 + … + ' + m.n + ') ÷ ' + m.n + ' = ' + ans + '.'] };
+      }
+      return { zh: ['P = C(n, k) ÷ 2ⁿ。', '= C(' + m.n + ', ' + m.k + ') ÷ 2^' + m.n + ' = ' + ans + '。'], en: ['P = C(n, k) ÷ 2ⁿ.', '= C(' + m.n + ', ' + m.k + ') ÷ 2^' + m.n + ' = ' + ans + '.'] };
+    },
+    circleprop: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'cyclic') {
+        return { zh: ['圓內接四邊形的對角互補。', '180° − ' + m.a + '° = ' + ans + '°。'], en: ['Opposite angles of a cyclic quadrilateral are supplementary.', '180° − ' + m.a + '° = ' + ans + '°.'] };
+      }
+      if (m.mode === 'sameseg') {
+        return { zh: ['同弓形內的圓周角相等。', '所以另一個角也是 ' + ans + '°。'], en: ['Angles in the same segment are equal.', 'So the other angle is also ' + ans + '°.'] };
+      }
+      return { zh: ['半圓上的圓周角與切線－半徑夾角都是 90°。', '答案 = ' + ans + '°。'], en: ['The angle in a semicircle and the tangent–radius angle are both 90°.', 'Answer = ' + ans + '°.'] };
+    },
+    dispersion: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      return {
+        zh: ['排序後共 7 個數據：Q1 是第 2 個，Q3 是第 6 個。', 'Q1 = ' + m.q1 + '，Q3 = ' + m.q3 + '，IQR = ' + m.q3 + ' − ' + m.q1 + ' = ' + ans + '。'],
+        en: ['With 7 sorted values, Q1 is the 2nd and Q3 the 6th.', 'Q1 = ' + m.q1 + ', Q3 = ' + m.q3 + ', IQR = ' + m.q3 + ' − ' + m.q1 + ' = ' + ans + '.']
+      };
+    }
+  };
+
   /* 回傳 { zh: [步驟...], en: [步驟...] }；不支援的題型回傳 null */
   function explain(p) {
     if (!p || !p.math) return null;
+    if (p.solution) return p.solution;
+    var solver = SOLVERS[p.type];
+    if (solver) {
+      var solved = solver(p);
+      if (solved) return solved;
+    }
     var m = p.math, a, b, sum, sym, t, tens, ones, sumN;
     switch (p.type) {
       case 'addition':

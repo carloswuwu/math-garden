@@ -948,7 +948,8 @@
     var box = $('exampleBox');
     if (!box) return;
     var p = MathCore.generateProblem(skill, { seed: (Date.now() & 0xffffffff) });
-    var ex = MathCore.explain(p);
+    var ex = null;
+    try { ex = MathCore.explain(p); } catch (e) { ex = null; }
     box.hidden = false;
     if (!ex) {
       box.innerHTML = '<div class="lesson-label">' + t('lesson.example') + '</div>' +
