@@ -610,6 +610,50 @@ async function main() {
   check(!!ctxTypedReload.d.getElementById('typedAnswer'), '重新載入後仍是鍵入答案題');
   check(ctxTypedReload.w.__mathApp.getState().index === 0, '重新載入後題號一致');
 
+  /* 34. 離開練習後再開另一個練習/測驗：不可重用上一個題組（回歸：舊 skillId 被 lesson 更新而誤判） */
+  const ctxRun = boot(JSON.stringify({
+    version: 2, lang: 'zh', sound: false, theme: 'light', skills: {},
+    stageExams: { prek: { passed: true, best: 100 } }
+  }));
+  const dRun = ctxRun.d, wRun = ctxRun.w;
+  dRun.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  dRun.querySelector('#screen-stage .skill-card[data-skill="prek.count"]').click();
+  dRun.getElementById('lessonPractice').click();
+  check(wRun.__mathApp.getState().skillId === 'prek.count', '第一個練習在 prek.count');
+  check(wRun.__mathApp.currentProblem().type === 'count', '第一個練習是數一數');
+  dRun.getElementById('backBtn').click();
+  dRun.getElementById('backBtn').click();
+  dRun.getElementById('backBtn').click();
+  check(!dRun.getElementById('screen-home').hidden, '已回到首頁');
+  dRun.querySelector('#screen-home .stage-card[data-stage="g1"]').click();
+  dRun.querySelector('#screen-stage .skill-card[data-skill="g1.add20"]').click();
+  dRun.getElementById('lessonPractice').click();
+  const stRunP = wRun.__mathApp.getState();
+  check(stRunP.skillId === 'g1.add20', '第二個練習切到 g1.add20');
+  check(stRunP.problems.length === 1, '第二個練習只保留新題組');
+  check(stRunP.problems.every((p) => ['addition', 'numberbonds'].indexOf(p.type) !== -1), '第二個練習沒有沿用上一個 prek 題目');
+  check(wRun.__mathApp.currentProblem().type !== 'count', '畫面上的題目屬於新技能');
+  check((dRun.querySelector('#screen-practice .p-title').textContent || '').includes('20 以內'), '標題顯示新技能');
+
+  /* 練習 → 離開 → 同區測驗：不可顯示上一個練習題 */
+  dRun.getElementById('backBtn').click();
+  dRun.getElementById('lessonQuiz').click();
+  const stRunQ = wRun.__mathApp.getState();
+  check(stRunQ.mode === 'quiz' && stRunQ.skillId === 'g1.add20', '測驗模式與技能正確');
+  check(stRunQ.problems.every((p) => ['addition', 'numberbonds'].indexOf(p.type) !== -1), '測驗沒有沿用上一個練習題目');
+  check(stRunQ.problems.length === 10, '測驗仍為 10 題');
+
+  /* 測驗 → 離開 → 另一區練習：不可顯示上一個測驗題 */
+  dRun.getElementById('backBtn').click();
+  dRun.getElementById('backBtn').click();
+  dRun.getElementById('backBtn').click();
+  dRun.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  dRun.querySelector('#screen-stage .skill-card[data-skill="prek.count"]').click();
+  dRun.getElementById('lessonPractice').click();
+  const stRunP2 = wRun.__mathApp.getState();
+  check(stRunP2.mode === 'practice' && stRunP2.skillId === 'prek.count', '第三個練習回到 prek.count');
+  check(stRunP2.problems.every((p) => p.type === 'count'), '第三個練習沒有沿用上一個測驗題目');
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }
