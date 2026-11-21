@@ -14,9 +14,13 @@
 
   var STORE_KEY = 'mathpath.progress';
   var LEGACY_STORE_KEY = 'mathpath.progress.v1';
+  var SESSION_KEY = 'mathpath.session.v1'; // 未完成的練習/測驗/考試，只存在 sessionStorage
+  var SESSION_VERSION = 1;
+  var SESSION_TTL = 24 * 60 * 60 * 1000; // 24 小時後不再自動恢復
   var QUIZ_LENGTH = 10;
   var EXAM_LENGTH = 20;
   var EXAM_PASS = 0.9; // 綜合考試達 90% 即可解鎖下一階段
+  var HOME_ROUTE = { screen: 'home' };
 
   /* ---------------- 狀態 ---------------- */
   var state = {
@@ -26,7 +30,8 @@
     screen: 'home',
     stageId: null,
     skillId: null,
-    mode: 'practice', // 'practice' | 'quiz'
+    examStage: null,
+    mode: 'practice', // 'practice' | 'quiz' | 'exam'
     problems: [],
     index: 0,
     correct: 0,
@@ -102,6 +107,130 @@
   }
   function saveProgress() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) { /* 忽略 */ }
+  }
+
+  /* ---------------- 未完成題組（sessionStorage，24 小時 TTL） ----------------
+   * 只存未完成的練習/測驗/考試；完成即清除；不寫入 progress schema。 */
+
+  function clearSession() {
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { /* 忽略 */ }
+  }
+
+  /* 只信任可重新驗證的題目：每題自己的答案必須能被 checkAnswer 接受 */
+  function validateSession(s) {
+    if (!s || typeof s !== 'object' || Array.isArray(s) || s.v !== SESSION_VERSION) return false;
+    var now = Date.now();
+    if (typeof s.savedAt !== 'number' || !isFinite(s.savedAt)) return false;
+    if (s.savedAt > now + 60000 || now - s.savedAt > SESSION_TTL) return false;
+    if (typeof s.route !== 'string') return false;
+    var parsed = parseHash(s.route);
+    if (!parsed || (parsed.screen !== 'practice' && parsed.screen !== 'quiz' && parsed.screen !== 'exam')) return false;
+    if (s.mode !== parsed.screen) return false;
+    if (parsed.screen === 'exam') {
+      if (s.stageId !== parsed.stageId) return false;
+    } else if (s.skillId !== parsed.skillId || s.stageId !== skillStageId(parsed.skillId)) {
+      return false;
+    }
+    if (!Array.isArray(s.problems) || !s.problems.length || s.problems.length > 200) return false;
+    if (typeof s.index !== 'number' || Math.floor(s.index) !== s.index || s.index < 0 || s.index >= s.problems.length) return false;
+    if (!Array.isArray(s.results) || s.results.length > s.problems.length) return false;
+    var i;
+    for (i = 0; i < s.problems.length; i++) {
+      var p = s.problems[i];
+      if (!p || typeof p !== 'object') return false;
+      if (!Array.isArray(p.choices) || p.answer === undefined || p.answer === null) return false;
+      if (!p.prompt || typeof p.prompt !== 'object') return false;
+      var res = null;
+      try { res = MathCore.checkAnswer(p, p.answer); } catch (e) { return false; }
+      if (!res || !res.correct) return false;
+    }
+    // route 仍須通過目前解鎖規則（避免重置進度後恢復到未解鎖內容）
+    var resolved = resolveRoute(parsed);
+    if (!resolved || !sameRoute(resolved, parsed)) return false;
+    return true;
+  }
+
+  function readSession() {
+    try {
+      var raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      return validateSession(s) ? s : null;
+    } catch (e) { return null; }
+  }
+
+  /* 在開始 / 前進 / 恢復時寫入；完成時由 finishQuiz/finishExam 清除 */
+  function saveSession() {
+    if (state.screen !== 'practice') return;
+    if (state.mode !== 'practice' && state.mode !== 'quiz' && state.mode !== 'exam') return;
+    if (!state.problems.length || state.index >= state.problems.length) return;
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        v: SESSION_VERSION,
+        route: serializeRoute(currentRoute()),
+        mode: state.mode,
+        stageId: state.mode === 'exam' ? state.examStage : skillStageId(state.skillId),
+        skillId: state.mode === 'exam' ? null : state.skillId,
+        problems: state.problems,
+        index: state.index,
+        correct: state.correct,
+        results: state.results,
+        quizStart: state.quizStart || Date.now(),
+        savedAt: Date.now()
+      }));
+    } catch (e) { /* 私密模式 / 容量不足：不影響學習 */ }
+  }
+
+  function restoreSession(s) {
+    var parsed = parseHash(s.route);
+    if (!parsed) return;
+    state.mode = parsed.screen;
+    state.skillId = parsed.screen === 'exam' ? null : parsed.skillId;
+    state.examStage = parsed.screen === 'exam' ? parsed.stageId : null;
+    state.stageId = parsed.screen === 'exam' ? parsed.stageId : skillStageId(parsed.skillId);
+    state.problems = s.problems;
+    state.index = s.index;
+    state.correct = s.correct || 0;
+    state.results = Array.isArray(s.results) ? s.results : [];
+    state.quizStart = s.quizStart || Date.now();
+    state.locked = false;
+    state.hintShown = false;
+    show('practice');
+    renderQuestion(state.problems[state.index]);
+    saveSession(); // 刷新 savedAt：繼續學習後再給 24 小時
+  }
+
+  /* 首頁 Continue 卡：重新驗證後恢復同一題 */
+  function resumeSession() {
+    var s = readSession();
+    var parsed = s ? parseHash(s.route) : null;
+    var route = parsed ? resolveRoute(parsed) : null;
+    if (!s || !route || !sameRoute(route, parsed)) {
+      clearSession();
+      renderHome();
+      return;
+    }
+    var hash = serializeRoute(route);
+    writeHash(hash, false);
+    nav.lastHash = hash;
+    restoreSession(s);
+  }
+
+  function sessionSummary() {
+    var s = readSession();
+    if (!s) return null;
+    var route = parseHash(s.route);
+    if (!route) return null;
+    var name = '';
+    if (route.screen === 'exam') {
+      var stage = getStage(route.stageId);
+      name = stage ? L(stage) : '';
+    } else {
+      var skill = getSkill(route.skillId);
+      name = skill ? nameOf(skill) : '';
+    }
+    var modeLabel = route.screen === 'quiz' ? t('quiz.title') : route.screen === 'exam' ? t('exam.title') : t('practice.title');
+    return { route: route, modeLabel: modeLabel, name: name, index: s.index, total: s.problems.length };
   }
 
   function getSkill(id) { return Curriculum.skills[id]; }
@@ -734,13 +863,157 @@
       '<text x="110" y="145" text-anchor="middle" font-size="13" fill="#333">長方形</text></svg>';
   }
 
-  /* ---------------- 導航 ---------------- */
+  /* ---------------- 路由（純函數）與導航 ---------------- */
 
+  /* 純函數：把 location.hash 解析為 route；無法辨識時回傳 null。
+   * 只接受 #/... 片段；skip link 之類的錨點（#main）不是路由。 */
+  function parseHash(hash) {
+    if (typeof hash !== 'string' || hash.length > 256) return null;
+    var m = /^#\/([a-z]+)(?:\/([A-Za-z0-9._-]+))?$/.exec(hash);
+    if (!m) return null;
+    var screen = m[1];
+    var param = m[2] || null;
+    if (screen === 'home' || screen === 'parent' || screen === 'settings' || screen === 'outline' || screen === 'formulas') {
+      return param ? null : { screen: screen };
+    }
+    if (screen === 'stage' || screen === 'exam') return param ? { screen: screen, stageId: param } : null;
+    if (screen === 'lesson' || screen === 'practice' || screen === 'quiz') return param ? { screen: screen, skillId: param } : null;
+    return null;
+  }
+
+  /* 純函數：route → 規範化 hash（無法辨識的 route 一律回 #/home） */
+  function serializeRoute(route) {
+    if (!route || typeof route !== 'object') return '#/home';
+    var screen = route.screen;
+    if (screen === 'stage' || screen === 'exam') return route.stageId ? '#/' + screen + '/' + route.stageId : '#/home';
+    if (screen === 'lesson' || screen === 'practice' || screen === 'quiz') return route.skillId ? '#/' + screen + '/' + route.skillId : '#/home';
+    if (screen === 'home' || screen === 'parent' || screen === 'settings' || screen === 'outline' || screen === 'formulas') return '#/' + screen;
+    return '#/home';
+  }
+
+  function sameRoute(a, b) { return serializeRoute(a) === serializeRoute(b); }
+
+  /* 當前 state → route（未驗證；驗證交給 resolveRoute） */
+  function currentRoute() {
+    switch (state.screen) {
+      case 'stage': return state.stageId ? { screen: 'stage', stageId: state.stageId } : { screen: 'home' };
+      case 'lesson': return state.skillId ? { screen: 'lesson', skillId: state.skillId } : { screen: 'home' };
+      case 'practice':
+        if (state.mode === 'exam') return state.examStage ? { screen: 'exam', stageId: state.examStage } : { screen: 'home' };
+        if (!state.skillId) return { screen: 'home' };
+        return { screen: state.mode === 'quiz' ? 'quiz' : 'practice', skillId: state.skillId };
+      case 'parent': case 'settings': case 'outline': case 'formulas': return { screen: state.screen };
+      default: return { screen: 'home' };
+    }
+  }
+
+  function skillStageId(skillId) {
+    var skill = getSkill(skillId);
+    return skill && getStage(skill.stage) ? skill.stage : null;
+  }
+
+  /* 上一層畫面：頂欄返回鍵用它；它同時是失效 route 的最近合法祖先 */
+  function parentOf(route) {
+    route = route || currentRoute();
+    switch (route.screen) {
+      case 'stage': return { screen: 'home' };
+      case 'lesson': {
+        var stageId = skillStageId(route.skillId);
+        return stageId ? { screen: 'stage', stageId: stageId } : { screen: 'home' };
+      }
+      case 'practice': case 'quiz':
+        return route.skillId ? { screen: 'lesson', skillId: route.skillId } : { screen: 'home' };
+      case 'exam': return route.stageId ? { screen: 'stage', stageId: route.stageId } : { screen: 'home' };
+      case 'home': return null;
+      default: return { screen: 'home' };
+    }
+  }
+
+  function isRealStage(stage) {
+    return stageSkills(stage).some(function (s) { return !s.scaffold; });
+  }
+  function stageHasExam(stage) {
+    return stageSkills(stage).some(function (s) { return !s.scaffold && s.types && s.types.length; });
+  }
+
+  /* 技能在階段內是否仍被順序解鎖規則擋住（與 renderStage 的 prevMastered 規則一致） */
+  function skillLockedInStage(skill) {
+    var stage = getStage(skill.stage);
+    if (!stage) return true;
+    var prevMastered = true;
+    var idx = 0;
+    var found = false;
+    var locked = true;
+    stage.topics.forEach(function (topic) {
+      topic.skills.forEach(function (id) {
+        var s = getSkill(id);
+        if (!s) { idx++; return; }
+        var isLocked = !prevMastered && idx > 0;
+        if (id === skill.id) { found = true; locked = isLocked; }
+        prevMastered = masteryOf(s).mastered || s.scaffold;
+        idx++;
+      });
+    });
+    return found ? locked : true;
+  }
+
+  /* 驗證 route：未知 → home；階段/技能未解鎖 → 最近合法祖先（含 home） */
+  function resolveRoute(route) {
+    if (!route || typeof route !== 'object') return null;
+    switch (route.screen) {
+      case 'home': return { screen: 'home' };
+      case 'parent': case 'settings': case 'outline': case 'formulas': return { screen: route.screen };
+      case 'stage': {
+        var stage = getStage(route.stageId);
+        if (!stage || !isRealStage(stage) || !stageUnlocked(stage.id)) return { screen: 'home' };
+        return { screen: 'stage', stageId: stage.id };
+      }
+      case 'exam': {
+        var examStage = getStage(route.stageId);
+        if (!examStage || !stageUnlocked(examStage.id) || !stageHasExam(examStage)) return { screen: 'home' };
+        return { screen: 'exam', stageId: examStage.id };
+      }
+      case 'lesson': case 'practice': case 'quiz': {
+        var skill = getSkill(route.skillId);
+        if (!skill || skill.scaffold) return { screen: 'home' };
+        var skillStage = getStage(skill.stage);
+        if (!skillStage || !isRealStage(skillStage) || !stageUnlocked(skillStage.id)) return { screen: 'home' };
+        if (skillLockedInStage(skill)) return { screen: 'stage', stageId: skillStage.id };
+        return { screen: route.screen, skillId: skill.id };
+      }
+    }
+    return { screen: 'home' };
+  }
+
+  /* lastHash 用於去重：popstate 與 hashchange 會成對觸發；重新渲染不應寫歷史 */
+  var nav = { lastHash: null };
+
+  function writeHash(hash, replace) {
+    if (location.hash === hash) return;
+    try {
+      if (replace) history.replaceState({ mathpath: hash }, '', hash);
+      else history.pushState({ mathpath: hash }, '', hash);
+    } catch (e) {
+      /* file:// 或受限環境：退回直接改 hash；觸發的 hashchange 由 lastHash 去重 */
+      try { location.hash = hash; } catch (e2) { /* 忽略 */ }
+    }
+  }
+
+  /* show() 是唯一的「畫面已切換」出口：同步 hash（重新渲染用 replace）、
+   * 更新頂欄、把焦點移到畫面標題，並透過 #announcer 宣告。 */
   function show(screen) {
     state.screen = screen;
     screens.forEach(function (s) { $('screen-' + s).hidden = (s !== screen); });
     try { window.scrollTo(0, 0); } catch (e) { /* jsdom 無此實現 */ }
     updateTopbar();
+
+    var hash = serializeRoute(currentRoute());
+    if (hash !== nav.lastHash) {
+      var changed = nav.lastHash !== null;
+      writeHash(hash, !changed); // 首次渲染/重繪用 replace，真正的畫面切換才 push
+      nav.lastHash = hash;
+    }
+
     /* 導航後把焦點移到畫面標題，並透過 live region 宣告，避免焦點掉到 body */
     var current = $('screen-' + screen);
     var heading = current && current.querySelector('h1, .page-title');
@@ -767,7 +1040,9 @@
       case 'home': title = t('appName'); break;
       case 'stage': title = L(getStage(state.stageId)); break;
       case 'lesson': title = nameOf(getSkill(state.skillId)); break;
-      case 'practice': title = state.mode === 'quiz' ? t('quiz.title') : t('practice.title'); break;
+      case 'practice':
+        title = state.mode === 'exam' ? t('exam.title') : state.mode === 'quiz' ? t('quiz.title') : t('practice.title');
+        break;
       case 'parent': title = t('parent.title'); break;
       case 'settings': title = t('settings.title'); break;
       case 'outline': title = t('outline.title'); break;
@@ -776,30 +1051,125 @@
     $('topbarTitle').textContent = title;
   }
 
-  function back() {
-    switch (state.screen) {
-      case 'stage': renderHome(); break;
-      case 'lesson': renderStage(state.stageId); break;
-      case 'practice':
-        if (state.mode === 'quiz') { renderLesson(state.skillId); }
-        else { renderLesson(state.skillId); }
-        break;
-      case 'parent': renderHome(); break;
-      case 'settings': renderHome(); break;
-      case 'outline': renderHome(); break;
-      case 'formulas': renderHome(); break;
+  /* 程式化導航：驗證 → 寫歷史 → 渲染。所有點擊入口最終都走這裡或 show()。 */
+  function navigate(route, opts) {
+    opts = opts || {};
+    var target;
+    try { target = resolveRoute(route) || { screen: 'home' }; }
+    catch (e) { target = { screen: 'home' }; } // 驗證本身出錯：交給渲染階段的錯誤邊界處理
+    var hash = serializeRoute(target);
+    writeHash(hash, !!opts.replace);
+    nav.lastHash = hash;
+    renderRouteSafely(target);
+  }
+
+  /* 瀏覽器 Back/Forward 或手動改 hash */
+  function onLocationChange() {
+    var hash = location.hash || '';
+    if (hash === nav.lastHash) return; // 同一事件已成對觸發，或畫面已同步
+    if (hash && hash.charAt(1) !== '/') {
+      /* 非路由錨點（例如 skip link 的 #main）：保留畫面，只把 hash 換回目前 route，
+       * 避免多一筆會讓 Back 看起來「沒有反應」的歷史。 */
+      var keep = nav.lastHash || serializeRoute(currentRoute());
+      try { history.replaceState({ mathpath: keep }, '', keep); } catch (e) { /* 忽略 */ }
+      return;
     }
+    if (!hash) { navigate(HOME_ROUTE, { replace: true }); return; }
+    var target;
+    try {
+      var parsed = parseHash(hash);
+      target = parsed ? (resolveRoute(parsed) || { screen: 'home' }) : { screen: 'home' };
+    } catch (err) { renderError(err); return; }
+    var canonical = serializeRoute(target);
+    nav.lastHash = canonical;
+    if (canonical !== hash) writeHash(canonical, true); // 失效/未解鎖 route 直接換成合法祖先
+    if (modalState.open) closeModal({ restore: false }); // Back/Forward 時收起對話框
+    renderRouteSafely(target);
+  }
+
+  function renderRoute(route) {
+    switch (route.screen) {
+      case 'home': return renderHome();
+      case 'stage': return renderStage(route.stageId);
+      case 'lesson': return renderLesson(route.skillId);
+      case 'practice': case 'quiz': case 'exam': return renderAssessmentRoute(route);
+      case 'parent': return renderParent();
+      case 'settings': return renderSettings();
+      case 'outline': return renderOutline();
+      case 'formulas': return renderFormulas();
+    }
+    return renderHome();
+  }
+
+  /* 複習/測驗/考試 route：state 仍對應同一題組就重繪當前題（語言切換、Back/Forward），
+   * 否則（含已完成）重新開始；未完成 session 的恢復在 init / Continue 卡處理。 */
+  function renderAssessmentRoute(route) {
+    var mode = route.screen;
+    var key = mode === 'exam' ? route.stageId : route.skillId;
+    var currentKey = mode === 'exam' ? state.examStage : state.skillId;
+    var sameRun = state.mode === mode && currentKey === key && state.problems.length > 0;
+    if (sameRun && state.index >= state.problems.length) {
+      // 已完成的題組：保留結果卡（從別的畫面 Back 回來時只切換顯示）
+      if (state.screen !== 'practice') show('practice');
+      return;
+    }
+    if (sameRun) {
+      renderQuestion(state.problems[state.index]);
+      if (state.screen !== 'practice') show('practice');
+      else updateTopbar();
+      return;
+    }
+    if (mode === 'practice') return startPractice(key);
+    if (mode === 'quiz') return startQuiz(key);
+    return renderGradeExam(key);
+  }
+
+  function renderRouteSafely(route) {
+    try { renderRoute(route); }
+    catch (err) { renderError(err); }
+  }
+
+  /* 錯誤邊界：畫面渲染失敗時給可恢復的卡片，先保住進度（匯出）再回首頁 */
+  function renderError(err) {
+    try { if (window.console && window.console.error) window.console.error(err); } catch (e) { /* 忽略 */ }
+    try { show('home'); } catch (e) { /* 忽略 */ }
+    var box = $('screen-home');
+    if (!box) return;
+    box.innerHTML = '<div class="result-card"><div class="big">⚠️</div>' +
+      '<h2>' + t('error.title') + '</h2>' +
+      '<p class="page-sub">' + t('error.body') + '</p>' +
+      '<div class="result-actions">' +
+      '<button class="btn secondary" id="errorExport" type="button">📤 ' + t('error.export') + '</button>' +
+      '<button class="btn" id="errorHome" type="button">' + t('error.home') + '</button>' +
+      '</div></div>';
+    var exportBtn = $('errorExport');
+    if (exportBtn) exportBtn.addEventListener('click', function () { exportProgress(); });
+    var homeBtn = $('errorHome');
+    if (homeBtn) homeBtn.addEventListener('click', function () { navigate(HOME_ROUTE); });
+  }
+
+  function back() {
+    var parent = parentOf(currentRoute());
+    navigate(parent || HOME_ROUTE);
   }
 
   /* ---------------- 首頁 ---------------- */
 
   function renderHome() {
-    show('home');
     var realStages = realStageList();
     var unlockedCount = 0;
+    var session = sessionSummary();
     var html = '<h1 class="page-title">' + t('home.title') + '</h1>' +
-      '<p class="page-sub">' + t('home.subtitle') + '</p>' +
-      '<div class="stage-grid">';
+      '<p class="page-sub">' + t('home.subtitle') + '</p>';
+    if (session) {
+      html += '<button class="continue-card" id="homeContinue" type="button">' +
+        '<span class="continue-emoji" aria-hidden="true">▶️</span>' +
+        '<span class="continue-body">' +
+        '<span class="continue-title">' + t('home.continue') + ' · ' + session.modeLabel + '</span>' +
+        '<span class="continue-sub">' + esc(session.name) + ' · ' + t('practice.question', { i: session.index + 1, n: session.total }) + '</span>' +
+        '</span></button>';
+    }
+    html += '<div class="stage-grid">';
     realStages.forEach(function (stage) {
       if (!stageUnlocked(stage.id)) return; // 未解鎖的階段不顯示
       unlockedCount++;
@@ -821,18 +1191,20 @@
     $('screen-home').innerHTML = html;
 
     $('screen-home').querySelectorAll('.stage-card').forEach(function (el) {
-      el.addEventListener('click', function () { renderStage(el.getAttribute('data-stage')); });
+      el.addEventListener('click', function () { navigate({ screen: 'stage', stageId: el.getAttribute('data-stage') }); });
     });
-    $('homeFormulasBtn').addEventListener('click', renderFormulas);
-    $('homeOutlineBtn').addEventListener('click', renderOutline);
-    $('homeParentBtn').addEventListener('click', renderParent);
+    $('homeFormulasBtn').addEventListener('click', function () { navigate({ screen: 'formulas' }); });
+    $('homeOutlineBtn').addEventListener('click', function () { navigate({ screen: 'outline' }); });
+    $('homeParentBtn').addEventListener('click', function () { navigate({ screen: 'parent' }); });
+    var continueBtn = $('homeContinue');
+    if (continueBtn) continueBtn.addEventListener('click', resumeSession);
+    show('home');
   }
 
   /* ---------------- 階段 / 技能列表 ---------------- */
 
   function renderStage(stageId) {
     state.stageId = stageId;
-    show('stage');
     var stage = getStage(stageId);
     var stats = stageSkillStats(stage);
 
@@ -858,8 +1230,9 @@
 
     $('screen-stage').innerHTML = html;
     var examBtn = $('stageExamBtn');
-    if (examBtn) examBtn.addEventListener('click', function () { renderGradeExam(stageId); });
+    if (examBtn) examBtn.addEventListener('click', function () { navigate({ screen: 'exam', stageId: stageId }); });
     bindStageCards();
+    show('stage');
   }
 
   function renderSkillCard(skill, ms, locked) {
@@ -896,14 +1269,14 @@
       el.addEventListener('click', function (ev) {
         if (ev.target.getAttribute('data-action') === 'go') return;
         if (locked) { toast(t('skill.unlockHint')); return; }
-        renderLesson(id);
+        navigate({ screen: 'lesson', skillId: id });
       });
       var goBtn = el.querySelector('[data-action="go"]');
       if (goBtn) {
         goBtn.addEventListener('click', function (ev) {
           ev.stopPropagation();
           if (locked) { toast(t('skill.unlockHint')); return; }
-          renderLesson(id);
+          navigate({ screen: 'lesson', skillId: id });
         });
       }
     });
@@ -913,7 +1286,6 @@
 
   function renderLesson(skillId) {
     state.skillId = skillId;
-    show('lesson');
     var skill = getSkill(skillId);
     var info = skill[state.lang === 'zh' ? 'zh' : 'en'];
     var lesson = Lessons[skill.lesson];
@@ -952,8 +1324,9 @@
     if (lesson) {
       $('lessonExample').addEventListener('click', function () { showWorkedExample(skillId); });
     }
-    $('lessonPractice').addEventListener('click', function () { startPractice(skillId); });
-    $('lessonQuiz').addEventListener('click', function () { startQuiz(skillId); });
+    $('lessonPractice').addEventListener('click', function () { navigate({ screen: 'practice', skillId: skillId }); });
+    $('lessonQuiz').addEventListener('click', function () { navigate({ screen: 'quiz', skillId: skillId }); });
+    show('lesson');
   }
 
   /* 一步步示範：生成一道該技能的題，列出解題步驟 */
@@ -997,10 +1370,14 @@
 
   function startPractice(skillId) {
     state.skillId = skillId;
+    state.stageId = skillStageId(skillId);
+    state.examStage = null;
     state.mode = 'practice';
     state.problems = [];
     state.index = 0;
     state.correct = 0;
+    state.results = [];
+    state.quizStart = 0;
     state.locked = false;
     state.hintShown = false;
     show('practice');
@@ -1016,10 +1393,13 @@
     state.locked = false;
     state.hintShown = false;
     renderQuestion(p);
+    saveSession();
   }
 
   function startQuiz(skillId) {
     state.skillId = skillId;
+    state.stageId = skillStageId(skillId);
+    state.examStage = null;
     state.mode = 'quiz';
     state.problems = buildQuiz(getSkill(skillId), QUIZ_LENGTH);
     state.index = 0;
@@ -1030,6 +1410,7 @@
     state.quizStart = Date.now();
     show('practice');
     renderQuestion(state.problems[0]);
+    saveSession();
   }
 
   function buildQuiz(skill, n) {
@@ -1325,6 +1706,7 @@
     if (state.index < state.problems.length) {
       state.locked = false;
       renderQuestion(state.problems[state.index]);
+      saveSession();
     } else if (state.mode === 'exam') {
       finishExam();
     } else {
@@ -1336,6 +1718,7 @@
     var skill = getSkill(state.skillId);
     var grade = MathCore.gradeQuiz(state.results);
     var seconds = Math.round((Date.now() - state.quizStart) / 1000);
+    clearSession();
     MathCore.applyQuizResult(progress, skill, grade.percent);
     saveProgress();
     updateTopbar();
@@ -1356,7 +1739,7 @@
       '<button class="btn" id="quizRetry" type="button">' + t('quiz.retry') + '</button>' +
       '</div></div>';
 
-    $('quizBack').addEventListener('click', function () { renderStage(state.stageId); });
+    $('quizBack').addEventListener('click', function () { navigate({ screen: 'stage', stageId: skillStageId(state.skillId) }); });
     $('quizRetry').addEventListener('click', function () { startQuiz(state.skillId); });
   }
 
@@ -1365,6 +1748,7 @@
   function renderGradeExam(stageId) {
     var stage = getStage(stageId);
     state.examStage = stageId;
+    state.stageId = stageId;
     state.mode = 'exam';
     state.skillId = null;
     state.problems = buildGradeExam(stage, EXAM_LENGTH);
@@ -1372,10 +1756,12 @@
     state.correct = 0;
     state.results = [];
     state.locked = false;
+    state.hintShown = false;
     state.quizStart = Date.now();
     show('practice');
     if (!state.problems.length) { toast(t('exam.empty')); renderStage(stageId); return; }
     renderQuestion(state.problems[0]);
+    saveSession();
   }
 
   function buildGradeExam(stage, n) {
@@ -1411,6 +1797,7 @@
     var stage = getStage(state.examStage);
     var grade = MathCore.gradeQuiz(state.results);
     var seconds = Math.round((Date.now() - state.quizStart) / 1000);
+    clearSession();
 
     // 記錄綜合考試成績；達 90% 即視為「完成本階段」，滿分另作紀錄
     var passed = grade.total > 0 && grade.percent >= EXAM_PASS;
@@ -1440,14 +1827,13 @@
       '<button class="btn secondary" id="examBack" type="button">' + t('quiz.back') + '</button>' +
       '<button class="btn" id="examRetry" type="button">' + t('quiz.retry') + '</button>' +
       '</div></div>';
-    $('examBack').addEventListener('click', function () { renderStage(state.examStage); });
+    $('examBack').addEventListener('click', function () { navigate({ screen: 'stage', stageId: state.examStage }); });
     $('examRetry').addEventListener('click', function () { renderGradeExam(state.examStage); });
   }
 
   /* ---------------- 家長中心 ---------------- */
 
   function renderParent() {
-    show('parent');
     var masteredCount = 0, totalCount = 0, sumStars = totalStars();
     Object.keys(Curriculum.skills).forEach(function (id) {
       var s = Curriculum.skills[id];
@@ -1493,6 +1879,7 @@
     $('parentExport').addEventListener('click', exportProgress);
     $('parentImport').addEventListener('click', importProgress);
     $('parentReset').addEventListener('click', confirmReset);
+    show('parent');
   }
 
   /* ---------------- 對話框（角色 / 焦點管理 / Tab 陷阱 / Esc 關閉） ---------------- */
@@ -1637,6 +2024,7 @@
           if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error(t('parent.importBadFormat'));
           progress = MathCore.sanitizeProgress(parsed);
           saveProgress();
+          clearSession(); // 匯入的進度可能改變解鎖狀態，舊題組不再恢復
           state.lang = progress.lang || state.lang;
           state.theme = progress.theme || state.theme;
           state.sound = progress.sound !== false;
@@ -1668,6 +2056,7 @@
       progress.sound = state.sound;
       progress.theme = state.theme;
       saveProgress();
+      clearSession(); // 重置進度後不應再恢復舊題組
       var opener = closeModal({ restore: false });
       renderHome();
       if (!restoreFocus(opener)) focusScreen();
@@ -1677,9 +2066,8 @@
   /* ---------------- 公式一覽（參考） ---------------- */
 
   function renderFormulas() {
-    show('formulas');
     var F = Formulas;
-    if (!F) { $('screen-formulas').innerHTML = '<p class="page-sub">—</p>'; return; }
+    if (!F) { $('screen-formulas').innerHTML = '<p class="page-sub">—</p>'; show('formulas'); return; }
     var lang = state.lang === 'zh' ? 'zh' : 'en';
     var html = '<h1 class="page-title">📐 ' + t('formulas.title') + '</h1>' +
       '<p class="page-sub">' + esc(F.intro[lang]) + '</p>';
@@ -1694,14 +2082,14 @@
       html += '</div>';
     });
     $('screen-formulas').innerHTML = html;
+    show('formulas');
   }
 
   /* ---------------- 課程大綱（參考） ---------------- */
 
   function renderOutline() {
-    show('outline');
     var o = CurriculumOutline;
-    if (!o) { $('screen-outline').innerHTML = '<p class="page-sub">—</p>'; return; }
+    if (!o) { $('screen-outline').innerHTML = '<p class="page-sub">—</p>'; show('outline'); return; }
     var lang = state.lang === 'zh' ? 'zh' : 'en';
     var KS_APP = { ks1: ['prek', 'g1', 'g2', 'g3'], ks2: ['g4', 'g5', 'g6'], js: ['ms1', 'ms2', 'ms3'], ss: ['hs1', 'hs2', 'hs3'] };
     var html = '<h1 class="page-title">📚 ' + t('outline.title') + '</h1>' +
@@ -1726,12 +2114,12 @@
       html += '</div>';
     });
     $('screen-outline').innerHTML = html;
+    show('outline');
   }
 
   /* ---------------- 設置 ---------------- */
 
   function renderSettings() {
-    show('settings');
     var html = '<h1 class="page-title">' + t('settings.title') + '</h1>' +
       '<div class="panel">' +
       '<div class="settings-row"><span class="k">' + t('settings.language') + '</span>' +
@@ -1774,7 +2162,8 @@
       });
     });
     $('settingsRefresh').addEventListener('click', forceUpdate);
-    $('settingsParent').addEventListener('click', renderParent);
+    $('settingsParent').addEventListener('click', function () { navigate({ screen: 'parent' }); });
+    show('settings');
   }
 
   function themeSegBtn(value, label) {
@@ -1786,18 +2175,8 @@
     progress.lang = state.lang;
     saveProgress();
     applyLang();
-    // 重新渲染當前屏幕
-    switch (state.screen) {
-      case 'home': renderHome(); break;
-      case 'stage': renderStage(state.stageId); break;
-      case 'lesson': renderLesson(state.skillId); break;
-      case 'practice':
-        var cur = currentProblem();
-        if (cur) renderQuestion(cur);
-        break;
-      case 'parent': renderParent(); break;
-      case 'settings': renderSettings(); break;
-    }
+    // 依目前 route 重新渲染（不在這裡另寫畫面分支）
+    renderRouteSafely(currentRoute());
     updateTopbar();
   }
 
@@ -1806,7 +2185,7 @@
   function bindTopbar() {
     $('backBtn').addEventListener('click', back);
     $('langBtn').addEventListener('click', toggleLang);
-    $('settingsBtn').addEventListener('click', renderSettings);
+    $('settingsBtn').addEventListener('click', function () { navigate({ screen: 'settings' }); });
   }
 
   /* 註冊 Service Worker（僅在 http/https 下，供離線與安裝成 App） */
@@ -1836,13 +2215,37 @@
     }).then(done).catch(done);
   }
 
+  /* 啟動：解析 hash → 驗證 → 恢復未完成的題組 → 渲染。
+   * 首次渲染用 replace，不把「開啟 app」本身寫成一條歷史。 */
   function init() {
     bindTopbar();
     applyTheme();
     applyLang();
     document.addEventListener('keydown', onGlobalKeydown);
+    window.addEventListener('hashchange', onLocationChange);
+    window.addEventListener('popstate', onLocationChange);
     registerSW();
-    renderHome();
+
+    var target = null;
+    try {
+      var parsed = parseHash(location.hash);
+      target = parsed ? resolveRoute(parsed) : null;
+    } catch (err) { renderError(err); return; }
+    var session = readSession();
+    if (session) {
+      var sessionParsed = parseHash(session.route);
+      var sessionRoute = null;
+      try { sessionRoute = sessionParsed ? resolveRoute(sessionParsed) : null; }
+      catch (e) { sessionRoute = null; }
+      if (!sessionRoute || !sameRoute(sessionRoute, sessionParsed)) {
+        clearSession(); // 解鎖狀態已改變，舊 session 不再合法
+      } else if (target && sameRoute(target, sessionRoute)) {
+        restoreSession(session); // 重新載入時回到同一題、同一進度
+        return;
+      }
+      /* 在首頁/其他 route 開啟時不自動恢復，改由首頁 Continue 卡讓使用者決定 */
+    }
+    navigate(target || HOME_ROUTE, { replace: true });
   }
 
   /* 腳本位於 <body> 末尾，DOM 已就緒，直接初始化 */
@@ -1855,6 +2258,17 @@
     currentProblem: function () { return currentProblem(); },
     renderGradeExam: renderGradeExam,
     finishExam: finishExam,
-    renderHome: renderHome
+    renderHome: renderHome,
+    parseHash: parseHash,
+    serializeRoute: serializeRoute,
+    resolveRoute: resolveRoute,
+    parentOf: parentOf,
+    currentRoute: currentRoute,
+    navigate: navigate,
+    session: {
+      key: SESSION_KEY,
+      read: readSession,
+      clear: clearSession
+    }
   };
 })();

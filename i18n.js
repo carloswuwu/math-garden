@@ -62,6 +62,13 @@
 
     formulas: { title: '公式一覽' },
 
+    error: {
+      title: '這個畫面暫時打不開',
+      body: '別擔心，你的學習進度仍然安全。可以先匯出進度作備份，再回到首頁。',
+      export: '匯出進度',
+      home: '回到首頁'
+    },
+
     exam: { title: '綜合考試', result: '模擬試卷完成', empty: '此年級暫無可考題目', perfectUnlock: '🎉 滿分！已解鎖下一階段', passUnlock: '🎉 已達標（90%）！已解鎖下一階段', needPass: '取得 90% 或以上即可解鎖下一階段', needPerfect: '考取滿分即可解鎖下一階段' },
 
     direction: { east: '東', south: '南', west: '西', north: '北' },
@@ -128,6 +135,13 @@
     outline: { title: 'Curriculum Outline', covered: 'covered in this app' },
 
     formulas: { title: 'Formula Sheet' },
+
+    error: {
+      title: 'This screen could not be shown',
+      body: 'Your progress is still safe. Export it as a backup, or go back home and try again.',
+      export: 'Export progress',
+      home: 'Back to home'
+    },
 
     exam: { title: 'Mock Exam', result: 'Mock exam complete', empty: 'No questions for this grade yet', perfectUnlock: '🎉 Full marks! Next stage unlocked', passUnlock: '🎉 90% or above — next stage unlocked', needPass: 'Score 90% or above to unlock the next stage', needPerfect: 'Get full marks to unlock the next stage' },
 
