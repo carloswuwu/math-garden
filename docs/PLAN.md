@@ -7,14 +7,15 @@
 | Item | Value |
 |---|---|
 | Repo | `C:\Users\Carlos\Documents\deepseek-harness\math` |
-| Branch / HEAD | `main` @ `8ba179e` (clean tree) |
+| Branch / HEAD | `main` @ `c4018db` (Phase 1 landed; docs commit on top) |
 | Live | https://carloswuwu.github.io/math-garden/ (GitHub Pages, deploy from `main` root) |
-| CI | `.github/workflows/tests.yml` — run #4 green; three node suites on every push/PR |
+| CI | `.github/workflows/tests.yml` — three node suites on every push/PR |
 | Content | 14 stages, **111 skills**, 102 lessons, 127 type entries; Pre-K → university |
-| Code size | `math-core.js` 3,606 lines · `app.js` 1,701 · `curriculum.js` 1,015 · `lessons.js` 534 · `style.css` 670 |
-| Tests | core **571,764** assertions · ui **88** · generators **111,680** (111 skills) |
+| Code size | `math-core.js` 3,777 lines · `app.js` 2,274 · `curriculum.js` 1,086 · `lessons.js` 597 · `style.css` 729 |
+| Tests | core **571,764** assertions · ui **183** · generators **111,680** (111 skills) |
 | Persistence | progress schema **v2** (`mathpath.progress`), legacy v1 key migrated, sanitized import |
-| Offline | SW cache `math-garden-v9`, 20 KaTeX woff2 precached, nav-only shell fallback |
+| In-flight session | `sessionStorage['mathpath.session.v1']` (24 h TTL, practice/quiz/exam only, never in progress) |
+| Offline | SW cache `math-garden-v10`, 20 KaTeX woff2 precached, nav-only shell fallback |
 | Local preview | `$env:PORT=8080; node tests/serve.js` → http://localhost:8080 (also LAN/tailnet) |
 | Dev env | Windows, PowerShell 5.1, Node 20; tests deps in `tests/` with `package-lock.json` |
 
@@ -39,6 +40,13 @@
 8. PWA safety: non-navigation misses never fall back to HTML; navigation timeout; fonts precached; no auto-reload mid-session.
 9. New modes: indices division/power-of-product, negative-coefficient inequalities with sign flip, general 2×2 simultaneous by elimination, log product law, even median, nature of roots, fractional .5 medians, unsorted stats prompts.
 
+### Landed in this cycle: Phase 1 — routing & resume (do not re-report)
+
+10. Hash routes (`#/home`, `#/stage/:stageId`, `#/lesson|practice|quiz/:skillId`, `#/exam/:stageId`, `#/parent|settings|outline|formulas`) parsed by pure `parseHash`/`serializeRoute`, validated by `resolveRoute` against `Curriculum` + unlock rules; unknown/locked links are replaced with the nearest valid ancestor. Back/Forward works via `hashchange` + `popstate` (deduped by `lastHash`); `pushState` only on a real screen change, re-renders replace.
+11. `show()` is the single navigation choke point: hash sync + topbar + focus-to-heading + `#announcer`. Duplicated `back()` and language-toggle screen switches removed (`back()` = `parentOf(currentRoute())`, language toggle re-renders via route).
+12. In-flight session resume: `sessionStorage['mathpath.session.v1']` for practice/quiz/exam `{v, route, mode, stageId, skillId, problems, index, correct, results, quizStart, savedAt}`; 24 h TTL; every problem re-validated with `MathCore.checkAnswer(p, p.answer)` and the route re-checked against unlocks; written on start/advance/restore, cleared on finish/reset/import. Reload mid-quiz restores question/index/results when the URL targets the same route; the home screen otherwise shows a Continue card. Progress schema untouched.
+13. Route error boundary (`renderRouteSafely`) renders a recoverable card that offers **Export progress** before returning home.
+
 ## 2. Architecture map
 
 ```
@@ -58,7 +66,8 @@ tests/              core.test.js, ui.test.js (jsdom), generators.test.js, serve.
 - `Problem { type, prompt{zh,en}, visual, answer, choices, math, hint, sig, solution? }`.
 - Five consumers of `math`: choice builder, `mathSig`, `explain/SOLVERS`, `renderVisual`, and the test oracle (`tests/core.test.js computeAnswer`). Any new mode must satisfy all five.
 - Progress: `{version:2, lang, sound, theme, stars, streak, badges, skills, stageExams}`; `MathCore.sanitizeProgress()` is the only writer path.
-- Navigation: mutable `state` + `show(screen)` toggling `hidden`; no URL state, no history, no resume.
+- Navigation: pure `parseHash(hash)`/`serializeRoute(route)` + `parentOf(route)`/`currentRoute()`; `resolveRoute()` validates against `Curriculum` and unlock rules (unknown → home, locked → nearest ancestor). `show(screen)` toggles `hidden`, syncs the hash (replace on re-render / push on screen change), moves focus to the heading and announces via `#announcer`. `hashchange`/`popstate` re-render from the URL; all click entries go through `navigate(route)` so the error boundary in `renderRouteSafely()` applies. Hash routes only — path routes would 404 on Pages reload and break `file://`.
+- In-flight session: `sessionStorage['mathpath.session.v1']` for practice/quiz/exam; `readSession()/saveSession()/clearSession()/restoreSession()`; home Continue card. It is never written to the progress schema.
 
 **Verification commands**
 
@@ -87,27 +96,34 @@ CI additionally does `npm ci --prefix tests` then the three suites.
 - Small documented pools remain (see `KNOWN_SMALL_POOLS` in `tests/generators.test.js`).
 
 ### Architecture (P1/P2)
-- **No routing/resume:** browser/hardware Back exits the app; reload loses quiz/exam state; `back()` is a hand-written switch.
+- **Routing remainder:** finished quiz/exam results have no dedicated route (coming Back to the same quiz route re-shows the last result card; a reload at that URL starts a fresh run). Topbar back navigates to `parentOf()` and therefore pushes a history entry instead of calling `history.back()`.
 - **No build:** 7 globals, script-order coupling, no minification/tree-shaking, unhashed assets; file:// double-click is a supported path.
 - **SW lifecycle:** manual `CACHE` version, no user-visible update prompt (auto-reload removed), `skipWaiting` still immediate.
 - **i18n split:** UI strings in `i18n.js`, item/lesson strings hardcoded `{zh,en}` in generators/lessons; ARIA strings inline in `app.js`.
 - **Test oracle duplication:** `tests/core.test.js computeAnswer` re-implements generator math (kept in sync manually).
-- **No error boundary/observability:** one bad item can blank a screen; no global handler.
+- **Error boundary/observability:** route renders are wrapped (`renderRouteSafely`) but a failure inside a direct event handler still surfaces via the console; no global `window.onerror` handler or telemetry.
 - **A11y remainder:** informative SVG visuals have no text alternative; background not `inert` when dialog open; targets are 42 px (WCAG suggests 44); no `tests/a11y.test.js`/axe subset.
 - **Content/spec drift:** formula sheet is standalone, not tagged to skills; no parity test.
 - **Repo metadata:** GitHub description still says “Pre-K to Primary 6”.
 
 ## 4. The plan
 
-### Phase 1 — Routing & resume (next, highest value)
-1. Add pure `parseHash(hash)` / `serializeRoute(route)` and route validation against `Curriculum` + unlock rules; routes: `#/home`, `#/stage/:stageId`, `#/lesson/:skillId`, `#/practice/:skillId`, `#/quiz/:skillId`, `#/exam/:stageId`, `#/parent|settings|outline|formulas`.
-2. Make `show()` the single navigation choke point: sync hash (suppress during `hashchange` render), move focus to screen heading (already partially done), announce title via `#announcer`.
-3. Wire `hashchange`/`popstate`; replace `back()` with `parentOf(route)`; `replace` unknown/locked routes to nearest valid ancestor.
-4. Add `sessionStorage['mathpath.session.v1']` for in-flight practice/quiz/exam `{v, route, mode, stageId, skillId, problems, index, correct, results, quizStart, savedAt}`; validate problems with `MathCore.checkAnswer(p, p.answer)`; 24 h TTL; write on start/advance/finish; restore after `loadProgress()`; home shows a Continue card.
-5. Delete the duplicated `back()` branches and language-toggle screen switch (re-render via route).
-6. Add an error boundary in `navigate()`: try/catch → recoverable card offering “Export progress” first.
+### Phase 1 — Routing & resume — ✅ landed (`6c20635` feat, `56890f1` ui/pwa, `c4018db` tests)
 
-**Acceptance:** Back/Forward works home→stage→lesson; reload mid-quiz restores same question/index/results; invalid or locked links redirect; all suites + new router tests green; no route state added to progress schema.
+Implemented as sketched:
+1. Pure `parseHash(hash)` / `serializeRoute(route)` (+ `parentOf`, `currentRoute`), exposed on `window.__mathApp` for the jsdom suite; `resolveRoute()` validates against `Curriculum` + unlock rules. Routes: `#/home`, `#/stage/:stageId`, `#/lesson/:skillId`, `#/practice/:skillId`, `#/quiz/:skillId`, `#/exam/:stageId`, `#/parent|settings|outline|formulas`.
+2. `show()` is the single choke point: syncs the hash once (replace on re-render, push only when the screen actually changes), updates the topbar, focuses the screen heading and announces via `#announcer`.
+3. `hashchange`/`popstate` re-render from the URL (deduped through `lastHash` because browsers fire both); unknown/locked routes are `replaceState`d to the nearest valid ancestor (home/stage).
+4. `sessionStorage['mathpath.session.v1']` for practice/quiz/exam, written on start/advance/restore, cleared on finish/reset/import; 24 h TTL; problems re-checked with `MathCore.checkAnswer(p, p.answer)` and the route re-validated against unlocks; auto-restore only when the URL already targets the same route, otherwise the home Continue card offers it.
+5. Duplicated `back()` switch and language-toggle screen switch deleted — both are route-driven (`back()` = `navigate(parentOf(currentRoute()))`; language toggle re-renders `currentRoute()`).
+6. `navigate()` → `renderRouteSafely()` error boundary renders a recoverable card that offers **Export progress** before home.
+
+Decisions / deviations from the original sketch:
+- Topbar back pushes `parentOf(currentRoute())` instead of calling `history.back()`; a finished-run route re-shows the existing result card until refresh.
+- `pushState`/`replaceState` are wrapped: on `file://` or restricted contexts they fall back to assigning `location.hash` (deduped by `lastHash`).
+- Session restore refreshes `savedAt` (24 h window restarts on Continue).
+
+**Acceptance met:** Back/Forward works home→stage→lesson; reload mid-quiz restores same question/index/results; invalid or locked links redirect; all three suites green; no route state added to progress schema. Covered by ui assertions 19–27.
 
 **Do not:** add a router library; use `history.pushState` path routes (Pages 404s on reload, file:// breaks); put quiz problems in progress; auto-resume stale sessions; push history on every re-render.
 
@@ -142,8 +158,8 @@ CI additionally does `npm ci --prefix tests` then the three suites.
 ### 30 / 60 / 90-day shape
 | Window | Ship |
 |---|---|
-| 0–30 d | Phase 1 routing steps 1–3 + session restore; Phase 2 contract tests; SW font precache + safe fallback (done); land a11y tests; formula/skill parity lint |
-| 31–60 d | esbuild phases A–B, generated SW, hashed assets, update banner; routing step 4 (deep links + Continue + error boundary) |
+| 0–30 d | **Phase 1 routing & resume (landed)**; SW font precache + safe fallback (done); Phase 2 contract tests; land a11y tests; formula/skill parity lint |
+| 31–60 d | esbuild phases A–B, generated SW, hashed assets, update banner; result routes / history polish for finished runs |
 | 61–90 d | Phases C–E modular split, text alternatives, perf/Lighthouse gates, content/spec parity report, docs/ADRs |
 
 ## 5. Agent playbook (proven in this repo)
@@ -174,16 +190,16 @@ git add -A; git commit -m "…"
 git push origin main          # needs credential store; run outside sandbox if needed
 ```
 
-Then: wait for the `tests` workflow (GitHub Actions) to go green, confirm Pages deployed, hard-refresh the live site. Bump the SW cache whenever shipped assets change (currently `math-garden-v9`); if the build pipeline lands, this becomes generated.
+Then: wait for the `tests` workflow (GitHub Actions) to go green, confirm Pages deployed, hard-refresh the live site. Bump the SW cache whenever shipped assets change (currently `math-garden-v10`); if the build pipeline lands, this becomes generated.
 
 ## 7. Bootstrap prompt for the new session
 
-> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Then continue with **Phase 1 — Routing & resume**: implement pure `parseHash/serializeRoute` with jsdom tests, route validation against curriculum/unlock rules, `show()` as the focus/announce choke point, `hashchange/popstate`, and `sessionStorage` resume for practice/quiz/exam with a Continue card. Keep the existing innerHTML renderer, file:// support and all three suites green; add tests for Back/Forward, invalid routes and mid-quiz reload. Commit by scope and push, then confirm CI.
+> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Phase 1 (routing & resume) is landed — do not redo it. Then continue with **Phase 2 — Contract tests**: add the MATH_SPEC `type(+mode) → answerFromMath` table and delete the duplicated `computeAnswer`; add the `sanitizeProgress` schema fuzz, the asset manifest check, i18n parity, solver-coverage and content-parity tests. Keep all three suites green (and CI ≤ 10 s), add tests for every new contract, then commit by scope and push. Keep the existing innerHTML renderer and file:// support.
 
 ## 8. Key references
 
 - Engine: `math-core.js` — `GENERATORS`, `SOLVERS`, `generateProblem`, `generateSet`, `explain`, `sanitizeProgress`, `mathSig`.
-- UI/state: `app.js` — `state`, `show()`, `renderQuestion`, `startPractice/Quiz`, `finishExam`, `showModal/closeModal`, `registerSW`, `applyLang`.
+- UI/state: `app.js` — `state`, `show()`, `navigate()`, `parseHash/serializeRoute/resolveRoute/parentOf/currentRoute`, `readSession/saveSession/restoreSession`, `renderQuestion`, `startPractice/Quiz`, `finishExam`, `showModal/closeModal`, `registerSW`, `applyLang`.
 - Content: `curriculum.js` (skills/types/levels), `lessons.js` (teaching text), `i18n.js` (UI strings), `formulas.js`, `curriculum-outline.js`.
-- Tests: `tests/core.test.js` (oracle + invariants), `tests/generators.test.js` (contracts, pool floors, explain), `tests/ui.test.js` (jsdom flows, a11y, keyboard).
+- Tests: `tests/core.test.js` (oracle + invariants), `tests/generators.test.js` (contracts, pool floors, explain), `tests/ui.test.js` (jsdom flows, router/Back-Forward, session resume, a11y, keyboard).
 - CI: `.github/workflows/tests.yml`; test deps: `tests/package.json` + `tests/package-lock.json`.
