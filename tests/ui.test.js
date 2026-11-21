@@ -466,6 +466,25 @@ async function main() {
   dErr.getElementById('errorExport').click();
   check(!dErr.getElementById('modal').hidden, '錯誤卡的匯出進度可開啟對話框');
 
+  /* 28. 匯入對話框：超過 1 MB 被拒絕；有效存檔可導入並同步語言 */
+  const ctxI = boot();
+  const dI = ctxI.d, wI = ctxI.w;
+  dI.getElementById('homeParentBtn').click();
+  dI.getElementById('parentImport').click();
+  check(!dI.getElementById('modal').hidden, '匯入對話框已開啟');
+  const jsonArea = dI.getElementById('jsonArea');
+  jsonArea.value = JSON.stringify({ version: 2, skills: {} }) + 'x'.repeat(1000000);
+  dI.getElementById('jsonOk').click();
+  const importToast = dI.getElementById('toast');
+  check(!importToast.hidden && importToast.textContent.includes('1 MB'), '超過 1 MB 的存檔被拒絕並提示');
+  jsonArea.value = JSON.stringify({ version: 2, lang: 'en', skills: { 'prek.count': { attempts: 2, correct: 1 } } });
+  dI.getElementById('jsonOk').click();
+  const importedProgress = wI.__mathApp.getProgress();
+  check(importedProgress.version === 2 && importedProgress.skills['prek.count'].attempts === 2, '有效存檔已導入');
+  check(JSON.parse(wI.localStorage.getItem('mathpath.progress')).skills['prek.count'].attempts === 2, '導入的進度已持久化');
+  check(dI.documentElement.getAttribute('lang') === 'en', '導入後 <html lang> 同步為英文');
+  check(dI.getElementById('modal').hidden, '導入成功後關閉對話框');
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }

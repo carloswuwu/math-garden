@@ -2689,6 +2689,59 @@
     }
     var m = p.math, a, b, sum, sym, t, tens, ones, sumN;
     switch (p.type) {
+      case 'count':
+        return {
+          zh: ['用手指一個一個點著數：1 到 ' + m.n + '。', '一共有 ' + p.answer + ' 個。'],
+          en: ['Point at each one and count: 1 to ' + m.n + '.', 'There are ' + p.answer + ' in all.']
+        };
+      case 'compare': {
+        var big = Math.max(m.a, m.b), small = Math.min(m.a, m.b);
+        return {
+          zh: ['兩個數是 ' + m.a + ' 和 ' + m.b + '。', '比較後，' + big + ' 比 ' + small + ' 大。', '答案是 ' + p.answer + '。'],
+          en: ['The two numbers are ' + m.a + ' and ' + m.b + '.', big + ' is bigger than ' + small + '.', 'The answer is ' + p.answer + '.']
+        };
+      }
+      case 'comparegroup': {
+        var green = m.a, orange = m.b, more = m.mode === 'max';
+        var ansZh = p.answer === 'green' ? '綠色' : '橙色';
+        var ansEn = p.answer === 'green' ? 'green' : 'orange';
+        var nAns = p.answer === 'green' ? green : orange;
+        return {
+          zh: ['數一數：綠色 ' + green + ' 個，橙色 ' + orange + ' 個。', (more ? '更多' : '更少') + '的是' + ansZh + '（' + nAns + ' 個），所以選' + ansZh + '。'],
+          en: ['Count: green ' + green + ', orange ' + orange + '.', 'The ' + (more ? 'greater' : 'smaller') + ' group is ' + ansEn + ' (' + nAns + '), so choose ' + ansEn + '.']
+        };
+      }
+      case 'fraction':
+        return {
+          zh: ['分母 = 總份數 = ' + m.d + '。', '分子 = 塗色份數 = ' + m.n + '。', '分數 = ' + renderValue({ n: m.n, d: m.d }) + '。'],
+          en: ['Denominator = total parts = ' + m.d + '.', 'Numerator = shaded parts = ' + m.n + '.', 'Fraction = ' + renderValue({ n: m.n, d: m.d }) + '.']
+        };
+      case 'missing':
+        if (m.blank === 'b') {
+          if (m.op === '+' || m.op === 'add') {
+            return {
+              zh: ['想一想：' + m.a + ' 加多少等於 ' + m.c + '？', m.c + ' − ' + m.a + ' = ' + p.answer + '。'],
+              en: ['Think: ' + m.a + ' plus what makes ' + m.c + '?', m.c + ' − ' + m.a + ' = ' + p.answer + '.']
+            };
+          }
+          return {
+            zh: ['想一想：' + m.a + ' 減多少等於 ' + m.c + '？', m.a + ' − ' + m.c + ' = ' + p.answer + '。'],
+            en: ['Think: ' + m.a + ' minus what makes ' + m.c + '?', m.a + ' − ' + m.c + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.blank === 'a') {
+          if (m.op === '+' || m.op === 'add') {
+            return {
+              zh: ['想一想：什麼數加 ' + m.b + ' 等於 ' + m.c + '？', m.c + ' − ' + m.b + ' = ' + p.answer + '。'],
+              en: ['Think: what plus ' + m.b + ' makes ' + m.c + '?', m.c + ' − ' + m.b + ' = ' + p.answer + '.']
+            };
+          }
+          return {
+            zh: ['想一想：什麼數減 ' + m.b + ' 等於 ' + m.c + '？', m.c + ' + ' + m.b + ' = ' + p.answer + '。'],
+            en: ['Think: what minus ' + m.b + ' makes ' + m.c + '?', m.c + ' + ' + m.b + ' = ' + p.answer + '.']
+          };
+        }
+        return null;
       case 'addition':
         a = m.a; b = m.b; sum = p.answer;
         if (a + b <= 20 && a < 10 && b < 10 && (10 - a) > 0 && (10 - a) < b) {
@@ -2932,6 +2985,30 @@
           en: ['mid x = (' + m.a[0] + ' + ' + m.b[0] + ') ÷ 2 = ' + m.mx + '.', 'mid y = (' + m.a[1] + ' + ' + m.b[1] + ') ÷ 2 = ' + m.my + '.', 'midpoint = ' + p.answer + '.']
         };
       case 'word':
+        if (m.op === 'add') {
+          return {
+            zh: ['先看「又得到」，用加法。', m.a + ' + ' + m.b + ' = ' + p.answer + '。'],
+            en: ['The key word is "more", so add.', m.a + ' + ' + m.b + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'sub') {
+          return {
+            zh: ['先看「用掉了」，用減法。', m.a + ' − ' + m.b + ' = ' + p.answer + '。'],
+            en: ['The key word is "uses", so subtract.', m.a + ' − ' + m.b + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'mul') {
+          return {
+            zh: ['每盒有 ' + m.a + ' 個，共 ' + m.b + ' 盒，用乘法。', m.a + ' × ' + m.b + ' = ' + p.answer + '。'],
+            en: ['Each box has ' + m.a + ', with ' + m.b + ' boxes, so multiply.', m.a + ' × ' + m.b + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wtwostep') {
+          return {
+            zh: ['先算每盒的總數，再減去送出的。', m.a + ' × ' + m.b + ' − ' + m.c + ' = ' + p.answer + '。'],
+            en: ['Find the total in the boxes first, then subtract what is given away.', m.a + ' × ' + m.b + ' − ' + m.c + ' = ' + p.answer + '.']
+          };
+        }
         if (m.op === 'warea') {
           return {
             zh: ['面積 = 長 × 闊。', '= ' + m.a + ' × ' + m.b + ' = ' + p.answer + '。'],
@@ -3318,6 +3395,205 @@
   /* 題型目錄：直接由註冊表產生，新增生成器即自動納入 */
   GENERATOR_TYPES = Object.keys(GENERATORS);
 
+  /* ---------------- 答案推導規格（MATH_SPEC） ----------------
+   * 生成器把參數寫進 p.math；此表只從 p.math 重新推導答案（不讀 p.answer），
+   * 是測試 oracle 與 generateProblem({selfCheck:true}) 自檢的唯一來源。
+   * 鍵 = p.math.op（題型選定的運算）；模式差異在函數內按 m.mode 分支。
+   * 與 GENERATORS 放在一起維護：新增題型時兩者都要加，contract 測試會檢查。 */
+  var MATH_SPEC = {
+    count: function (m) { return m.n; },
+    frac: function (m) { return { n: m.n, d: m.d }; },
+    compare: function (m) { return m.mode === 'max' ? Math.max(m.a, m.b) : Math.min(m.a, m.b); },
+    comparegroup: function (m) { return m.mode === 'max' ? (m.a > m.b ? 'green' : 'orange') : (m.a < m.b ? 'green' : 'orange'); },
+    fadd: function (m) { return { n: m.a + m.b, d: m.d }; },
+    fsub: function (m) { return { n: m.a - m.b, d: m.d }; },
+    dadd: function (m) { return (m.r / 10).toFixed(1); },
+    dsub: function (m) { return (m.r / 10).toFixed(1); },
+    dmul: function (m) { return (m.r / 10).toFixed(1); },
+    ddiv: function (m) { return (m.r / 10).toFixed(1); },
+    avg: function (m) { return m.nums.reduce(function (s, x) { return s + x; }, 0) / m.nums.length; },
+    equation: function (m) {
+      if (m.form === 'x+a=c') return m.c - m.a;
+      if (m.form === 'x-a=c') return m.c + m.a;
+      if (m.form === 'ax=c') return m.c / m.a;
+      return m.a * m.c; // x/a=c
+    },
+    percent: function (m) {
+      if (m.kind === 'of') return m.p * m.whole / 100;
+      if (m.kind === 'increase') return m.whole * (100 + m.p) / 100;
+      if (m.kind === 'decrease') return m.whole * (100 - m.p) / 100;
+      return m.pct;
+    },
+    ratio: function (m) { return m.q * m.k; },
+    area: function (m) { return m.mode === 'area' ? m.l * m.w : 2 * (m.l + m.w); },
+    fractionof: function (m) { return m.n * m.k; },
+    exprsub: function (m) { return m.a * m.x + m.b; },
+    linear: function (m) { return m.form === '+' ? (m.c - m.b) / m.a : (m.c + m.b) / m.a; },
+    pythagoras: function (m) { return m.mode === 'hyp' ? m.c : m.b; },
+    simul: function (m) { return m.mode === 'gen' ? (m.s * m.d - m.b * m.t) / (m.a * m.d - m.b * m.c) : (m.s + m.d) / 2; },
+    indices: function (m) {
+      if (m.mode === 'power') return Math.pow(m.base, m.e);
+      if (m.mode === 'prod') return Math.pow(m.base, m.e1 + m.e2);
+      if (m.mode === 'quot') return Math.pow(m.base, m.e1 - m.e2);
+      return Math.pow(m.b1 * m.b2, m.e);
+    },
+    inequality: function (m) {
+      var sign = m.a > 0 ? m.sign : (m.sign === '>' ? '<' : '>');
+      return 'x ' + sign + ' ' + m.x0;
+    },
+    log: function (m) { return m.mode === 'law' ? Math.round(Math.log(m.m * m.n) / Math.log(m.base)) : m.n; },
+    fx: function (m) { return m.a * m.x * m.x + m.b * m.x + m.c; },
+    trig: function (m) {
+      if (m.which === 'sin') return { n: m.a, d: m.c };
+      if (m.which === 'cos') return { n: m.b, d: m.c };
+      return { n: m.a, d: m.b };
+    },
+    ap: function (m) { return m.a + (m.n - 1) * m.d; },
+    gp: function (m) {
+      if (m.mode === 'sum') return m.a * (Math.pow(m.r, m.n) - 1) / (m.r - 1);
+      if (m.mode === 'inf') return m.a / (1 - m.r);
+      return m.a * Math.pow(m.r, m.n - 1);
+    },
+    prob: function (m) { return { n: m.good, d: m.total }; },
+    quad: function (m) { return m.askSum ? m.sum : m.prod; },
+    stats: function (m) {
+      var s = m.nums.slice().sort(function (x, y) { return x - y; });
+      if (s.length % 2 === 0) return (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+      return s[(s.length - 1) / 2];
+    },
+    triangle: function (m) { return m.b * m.h / 2; },
+    circle: function (m) { return piValue(m.mode === 'area' ? m.r * m.r : 2 * m.r); },
+    volume: function (m) { return m.l * m.w * m.h; },
+    coord: function (m) { return m.mode === 'dist' ? m.dist : '(' + m.mx + ', ' + m.my + ')'; },
+    warea: function (m) { return m.a * m.b; },
+    wpercent: function (m) { return m.a * (100 - m.b) / 100; },
+    wratio: function (m) { return m.b; },
+    wspeed: function (m) { return m.a * m.b / 60; },
+    wprofit: function (m) { return m.b; },
+    wcompound: function (m) { return Math.round(m.a * Math.pow(1 + m.b / 100, m.c)); },
+    wtwostep: function (m) { return m.a * m.b - m.c; },
+    placevalue: function (m) {
+      if (m.mode === 'tens') return m.tens;
+      if (m.mode === 'ones') return m.ones;
+      if (m.mode === 'value') return m.tens * 10;
+      return m.n;
+    },
+    perimeter: function (m) { return 2 * (m.l + m.w); },
+    polygon: function (m) { return (m.n - 2) * 180; },
+    angle: function (m) { return m.a; },
+    money: function (m) { return m.a - m.b; },
+    fact: function (m) { return m.a; },
+    quadsolve: function (m) {
+      if (m.mode === 'disc') return Math.pow(m.p - m.q, 2);
+      if (m.mode === 'nature') {
+        var qD = m.b * m.b - 4 * m.a * m.c;
+        return qD > 0 ? 2 : (qD === 0 ? 1 : 0);
+      }
+      return Math.max(m.p, m.q);
+    },
+    line: function (m) { return m.mode === 'eq' ? m.y - m.m * m.x : (m.b[1] - m.a[1]) / (m.b[0] - m.a[0]); },
+    variation: function (m) { return m.k * m.c; },
+    oddeven: function (m) {
+      if (m.mode === 'counteven') return Math.floor(m.n / 2);
+      if (m.mode === 'countodd') return Math.ceil(m.n / 2);
+      return m.n + 2;
+    },
+    shape: function (m) { return m.a; },
+    symmetry: function (m) { return m.a; },
+    liketerms: function (m) { return m.mode === 'sub' ? m.a - m.b : m.a + m.b; },
+    polycoeff: function (m) { return m.mode === 'deg' ? m.d : m.c; },
+    arclen: function (m) { return piValue(m.coef); },
+    mode: function (m) { return m.m; },
+    asum: function (m) { return m.n * (2 * m.a + (m.n - 1) * m.d) / 2; },
+    invvar: function (m) { return m.k / m.c; },
+    comb: function (m) {
+      return m.mode === 'P' ? factInt(m.n) / factInt(m.n - m.r) : factInt(m.n) / (factInt(m.r) * factInt(m.n - m.r));
+    },
+    range: function (m) { return Math.max.apply(null, m.nums) - Math.min.apply(null, m.nums); },
+    circleeq: function (m) { return m.r; },
+    parallel: function (m) { return m.mode === 'int' ? 180 - m.a : m.a; },
+    sqrt: function (m) { return m.base; },
+    congruent: function (m) { return m.a; },
+    similar: function (m) { return m.k; },
+    quadshape: function (m) { return m.a; },
+    cylinder: function (m) { return piValue(m.coef); },
+    sinterest: function (m) { return m.p * m.r * m.n / 100; },
+    expand: function (m) { return m.mode === 'coeff' ? m.a + m.b : m.a * m.b; },
+    pichart: function (m) { return m.pct * 360 / 100; },
+    approx: function (m) { return m.a / 2; },
+    direction: function (m) { return m.k; },
+    time24: function (m) { return m.a; },
+    cone: function (m) { return piValue(m.coef); },
+    centre: function (m) { return m.k; },
+    circleangle: function (m) { return m.mode === 'centre' ? 2 * m.a : m.a; },
+    binomial: function (m) {
+      var coef = factInt(m.n) / (factInt(m.r) * factInt(m.n - m.r));
+      return m.mode === 'gen' ? coef * Math.pow(m.a, m.n - m.r) : coef;
+    },
+    derivative: function (m) { return m.mode === 'coeff' ? m.a * m.n : m.n - 1; },
+    identity: function (m) {
+      if (m.mode === 'mid') return m.a + m.b;
+      if (m.mode === 'const') return m.a * m.b;
+      if (m.mode === 'square') return 2 * m.a;
+      return m.a * m.a - m.b * m.b;
+    },
+    circleprop: function (m) {
+      if (m.mode === 'semicircle' || m.mode === 'tangent') return 90;
+      if (m.mode === 'cyclic') return 180 - m.a;
+      return m.a;
+    },
+    dispersion: function (m) { return m.q3 - m.q1; },
+    prism: function (m) { return m.mode === 'pyramid' ? m.area * m.h / 3 : m.area * m.h; },
+    matrix: function (m) {
+      if (m.mode === 'det') return m.a * m.d - m.b * m.c;
+      return m.A[0][0] * m.B[0][0] + m.A[0][1] * m.B[1][0];
+    },
+    calculus: function (m) {
+      if (m.mode === 'dval') return m.a * m.n * Math.pow(m.x, m.n - 1);
+      return m.a * Math.pow(m.b, m.n + 1) / (m.n + 1);
+    },
+    expectation: function (m) {
+      if (m.mode === 'die') return { n: 7, d: 2 };
+      if (m.mode === 'spinner') {
+        var sp = m.n + 1;
+        return sp % 2 === 0 ? sp / 2 : { n: sp, d: 2 };
+      }
+      return { n: factInt(m.n) / (factInt(m.k) * factInt(m.n - m.k)), d: Math.pow(2, m.n) };
+    },
+    add: function (m) { return m.a + m.b; },
+    sub: function (m) { return m.a - m.b; },
+    mul: function (m) { return m.a * m.b; },
+    '+': function (m) { return m.a + m.b; },
+    '−': function (m) { return m.a - m.b; },
+    '×': function (m) { return m.a * m.b; },
+    '÷': function (m) { return m.a / m.b; }
+  };
+
+  /* π 的顯示值：係數為 1 時寫成 π，而不是 1π（與 renderValue 的約定一致） */
+  function piValue(k) { return (k === 1 ? '' : k) + 'π'; }
+
+  function factInt(n) {
+    var f = 1;
+    for (var i = 2; i <= n; i++) f *= i;
+    return f;
+  }
+
+  /* 從 p.math 推導期望答案；缺 math / 未登記的 op 一律拋錯（測試會即時發現） */
+  function answerFromMath(problem) {
+    if (!problem || !problem.math || typeof problem.math !== 'object') {
+      throw new Error('answerFromMath: 缺少 math 元資料');
+    }
+    var m = problem.math;
+    /* 填空題：先由和／差反推被遮住的項 */
+    if (m.blank) {
+      if (m.blank === 'a') return m.op === '+' || m.op === 'add' ? m.c - m.b : m.c + m.b;
+      if (m.blank === 'b') return m.op === '+' || m.op === 'add' ? m.c - m.a : m.a - m.c;
+    }
+    var spec = MATH_SPEC[m.op];
+    if (!spec) throw new Error('answerFromMath: 未登記的 op ' + m.op);
+    return spec(m);
+  }
+
   /* ---------------- 選項（干擾項）生成 ---------------- */
 
   function fractionDistractor(rng, ans) {
@@ -3518,6 +3794,13 @@
     }
     delete p.base;
     p.sig = p.type + ':' + mathSig(p.math);
+    /* 開發／契約測試用自檢：p.math 推導出的答案必須與生成器給的答案一致 */
+    if (opts.selfCheck) {
+      var expected = answerFromMath(p);
+      if (!valuesEqual(p.answer, expected)) {
+        throw new Error('答案與 MATH_SPEC 不一致: ' + p.type + ' ' + p.sig + ' answer=' + renderValue(p.answer) + ' expected=' + renderValue(expected));
+      }
+    }
     return p;
   }
 
@@ -3749,6 +4032,8 @@
 
   return {
     GENERATOR_TYPES: GENERATOR_TYPES,
+    MATH_SPEC: MATH_SPEC,
+    answerFromMath: answerFromMath,
     seedRandom: seedRandom,
     randInt: randInt,
     pick: pick,

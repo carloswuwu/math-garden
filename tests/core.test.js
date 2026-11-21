@@ -10,175 +10,7 @@ function check(cond, msg) {
   assert.ok(cond, msg);
 }
 
-/* 用 math 元信息重新計算期望答案，用於交叉驗證 */
-function applyOp(op, a, b) {
-  if (op === '+') return a + b;
-  if (op === '−') return a - b;
-  if (op === '×') return a * b;
-  if (op === '÷') return a / b;
-}
-
-function computeAnswer(math) {
-  const pi = (k) => (k === 1 ? '' : k) + 'π';
-  if (math.op === 'count') return math.n;
-  if (math.op === 'frac') return { n: math.n, d: math.d };
-  if (math.op === 'compare') return math.mode === 'max' ? Math.max(math.a, math.b) : Math.min(math.a, math.b);
-  if (math.op === 'comparegroup') return math.mode === 'max' ? (math.a > math.b ? 'green' : 'orange') : (math.a < math.b ? 'green' : 'orange');
-  if (math.op === 'fadd') return { n: math.a + math.b, d: math.d };
-  if (math.op === 'fsub') return { n: math.a - math.b, d: math.d };
-  if (math.op === 'dadd' || math.op === 'dsub' || math.op === 'dmul' || math.op === 'ddiv') return (math.r / 10).toFixed(1);
-  if (math.op === 'avg') return math.nums.reduce(function (s, x) { return s + x; }, 0) / math.nums.length;
-  if (math.op === 'equation') {
-    if (math.form === 'x+a=c') return math.c - math.a;
-    if (math.form === 'x-a=c') return math.c + math.a;
-    if (math.form === 'ax=c') return math.c / math.a;
-    return math.a * math.c; // x/a=c
-  }
-  if (math.op === 'percent') {
-    if (math.kind === 'of') return math.p * math.whole / 100;
-    if (math.kind === 'increase') return math.whole * (100 + math.p) / 100;
-    if (math.kind === 'decrease') return math.whole * (100 - math.p) / 100;
-    return math.pct;
-  }
-  if (math.op === 'ratio') return math.q * math.k;
-  if (math.op === 'area') return math.mode === 'area' ? math.l * math.w : 2 * (math.l + math.w);
-  if (math.op === 'fractionof') return math.n * math.k;
-  if (math.op === 'exprsub') return math.a * math.x + math.b;
-  if (math.op === 'linear') return math.form === '+' ? (math.c - math.b) / math.a : (math.c + math.b) / math.a;
-  if (math.op === 'pythagoras') return math.mode === 'hyp' ? math.c : math.b;
-  if (math.op === 'simul') return math.mode === 'gen' ? (math.s * math.d - math.b * math.t) / (math.a * math.d - math.b * math.c) : (math.s + math.d) / 2;
-  if (math.op === 'indices') {
-    if (math.mode === 'power') return Math.pow(math.base, math.e);
-    if (math.mode === 'prod') return Math.pow(math.base, math.e1 + math.e2);
-    if (math.mode === 'quot') return Math.pow(math.base, math.e1 - math.e2);
-    return Math.pow(math.b1 * math.b2, math.e);
-  }
-  if (math.op === 'inequality') { var isg = math.a > 0 ? math.sign : (math.sign === '>' ? '<' : '>'); return 'x ' + isg + ' ' + math.x0; }
-  if (math.op === 'log') return math.mode === 'law' ? Math.round(Math.log(math.m * math.n) / Math.log(math.base)) : math.n;
-  if (math.op === 'fx') return math.a * math.x * math.x + math.b * math.x + math.c;
-  if (math.op === 'trig') {
-    if (math.which === 'sin') return { n: math.a, d: math.c };
-    if (math.which === 'cos') return { n: math.b, d: math.c };
-    return { n: math.a, d: math.b };
-  }
-  if (math.op === 'ap') return math.a + (math.n - 1) * math.d;
-  if (math.op === 'gp') { if (math.mode === 'sum') return math.a * (Math.pow(math.r, math.n) - 1) / (math.r - 1); if (math.mode === 'inf') return math.a / (1 - math.r); return math.a * Math.pow(math.r, math.n - 1); }
-  if (math.op === 'prob') return { n: math.good, d: math.total };
-  if (math.op === 'quad') return math.askSum ? math.sum : math.prod;
-  if (math.op === 'stats') {
-    var s = math.nums.slice().sort(function (x, y) { return x - y; });
-    if (s.length % 2 === 0) return (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
-    return s[(s.length - 1) / 2];
-  }
-  if (math.op === 'triangle') return math.b * math.h / 2;
-  if (math.op === 'circle') return math.mode === 'area' ? pi(math.r * math.r) : pi(2 * math.r);
-  if (math.op === 'volume') return math.l * math.w * math.h;
-  if (math.op === 'coord') return math.mode === 'dist' ? math.dist : '(' + math.mx + ', ' + math.my + ')';
-  if (math.op === 'warea') return math.a * math.b;
-  if (math.op === 'wpercent') return math.a * (100 - math.b) / 100;
-  if (math.op === 'wratio') return math.b;
-  if (math.op === 'wspeed') return math.a * math.b / 60;
-  if (math.op === 'wprofit') return math.b;
-  if (math.op === 'wcompound') return Math.round(math.a * Math.pow(1 + math.b / 100, math.c));
-  if (math.op === 'wtwostep') return math.a * math.b - math.c;
-  if (math.op === 'placevalue') {
-    if (math.mode === 'tens') return math.tens;
-    if (math.mode === 'ones') return math.ones;
-    if (math.mode === 'value') return math.tens * 10;
-    return math.n;
-  }
-  if (math.op === 'perimeter') return 2 * (math.l + math.w);
-  if (math.op === 'polygon') return (math.n - 2) * 180;
-  if (math.op === 'angle') return math.a;
-  if (math.op === 'money') return math.a - math.b;
-  if (math.op === 'fact') return math.a;
-  if (math.op === 'quadsolve') {
-    if (math.mode === 'disc') return Math.pow(math.p - math.q, 2);
-    if (math.mode === 'nature') { var qD = math.b * math.b - 4 * math.a * math.c; return qD > 0 ? 2 : (qD === 0 ? 1 : 0); }
-    return Math.max(math.p, math.q);
-  }
-  if (math.op === 'line') return math.mode === 'eq' ? math.y - math.m * math.x : (math.b[1] - math.a[1]) / (math.b[0] - math.a[0]);
-  if (math.op === 'variation') return math.k * math.c;
-  if (math.op === 'oddeven') {
-    if (math.mode === 'counteven') return Math.floor(math.n / 2);
-    if (math.mode === 'countodd') return Math.ceil(math.n / 2);
-    return math.n + 2;
-  }
-  if (math.op === 'shape') return math.a;
-  if (math.op === 'symmetry') return math.a;
-  if (math.op === 'liketerms') return math.mode === 'sub' ? math.a - math.b : math.a + math.b;
-  if (math.op === 'polycoeff') return math.mode === 'deg' ? math.d : math.c;
-  if (math.op === 'arclen') return pi(math.coef);
-  if (math.op === 'mode') return math.m;
-  if (math.op === 'asum') return math.n * (2 * math.a + (math.n - 1) * math.d) / 2;
-  if (math.op === 'invvar') return math.k / math.c;
-  if (math.op === 'comb') {
-    var fn = 1, fr = 1, fnr = 1;
-    for (var i = 2; i <= math.n; i++) fn *= i;
-    for (var j = 2; j <= math.r; j++) fr *= j;
-    for (var k2 = 2; k2 <= (math.n - math.r); k2++) fnr *= k2;
-    return math.mode === 'P' ? fn / fnr : fn / (fr * fnr);
-  }
-  if (math.op === 'range') { var ar = math.nums; return Math.max.apply(null, ar) - Math.min.apply(null, ar); }
-  if (math.op === 'circleeq') return math.r;
-  if (math.op === 'parallel') return math.mode === 'int' ? 180 - math.a : math.a;
-  if (math.op === 'sqrt') return math.base;
-  if (math.op === 'congruent') return math.a;
-  if (math.op === 'similar') return math.k;
-  if (math.op === 'quadshape') return math.a;
-  if (math.op === 'cylinder') return pi(math.coef);
-  if (math.op === 'sinterest') return math.p * math.r * math.n / 100;
-  if (math.op === 'expand') return math.mode === 'coeff' ? math.a + math.b : math.a * math.b;
-  if (math.op === 'pichart') return math.pct * 360 / 100;
-  if (math.op === 'approx') return math.a / 2;
-  if (math.op === 'direction') return math.k;
-  if (math.op === 'time24') return math.a;
-  if (math.op === 'cone') return pi(math.coef);
-  if (math.op === 'centre') return math.k;
-  if (math.op === 'circleangle') return math.mode === 'centre' ? 2 * math.a : math.a;
-  if (math.op === 'binomial') {
-    var bfact = function (x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; };
-    var bcoef = bfact(math.n) / (bfact(math.r) * bfact(math.n - math.r)); return math.mode === 'gen' ? bcoef * Math.pow(math.a, math.n - math.r) : bcoef;
-  }
-  if (math.op === 'derivative') return math.mode === 'coeff' ? math.a * math.n : math.n - 1;
-  if (math.op === 'identity') {
-    if (math.mode === 'mid') return math.a + math.b;
-    if (math.mode === 'const') return math.a * math.b;
-    if (math.mode === 'square') return 2 * math.a;
-    return math.a * math.a - math.b * math.b;
-  }
-  if (math.op === 'circleprop') {
-    if (math.mode === 'semicircle' || math.mode === 'tangent') return 90;
-    if (math.mode === 'cyclic') return 180 - math.a;
-    return math.a;
-  }
-  if (math.op === 'dispersion') return math.q3 - math.q1;
-  if (math.op === 'prism') return math.mode === 'pyramid' ? math.area * math.h / 3 : math.area * math.h;
-  if (math.op === 'matrix') {
-    if (math.mode === 'det') return math.a * math.d - math.b * math.c;
-    return math.A[0][0] * math.B[0][0] + math.A[0][1] * math.B[1][0];
-  }
-  if (math.op === 'calculus') {
-    if (math.mode === 'dval') return math.a * math.n * Math.pow(math.x, math.n - 1);
-    return math.a * Math.pow(math.b, math.n + 1) / (math.n + 1);
-  }
-  if (math.op === 'expectation') {
-    if (math.mode === 'die') return { n: 7, d: 2 };
-    if (math.mode === 'spinner') { var sp = math.n + 1; return sp % 2 === 0 ? sp / 2 : { n: sp, d: 2 }; }
-    var ef = function (x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; };
-    return { n: ef(math.n) / (ef(math.k) * ef(math.n - math.k)), d: Math.pow(2, math.n) };
-  }
-  if (math.op === 'add') return math.a + math.b;
-  if (math.op === 'sub') return math.a - math.b;
-  if (math.op === 'mul') return math.a * math.b;
-  if (math.blank) {
-    if (math.blank === 'a') return math.op === '+' ? math.c - math.b : math.c + math.b;
-    if (math.blank === 'b') return math.op === '+' ? math.c - math.a : math.a - math.c;
-    return applyOp(math.op, math.a, math.b);
-  }
-  return applyOp(math.op, math.a, math.b);
-}
-
+/* 期望答案由 MathCore.answerFromMath（MATH_SPEC）推導：oracle 只有一份實作 */
 function isIntNonNeg(v) {
   return Number.isInteger(v) && v >= 0;
 }
@@ -290,7 +122,7 @@ function validateProblem(skill, p, label) {
   check(p.prompt && p.prompt.zh && p.prompt.en, `${label}: 缺少雙語 prompt`);
 
   // 答案與 math 元信息一致
-  const expected = computeAnswer(p.math);
+  const expected = C.answerFromMath(p);
   const isColor = p.type === 'comparegroup';
   const isString = typeof p.answer === 'string';
   if (C.isFraction(expected)) {
@@ -474,7 +306,8 @@ for (let seed = 1; seed <= N; seed++) {
     }
   });
   const c = C.generateProblem(SKILLS.count, { seed: 1 });
-  check(C.explain(c) === null, 'explain: 數一數暫不提供步驟');
+  const cEx = C.explain(c);
+  check(!!cEx && cEx.zh.length > 0 && cEx.zh[cEx.zh.length - 1].indexOf(String(c.answer)) >= 0, 'explain: 數一數也應提供步驟並交代答案');
 })();
 
 /* 進度資料清洗：壞資料不得令進度出現 NaN／超界值 */
@@ -504,6 +337,90 @@ for (let seed = 1; seed <= N; seed++) {
 
   const migrated = C.sanitizeProgress({ version: 1, lang: 'en', skills: { 'g1.add20': { correct: 5 } } });
   check(migrated.lang === 'en' && migrated.skills['g1.add20'].correct === 5 && migrated.version === 2, 'sanitize: v1→v2 保留資料');
+})();
+
+/* 9. sanitizeProgress 模糊測試：任意 JSON 不拋錯、上限成立、清洗冪等 */
+(() => {
+  let seed = 12345;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const junkKeys = ['skills', 'stageExams', 'typeAcc', 'lastProblems', 'streak', 'badges', 'lang',
+    'sound', 'theme', 'stars', 'attempts', 'correct', 'version', 'lastDay', 'ok', 'a', 'c',
+    'passed', 'perfect', 'best'];
+  function randomValue(depth) {
+    const r = rnd();
+    if (depth <= 0 || r < 0.45) {
+      if (r < 0.12) return null;
+      if (r < 0.2) return String(rnd());
+      if (r < 0.3) return Math.floor(rnd() * 1000000) - 500000;
+      if (r < 0.36) return rnd() < 0.5;
+      if (r < 0.42) return NaN;
+      if (r < 0.44) return Infinity;
+      return {};
+    }
+    if (r < 0.6) {
+      const arr = [];
+      const n = Math.floor(rnd() * 6);
+      for (let i = 0; i < n; i++) arr.push(randomValue(depth - 1));
+      return arr;
+    }
+    const obj = {};
+    const n = Math.floor(rnd() * 6);
+    for (let i = 0; i < n; i++) obj[junkKeys[Math.floor(rnd() * junkKeys.length)]] = randomValue(depth - 1);
+    return obj;
+  }
+  for (let i = 0; i < 400; i++) {
+    const r = rnd();
+    let input;
+    if (r < 0.1) input = [];
+    else if (r < 0.2) input = 'junk';
+    else if (r < 0.3) input = NaN;
+    else input = randomValue(4);
+    let out;
+    try { out = C.sanitizeProgress(input); }
+    catch (e) { check(false, 'sanitize 拋錯: ' + e.message); continue; }
+    check(!!out && out.version === 2, '模糊: 清洗後版本為 2');
+    const again = C.sanitizeProgress(JSON.parse(JSON.stringify(out)));
+    check(JSON.stringify(again) === JSON.stringify(out), '模糊: JSON 往返後再次清洗冪等');
+    check(Object.keys(out.skills).length <= 500, '模糊: skills 上限 500');
+    check(Object.keys(out.stageExams).length <= 100, '模糊: stageExams 上限 100');
+    Object.keys(out.skills).forEach((id) => {
+      const sp = out.skills[id];
+      check(Object.keys(sp.typeAcc).length <= 60, '模糊: typeAcc 上限 60');
+      check(sp.lastProblems.length <= 20, '模糊: lastProblems 上限 20');
+    });
+  }
+
+  /* 超量輸入必須被截斷到上限 */
+  const big = { version: 2, skills: {}, stageExams: {} };
+  for (let i = 0; i < 600; i++) {
+    const ta = {};
+    for (let j = 0; j < 80; j++) ta['t' + j] = { a: j, c: j };
+    big.skills['s' + i] = { typeAcc: ta, lastProblems: Array.from({ length: 30 }, (_, j) => ({ type: 'x', sig: 'y' + j })) };
+  }
+  for (let i = 0; i < 150; i++) big.stageExams['st' + i] = { passed: true, best: 100 };
+  const capped = C.sanitizeProgress(big);
+  check(Object.keys(capped.skills).length === 500, '上限: skills 截到 500');
+  check(Object.keys(capped.stageExams).length === 100, '上限: stageExams 截到 100');
+  Object.values(capped.skills).forEach((sp) => {
+    check(Object.keys(sp.typeAcc).length === 60, '上限: typeAcc 截到 60');
+    check(sp.lastProblems.length === 20, '上限: lastProblems 截到 20');
+  });
+
+  /* 1 MB 級輸入（家長匯入的量級）：不拋錯，上限照樣成立 */
+  const pad = 'x'.repeat(2000);
+  const huge = { version: 2, lang: 'zh', skills: {}, stageExams: {} };
+  for (let i = 0; i < 500; i++) {
+    huge.skills['s' + i] = { attempts: 1, correct: 1, junk: pad, typeAcc: { t: { a: 1, c: 1 } }, lastProblems: [{ type: pad, sig: pad }] };
+  }
+  const hugeText = JSON.stringify(huge);
+  check(hugeText.length > 1000000, '1MB: 測試輸入應超過 1 MB，實際 ' + hugeText.length);
+  let hugeOut;
+  try { hugeOut = C.sanitizeProgress(JSON.parse(hugeText)); }
+  catch (e) { check(false, '1MB: sanitize 拋錯 ' + e.message); }
+  if (hugeOut) {
+    check(Object.keys(hugeOut.skills).length === 500, '1MB: 技能上限仍成立');
+    check(Object.keys(hugeOut.skills).every((id) => hugeOut.skills[id].junk === undefined), '1MB: 未知欄位被丟棄');
+  }
 })();
 
 console.log(`✓ math-core 全部通過（${checks} 項斷言）`);

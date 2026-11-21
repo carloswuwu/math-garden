@@ -2019,7 +2019,7 @@
       if (isImport) {
         try {
           var text = $('jsonArea').value;
-          if (text.length > 1000000) throw new Error(t('parent.importTooLarge'));
+          if (text.length > 1000000) throw new Error(t('parent.importedTooLarge'));
           var parsed = JSON.parse(text);
           if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error(t('parent.importBadFormat'));
           progress = MathCore.sanitizeProgress(parsed);
