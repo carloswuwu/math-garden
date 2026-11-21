@@ -47,7 +47,7 @@
       export: '導出進度', import: '導入進度', reset: '重置進度',
       unlockAll: '解鎖所有階段', unlockAllConfirm: '確定解鎖所有階段嗎？解鎖後孩子可自由進入任何階段。', unlockAllDone: '已解鎖所有階段',
       resetConfirm: '確定要清空所有學習進度嗎？此操作無法撤銷。',
-      imported: '進度已導入', exported: '已復制到剪貼板', empty: '還沒有練習記錄，快開始吧！'
+      imported: '進度已導入', importedTooLarge: '存檔太大（上限 1 MB）', importBadFormat: '存檔格式不正確', exported: '已復制到剪貼板', empty: '還沒有練習記錄，快開始吧！'
     },
 
     settings: {
@@ -114,7 +114,7 @@
       export: 'Export', import: 'Import', reset: 'Reset progress',
       unlockAll: 'Unlock all stages', unlockAllConfirm: 'Unlock all stages? Your child can then enter any stage freely.', unlockAllDone: 'All stages unlocked',
       resetConfirm: 'Clear all learning progress? This cannot be undone.',
-      imported: 'Progress imported', exported: 'Copied to clipboard', empty: 'No practice yet. Let\'s get started!'
+      imported: 'Progress imported', importedTooLarge: 'Save file is too large (1 MB limit)', importBadFormat: 'Not a valid save file', exported: 'Copied to clipboard', empty: 'No practice yet. Let\'s get started!'
     },
 
     settings: {

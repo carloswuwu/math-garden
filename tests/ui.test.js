@@ -65,8 +65,9 @@ async function main() {
   check(!d.getElementById('nextBtn').hidden, '答對後出現下一題按鈕');
   const sp = w.__mathApp.getProgress().skills['prek.count'];
   check(sp && sp.correct === 1, '進度已記錄 1 次答對');
-  const saved = JSON.parse(w.localStorage.getItem('mathpath.progress.v1'));
+  const saved = JSON.parse(w.localStorage.getItem('mathpath.progress'));
   check(saved.skills['prek.count'].correct === 1, '進度已持久化');
+  check(saved.version === 2, '存檔已升級到 schema 2');
 
   /* 5. 下一題 */
   const firstSig = p.sig;

@@ -3380,7 +3380,75 @@
   }
 
   function newProgress() {
-    return { version: 1, lang: 'zh', sound: true, stars: 0, streak: { lastDay: null, count: 0 }, badges: [], skills: {} };
+    return { version: 2, lang: 'zh', sound: true, theme: 'light', stars: 0, streak: { lastDay: null, count: 0 }, badges: [], skills: {}, stageExams: {} };
+  }
+
+  /* ---------------- 進度資料的清洗與升級 ----------------
+   * 所有外部來源（localStorage、家長匯入）都先經過這裡：
+   * 只保留已知欄位、把數值夾到合法範圍、補上缺少的預設值。
+   * v1 → v2：新增 stageExams / theme，缺少時補預設。 */
+  function sanitizeProgress(input) {
+    var base = newProgress();
+    if (!input || typeof input !== 'object' || Array.isArray(input)) return base;
+    var num = function (v, d) { return (typeof v === 'number' && isFinite(v)) ? v : d; };
+    var int = function (v, d, min, max) {
+      var n = Math.floor(num(v, d));
+      if (n < min) n = min;
+      if (max != null && n > max) n = max;
+      return n;
+    };
+    var bool = function (v, d) { return typeof v === 'boolean' ? v : d; };
+    base.lang = (input.lang === 'en' || input.lang === 'zh') ? input.lang : 'zh';
+    base.sound = bool(input.sound, true);
+    base.theme = (input.theme === 'dark' || input.theme === 'light' || input.theme === 'auto') ? input.theme : 'light';
+    base.stars = int(input.stars, 0, 0, 1000000);
+    if (input.streak && typeof input.streak === 'object') {
+      base.streak.lastDay = (typeof input.streak.lastDay === 'string' || input.streak.lastDay === null) ? input.streak.lastDay : null;
+      base.streak.count = int(input.streak.count, 0, 0, 100000);
+    }
+    if (Array.isArray(input.badges)) {
+      base.badges = input.badges.filter(function (b) { return typeof b === 'string'; }).slice(0, 100);
+    }
+    if (input.skills && typeof input.skills === 'object' && !Array.isArray(input.skills)) {
+      Object.keys(input.skills).slice(0, 500).forEach(function (id) {
+        var s = input.skills[id];
+        if (!s || typeof s !== 'object') return;
+        var sp = {
+          attempts: int(s.attempts, 0, 0, 1000000),
+          correct: int(s.correct, 0, 0, 1000000),
+          consecCorrect: int(s.consecCorrect, 0, 0, 100),
+          consecWrong: int(s.consecWrong, 0, 0, 100),
+          difficultyStep: int(s.difficultyStep, 0, 0, 20),
+          lastSeen: num(s.lastSeen, 0),
+          typeAcc: {},
+          stars: int(s.stars, 0, 0, 3),
+          mastered: bool(s.mastered, false),
+          quizStars: int(s.quizStars, 0, 0, 3),
+          quizBest: int(s.quizBest, 0, 0, 100),
+          lastProblems: Array.isArray(s.lastProblems) ? s.lastProblems.slice(-20) : []
+        };
+        if (s.typeAcc && typeof s.typeAcc === 'object') {
+          Object.keys(s.typeAcc).slice(0, 60).forEach(function (t) {
+            var a = s.typeAcc[t];
+            if (a && typeof a === 'object') sp.typeAcc[t] = { a: int(a.a, 0, 0, 1000000), c: int(a.c, 0, 0, 1000000) };
+          });
+        }
+        base.skills[id] = sp;
+      });
+    }
+    if (input.stageExams && typeof input.stageExams === 'object' && !Array.isArray(input.stageExams)) {
+      Object.keys(input.stageExams).slice(0, 100).forEach(function (id) {
+        var e = input.stageExams[id];
+        if (!e || typeof e !== 'object') return;
+        base.stageExams[id] = {
+          passed: bool(e.passed, false) || bool(e.perfect, false),
+          perfect: bool(e.perfect, false),
+          best: int(e.best, 0, 0, 100)
+        };
+      });
+    }
+    base.version = 2;
+    return base;
   }
 
   function practiceStars(correct, practice) {
@@ -3515,6 +3583,7 @@
     checkAnswer: checkAnswer,
     defaultSkillProgress: defaultSkillProgress,
     newProgress: newProgress,
+    sanitizeProgress: sanitizeProgress,
     practiceStars: practiceStars,
     quizStars: quizStars,
     masteryStatus: masteryStatus,

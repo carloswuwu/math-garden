@@ -464,4 +464,33 @@ for (let seed = 1; seed <= N; seed++) {
   check(C.explain(c) === null, 'explain: 數一數暫不提供步驟');
 })();
 
+/* 進度資料清洗：壞資料不得令進度出現 NaN／超界值 */
+(() => {
+  const empty = C.sanitizeProgress(null);
+  check(empty.version === 2 && empty.lang === 'zh' && empty.sound === true, 'sanitize: null 給預設值');
+  check(empty.stageExams && typeof empty.stageExams === 'object', 'sanitize: 應有 stageExams');
+
+  const junky = C.sanitizeProgress({
+    version: 1, lang: 'xx', sound: 'yes', theme: 'pink', stars: -5,
+    streak: { lastDay: null, count: -1 }, badges: [1, 'first', null],
+    skills: {
+      ok: { attempts: -3, correct: 1.7, stars: 9, quizBest: 250, consecCorrect: 200, typeAcc: { add: { a: 'x', c: 2 } } },
+      bad: null
+    },
+    stageExams: { prek: { perfect: true, best: 200 } }
+  });
+  check(junky.lang === 'zh' && junky.sound === true && junky.theme === 'light', 'sanitize: 語言／音效／主題回預設');
+  check(junky.stars === 0 && junky.streak.count === 0, 'sanitize: 負數夾到 0');
+  check(junky.badges.length === 1 && junky.badges[0] === 'first', 'sanitize: 只留字串徽章');
+  check(junky.skills.ok.attempts === 0 && junky.skills.ok.correct === 1, 'sanitize: 技能數值夾限');
+  check(junky.skills.ok.stars === 3 && junky.skills.ok.quizBest === 100 && junky.skills.ok.consecCorrect === 100, 'sanitize: 星數／最佳分數上限');
+  check(junky.skills.ok.typeAcc.add.a === 0 && junky.skills.ok.typeAcc.add.c === 2, 'sanitize: typeAcc 數值清洗');
+  check(!junky.skills.bad, 'sanitize: 丟棄非物件技能');
+  check(junky.stageExams.prek.passed === true && junky.stageExams.prek.best === 100, 'sanitize: 舊 perfect 轉 passed、分數夾限');
+  check(junky.version === 2, 'sanitize: 版本升級到 2');
+
+  const migrated = C.sanitizeProgress({ version: 1, lang: 'en', skills: { 'g1.add20': { correct: 5 } } });
+  check(migrated.lang === 'en' && migrated.skills['g1.add20'].correct === 5 && migrated.version === 2, 'sanitize: v1→v2 保留資料');
+})();
+
 console.log(`✓ math-core 全部通過（${checks} 項斷言）`);

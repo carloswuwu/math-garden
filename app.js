@@ -12,7 +12,8 @@
   var Formulas = window.Formulas;
   var Lessons = window.Lessons;
 
-  var STORE_KEY = 'mathpath.progress.v1';
+  var STORE_KEY = 'mathpath.progress';
+  var LEGACY_STORE_KEY = 'mathpath.progress.v1';
   var QUIZ_LENGTH = 10;
   var EXAM_LENGTH = 20;
   var EXAM_PASS = 0.9; // 綜合考試達 90% 即可解鎖下一階段
@@ -89,21 +90,15 @@
   function loadProgress() {
     try {
       var raw = localStorage.getItem(STORE_KEY);
-      if (raw) {
-        var p = JSON.parse(raw);
-        var base = MathCore.newProgress();
-        base.streak = p.streak || base.streak;
-        base.lang = p.lang || 'zh';
-        base.sound = p.sound !== false;
-        base.theme = p.theme || 'light';
-        base.stars = p.stars || 0;
-        base.badges = p.badges || [];
-        base.skills = p.skills || {};
-        base.stageExams = p.stageExams || {};
-        return base;
+      var legacy = raw ? null : localStorage.getItem(LEGACY_STORE_KEY);
+      if (!raw && !legacy) return MathCore.newProgress();
+      var parsed = JSON.parse(raw || legacy);
+      var clean = MathCore.sanitizeProgress(parsed);
+      if (!raw && legacy) {
+        try { localStorage.setItem(STORE_KEY, JSON.stringify(clean)); } catch (e) { /* 忽略 */ }
       }
-    } catch (e) { /* 忽略損壞數據 */ }
-    return MathCore.newProgress();
+      return clean;
+    } catch (e) { return MathCore.newProgress(); }
   }
   function saveProgress() {
     try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) { /* 忽略 */ }
@@ -1400,12 +1395,16 @@
     $('jsonOk').addEventListener('click', function () {
       if (isImport) {
         try {
-          var parsed = JSON.parse($('jsonArea').value);
-          progress = MathCore.newProgress();
-          progress.streak = parsed.streak || progress.streak;
-          progress.skills = parsed.skills || {};
-          progress.badges = parsed.badges || [];
+          var text = $('jsonArea').value;
+          if (text.length > 1000000) throw new Error(t('parent.importTooLarge'));
+          var parsed = JSON.parse(text);
+          if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error(t('parent.importBadFormat'));
+          progress = MathCore.sanitizeProgress(parsed);
           saveProgress();
+          state.lang = progress.lang || state.lang;
+          state.theme = progress.theme || state.theme;
+          state.sound = progress.sound !== false;
+          applyTheme();
           toast(t('parent.imported'));
           modal.hidden = true;
           renderParent();
