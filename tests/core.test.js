@@ -46,10 +46,15 @@ function computeAnswer(math) {
   if (math.op === 'exprsub') return math.a * math.x + math.b;
   if (math.op === 'linear') return math.form === '+' ? (math.c - math.b) / math.a : (math.c + math.b) / math.a;
   if (math.op === 'pythagoras') return math.mode === 'hyp' ? math.c : math.b;
-  if (math.op === 'simul') return (math.s + math.d) / 2;
-  if (math.op === 'indices') return math.e != null ? Math.pow(math.base, math.e) : Math.pow(math.base, math.e1 + math.e2);
-  if (math.op === 'inequality') return 'x ' + math.sign + ' ' + math.x0;
-  if (math.op === 'log') return math.n;
+  if (math.op === 'simul') return math.mode === 'gen' ? (math.s * math.d - math.b * math.t) / (math.a * math.d - math.b * math.c) : (math.s + math.d) / 2;
+  if (math.op === 'indices') {
+    if (math.mode === 'power') return Math.pow(math.base, math.e);
+    if (math.mode === 'prod') return Math.pow(math.base, math.e1 + math.e2);
+    if (math.mode === 'quot') return Math.pow(math.base, math.e1 - math.e2);
+    return Math.pow(math.b1 * math.b2, math.e);
+  }
+  if (math.op === 'inequality') { var isg = math.a > 0 ? math.sign : (math.sign === '>' ? '<' : '>'); return 'x ' + isg + ' ' + math.x0; }
+  if (math.op === 'log') return math.mode === 'law' ? Math.round(Math.log(math.m * math.n) / Math.log(math.base)) : math.n;
   if (math.op === 'fx') return math.a * math.x * math.x + math.b * math.x + math.c;
   if (math.op === 'trig') {
     if (math.which === 'sin') return { n: math.a, d: math.c };
@@ -60,7 +65,11 @@ function computeAnswer(math) {
   if (math.op === 'gp') { if (math.mode === 'sum') return math.a * (Math.pow(math.r, math.n) - 1) / (math.r - 1); if (math.mode === 'inf') return math.a / (1 - math.r); return math.a * Math.pow(math.r, math.n - 1); }
   if (math.op === 'prob') return { n: math.good, d: math.total };
   if (math.op === 'quad') return math.askSum ? math.sum : math.prod;
-  if (math.op === 'stats') { var s = math.nums.slice().sort(function (x, y) { return x - y; }); return s[(s.length - 1) / 2]; }
+  if (math.op === 'stats') {
+    var s = math.nums.slice().sort(function (x, y) { return x - y; });
+    if (s.length % 2 === 0) return (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+    return s[(s.length - 1) / 2];
+  }
   if (math.op === 'triangle') return math.b * math.h / 2;
   if (math.op === 'circle') return math.mode === 'area' ? pi(math.r * math.r) : pi(2 * math.r);
   if (math.op === 'volume') return math.l * math.w * math.h;

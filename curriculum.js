@@ -386,8 +386,8 @@
     },
     'ms.s2.simul': {
       id: 'ms.s2.simul', stage: 'ms2', order: 2,
-      zh: { name: '聯立方程', goal: '會解簡單的二元一次方程組。' },
-      en: { name: 'Simultaneous Equations', goal: 'Solve simple simultaneous linear equations.' },
+      zh: { name: '聯立方程', goal: '會用消元法解二元一次方程組。' },
+      en: { name: 'Simultaneous Equations', goal: 'Solve simultaneous linear equations by elimination.' },
       lesson: 'ms.s2.simul',
       types: ['simul'],
       levels: [{}],
@@ -398,8 +398,8 @@
 
     'ms.s3.indices': {
       id: 'ms.s3.indices', stage: 'ms3', order: 1,
-      zh: { name: '指數定律', goal: '會用指數定律計算乘方與同底數相乘。' },
-      en: { name: 'Laws of Indices', goal: 'Use index laws to evaluate powers and same-base products.' },
+      zh: { name: '指數定律', goal: '會用指數定律計算乘方、同底數相乘與相除。' },
+      en: { name: 'Laws of Indices', goal: 'Use index laws for powers, same-base products and quotients.' },
       lesson: 'ms.s3.indices',
       types: ['indices'],
       levels: [{}],
@@ -419,8 +419,8 @@
 
     'hs.s4.log': {
       id: 'hs.s4.log', stage: 'hs1', order: 1,
-      zh: { name: '對數', goal: '會求簡單的對數值。' },
-      en: { name: 'Logarithms', goal: 'Evaluate simple logarithms.' },
+      zh: { name: '對數', goal: '會求簡單的對數值，並用同底對數相加的法則。' },
+      en: { name: 'Logarithms', goal: 'Evaluate logarithms and use the same-base product law.' },
       lesson: 'hs.s4.log',
       types: ['log'],
       levels: [{}],
@@ -488,8 +488,8 @@
     },
     'hs.s6.stats': {
       id: 'hs.s6.stats', stage: 'hs3', order: 2,
-      zh: { name: '中位數', goal: '會求一組數據的中位數。' },
-      en: { name: 'Median', goal: 'Find the median of a data set.' },
+      zh: { name: '中位數', goal: '會求一組數據的中位數（單數及雙數個數據）。' },
+      en: { name: 'Median', goal: 'Find the median for odd- and even-sized data sets.' },
       lesson: 'hs.s6.stats',
       types: ['stats'],
       levels: [{}],

@@ -237,16 +237,16 @@
       visual: { kind: 'righttri' }
     },
     'ms.s2.simul': {
-      zh: { title: '聯立方程', intro: '兩條方程一起解；把兩式相加或相減，消去一個未知數。', example: 'x + y = 5，x − y = 1；相加得 2x = 6，x = 3。', tip: '先消去一個未知數，再求另一個。' },
-      en: { title: 'Simultaneous Equations', intro: 'Solve two equations together; add or subtract to eliminate one unknown.', example: 'x + y = 5, x − y = 1; add: 2x = 6, so x = 3.', tip: 'Eliminate one unknown first, then find the other.' },
+      zh: { title: '聯立方程', intro: '兩條方程一起解；用消元法把一條方程乘以適當倍數，消去一個未知數。', example: '2x + y = 7，x − y = 2；相加得 3x = 9，x = 3。', tip: '先消去一個未知數，再求另一個。' },
+      en: { title: 'Simultaneous Equations', intro: 'Solve two equations by elimination: multiply one equation so a variable cancels.', example: '2x + y = 7, x − y = 2; add: 3x = 9, so x = 3.', tip: 'Eliminate one unknown first, then find the other.' },
       visual: null
     },
 
     /* ---------- 中三（S3） ---------- */
 
     'ms.s3.indices': {
-      zh: { title: '指數定律', intro: '同底數相乘，指數相加；乘方就是連乘。', example: '2³ = 8；2³ × 2² = 2^(3+2) = 2⁵ = 32。', tip: '底數相同時，指數相加。' },
-      en: { title: 'Laws of Indices', intro: 'For the same base, add the exponents when multiplying; a power is repeated multiplication.', example: '2³ = 8; 2³ × 2² = 2^(3+2) = 2⁵ = 32.', tip: 'Same base → add the exponents.' },
+      zh: { title: '指數定律', intro: '同底數相乘，指數相加；同底數相除，指數相減；乘方就是連乘。', example: '2³ × 2² = 2⁵ = 32；2⁵ ÷ 2² = 2³ = 8。', tip: '底數相同時：乘加除減。' },
+      en: { title: 'Laws of Indices', intro: 'Same base: add exponents when multiplying, subtract when dividing; a power is repeated multiplication.', example: '2³ × 2² = 2⁵ = 32; 2⁵ ÷ 2² = 2³ = 8.', tip: 'Same base: add for multiplication, subtract for division.' },
       visual: null
     },
     'ms.s3.inequality': {
@@ -258,8 +258,8 @@
     /* ---------- 中四（S4） ---------- */
 
     'hs.s4.log': {
-      zh: { title: '對數', intro: '$\\log_b x$ 就是問「$b$ 的幾次方等於 $x$」。', example: '$\\log_2 8 = 3$，因為 $2^3 = 8$。', tip: '對數和指數是互逆的。' },
-      en: { title: 'Logarithms', intro: '$\\log_b x$ asks: "what power of $b$ gives $x$?".', example: '$\\log_2 8 = 3$ because $2^3 = 8$.', tip: 'Logs and powers are inverses.' },
+      zh: { title: '對數', intro: '$\\log_b x$ 就是問「$b$ 的幾次方等於 $x$」；同底對數相加等於相乘的對數。', example: '$\\log_2 8 = 3$；$\\log_2 4 + \\log_2 8 = \\log_2 32 = 5$。', tip: '對數和指數互逆；log m + log n = log(mn)。' },
+      en: { title: 'Logarithms', intro: '$\\log_b x$ asks: what power of $b$ gives $x$? Same-base logs add to the log of the product.', example: '$\\log_2 8 = 3$; $\\log_2 4 + \\log_2 8 = \\log_2 32 = 5$.', tip: 'Logs and powers are inverses; log m + log n = log(mn).' },
       visual: null
     },
     'hs.s4.fx': {
@@ -299,8 +299,8 @@
       visual: null
     },
     'hs.s6.stats': {
-      zh: { title: '中位數', intro: '把數據由小到大排列，取中間那個數（若個數是單數）。', example: '1、3、7、8、9 的中位數是 7。', tip: '先排序，再取中間。' },
-      en: { title: 'Median', intro: 'Sort the data, then take the middle value (for an odd count).', example: 'Median of 1, 3, 7, 8, 9 is 7.', tip: 'Sort first, then take the middle.' },
+      zh: { title: '中位數', intro: '把數據由小到大排列；單數個取中間那個，雙數個取中間兩個的平均。', example: '1、3、7、8、9 的中位數是 7；1、3、7、8、9、10 的中位數是 7.5。', tip: '先排序，再取中間（雙數個要平均）。' },
+      en: { title: 'Median', intro: 'Sort the data: take the middle value for an odd count, or the mean of the two middle values for an even count.', example: 'Median of 1, 3, 7, 8, 9 is 7; median of 1, 3, 7, 8, 9, 10 is 7.5.', tip: 'Sort first, then take the middle (average the two middles for an even count).' },
       visual: null
     },
 

@@ -20,7 +20,8 @@
           { zh: '長方形周界', en: 'Perimeter of rectangle', latex: 'P = 2(l + w)' },
           { zh: '正方形周界', en: 'Perimeter of square', latex: 'P = 4a' },
           { zh: '圓周長', en: 'Circumference', latex: 'C = 2 \\pi r' },
-          { zh: '圓面積', en: 'Area of circle', latex: 'A = \\pi r^2' }
+          { zh: '圓面積', en: 'Area of circle', latex: 'A = \\pi r^2' },
+          { zh: '扇形面積', en: 'Area of sector', latex: 'A = \\pi r^2 \\times \\dfrac{\\theta}{360}' }
         ]
       },
       {
@@ -34,7 +35,11 @@
       {
         zh: '體積', en: 'Volume', items: [
           { zh: '長方體體積', en: 'Volume of cuboid', latex: 'V = l w h' },
-          { zh: '圓柱體積', en: 'Volume of cylinder', latex: 'V = \\pi r^2 h' }
+          { zh: '柱體體積', en: 'Volume of prism', latex: 'V = A h' },
+          { zh: '錐體體積', en: 'Volume of pyramid', latex: 'V = \\dfrac{1}{3} A h' },
+          { zh: '圓柱體積', en: 'Volume of cylinder', latex: 'V = \\pi r^2 h' },
+          { zh: '圓錐體積', en: 'Volume of cone', latex: 'V = \\dfrac{1}{3} \\pi r^2 h' },
+          { zh: '球體積', en: 'Volume of sphere', latex: 'V = \\dfrac{4}{3} \\pi r^3' }
         ]
       },
       {
@@ -43,7 +48,14 @@
           { zh: '等差數列第 n 項', en: 'nth term (arithmetic)', latex: 'a_n = a_1 + (n-1) d' },
           { zh: '等比數列第 n 項', en: 'nth term (geometric)', latex: 'a_n = a_1 r^{n-1}' },
           { zh: '一元二次方程求根', en: 'Quadratic formula', latex: 'x = \\dfrac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}' },
-          { zh: '兩根之和與積', en: 'Sum & product of roots', latex: '\\alpha + \\beta = -\\dfrac{b}{a},\\quad \\alpha \\beta = \\dfrac{c}{a}' }
+          { zh: '判別式', en: 'Discriminant', latex: '\\Delta = b^2 - 4ac' },
+          { zh: '兩根之和與積', en: 'Sum & product of roots', latex: '\\alpha + \\beta = -\\dfrac{b}{a},\\quad \\alpha \\beta = \\dfrac{c}{a}' },
+          { zh: '對數定律', en: 'Laws of logarithms', latex: '\\log(mn) = \\log m + \\log n,\\quad \\log\\dfrac{m}{n} = \\log m - \\log n' },
+          { zh: '等比數列前 n 項和', en: 'Sum of geometric series', latex: 'S_n = \\dfrac{a(1 - r^n)}{1 - r}' },
+          { zh: '等比數列無限和', en: 'Sum to infinity', latex: 'S_\\infty = \\dfrac{a}{1 - r}\\ (|r| < 1)' },
+          { zh: '排列', en: 'Permutation', latex: 'P(n,r) = \\dfrac{n!}{(n-r)!}' },
+          { zh: '組合', en: 'Combination', latex: 'C(n,r) = \\dfrac{n!}{r!(n-r)!}' },
+          { zh: '二項式定理（一般項）', en: 'Binomial term', latex: 'T_{r+1} = C(n,r)\\,x^{n-r}a^r' }
         ]
       },
       {
@@ -63,7 +75,9 @@
         zh: '概率與統計', en: 'Probability & Statistics', items: [
           { zh: '概率', en: 'Probability', latex: 'P(E) = \\dfrac{n(E)}{n(S)}' },
           { zh: '平均數', en: 'Mean', latex: '\\bar{x} = \\dfrac{x_1 + x_2 + \\cdots + x_n}{n}' },
-          { zh: '中位數', en: 'Median', latex: '\\tilde{x}' }
+          { zh: '中位數', en: 'Median', latex: '\\tilde{x}' },
+          { zh: '四分位距', en: 'Interquartile range', latex: 'IQR = Q_3 - Q_1' },
+          { zh: '期望值', en: 'Expected value', latex: 'E(X) = \\sum x P(x)' }
         ]
       }
     ]

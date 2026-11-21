@@ -803,69 +803,103 @@
 
   /* 聯立方程 */
   function genSimul(rng, o) {
-    var x = randInt(rng, 1, 10);
-    var y = randInt(rng, 1, 10);
-    var s = x + y;
-    var d = x - y;
+    var x = randInt(rng, 1, 9);
+    var y = randInt(rng, 1, 9);
+    var a, b, c, d, det;
+    do {
+      a = randInt(rng, 2, 5); b = randInt(rng, 2, 5);
+      c = randInt(rng, 2, 5); d = randInt(rng, 2, 5);
+      det = a * d - b * c;
+    } while (det === 0);
+    var s = a * x + b * y, t = c * x + d * y;
     return {
       type: 'simul',
-      prompt: { zh: '已知 x + y = ' + s + '，x − y = ' + d + '，求 x。', en: 'Given x + y = ' + s + ' and x − y = ' + d + ', find x.' },
+      prompt: {
+        zh: '已知 ' + a + 'x + ' + b + 'y = ' + s + '，' + c + 'x + ' + d + 'y = ' + t + '，求 x。',
+        en: 'Given ' + a + 'x + ' + b + 'y = ' + s + ' and ' + c + 'x + ' + d + 'y = ' + t + ', find x.'
+      },
       visual: null,
       answer: x,
-      math: { op: 'simul', x: x, y: y, s: s, d: d },
-      hint: { zh: '兩式相加得 2x = ' + (s + d) + '，再除以 2。', en: 'Add the equations: 2x = ' + (s + d) + ', then divide by 2.' }
+      math: { op: 'simul', mode: 'gen', a: a, b: b, c: c, d: d, s: s, t: t },
+      hint: { zh: '用消元法：把一條方程乘以適當倍數，消去 y。', en: 'Use elimination: multiply one equation so the y terms cancel.' }
     };
   }
 
-  /* 指數定律 */
+  /* 指數定律：乘、除、冪的乘方 */
   function genIndices(rng, o) {
     var base = pick(rng, [2, 3, 4, 5]);
-    var e1 = randInt(rng, 2, 3);
-    var e2 = randInt(rng, 2, 3);
-    if (rng() < 0.5) {
-      var val = Math.pow(base, e1);
+    var mode = pick(rng, ['power', 'prod', 'quot', 'pwrprod']);
+    if (mode === 'power') {
+      var e = randInt(rng, 2, 3);
       return {
         type: 'indices',
-        prompt: { zh: base + '^' + e1 + ' = ?', en: base + '^' + e1 + ' = ?' },
+        prompt: { zh: base + '^' + e + ' = ?', en: base + '^' + e + ' = ?' },
         visual: null,
-        answer: val,
-        math: { op: 'indices', base: base, e: e1 },
-        hint: { zh: base + '^' + e1 + ' 表示 ' + Array(e1).fill(base).join(' × ') + '。', en: base + '^' + e1 + ' means ' + Array(e1).fill(base).join(' × ') + '.' }
+        answer: Math.pow(base, e),
+        math: { op: 'indices', mode: 'power', base: base, e: e },
+        hint: { zh: base + '^' + e + ' 表示 ' + Array(e).fill(base).join(' × ') + '。', en: base + '^' + e + ' means ' + Array(e).fill(base).join(' × ') + '.' }
       };
     }
+    if (mode === 'prod') {
+      var e1 = randInt(rng, 2, 3), e2 = randInt(rng, 2, 3);
+      return {
+        type: 'indices',
+        prompt: { zh: base + '^' + e1 + ' × ' + base + '^' + e2 + ' = ?', en: base + '^' + e1 + ' × ' + base + '^' + e2 + ' = ?' },
+        visual: null,
+        answer: Math.pow(base, e1 + e2),
+        math: { op: 'indices', mode: 'prod', base: base, e1: e1, e2: e2 },
+        hint: { zh: '同底數相乘，指數相加：' + base + '^' + (e1 + e2) + '。', en: 'Same base: add exponents, ' + base + '^' + (e1 + e2) + '.' }
+      };
+    }
+    if (mode === 'quot') {
+      var q1 = randInt(rng, 3, 4), q2 = randInt(rng, 1, q1 - 1);
+      return {
+        type: 'indices',
+        prompt: { zh: base + '^' + q1 + ' ÷ ' + base + '^' + q2 + ' = ?', en: base + '^' + q1 + ' ÷ ' + base + '^' + q2 + ' = ?' },
+        visual: null,
+        answer: Math.pow(base, q1 - q2),
+        math: { op: 'indices', mode: 'quot', base: base, e1: q1, e2: q2 },
+        hint: { zh: '同底數相除，指數相減：' + base + '^' + (q1 - q2) + '。', en: 'Same base: subtract exponents, ' + base + '^' + (q1 - q2) + '.' }
+      };
+    }
+    var b1 = randInt(rng, 2, 4), b2 = randInt(rng, 2, 3), pe = randInt(rng, 2, 3);
     return {
       type: 'indices',
-      prompt: { zh: base + '^' + e1 + ' × ' + base + '^' + e2 + ' = ?', en: base + '^' + e1 + ' × ' + base + '^' + e2 + ' = ?' },
+      prompt: { zh: '(' + b1 + ' × ' + b2 + ')^' + pe + ' = ?', en: '(' + b1 + ' × ' + b2 + ')^' + pe + ' = ?' },
       visual: null,
-      answer: Math.pow(base, e1 + e2),
-      math: { op: 'indices', base: base, e1: e1, e2: e2 },
-      hint: { zh: '同底數相乘，指數相加：' + base + '^' + (e1 + e2) + '。', en: 'Same base: add the exponents, ' + base + '^' + (e1 + e2) + '.' }
+      answer: Math.pow(b1 * b2, pe),
+      math: { op: 'indices', mode: 'pwrprod', b1: b1, b2: b2, e: pe },
+      hint: { zh: '先算括號內的積，再取次方。', en: 'Work out the product in the bracket, then raise it to the power.' }
     };
   }
 
   /* 一元一次不等式（答案為「x > k」等字串） */
   function genInequality(rng, o) {
-    var a = randInt(rng, 2, 5);
+    var a = pick(rng, [-4, -3, -2, 2, 3, 4, 5]);
     var b = randInt(rng, 1, 10);
     var x0 = randInt(rng, 1, 10);
     var greater = rng() < 0.5;
-    var sign = greater ? '>' : '<';
+    var inSign = greater ? '>' : '<';
     var c = a * x0 + b;
-    var answer = 'x ' + sign + ' ' + x0;
+    var solveSign = a > 0 ? inSign : (greater ? '<' : '>');
+    var answer = 'x ' + solveSign + ' ' + x0;
     var choices = [
       answer,
-      'x ' + (greater ? '<' : '>') + ' ' + x0,
-      'x ' + sign + ' ' + (x0 + 1),
-      'x ' + sign + ' ' + (x0 - 1)
+      'x ' + (solveSign === '<' ? '>' : '<') + ' ' + x0,
+      'x ' + solveSign + ' ' + (x0 + 1),
+      'x ' + solveSign + ' ' + (x0 - 1)
     ];
     return {
       type: 'inequality',
-      prompt: { zh: '解不等式：' + a + 'x + ' + b + ' ' + sign + ' ' + c, en: 'Solve the inequality: ' + a + 'x + ' + b + ' ' + sign + ' ' + c },
+      prompt: { zh: '解不等式：' + (a < 0 ? '−' + (-a) : a) + 'x + ' + b + ' ' + inSign + ' ' + c, en: 'Solve the inequality: ' + (a < 0 ? '−' + (-a) : a) + 'x + ' + b + ' ' + inSign + ' ' + c },
       visual: null,
       answer: answer,
-      math: { op: 'inequality', a: a, b: b, x0: x0, sign: sign },
+      math: { op: 'inequality', a: a, b: b, x0: x0, sign: inSign },
       choices: shuffle(rng, choices),
-      hint: { zh: '先把 ' + b + ' 移到右邊，再兩邊除以 ' + a + '。', en: 'Move ' + b + ' to the right, then divide both sides by ' + a + '.' }
+      hint: {
+        zh: a > 0 ? '先把 ' + b + ' 移到右邊，再兩邊除以 ' + a + '。' : '先把 ' + b + ' 移到右邊，兩邊除以負數（' + a + '）時不等號要反向。',
+        en: a > 0 ? 'Move ' + b + ' to the right, then divide by ' + a + '.' : 'Move ' + b + ' to the right; dividing by ' + a + ' flips the inequality sign.'
+      }
     };
   }
 
@@ -875,6 +909,21 @@
 
   /* 對數 */
   function genLog(rng, o) {
+    if (rng() < 0.5) {
+      var lb = pick(rng, [2, 3, 5]);
+      var l1 = randInt(rng, 1, 3), l2 = randInt(rng, 1, 3);
+      return {
+        type: 'log',
+        prompt: {
+          zh: '$\\log_{' + lb + '} ' + Math.pow(lb, l1) + ' + \\log_{' + lb + '} ' + Math.pow(lb, l2) + ' = ?$',
+          en: '$\\log_{' + lb + '} ' + Math.pow(lb, l1) + ' + \\log_{' + lb + '} ' + Math.pow(lb, l2) + ' = ?$'
+        },
+        visual: null,
+        answer: l1 + l2,
+        math: { op: 'log', mode: 'law', base: lb, m: Math.pow(lb, l1), n: Math.pow(lb, l2) },
+        hint: { zh: '同底對數相加：log m + log n = log(mn)。', en: 'Same base: log m + log n = log(mn).' }
+      };
+    }
     var base = pick(rng, [2, 3, 5, 10]);
     var n = randInt(rng, 2, 4);
     var val = Math.pow(base, n);
@@ -883,7 +932,7 @@
       prompt: { zh: '$\\log_{' + base + '} ' + val + ' = ?$', en: '$\\log_{' + base + '} ' + val + ' = ?$' },
       visual: null,
       answer: n,
-      math: { op: 'log', base: base, n: n, val: val },
+      math: { op: 'log', mode: 'value', base: base, n: n, val: val },
       hint: { zh: '想一想：' + base + ' 的幾次方等於 ' + val + '？', en: 'What power of ' + base + ' gives ' + val + '?' }
     };
   }
@@ -1077,17 +1126,28 @@
 
   /* 中位數 */
   function genStats(rng, o) {
-    var n = pick(rng, [5, 7]);
-    var nums = [];
-    for (var i = 0; i < n; i++) nums.push(randInt(rng, 1, 20));
+    var n = pick(rng, [5, 6, 7]);
+    var nums;
+    if (n === 6) {
+      var m1 = randInt(rng, 4, 14);
+      var m2 = m1 + 2 * randInt(rng, 0, 2);
+      nums = [m1 - 2, m1 - 1, m1, m2, m2 + 1, m2 + 2];
+    } else {
+      nums = [];
+      for (var i = 0; i < n; i++) nums.push(randInt(rng, 1, 20));
+      nums.sort(function (x, y) { return x - y; });
+    }
     var sorted = nums.slice().sort(function (x, y) { return x - y; });
+    var median = n % 2 === 1 ? sorted[(n - 1) / 2] : (sorted[n / 2 - 1] + sorted[n / 2]) / 2;
     return {
       type: 'stats',
       prompt: { zh: '求 ' + nums.join('、') + ' 的中位數。', en: 'Find the median of ' + nums.join(', ') + '.' },
       visual: { kind: 'barchart' },
-      answer: sorted[(n - 1) / 2],
-      math: { op: 'stats', nums: nums, sorted: sorted },
-      hint: { zh: '先把數字由小到大排列，再取中間那個。', en: 'Sort the numbers, then take the middle one.' }
+      answer: median,
+      math: { op: 'stats', mode: n % 2 === 1 ? 'odd' : 'even', nums: nums, sorted: sorted },
+      hint: n % 2 === 1
+        ? { zh: '先把數字由小到大排列，再取中間那個。', en: 'Sort the numbers, then take the middle one.' }
+        : { zh: '先把數字排序；共 6 個，取中間兩個的平均。', en: 'Sort the numbers; with 6 values, average the two middle ones.' }
     };
   }
 
@@ -2313,11 +2373,14 @@
     var askCoeff = rng() < 0.5;
     return {
       type: 'derivative',
-      prompt: { zh: '求 $\\dfrac{d}{dx}(' + a + 'x^' + n + ')$，' + (askCoeff ? '結果中 $x$ 的係數' : '結果的次數') + '是多少？', en: 'Find $\\dfrac{d}{dx}(' + a + 'x^' + n + ')$. What is the ' + (askCoeff ? 'coefficient of $x$' : 'degree') + '?' },
+      prompt: {
+        zh: '求 $\\dfrac{d}{dx}(' + a + 'x^' + n + ')$，' + (askCoeff ? '導數中最高次項的係數' : '導數的次數') + '是多少？',
+        en: 'Find $\\dfrac{d}{dx}(' + a + 'x^' + n + ')$. What is the ' + (askCoeff ? 'leading coefficient of the derivative' : 'degree of the derivative') + '?'
+      },
       visual: null,
       answer: askCoeff ? a * n : (n - 1),
       math: { op: 'derivative', a: a, n: n, mode: askCoeff ? 'coeff' : 'deg' },
-      hint: { zh: 'd/dx(ax^n) = a·n·x^(n−1)。', en: 'd/dx(ax^n) = a·n·x^(n−1).' }
+      hint: { zh: 'd/dx(ax^n) = a·n·x^(n−1)：係數是 a·n，次數是 n−1。', en: 'd/dx(ax^n) = a·n·x^(n−1): the coefficient is a·n and the degree is n−1.' }
     };
   }
 
@@ -2420,6 +2483,59 @@
         };
       }
       return null;
+    },
+    indices: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'power') {
+        return { zh: ['重複相乘。', m.base + '^' + m.e + ' = ' + Array(m.e).fill(m.base).join(' × ') + ' = ' + ans + '。'], en: ['Repeated multiplication.', m.base + '^' + m.e + ' = ' + Array(m.e).fill(m.base).join(' × ') + ' = ' + ans + '.'] };
+      }
+      if (m.mode === 'prod') {
+        return { zh: ['同底數相乘，指數相加。', m.base + '^' + m.e1 + ' × ' + m.base + '^' + m.e2 + ' = ' + m.base + '^' + (m.e1 + m.e2) + ' = ' + ans + '。'], en: ['Same base: add the exponents.', m.base + '^' + m.e1 + ' × ' + m.base + '^' + m.e2 + ' = ' + m.base + '^' + (m.e1 + m.e2) + ' = ' + ans + '.'] };
+      }
+      if (m.mode === 'quot') {
+        return { zh: ['同底數相除，指數相減。', m.base + '^' + m.e1 + ' ÷ ' + m.base + '^' + m.e2 + ' = ' + m.base + '^' + (m.e1 - m.e2) + ' = ' + ans + '。'], en: ['Same base: subtract the exponents.', m.base + '^' + m.e1 + ' ÷ ' + m.base + '^' + m.e2 + ' = ' + m.base + '^' + (m.e1 - m.e2) + ' = ' + ans + '.'] };
+      }
+      return { zh: ['先算括號內的積，再取次方。', '= (' + m.b1 + ' × ' + m.b2 + ')^' + m.e + ' = ' + ans + '。'], en: ['Work out the product first, then the power.', '= (' + m.b1 + ' × ' + m.b2 + ')^' + m.e + ' = ' + ans + '.'] };
+    },
+    inequality: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      var sign = m.a > 0 ? m.sign : (m.sign === '>' ? '<' : '>');
+      var flip = m.a < 0 ? '（除以負數，不等號反向）' : '';
+      var flipEn = m.a < 0 ? ' (dividing by a negative flips the sign)' : '';
+      return {
+        zh: ['先把 ' + m.b + ' 移到右邊：' + m.a + 'x ' + m.sign + ' ' + (m.a * m.x0) + '。', '兩邊除以 ' + m.a + flip + '：' + ans + '。'],
+        en: ['Move ' + m.b + ' to the right: ' + m.a + 'x ' + m.sign + ' ' + (m.a * m.x0) + '.', 'Divide by ' + m.a + flipEn + ': ' + ans + '.']
+      };
+    },
+    simul: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      var det = m.a * m.d - m.b * m.c;
+      return {
+        zh: ['用消元法解二元一次方程組。', 'x = (' + m.s + ' × ' + m.d + ' − ' + m.b + ' × ' + m.t + ') ÷ (' + m.a + ' × ' + m.d + ' − ' + m.b + ' × ' + m.c + ') = ' + ans + '。'],
+        en: ['Solve the simultaneous equations by elimination.', 'x = (' + m.s + ' × ' + m.d + ' − ' + m.b + ' × ' + m.t + ') ÷ (' + m.a + ' × ' + m.d + ' − ' + m.b + ' × ' + m.c + ') = ' + ans + '.']
+      };
+    },
+    log: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'law') {
+        return {
+          zh: ['同底對數相加：log m + log n = log(mn)。', 'log_' + m.base + '(' + m.m + ' × ' + m.n + ') = log_' + m.base + ' ' + (m.m * m.n) + ' = ' + ans + '。'],
+          en: ['Same base: log m + log n = log(mn).', 'log_' + m.base + '(' + m.m + ' × ' + m.n + ') = log_' + m.base + ' ' + (m.m * m.n) + ' = ' + ans + '.']
+        };
+      }
+      return null;
+    },
+    stats: function (p) {
+      var m = p.math, ans = renderValue(p.answer);
+      if (m.mode === 'even') {
+        var a1 = m.sorted[m.sorted.length / 2 - 1], a2 = m.sorted[m.sorted.length / 2];
+        return {
+          zh: ['排序後共 6 個數據，取中間兩個。', '中間兩個是 ' + a1 + ' 和 ' + a2 + '，中位數 = (' + a1 + ' + ' + a2 + ') ÷ 2 = ' + ans + '。'],
+          en: ['With 6 sorted values, take the two middle ones.', 'They are ' + a1 + ' and ' + a2 + ', so median = (' + a1 + ' + ' + a2 + ') ÷ 2 = ' + ans + '.']
+        };
+      }
+      var mid = m.sorted[(m.sorted.length - 1) / 2];
+      return { zh: ['排序後取中間那個。', '中間的是 ' + mid + '，中位數 = ' + ans + '。'], en: ['Sort, then take the middle value.', 'The middle value is ' + mid + ', so median = ' + ans + '.'] };
     },
     placevalue: function (p) {
       var m = p.math, ans = renderValue(p.answer);

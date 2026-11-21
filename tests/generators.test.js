@@ -157,7 +157,9 @@ for (const skill of skills) {
  ['ms.s3.prism', 'prism'], ['col.linalg', 'matrix'], ['col.calculus', 'calculus'],
  ['col.prob', 'expectation'], ['hs.s4.circleprop', 'circleprop'],
  ['hs.s5.dispersion', 'dispersion'], ['g1.place100', 'placevalue'],
- ['g4.fractionadd', 'fractionadd'], ['ms.s3.prob', 'prob'], ['g6.percent', 'percent']].forEach(([sid, type]) => {
+ ['g4.fractionadd', 'fractionadd'], ['ms.s3.prob', 'prob'], ['g6.percent', 'percent'],
+ ['ms.s3.indices', 'indices'], ['ms.s3.inequality', 'inequality'], ['ms.s2.simul', 'simul'],
+ ['hs.s4.log', 'log'], ['hs.s6.stats', 'stats'], ['hs.s6.derivative', 'derivative']].forEach(([sid, type]) => {
   const skill = C.skills[sid];
   check(!!skill, '缺少技能 ' + sid);
   for (let i = 0; i < 20; i++) {
