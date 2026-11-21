@@ -57,7 +57,7 @@ function computeAnswer(math) {
     return { n: math.a, d: math.b };
   }
   if (math.op === 'ap') return math.a + (math.n - 1) * math.d;
-  if (math.op === 'gp') return math.a * Math.pow(math.r, math.n - 1);
+  if (math.op === 'gp') { if (math.mode === 'sum') return math.a * (Math.pow(math.r, math.n) - 1) / (math.r - 1); if (math.mode === 'inf') return math.a / (1 - math.r); return math.a * Math.pow(math.r, math.n - 1); }
   if (math.op === 'prob') return { n: math.good, d: math.total };
   if (math.op === 'quad') return math.askSum ? math.sum : math.prod;
   if (math.op === 'stats') { var s = math.nums.slice().sort(function (x, y) { return x - y; }); return s[(s.length - 1) / 2]; }
@@ -83,8 +83,8 @@ function computeAnswer(math) {
   if (math.op === 'angle') return math.a;
   if (math.op === 'money') return math.a - math.b;
   if (math.op === 'fact') return math.a;
-  if (math.op === 'quadsolve') return Math.max(math.p, math.q);
-  if (math.op === 'line') return (math.b[1] - math.a[1]) / (math.b[0] - math.a[0]);
+  if (math.op === 'quadsolve') return math.mode === 'disc' ? Math.pow(math.p - math.q, 2) : Math.max(math.p, math.q);
+  if (math.op === 'line') return math.mode === 'eq' ? math.y - math.m * math.x : (math.b[1] - math.a[1]) / (math.b[0] - math.a[0]);
   if (math.op === 'variation') return math.k * math.c;
   if (math.op === 'oddeven') {
     if (math.mode === 'counteven') return Math.floor(math.n / 2);
@@ -125,9 +125,36 @@ function computeAnswer(math) {
   if (math.op === 'circleangle') return math.mode === 'centre' ? 2 * math.a : math.a;
   if (math.op === 'binomial') {
     var bfact = function (x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; };
-    return bfact(math.n) / (bfact(math.r) * bfact(math.n - math.r));
+    var bcoef = bfact(math.n) / (bfact(math.r) * bfact(math.n - math.r)); return math.mode === 'gen' ? bcoef * Math.pow(math.a, math.n - math.r) : bcoef;
   }
   if (math.op === 'derivative') return math.mode === 'coeff' ? math.a * math.n : math.n - 1;
+  if (math.op === 'identity') {
+    if (math.mode === 'mid') return math.a + math.b;
+    if (math.mode === 'const') return math.a * math.b;
+    if (math.mode === 'square') return 2 * math.a;
+    return math.a * math.a - math.b * math.b;
+  }
+  if (math.op === 'circleprop') {
+    if (math.mode === 'semicircle' || math.mode === 'tangent') return 90;
+    if (math.mode === 'cyclic') return 180 - math.a;
+    return math.a;
+  }
+  if (math.op === 'dispersion') return math.q3 - math.q1;
+  if (math.op === 'prism') return math.mode === 'pyramid' ? math.area * math.h / 3 : math.area * math.h;
+  if (math.op === 'matrix') {
+    if (math.mode === 'det') return math.a * math.d - math.b * math.c;
+    return math.A[0][0] * math.B[0][0] + math.A[0][1] * math.B[1][0];
+  }
+  if (math.op === 'calculus') {
+    if (math.mode === 'dval') return math.a * math.n * Math.pow(math.x, math.n - 1);
+    return math.a * Math.pow(math.b, math.n + 1) / (math.n + 1);
+  }
+  if (math.op === 'expectation') {
+    if (math.mode === 'die') return { n: 7, d: 2 };
+    if (math.mode === 'spinner') return { n: math.n + 1, d: 2 };
+    var ef = function (x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; };
+    return { n: ef(math.n) / (ef(math.k) * ef(math.n - math.k)), d: Math.pow(2, math.n) };
+  }
   if (math.op === 'add') return math.a + math.b;
   if (math.op === 'sub') return math.a - math.b;
   if (math.op === 'mul') return math.a * math.b;
@@ -148,6 +175,21 @@ const SKILLS = {
   compare:        { id: 't.compare',   types: ['compare'],                   levels: [{ min: 1, max: 10 }] },
   comparegroup:   { id: 't.compareg',  types: ['comparegroup'],              levels: [{ min: 1, max: 10 }] },
   placevalue:     { id: 't.pv',        types: ['placevalue'],                levels: [{ min: 10, max: 99 }] },
+  identity:       { id: 't.ident',     types: ['identity'],                  levels: [{}] },
+  circleprop:     { id: 't.cprop',     types: ['circleprop'],                levels: [{}] },
+  dispersion:     { id: 't.disp',      types: ['dispersion'],                levels: [{}] },
+  prism:          { id: 't.prism',     types: ['prism'],                     levels: [{}] },
+  matrix:         { id: 't.matrix',    types: ['matrix'],                    levels: [{}] },
+  calculus:       { id: 't.calc',      types: ['calculus'],                  levels: [{}] },
+  expectation:    { id: 't.exp',       types: ['expectation'],               levels: [{}] },
+  sector:         { id: 't.sector',    types: [{ t: 'arclen', opts: { mode: 'sector' } }], levels: [{}] },
+  quadDisc:       { id: 't.qdisc',     types: [{ t: 'quadsolve', opts: { mode: 'disc' } }], levels: [{}] },
+  lineEq:         { id: 't.lineq',     types: [{ t: 'line', opts: { mode: 'eq' } }], levels: [{}] },
+  gpSum:          { id: 't.gpsum',     types: [{ t: 'gp', opts: { mode: 'sum' } }], levels: [{}] },
+  gpInf:          { id: 't.gpinf',     types: [{ t: 'gp', opts: { mode: 'inf' } }], levels: [{}] },
+  binGen:         { id: 't.bingen',    types: [{ t: 'binomial', opts: { general: true } }], levels: [{}] },
+  probDice:       { id: 't.pdice',     types: [{ t: 'prob', opts: { mode: 'twoDice' } }], levels: [{}] },
+  probComp:       { id: 't.pcomp',     types: [{ t: 'prob', opts: { mode: 'complement' } }], levels: [{}] },
   addition:       { id: 't.add',       types: ['addition'],                  levels: [{ max: 10 }, { max: 20 }] },
   subtraction:    { id: 't.sub',       types: ['subtraction'],               levels: [{ max: 10 }, { max: 20 }] },
   numberbonds:    { id: 't.bonds',     types: ['numberbonds'],               levels: [{ max: 10 }, { max: 20 }] },
@@ -246,7 +288,7 @@ function validateProblem(skill, p, label) {
       const red = C.reduceFraction(p.answer);
       check(red.n === p.answer.n && red.d === p.answer.d, `${label}: 計算型分數答案未約簡 (${p.answer.n}/${p.answer.d})`);
     }
-    check(p.answer.n > 0 && p.answer.n < p.answer.d, `${label}: 分數應真分數`);
+    check(p.answer.n > 0 && p.answer.d > 0, `${label}: 分數分母必須為正`);
   } else if (isString) {
     check(typeof p.answer === 'string', `${label}: 字符串題答案應為字符串`);
     check(p.answer === expected, `${label}: 字符串答案不一致 (${p.answer} vs ${expected})`);
@@ -264,7 +306,7 @@ function validateProblem(skill, p, label) {
   check(keys.indexOf(C.valueKey(p.answer)) !== -1, `${label}: 選項缺少正確答案`);
   p.choices.forEach((c) => {
     if (C.isFraction(c)) {
-      check(c.n > 0 && c.n < c.d, `${label}: 分數選項應為真分數`);
+      check(c.n > 0 && c.d > 0, `${label}: 分數選項分母必須為正`);
     } else if (isString) {
       check(typeof c === 'string', `${label}: 字符串選項應為字符串`);
     } else {

@@ -962,6 +962,28 @@
 
   /* 等比數列 */
   function genGp(rng, o) {
+    if (o && o.mode === 'sum') {
+      var sa = randInt(rng, 1, 5), sr = pick(rng, [2, 3]), sn = randInt(rng, 3, 5);
+      return {
+        type: 'gp',
+        prompt: { zh: '等比數列首項是 ' + sa + '，公比是 ' + sr + '。求前 ' + sn + ' 項之和。', en: 'A geometric sequence has first term ' + sa + ' and common ratio ' + sr + '. Find the sum of the first ' + sn + ' terms.' },
+        visual: null,
+        answer: sa * (Math.pow(sr, sn) - 1) / (sr - 1),
+        math: { op: 'gp', mode: 'sum', a: sa, r: sr, n: sn },
+        hint: { zh: '前 n 項和 = a(rⁿ − 1)/(r − 1)。', en: 'Sum = a(rⁿ − 1)/(r − 1).' }
+      };
+    }
+    if (o && o.mode === 'inf') {
+      var ia = randInt(rng, 1, 4) * 2;
+      return {
+        type: 'gp',
+        prompt: { zh: '等比數列首項是 ' + ia + '，公比是 1/2。求無限項之和。', en: 'A geometric sequence has first term ' + ia + ' and common ratio 1/2. Find the sum to infinity.' },
+        visual: null,
+        answer: ia * 2,
+        math: { op: 'gp', mode: 'inf', a: ia, r: 0.5 },
+        hint: { zh: 'S∞ = a ÷ (1 − r)，r = 1/2。', en: 'S∞ = a ÷ (1 − r) with r = 1/2.' }
+      };
+    }
     var a = randInt(rng, 1, 5);
     var r = pick(rng, [2, 3]);
     var n = randInt(rng, 3, 5);
@@ -976,7 +998,47 @@
   }
 
   /* 概率 */
+  /* 由同一分母建立 4 個互不等值的選項（概率題用） */
+  function fracChoiceSet(rng, ans, den, maxNum) {
+    var pool = [];
+    var top = maxNum != null ? Math.min(maxNum, den - 1) : den - 1;
+    for (var n = 1; n <= top; n++) {
+      var c = reduceFraction({ n: n, d: den });
+      if (!valuesEqual(c, ans)) pool.push(c);
+    }
+    pool = shuffle(rng, pool).slice(0, 3);
+    return shuffle(rng, [ans].concat(pool));
+  }
+
   function genProb(rng, o) {
+    if (o && o.mode === 'twoDice') {
+      var s = randInt(rng, 2, 12);
+      var cnt = 6 - Math.abs(s - 7);
+      var ans = reduceFraction({ n: cnt, d: 36 });
+      return {
+        type: 'prob',
+        prompt: { zh: '擲兩枚均勻骰子，點數之和是 ' + s + ' 的概率是多少？', en: 'Two fair dice are rolled. What is the probability that the sum is ' + s + '?' },
+        visual: null,
+        answer: ans,
+        choices: fracChoiceSet(rng, ans, 36, 12),
+        math: { op: 'prob', mode: 'twoDice', s: s, good: cnt, total: 36 },
+        hint: { zh: '數一數和為 ' + s + ' 的組合數，再除以 36。', en: 'Count the pairs with sum ' + s + ', then divide by 36.' }
+      };
+    }
+    if (o && o.mode === 'complement') {
+      var ct = pick(rng, [6, 8, 10, 12]);
+      var cg = randInt(rng, 1, ct - 1);
+      var comp = reduceFraction({ n: ct - cg, d: ct });
+      return {
+        type: 'prob',
+        prompt: { zh: '袋中有 ' + ct + ' 個球，其中 ' + cg + ' 個是紅球。隨機抽一個，抽到的不是紅球的概率是多少？', en: 'A bag has ' + ct + ' balls, ' + cg + ' of them red. What is the probability of NOT drawing a red ball?' },
+        visual: null,
+        answer: comp,
+        choices: fracChoiceSet(rng, comp, ct),
+        math: { op: 'prob', mode: 'complement', good: ct - cg, total: ct },
+        hint: { zh: 'P(不是紅球) = 1 − P(紅球)。', en: 'P(not red) = 1 − P(red).' }
+      };
+    }
     var total = pick(rng, [6, 8, 10, 12]);
     var good = randInt(rng, 1, total - 1);
     var answer = reduceFraction({ n: good, d: total });
@@ -1295,6 +1357,21 @@
 
   /* 二次方程求根（較大的根） */
   function genQuadsolve(rng, o) {
+    if (o && o.mode === 'disc') {
+      var dp = randInt(rng, 1, 9), dq = randInt(rng, 1, 9);
+      while (dq === dp) dq = randInt(rng, 1, 9);
+      var db = -(dp + dq), dc = dp * dq;
+      var dbx = (db > 0 ? '+ ' + db : '- ' + (-db));
+      var dcs = (dc > 0 ? '+ ' + dc : '- ' + (-dc));
+      return {
+        type: 'quadsolve',
+        prompt: { zh: '求方程 $x^2 ' + dbx + 'x ' + dcs + ' = 0$ 的判別式。', en: 'Find the discriminant of $x^2 ' + dbx + 'x ' + dcs + ' = 0$.' },
+        visual: null,
+        answer: Math.pow(dp - dq, 2),
+        math: { op: 'quadsolve', mode: 'disc', p: dp, q: dq, b: db, c: dc },
+        hint: { zh: '判別式 = b² − 4ac；本題 a = 1。', en: 'Discriminant = b² − 4ac; here a = 1.' }
+      };
+    }
     var p = randInt(rng, 1, 9), q = randInt(rng, 1, 9);
     while (q === p) q = randInt(rng, 1, 9);
     var b = -(p + q), c = p * q;
@@ -1313,6 +1390,18 @@
 
   /* 直線斜率 */
   function genLine(rng, o) {
+    if (o && o.mode === 'eq') {
+      var em = randInt(rng, 1, 4), ec = randInt(rng, 0, 9), ex = randInt(rng, 1, 4);
+      var ey = em * ex + ec;
+      return {
+        type: 'line',
+        prompt: { zh: '直線 $y = ' + em + 'x + c$ 經過點 (' + ex + ', ' + ey + ')，求 c。', en: 'The line $y = ' + em + 'x + c$ passes through (' + ex + ', ' + ey + '). Find c.' },
+        visual: null,
+        answer: ec,
+        math: { op: 'line', mode: 'eq', m: em, c: ec, x: ex, y: ey },
+        hint: { zh: '把點的坐標代入方程，再解 c。', en: 'Substitute the point into the equation, then solve for c.' }
+      };
+    }
     var x1 = randInt(rng, 0, 5), y1 = randInt(rng, 0, 5);
     var dx = randInt(rng, 1, 4), m = randInt(rng, 1, 4);
     var x2 = x1 + dx, y2 = y1 + m * dx;
@@ -1491,7 +1580,270 @@
   }
 
   /* 扇形弧長（以 π 表示） */
+  var SECTOR_PAIRS = [
+    [3, 40], [3, 80], [3, 120], [3, 160], [3, 200], [3, 240], [3, 280], [3, 320],
+    [6, 10], [6, 20], [6, 40], [6, 60], [6, 90], [6, 120], [6, 180],
+    [9, 40], [9, 80], [9, 120], [9, 160],
+    [12, 10], [12, 20], [12, 30], [12, 40], [12, 90]
+  ];
+
+  function genDispersion(rng, o) {
+    var nums = [];
+    while (nums.length < 7) {
+      var v = randInt(rng, 1, 30);
+      if (nums.indexOf(v) === -1) nums.push(v);
+    }
+    nums.sort(function (x, y) { return x - y; });
+    var q1 = nums[1], q3 = nums[5];
+    return {
+      type: 'dispersion',
+      prompt: { zh: '求 ' + nums.join('、') + ' 的四分位距（IQR）。', en: 'Find the interquartile range (IQR) of ' + nums.join(', ') + '.' },
+      visual: null,
+      answer: q3 - q1,
+      math: { op: 'dispersion', nums: nums, q1: q1, q3: q3 },
+      hint: { zh: '先排序；Q1 是下半部的中位數，Q3 是上半部的中位數，IQR = Q3 − Q1。', en: 'Sort first; Q1 is the lower-half median, Q3 the upper-half median, IQR = Q3 − Q1.' }
+    };
+  }
+
+  function genCircleprop(rng, o) {
+    var mode = pick(rng, ['semicircle', 'cyclic', 'tangent', 'sameseg']);
+    var x = randInt(rng, 20, 70);
+    var prompt, answer, hint;
+    if (mode === 'semicircle') {
+      answer = 90;
+      prompt = { zh: '半圓上的圓周角是多少度？', en: 'What is the angle in a semicircle?' };
+      hint = { zh: '半圓上的圓周角 = 90°。', en: 'The angle in a semicircle is 90°.' };
+    } else if (mode === 'cyclic') {
+      answer = 180 - x;
+      prompt = { zh: '圓內接四邊形的一個內角是 ' + x + '°，它的對角是多少度？', en: 'One angle of a cyclic quadrilateral is ' + x + '°. What is its opposite angle?' };
+      hint = { zh: '圓內接四邊形的對角互補（和 = 180°）。', en: 'Opposite angles of a cyclic quadrilateral sum to 180°.' };
+    } else if (mode === 'tangent') {
+      answer = 90;
+      prompt = { zh: '圓的半徑與切線的夾角是多少度？', en: 'What is the angle between a radius and the tangent at its endpoint?' };
+      hint = { zh: '切線垂直於過切點的半徑。', en: 'A tangent is perpendicular to the radius at the point of contact.' };
+    } else {
+      answer = x;
+      prompt = { zh: '同一弓形上的兩個圓周角，其中一個是 ' + x + '°，另一個是多少度？', en: 'Two angles in the same segment: one is ' + x + '°. What is the other?' };
+      hint = { zh: '同弓形內的圓周角相等。', en: 'Angles in the same segment are equal.' };
+    }
+    return {
+      type: 'circleprop',
+      prompt: prompt,
+      visual: { kind: 'circleang' },
+      answer: answer,
+      math: { op: 'circleprop', mode: mode, a: x },
+      hint: hint
+    };
+  }
+
+  /* 恆等式與展開 */
+  function genIdentity(rng, o) {
+    var a = randInt(rng, 1, 6), b = randInt(rng, 1, 6);
+    var mode = pick(rng, ['mid', 'const', 'square', 'diff']);
+    if (mode === 'diff' && a < b) { var tmp = a; a = b; b = tmp; }
+    var prompt, answer, hint;
+    if (mode === 'mid') {
+      prompt = { zh: '展開 $(x + ' + a + ')(x + ' + b + ')$，$x$ 的係數是多少？', en: 'Expand $(x + ' + a + ')(x + ' + b + ')$. What is the coefficient of $x$?' };
+      answer = a + b;
+      hint = { zh: '(x + a)(x + b) = x² + (a + b)x + ab。', en: '(x + a)(x + b) = x² + (a + b)x + ab.' };
+    } else if (mode === 'const') {
+      prompt = { zh: '展開 $(x + ' + a + ')(x + ' + b + ')$，常數項是多少？', en: 'Expand $(x + ' + a + ')(x + ' + b + ')$. What is the constant term?' };
+      answer = a * b;
+      hint = { zh: '常數項 = a × b。', en: 'Constant term = a × b.' };
+    } else if (mode === 'square') {
+      prompt = { zh: '展開 $(x + ' + a + ')^2$，$x$ 的係數是多少？', en: 'Expand $(x + ' + a + ')^2$. What is the coefficient of $x$?' };
+      answer = 2 * a;
+      hint = { zh: '(x + a)² = x² + 2ax + a²。', en: '(x + a)² = x² + 2ax + a².' };
+    } else {
+      prompt = { zh: '計算 $(' + (a + b) + ')(' + (a - b) + ')$。', en: 'Evaluate $(' + (a + b) + ')(' + (a - b) + ')$.' };
+      answer = a * a - b * b;
+      hint = { zh: '平方差：(a + b)(a − b) = a² − b²。', en: 'Difference of squares: (a + b)(a − b) = a² − b².' };
+    }
+    return {
+      type: 'identity',
+      prompt: prompt,
+      visual: null,
+      answer: answer,
+      math: { op: 'identity', mode: mode, a: a, b: b },
+      hint: hint
+    };
+  }
+
+  /* 柱體與錐體體積（底面積 × 高） */
+  function genPrism(rng, o) {
+    var mode = pick(rng, ['prism', 'pyramid']);
+    var area = randInt(rng, 2, 20);
+    var h = mode === 'pyramid' ? randInt(rng, 1, 4) * 3 : randInt(rng, 2, 10);
+    var answer = mode === 'pyramid' ? area * h / 3 : area * h;
+    return {
+      type: 'prism',
+      prompt: {
+        zh: (mode === 'pyramid' ? '錐體' : '柱體') + '的底面積是 ' + area + ' cm²，高是 ' + h + ' cm，體積是多少？',
+        en: 'A ' + (mode === 'pyramid' ? 'pyramid' : 'prism') + ' has base area ' + area + ' cm² and height ' + h + ' cm. What is its volume?'
+      },
+      visual: null,
+      answer: answer,
+      math: { op: 'prism', mode: mode, area: area, h: h },
+      hint: {
+        zh: mode === 'pyramid' ? '錐體體積 = 底面積 × 高 ÷ 3。' : '柱體體積 = 底面積 × 高。',
+        en: mode === 'pyramid' ? 'Pyramid volume = base area × height ÷ 3.' : 'Prism volume = base area × height.'
+      }
+    };
+  }
+
+  /* 2×2 矩陣：行列式與乘積元素 */
+  function genMatrix(rng, o) {
+    var mode = pick(rng, ['det', 'entry']);
+    if (mode === 'det') {
+      var a = randInt(rng, 2, 6), d = randInt(rng, 2, 6);
+      var b = randInt(rng, 0, 3), c = randInt(rng, 0, 3);
+      if (a * d - b * c <= 0) { var t = b; b = c; c = t; }
+      if (a * d - b * c <= 0) { b = 0; c = 0; }
+      return {
+        type: 'matrix',
+        prompt: {
+          zh: '求矩陣 $\\begin{pmatrix}' + a + ' & ' + b + ' \\\\ ' + c + ' & ' + d + '\\end{pmatrix}$ 的行列式。',
+          en: 'Find the determinant of $\\begin{pmatrix}' + a + ' & ' + b + ' \\\\ ' + c + ' & ' + d + '\\end{pmatrix}$.'
+        },
+        visual: null,
+        answer: a * d - b * c,
+        math: { op: 'matrix', mode: 'det', a: a, b: b, c: c, d: d },
+        hint: { zh: '二階行列式 = ad − bc。', en: '2×2 determinant = ad − bc.' }
+      };
+    }
+    var A = [[randInt(rng, 0, 3), randInt(rng, 0, 3)], [randInt(rng, 0, 3), randInt(rng, 0, 3)]];
+    var B = [[randInt(rng, 0, 3), randInt(rng, 0, 3)], [randInt(rng, 0, 3), randInt(rng, 0, 3)]];
+    var entry = A[0][0] * B[0][0] + A[0][1] * B[1][0];
+    return {
+      type: 'matrix',
+      prompt: {
+        zh: '設 $A = \\begin{pmatrix}' + A[0][0] + ' & ' + A[0][1] + ' \\\\ ' + A[1][0] + ' & ' + A[1][1] + '\\end{pmatrix}$，$B = \\begin{pmatrix}' + B[0][0] + ' & ' + B[0][1] + ' \\\\ ' + B[1][0] + ' & ' + B[1][1] + '\\end{pmatrix}$，求 $AB$ 的左上角元素。',
+        en: 'Let $A = \\begin{pmatrix}' + A[0][0] + ' & ' + A[0][1] + ' \\\\ ' + A[1][0] + ' & ' + A[1][1] + '\\end{pmatrix}$ and $B = \\begin{pmatrix}' + B[0][0] + ' & ' + B[0][1] + ' \\\\ ' + B[1][0] + ' & ' + B[1][1] + '\\end{pmatrix}$. Find the top-left entry of $AB$.'
+      },
+      visual: null,
+      answer: entry,
+      math: { op: 'matrix', mode: 'entry', A: A, B: B },
+      hint: { zh: '(AB)₁₁ = A₁₁B₁₁ + A₁₂B₂₁。', en: '(AB)₁₁ = A₁₁B₁₁ + A₁₂B₂₁.' }
+    };
+  }
+
+  /* 微積分入門：導數值 / 定積分 */
+  function genCalculus(rng, o) {
+    var mode = pick(rng, ['dval', 'idef']);
+    if (mode === 'dval') {
+      var a = randInt(rng, 1, 6), n = pick(rng, [2, 3]), x = randInt(rng, 1, 4);
+      return {
+        type: 'calculus',
+        prompt: {
+          zh: '設 $f(x) = ' + a + 'x^' + n + '$，求 $f\'(' + x + ')$。',
+          en: 'Let $f(x) = ' + a + 'x^' + n + '$. Find $f\'(' + x + ')$.'
+        },
+        visual: null,
+        answer: a * n * Math.pow(x, n - 1),
+        math: { op: 'calculus', mode: 'dval', a: a, n: n, x: x },
+        hint: { zh: 'f′(x) = a·n·x^(n−1)，再代入 x。', en: 'f′(x) = a·n·x^(n−1), then substitute x.' }
+      };
+    }
+    var ca = pick(rng, [2, 4, 6]);
+    var b = randInt(rng, 1, 5);
+    return {
+      type: 'calculus',
+      prompt: {
+        zh: '計算 $\\int_0^{' + b + '} ' + ca + 'x \\, dx$。',
+        en: 'Evaluate $\\int_0^{' + b + '} ' + ca + 'x \\, dx$.'
+      },
+      visual: null,
+      answer: ca * b * b / 2,
+      math: { op: 'calculus', mode: 'idef', a: ca, b: b, n: 1 },
+      hint: { zh: '∫ ax dx = a x²/2，代入上下限。', en: '∫ ax dx = a x²/2; substitute the limits.' }
+    };
+  }
+
+  /* 期望值與二項概率 */
+  function genExpectation(rng, o) {
+    var mode = pick(rng, ['die', 'spinner', 'binomial']);
+    if (mode === 'die') {
+      return {
+        type: 'expectation',
+        prompt: { zh: '擲一枚均勻骰子，點數的期望值是多少？', en: 'A fair die is rolled. What is the expected value?' },
+        visual: null,
+        answer: { n: 7, d: 2 },
+        math: { op: 'expectation', mode: 'die' },
+        hint: { zh: 'E(X) = (1 + 2 + … + 6) ÷ 6 = 7/2。', en: 'E(X) = (1 + 2 + … + 6) ÷ 6 = 7/2.' }
+      };
+    }
+    if (mode === 'spinner') {
+      var n = pick(rng, [4, 5, 6]);
+      return {
+        type: 'expectation',
+        prompt: {
+          zh: '轉盤有 ' + n + ' 格，分別標示 1 至 ' + n + '，每格機會相等。轉一次，期望值是多少？',
+          en: 'A spinner has ' + n + ' equally likely sectors numbered 1 to ' + n + '. What is the expected value?'
+        },
+        visual: null,
+        answer: { n: n + 1, d: 2 },
+        math: { op: 'expectation', mode: 'spinner', n: n },
+        hint: { zh: 'E(X) = (1 + … + n) ÷ n = (n + 1)/2。', en: 'E(X) = (1 + … + n) ÷ n = (n + 1)/2.' }
+      };
+    }
+    var coins = pick(rng, [3, 4, 5]);
+    var k = randInt(rng, 1, coins - 1);
+    function choose(a, b) {
+      function f(x) { var r = 1; for (var i = 2; i <= x; i++) r *= i; return r; }
+      return f(a) / (f(b) * f(a - b));
+    }
+    var expectChoices = [choose(coins, k)];
+    [choose(coins, k - 1), choose(coins, k + 1), 1].forEach(function (v) {
+      if (v > 0 && expectChoices.indexOf(v) === -1) expectChoices.push(v);
+    });
+    var denom = Math.pow(2, coins);
+    var expectSeen = {};
+    expectSeen[valueKey(reduceFraction({ n: choose(coins, k), d: denom }))] = true;
+    var expectPicked = [reduceFraction({ n: choose(coins, k), d: denom })];
+    shuffle(rng, expectChoices).forEach(function (num) {
+      var c = reduceFraction({ n: num, d: denom });
+      var kk = valueKey(c);
+      if (expectPicked.length < 4 && num !== choose(coins, k) && !expectSeen[kk]) {
+        expectSeen[kk] = true;
+        expectPicked.push(c);
+      }
+    });
+    var expectGuard = 0;
+    while (expectPicked.length < 4 && expectGuard++ < 60) {
+      var rnum = randInt(rng, 1, denom - 1);
+      var rc = reduceFraction({ n: rnum, d: denom });
+      var rk = valueKey(rc);
+      if (!expectSeen[rk]) { expectSeen[rk] = true; expectPicked.push(rc); }
+    }
+    return {
+      type: 'expectation',
+      prompt: {
+        zh: '擲 ' + coins + ' 枚均勻硬幣，剛好有 ' + k + ' 個正面的概率是多少？',
+        en: coins + ' fair coins are tossed. What is the probability of exactly ' + k + ' heads?'
+      },
+      visual: null,
+      answer: { n: choose(coins, k), d: Math.pow(2, coins) },
+      choices: shuffle(rng, expectPicked),
+      math: { op: 'expectation', mode: 'binomial', n: coins, k: k },
+      hint: { zh: 'P = C(n, k) ÷ 2ⁿ。', en: 'P = C(n, k) ÷ 2ⁿ.' }
+    };
+  }
+
   function genArclen(rng, o) {
+    if (o && o.mode === 'sector') {
+      var sp = pick(rng, SECTOR_PAIRS);
+      var sr = sp[0], sa = sp[1];
+      var sc = sr * sr * sa / 360;
+      return {
+        type: 'arclen',
+        prompt: { zh: '半徑 ' + sr + ' cm、圓心角 ' + sa + '° 的扇形，面積是多少？（以 π 表示）', en: 'A sector has radius ' + sr + ' cm and central angle ' + sa + '°. What is its area? (in terms of π)' },
+        visual: { kind: 'circle', r: sr },
+        answer: piLabel(sc),
+        math: { op: 'arclen', mode: 'sector', r: sr, angle: sa, coef: sc },
+        choices: circleChoices(rng, sc, 'π'),
+        hint: { zh: '扇形面積 = π r² × (圓心角 ÷ 360°)。', en: 'Sector area = π r² × (angle ÷ 360°).' }
+      };
+    }
     var pr = pick(rng, ARCLEN_PAIRS);
     var r = pr[0], angle = pr[1];
     var coef = r * angle / 180;
@@ -1944,13 +2296,26 @@
 
   /* 二項式定理 */
   function genBinomial(rng, o) {
-    var n = pick(rng, [3, 4, 5, 6]);
-    var r = pick(rng, [1, 2, 3]);
-    while (r >= n) r = 1;
     function C(a, b) {
       function fact(x) { var f = 1; for (var i = 2; i <= x; i++) f *= i; return f; }
       return fact(a) / (fact(b) * fact(a - b));
     }
+    if (o && o.general) {
+      var gn = pick(rng, [3, 4, 5]);
+      var ga = pick(rng, [2, 3]);
+      var gr = randInt(rng, 1, gn - 1);
+      return {
+        type: 'binomial',
+        prompt: { zh: '在 $(x + ' + ga + ')^' + gn + '$ 的展開式中，' + (gr === 1 ? '$x$' : '$x^' + gr + '$') + ' 的係數是多少？', en: 'In the expansion of $(x + ' + ga + ')^' + gn + '$, what is the coefficient of ' + (gr === 1 ? '$x$' : '$x^' + gr + '$') + '?' },
+        visual: null,
+        answer: C(gn, gr) * Math.pow(ga, gn - gr),
+        math: { op: 'binomial', mode: 'gen', n: gn, r: gr, a: ga },
+        hint: { zh: 'x^r 的係數 = C(n, r) × a^(n−r)。', en: 'Coefficient of x^r = C(n, r) × a^(n−r).' }
+      };
+    }
+    var n = pick(rng, [3, 4, 5, 6]);
+    var r = pick(rng, [1, 2, 3]);
+    while (r >= n) r = 1;
     return {
       type: 'binomial',
       prompt: { zh: '在 $(x + 1)^' + n + '$ 的展開式中，$x^' + r + '$ 的係數是多少？', en: 'In the expansion of $(x + 1)^' + n + '$, what is the coefficient of $x^' + r + '$?' },
@@ -2524,6 +2889,13 @@
     compare: genCompare,
     comparegroup: genCompareGroup,
     placevalue: genPlacevalue,
+    identity: genIdentity,
+    circleprop: genCircleprop,
+    dispersion: genDispersion,
+    prism: genPrism,
+    matrix: genMatrix,
+    calculus: genCalculus,
+    expectation: genExpectation,
     addition: genAddition,
     subtraction: genSubtraction,
     numberbonds: genNumberBonds,

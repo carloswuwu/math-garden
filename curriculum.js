@@ -1,7 +1,7 @@
 /*
  * 課程體系：從學前到大學的學習路徑（技能樹）。
  * 每個階段(Stage)包含若干主題(Topic)，每個主題包含若干技能(Skill)。
- * Pre-K → Grade 3 為完整內容；Grade 4 → 大學為可導航的腳手架。
+ * Pre-K → S6 為完整內容；大學為微積分、線性代數、概率統計的入門單元。
  *
  * 技能字段：
  *  - id / stage / order        穩定標識、所屬階段、階段內順序
@@ -497,22 +497,85 @@
     },
 
     'col.calculus': {
-      id: 'col.calculus', stage: 'college', order: 1, scaffold: true,
-      zh: { name: '微積分', goal: '導數與積分。' },
-      en: { name: 'Calculus', goal: 'Derivatives and integrals.' },
-      lesson: null, types: null, levels: null, mastery: { practice: 12, quizPass: 0.8 }
+      id: 'col.calculus', stage: 'college', order: 1,
+      zh: { name: '微積分', goal: '會求多項式的導數值與定積分。' },
+      en: { name: 'Calculus', goal: 'Evaluate derivatives and definite integrals of polynomials.' },
+      lesson: 'col.calculus', types: ['calculus'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
     },
     'col.linalg': {
-      id: 'col.linalg', stage: 'college', order: 2, scaffold: true,
-      zh: { name: '線性代數', goal: '矩陣與線性方程組。' },
-      en: { name: 'Linear Algebra', goal: 'Matrices and linear systems.' },
-      lesson: null, types: null, levels: null, mastery: { practice: 12, quizPass: 0.8 }
+      id: 'col.linalg', stage: 'college', order: 2,
+      zh: { name: '線性代數', goal: '會計算二階行列式與矩陣乘積的元素。' },
+      en: { name: 'Linear Algebra', goal: 'Compute 2×2 determinants and entries of matrix products.' },
+      lesson: 'col.linalg', types: ['matrix'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
     },
     'col.prob': {
-      id: 'col.prob', stage: 'college', order: 3, scaffold: true,
-      zh: { name: '概率與統計', goal: '概率、分布與統計推斷。' },
-      en: { name: 'Probability & Statistics', goal: 'Probability, distributions, and inference.' },
-      lesson: null, types: null, levels: null, mastery: { practice: 12, quizPass: 0.8 }
+      id: 'col.prob', stage: 'college', order: 3,
+      zh: { name: '概率與統計', goal: '會求期望值與二項概率。' },
+      en: { name: 'Probability & Statistics', goal: 'Find expected values and binomial probabilities.' },
+      lesson: 'col.prob', types: ['expectation'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    /* ===================== 中學與大學增補（二） ===================== */
+
+    'ms.s2.identity': {
+      id: 'ms.s2.identity', stage: 'ms2', order: 9,
+      zh: { name: '恆等式與展開', goal: '會展開 (x+a)(x+b)、(x+a)² 與平方差，並讀出係數。' },
+      en: { name: 'Identities & Expansion', goal: 'Expand products and squares, and read off coefficients.' },
+      lesson: 'ms.s2.identity', types: ['identity'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.sector': {
+      id: 'ms.s3.sector', stage: 'ms3', order: 11,
+      zh: { name: '扇形面積', goal: '會用 πr² × (θ/360°) 求扇形面積（以 π 表示）。' },
+      en: { name: 'Sector Area', goal: 'Find sector area with πr² × (θ/360°), in terms of π.' },
+      lesson: 'ms.s3.sector', types: [{ t: 'arclen', opts: { mode: 'sector' } }], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'ms.s3.prism': {
+      id: 'ms.s3.prism', stage: 'ms3', order: 12,
+      zh: { name: '柱體與錐體體積', goal: '會用底面積 × 高求柱體體積，錐體則除以 3。' },
+      en: { name: 'Volume of Prisms & Pyramids', goal: 'Use base area × height; divide by 3 for pyramids.' },
+      lesson: 'ms.s3.prism', types: ['prism'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s4.quad2': {
+      id: 'hs.s4.quad2', stage: 'hs1', order: 9,
+      zh: { name: '判別式', goal: '會計算二次方程的判別式 b² − 4ac。' },
+      en: { name: 'Discriminant', goal: 'Compute the discriminant b² − 4ac.' },
+      lesson: 'hs.s4.quad2', types: [{ t: 'quadsolve', opts: { mode: 'disc' } }], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s4.line2': {
+      id: 'hs.s4.line2', stage: 'hs1', order: 10,
+      zh: { name: '直線方程', goal: '會由直線方程與一點求未知常數。' },
+      en: { name: 'Equations of Lines', goal: 'Find an unknown constant from a line equation and a point.' },
+      lesson: 'hs.s4.line2', types: [{ t: 'line', opts: { mode: 'eq' } }], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s4.circleprop': {
+      id: 'hs.s4.circleprop', stage: 'hs1', order: 11,
+      zh: { name: '圓的性質', goal: '會用半圓上的角、同弓形角與圓內接四邊形求角。' },
+      en: { name: 'Circle Properties', goal: 'Use semicircle, same-segment and cyclic-quadrilateral angle facts.' },
+      lesson: 'hs.s4.circleprop', types: ['circleprop'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.gpsum': {
+      id: 'hs.s5.gpsum', stage: 'hs2', order: 7,
+      zh: { name: '等比數列求和', goal: '會求等比數列前 n 項和與無限項之和。' },
+      en: { name: 'Sums of Geometric Sequences', goal: 'Find finite and infinite geometric sums.' },
+      lesson: 'hs.s5.gpsum', types: [{ t: 'gp', opts: { mode: 'sum' } }, { t: 'gp', opts: { mode: 'inf' } }], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.dispersion': {
+      id: 'hs.s5.dispersion', stage: 'hs2', order: 8,
+      zh: { name: '四分位距', goal: '會排序數據並求四分位距（IQR）。' },
+      en: { name: 'Interquartile Range', goal: 'Sort data and find the interquartile range.' },
+      lesson: 'hs.s5.dispersion', types: ['dispersion'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.prob2': {
+      id: 'hs.s6.prob2', stage: 'hs3', order: 7,
+      zh: { name: '續概率', goal: '會求兩枚骰子的概率與對立事件概率。' },
+      en: { name: 'More Probability', goal: 'Two-dice outcomes and complementary events.' },
+      lesson: 'hs.s6.prob2', types: [{ t: 'prob', opts: { mode: 'twoDice' } }, { t: 'prob', opts: { mode: 'complement' } }], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.binomial2': {
+      id: 'hs.s6.binomial2', stage: 'hs3', order: 8,
+      zh: { name: '二項式定理（一般項）', goal: '會求 (x + a)ⁿ 展開式中 xʳ 的係數。' },
+      en: { name: 'Binomial Theorem (general term)', goal: 'Find the coefficient of xʳ in (x + a)ⁿ.' },
+      lesson: 'hs.s6.binomial2', types: [{ t: 'binomial', opts: { general: true } }], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
     },
 
     /* ===================== 幾何、座標、應用題（補充） ===================== */
@@ -964,7 +1027,8 @@
         { id: 'ms2.poly', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['ms.s2.polygon'] },
         { id: 'ms2.polyc', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['ms.s2.polycoeff'] },
         { id: 'ms2.geo3', zh: '圖形與空間（續二）', en: 'Shape & Space (cont.)', skills: ['ms.s2.congruent', 'ms.s2.similar', 'ms.s2.quad'] },
-        { id: 'ms2.num', zh: '數與代數（續二）', en: 'Number & Algebra (cont.)', skills: ['ms.s2.sinterest', 'ms.s2.approx'] }
+        { id: 'ms2.num', zh: '數與代數（續二）', en: 'Number & Algebra (cont.)', skills: ['ms.s2.sinterest', 'ms.s2.approx'] },
+        { id: 'ms2.id', zh: '代數（續二）', en: 'Algebra (cont.)', skills: ['ms.s2.identity'] }
       ] },
     { id: 'ms3', zh: '中三', en: 'S3', desc: { zh: '指數定律、一元一次不等式', en: 'Laws of indices, linear inequalities' }, color: '#FF8C42', emoji: '🧮',
       topics: [
@@ -977,7 +1041,8 @@
         { id: 'ms3.data2', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['ms.s3.pichart'] },
         { id: 'ms3.geo4', zh: '度量（續三）', en: 'Measures (cont.)', skills: ['ms.s3.cone'] },
         { id: 'ms3.geo5', zh: '圖形與空間', en: 'Shape & Space', skills: ['ms.s3.centre'] },
-        { id: 'ms3.data3', zh: '數據處理（續二）', en: 'Data Handling (cont.)', skills: ['ms.s3.prob'] }
+        { id: 'ms3.data3', zh: '數據處理（續二）', en: 'Data Handling (cont.)', skills: ['ms.s3.prob'] },
+        { id: 'ms3.meas2', zh: '度量（續四）', en: 'Measures (cont.)', skills: ['ms.s3.sector', 'ms.s3.prism'] }
       ] },
     { id: 'hs1', zh: '中四', en: 'S4', desc: { zh: '對數、函數求值、三角比', en: 'Logarithms, function values, trigonometric ratios' }, color: '#A2845E', emoji: '🧠',
       topics: [
@@ -987,7 +1052,9 @@
         { id: 'hs1.quad', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s4.quadsolve'] },
         { id: 'hs1.geo', zh: '圖形與空間', en: 'Shape & Space', skills: ['hs.s4.line'] },
         { id: 'hs1.geo2', zh: '圖形與空間（續）', en: 'Shape & Space (cont.)', skills: ['hs.s4.circleeq'] },
-        { id: 'hs1.geo3', zh: '圖形與空間（續二）', en: 'Shape & Space (cont.)', skills: ['hs.s4.circleangle'] }
+        { id: 'hs1.geo3', zh: '圖形與空間（續二）', en: 'Shape & Space (cont.)', skills: ['hs.s4.circleangle'] },
+        { id: 'hs1.alg2', zh: '代數（續二）', en: 'Algebra (cont.)', skills: ['hs.s4.quad2'] },
+        { id: 'hs1.geo4', zh: '圖形與空間（續三）', en: 'Shape & Space (cont.)', skills: ['hs.s4.line2', 'hs.s4.circleprop'] }
       ] },
     { id: 'hs2', zh: '中五', en: 'S5', desc: { zh: '等差、等比數列、概率', en: 'Arithmetic and geometric sequences, probability' }, color: '#8B6F47', emoji: '📈',
       topics: [
@@ -995,16 +1062,17 @@
         { id: 'hs2.prob', zh: '概率', en: 'Probability', skills: ['hs.s5.prob'] },
         { id: 'hs2.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s5.word'] },
         { id: 'hs2.alg', zh: '代數', en: 'Algebra', skills: ['hs.s5.variation'] },
-        { id: 'hs2.seq2', zh: '數列（續）', en: 'Sequences (cont.)', skills: ['hs.s5.asum'] },
-        { id: 'hs2.alg2', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s5.invvar'] }
+        { id: 'hs2.seq2', zh: '數列（續）', en: 'Sequences (cont.)', skills: ['hs.s5.asum', 'hs.s5.gpsum'] },
+        { id: 'hs2.alg2', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s5.invvar'] },
+        { id: 'hs2.stat', zh: '統計', en: 'Statistics', skills: ['hs.s5.dispersion'] }
       ] },
     { id: 'hs3', zh: '中六', en: 'S6', desc: { zh: '二次方程的根、中位數', en: 'Roots of quadratics, median' }, color: '#7A5F3C', emoji: '📊',
       topics: [
         { id: 'hs3.alg', zh: '代數', en: 'Algebra', skills: ['hs.s6.quad'] },
         { id: 'hs3.stats', zh: '統計', en: 'Statistics', skills: ['hs.s6.stats'] },
         { id: 'hs3.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s6.word'] },
-        { id: 'hs3.data', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['hs.s6.comb', 'hs.s6.range'] },
-        { id: 'hs3.alg2', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s6.binomial', 'hs.s6.derivative'] }
+        { id: 'hs3.data', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['hs.s6.comb', 'hs.s6.range', 'hs.s6.prob2'] },
+        { id: 'hs3.alg2', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s6.binomial', 'hs.s6.binomial2', 'hs.s6.derivative'] }
       ] },
     { id: 'college', zh: '大學', en: 'University', desc: { zh: '微積分、線性代數、概率統計', en: 'Calculus, linear algebra, statistics' }, color: '#8E8E93', emoji: '🎯',
       topics: [

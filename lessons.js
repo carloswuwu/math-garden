@@ -524,6 +524,72 @@
       zh: { title: '微分入門', intro: 'd/dx(ax^n) = a·n·x^(n−1)。', example: 'd/dx(3x²) = 6x。', tip: '指數乘到前面，指數減 1。' },
       en: { title: 'Intro to Derivatives', intro: 'd/dx(ax^n) = a·n·x^(n−1).', example: 'd/dx(3x²) = 6x.', tip: 'Multiply by the exponent, then reduce it by 1.' },
       visual: null
+    },
+
+    'ms.s2.identity': {
+      zh: { title: '恆等式與展開', intro: '(x + a)(x + b) = x² + (a + b)x + ab；(x + a)² = x² + 2ax + a²；(a + b)(a − b) = a² − b²。', example: '(x + 3)(x + 2) = x² + 5x + 6，x 的係數是 5。', tip: '先認出是哪個恆等式，再讀係數。' },
+      en: { title: 'Identities & Expansion', intro: '(x + a)(x + b) = x² + (a + b)x + ab; (x + a)² = x² + 2ax + a²; (a + b)(a − b) = a² − b².', example: '(x + 3)(x + 2) = x² + 5x + 6, so the coefficient of x is 5.', tip: 'Identify the identity first, then read off the coefficient.' },
+      visual: null
+    },
+    'ms.s3.sector': {
+      zh: { title: '扇形面積', intro: '扇形面積 = πr² × (圓心角 ÷ 360°)。', example: '半徑 6、圓心角 60°：面積 = π × 36 × 60/360 = 6π。', tip: '先算扇形佔全圓的幾分之幾。' },
+      en: { title: 'Sector Area', intro: 'Sector area = πr² × (angle ÷ 360°).', example: 'Radius 6, angle 60°: area = π × 36 × 60/360 = 6π.', tip: 'Find the fraction of the full circle first.' },
+      visual: { kind: 'circle', r: 6 }
+    },
+    'ms.s3.prism': {
+      zh: { title: '柱體與錐體體積', intro: '柱體體積 = 底面積 × 高；錐體體積 = 底面積 × 高 ÷ 3。', example: '底面積 12 cm²、高 5 cm 的柱體：體積 = 60 cm³。', tip: '錐體是柱體的三分之一。' },
+      en: { title: 'Volume of Prisms & Pyramids', intro: 'Prism volume = base area × height; pyramid volume = base area × height ÷ 3.', example: 'Base area 12 cm², height 5 cm: prism volume = 60 cm³.', tip: 'A pyramid is one third of the matching prism.' },
+      visual: null
+    },
+    'hs.s4.quad2': {
+      zh: { title: '判別式', intro: '二次方程 ax² + bx + c = 0 的判別式是 b² − 4ac。', example: 'x² − 5x + 6 = 0：b² − 4ac = 25 − 24 = 1。', tip: '先讀出 a、b、c 的值（注意正負號）。' },
+      en: { title: 'Discriminant', intro: 'For ax² + bx + c = 0, the discriminant is b² − 4ac.', example: 'x² − 5x + 6 = 0: 25 − 24 = 1.', tip: 'Read a, b and c carefully, including signs.' },
+      visual: null
+    },
+    'hs.s4.line2': {
+      zh: { title: '直線方程', intro: '點在直線上，就把它的坐標代入方程；再解未知常數。', example: 'y = 2x + c 經過 (3, 8)：8 = 2 × 3 + c，所以 c = 2。', tip: '代入 → 解方程，兩步完成。' },
+      en: { title: 'Equations of Lines', intro: 'If a point lies on a line, substitute its coordinates, then solve for the unknown constant.', example: 'y = 2x + c through (3, 8): 8 = 6 + c, so c = 2.', tip: 'Substitute, then solve — two steps.' },
+      visual: null
+    },
+    'hs.s4.circleprop': {
+      zh: { title: '圓的性質', intro: '半圓上的圓周角 = 90°；同弓形內的圓周角相等；圓內接四邊形的對角互補（和 = 180°）；切線垂直於半徑。', example: '圓內接四邊形一個內角是 70°，對角 = 180° − 70° = 110°。', tip: '先認出用的是哪一條圓的性質。' },
+      en: { title: 'Circle Properties', intro: 'Angle in a semicircle = 90°; angles in the same segment are equal; opposite angles of a cyclic quadrilateral sum to 180°; a tangent is perpendicular to the radius.', example: 'A cyclic quadrilateral has an angle of 70°, so its opposite angle is 110°.', tip: 'Name the circle property you are using first.' },
+      visual: { kind: 'circleang' }
+    },
+    'hs.s5.gpsum': {
+      zh: { title: '等比數列求和', intro: '前 n 項和 = a(rⁿ − 1) ÷ (r − 1)；無限項之和（|r| < 1）= a ÷ (1 − r)。', example: '首項 2、公比 3、n = 4：和 = 2(81 − 1)/2 = 80。', tip: '無限項和只在 |r| < 1 時存在。' },
+      en: { title: 'Sums of Geometric Sequences', intro: 'Sum of n terms = a(rⁿ − 1) ÷ (r − 1); sum to infinity (|r| < 1) = a ÷ (1 − r).', example: 'First 2, ratio 3, n = 4: sum = 2(81 − 1)/2 = 80.', tip: 'An infinite sum exists only when |r| < 1.' },
+      visual: null
+    },
+    'hs.s5.dispersion': {
+      zh: { title: '四分位距', intro: '先排序；Q1 是下半部的中位數，Q3 是上半部的中位數；IQR = Q3 − Q1。', example: '1、3、4、6、8、9、10：Q1 = 3，Q3 = 9，IQR = 6。', tip: '7 個數據時，Q1 是第 2 個、Q3 是第 6 個。' },
+      en: { title: 'Interquartile Range', intro: 'Sort the data; Q1 is the lower-half median and Q3 the upper-half median; IQR = Q3 − Q1.', example: '1, 3, 4, 6, 8, 9, 10: Q1 = 3, Q3 = 9, IQR = 6.', tip: 'With 7 values, Q1 is the 2nd and Q3 the 6th.' },
+      visual: null
+    },
+    'hs.s6.prob2': {
+      zh: { title: '續概率', intro: '兩枚骰子共有 36 個等可能結果；P(不是 A) = 1 − P(A)。', example: '兩枚骰子點數和為 7 的組合有 6 個，概率 = 6/36 = 1/6。', tip: '先數總結果數，再數符合條件的結果數。' },
+      en: { title: 'More Probability', intro: 'Two dice give 36 equally likely outcomes; P(not A) = 1 − P(A).', example: 'There are 6 ways to get a sum of 7, so P = 6/36 = 1/6.', tip: 'Count the total outcomes, then the favourable ones.' },
+      visual: null
+    },
+    'hs.s6.binomial2': {
+      zh: { title: '二項式定理（一般項）', intro: '(x + a)ⁿ 展開式中 xʳ 的係數 = C(n, r) × a^(n−r)。', example: '(x + 2)⁴ 中 x² 的係數 = C(4,2) × 2² = 24。', tip: '先取組合數，再補上 a 的次方。' },
+      en: { title: 'Binomial Theorem (general term)', intro: 'In (x + a)ⁿ, the coefficient of xʳ is C(n, r) × a^(n−r).', example: 'In (x + 2)⁴, the coefficient of x² is C(4,2) × 2² = 24.', tip: 'Take the combination first, then the power of a.' },
+      visual: null
+    },
+    'col.calculus': {
+      zh: { title: '微積分', intro: 'd/dx(axⁿ) = a·n·x^(n−1)；∫₀ᵇ axⁿ dx = a·b^(n+1)/(n+1)。', example: 'f(x) = 3x²，f′(2) = 3 × 2 × 2 = 12。', tip: '先微分／積分，再代入數值。' },
+      en: { title: 'Calculus', intro: 'd/dx(axⁿ) = a·n·x^(n−1); ∫₀ᵇ axⁿ dx = a·b^(n+1)/(n+1).', example: 'For f(x) = 3x², f′(2) = 12.', tip: 'Differentiate or integrate first, then substitute.' },
+      visual: null
+    },
+    'col.linalg': {
+      zh: { title: '線性代數', intro: '二階行列式 |A| = ad − bc；矩陣乘積 (AB)₁₁ = A₁₁B₁₁ + A₁₂B₂₁。', example: 'A = [[2,1],[0,3]]，|A| = 6。', tip: '行列式是主對角線積減副對角線積。' },
+      en: { title: 'Linear Algebra', intro: '2×2 determinant |A| = ad − bc; matrix product entry (AB)₁₁ = A₁₁B₁₁ + A₁₂B₂₁.', example: 'A = [[2,1],[0,3]] gives |A| = 6.', tip: 'Determinant = main diagonal product − other diagonal product.' },
+      visual: null
+    },
+    'col.prob': {
+      zh: { title: '概率與統計', intro: '期望值 E(X) = Σ x·P(x)；二項概率 P = C(n, k) ÷ 2ⁿ（公平硬幣）。', example: '擲兩枚硬幣，剛好一個正面的概率 = C(2,1)/4 = 1/2。', tip: '先列出所有結果，再加權平均或數組合。' },
+      en: { title: 'Probability & Statistics', intro: 'Expected value E(X) = Σ x·P(x); binomial probability P = C(n, k) ÷ 2ⁿ for fair coins.', example: 'Two coins, exactly one head: C(2,1)/4 = 1/2.', tip: 'List outcomes, then average or count combinations.' },
+      visual: null
     }
   };
 
