@@ -228,7 +228,12 @@ function validateProblem(skill, p, label) {
   const isString = typeof p.answer === 'string';
   if (C.isFraction(expected)) {
     check(C.isFraction(p.answer), `${label}: 應為分數答案`);
-    check(p.answer.n === expected.n && p.answer.d === expected.d, `${label}: 分數答案不一致 (${p.answer.n}/${p.answer.d} vs ${expected.n}/${expected.d})`);
+    // 等值即可（2/3 與 6/9 同值）；計算型答案另須為最簡分數
+    check(p.answer.n * expected.d === expected.n * p.answer.d, `${label}: 分數答案不等值 (${p.answer.n}/${p.answer.d} vs ${expected.n}/${expected.d})`);
+    if (p.type !== 'fraction') {
+      const red = C.reduceFraction(p.answer);
+      check(red.n === p.answer.n && red.d === p.answer.d, `${label}: 計算型分數答案未約簡 (${p.answer.n}/${p.answer.d})`);
+    }
     check(p.answer.n > 0 && p.answer.n < p.answer.d, `${label}: 分數應真分數`);
   } else if (isString) {
     check(typeof p.answer === 'string', `${label}: 字符串題答案應為字符串`);

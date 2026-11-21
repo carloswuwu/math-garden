@@ -1,0 +1,151 @@
+/* 題目生成器性質測試：node tests/generators.test.js
+ *
+ * 針對「生成器」而非 UI 做性質檢驗（property-based）：
+ *  1. 每題都有答案、選項恰好 4 個、選項兩兩等值不同、正解恰出現一次
+ *  2. 計算得出的分數答案必須是最簡分數；等值分數（2/4 與 1/2）必須判對
+ *  3. 概率選項必須落在 [0, 1]，且干擾項留在同一樣本空間
+ *  4. 題幹/提示不得含 undefined/NaN；提示不得與顯示方式矛盾（圓點 vs 數字）
+ *  5. 提示英文不得是中文
+ *  6. 題庫池大小不得倒退（記錄目前已知偏小的回憶型題庫）
+ *  7. 難度階梯確實變難
+ */
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const vm = require('vm');
+const M = require('../math-core.js');
+
+const ROOT = path.join(__dirname, '..');
+const ctx = {};
+vm.createContext(ctx);
+ctx.window = ctx;
+ctx.globalThis = ctx;
+vm.runInContext(fs.readFileSync(path.join(ROOT, 'curriculum.js'), 'utf8'), ctx, { filename: 'curriculum.js' });
+const C = ctx.Curriculum;
+
+let checks = 0;
+function check(cond, msg) {
+  checks++;
+  assert.ok(cond, msg);
+}
+
+const CJK = /[\u4e00-\u9fff]/;
+const GARBAGE = /undefined|NaN|Infinity/;
+
+/* 目前已知「回憶型題庫」偏小（內容債，見審閱報告 P1）；值為每階段最高難度下
+ * generateSet(10) 的實測下限。若再下降即屬回歸。新技能若低於 10 而沒有列在這裡，測試會失敗。 */
+const KNOWN_SMALL_POOLS = {
+  'g2.mul25': 9,
+  'g2.mul34': 9,
+  'g3.multable': 9,
+  'g2.fact': 7,
+  'g3.angle': 6,
+  'ms.s2.polygon': 6,
+  'g3.shape': 7,
+  'g6.symmetry': 5,
+  'ms.s2.congruent': 3,
+  'ms.s2.quad': 5,
+  'ms.s2.approx': 3,
+  'ms.s3.pichart': 7,
+  'g2.direction': 3,
+  'g3.time24': 5,
+  'ms.s3.cone': 6,
+  'ms.s3.centre': 4
+};
+
+const skills = Object.values(C.skills).filter((s) => !s.scaffold && (s.types || []).length);
+check(skills.length > 90, '應載入 90+ 個有題目的技能');
+
+for (const skill of skills) {
+  const specs = skill.types.map((t) => (typeof t === 'string' ? { t } : t));
+  const steps = Math.max(1, Math.min(3, (skill.levels || []).length));
+  for (const spec of specs) {
+    for (let step = 0; step < steps; step++) {
+      for (let i = 0; i < 40; i++) {
+        const tag = skill.id + '/' + spec.t + '/step' + step + '/#' + i;
+        const p = M.generateProblem(skill, { type: spec.t, seed: 100 + i * 37 + step * 11, difficultyStep: step });
+
+        /* 1. 結構 */
+        check(p.answer !== undefined && p.answer !== null, '缺少答案 ' + tag);
+        if (typeof p.answer === 'number') check(Number.isFinite(p.answer), '答案非有限數 ' + tag);
+        /* 比大小（顏色版）刻意只有兩個選項（綠組／橙組），其餘題型一律 4 個 */
+        const expectedChoices = spec.t === 'comparegroup' ? 2 : 4;
+        check(Array.isArray(p.choices) && p.choices.length === expectedChoices, '選項數不是 ' + expectedChoices + ' ' + tag);
+        for (let x = 0; x < p.choices.length; x++) {
+          for (let y = x + 1; y < p.choices.length; y++) {
+            check(!M.valuesEqual(p.choices[x], p.choices[y]), '選項等值重複 ' + tag + ' ' + JSON.stringify(p.choices));
+          }
+        }
+        const correct = p.choices.filter((c) => M.valuesEqual(c, p.answer));
+        check(correct.length === 1, '正解在選項中出現 ' + correct.length + ' 次 ' + tag);
+        check(!GARBAGE.test(p.prompt.zh) && !GARBAGE.test(p.prompt.en), '題幹含垃圾值 ' + tag);
+        check(!!p.prompt.zh && !!p.prompt.en, '題幹缺語言 ' + tag);
+
+        /* 2. 分數 */
+        if (M.isFraction(p.answer) && spec.t !== 'fraction') {
+          const r = M.reduceFraction(p.answer);
+          check(r.n === p.answer.n && r.d === p.answer.d,
+            '計算型分數答案未約簡 ' + tag + ' ' + p.answer.n + '/' + p.answer.d);
+        }
+        if (M.isFraction(p.answer) && p.answer.d > 0) {
+          const n = p.answer.n, d = p.answer.d;
+          check(M.checkAnswer(p, n + '/' + d).correct, '自己的答案應判對 ' + tag);
+          check(M.checkAnswer(p, Math.round(n * 2) + '/' + Math.round(d * 2)).correct, '等值分數應判對 ' + tag);
+          if (n !== d - 1) check(!M.checkAnswer(p, (n + 1) + '/' + d).correct, '非等值分數不應判對 ' + tag);
+        }
+
+        /* 3. 概率 */
+        if (spec.t === 'prob') {
+          const m = p.math;
+          check(M.valuesEqual(p.answer, { n: m.good, d: m.total }), '概率答案應為 good/total ' + tag);
+          p.choices.forEach((c) => {
+            const v = M.isFraction(c) ? c.n / c.d : c;
+            check(v >= 0 && v <= 1, '概率選項超出 [0,1] ' + tag + ' ' + JSON.stringify(c));
+            /* 化簡後的分母必須整除總數（或「數錯總數」的 total−1），才算留在同一樣本空間 */
+            const r = M.reduceFraction(c);
+            const sameSpace = (m.total % r.d === 0) || ((m.total - 1) % r.d === 0);
+            check(M.isFraction(c) && sameSpace, '概率干擾項脫離樣本空間 ' + tag + ' ' + JSON.stringify(c));
+          });
+        }
+
+        /* 4. 提示與顯示一致 */
+        if (spec.t === 'compare' && Math.max(p.math.a, p.math.b) > 20) {
+          check(!/圓點|dots/.test(p.hint.zh + p.hint.en), '數字題仍在講圓點提示 ' + tag);
+        }
+
+        /* 5. 英文提示不得是中文 */
+        check(!(p.hint && p.hint.en && CJK.test(p.hint.en)), '英文提示含中文 ' + tag);
+      }
+    }
+  }
+}
+
+/* 6. 題庫池大小（最高難度下應能出 10 道不重複的題） */
+for (const skill of skills) {
+  const steps = Math.max(1, (skill.levels || []).length);
+  const set = M.generateSet(skill, 10, { seed: 7, difficultyStep: steps - 1 });
+  const sigs = new Set(set.map((p) => p.sig));
+  const floor = KNOWN_SMALL_POOLS[skill.id] != null ? KNOWN_SMALL_POOLS[skill.id] : 10;
+  check(sigs.size >= floor, '題庫池太小 ' + skill.id + '：' + sigs.size + ' < ' + floor);
+  check(set.length >= floor, 'generateSet 產出不足 ' + skill.id + '：' + set.length + ' < ' + floor);
+}
+
+/* 7. 難度階梯：同一技能高階平均答案應大於低階 */
+['prek.count', 'g1.add20', 'g1.place100', 'g2.addsub100r'].forEach((sid) => {
+  const skill = C.skills[sid];
+  if (!skill) return;
+  const mean = (step) => {
+    let sum = 0, n = 0;
+    for (let i = 0; i < 120; i++) {
+      const p = M.generateProblem(skill, { seed: 300 + i, difficultyStep: step });
+      const v = M.isFraction(p.answer) ? p.answer.n / p.answer.d : Number(p.answer);
+      if (Number.isFinite(v)) { sum += Math.abs(v); n++; }
+    }
+    return sum / Math.max(1, n);
+  };
+  const steps = Math.min(3, (skill.levels || []).length);
+  if (steps >= 2) check(mean(steps - 1) > mean(0), '難度階梯沒有變難 ' + sid);
+});
+
+console.log('✓ 生成器性質測試全部通過（' + checks + ' 項斷言，' + skills.length + ' 個技能）');

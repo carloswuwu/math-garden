@@ -71,16 +71,33 @@
     return v && typeof v === 'object' && typeof v.n === 'number' && typeof v.d === 'number';
   }
 
+  function gcdInt(a, b) {
+    a = Math.abs(a); b = Math.abs(b);
+    while (b) { var t = a % b; a = b; b = t; }
+    return a || 1;
+  }
+
+  /* 化簡為最簡分數；分母保持正數 */
+  function reduceFraction(f) {
+    var sign = f.d < 0 ? -1 : 1;
+    var g = gcdInt(f.n, f.d);
+    return { n: (f.n * sign) / g, d: (f.d * sign) / g };
+  }
+
+  /* 值鍵：等值分數共用同一鍵（2/4 與 1/2 相同），用於選項去重 */
   function valueKey(v) {
-    return isFraction(v) ? v.n + '/' + v.d : String(v);
+    if (!isFraction(v)) return String(v);
+    var r = reduceFraction(v);
+    return r.n + '/' + r.d;
   }
 
   function renderValue(v) {
     return isFraction(v) ? v.n + '/' + v.d : String(v);
   }
 
+  /* 等值分數視為相等：2/4 = 1/2 */
   function valuesEqual(a, b) {
-    if (isFraction(a) && isFraction(b)) return a.n === b.n && a.d === b.d;
+    if (isFraction(a) && isFraction(b)) return a.n * b.d === b.n * a.d;
     return a === b;
   }
 
@@ -131,6 +148,7 @@
     while (b === a && guard++ < 50) b = randInt(rng, min, max);
     var more = rng() < 0.5;
     var answer = more ? Math.max(a, b) : Math.min(a, b);
+    var dots = a <= 20 && b <= 20;
     return {
       type: 'compare',
       prompt: {
@@ -141,7 +159,9 @@
       answer: answer,
       math: { op: 'compare', a: a, b: b, mode: more ? 'max' : 'min' },
       base: [a, b],
-      hint: { zh: '比較兩組圓點，多的那組數更大。', en: 'The group with more dots is the bigger number.' }
+      hint: dots
+        ? { zh: '比較兩組圓點，多的那組數更大。', en: 'The group with more dots is the bigger number.' }
+        : { zh: '先比較十位，十位相同再比個位。', en: 'Compare the tens first, then the ones if the tens are equal.' }
     };
   }
 
@@ -913,12 +933,28 @@
   function genProb(rng, o) {
     var total = pick(rng, [6, 8, 10, 12]);
     var good = randInt(rng, 1, total - 1);
+    var answer = reduceFraction({ n: good, d: total });
+    /* 干擾項必須留在同一個樣本空間內：分母是總數，或「數錯總數」的 total−1 */
+    var pool = [];
+    [good + 1, good - 1, total - good, total - good + 1, good + 2].forEach(function (n) {
+      if (n > 0 && n < total) pool.push(reduceFraction({ n: n, d: total }));
+    });
+    if (total - 1 > 1 && good < total - 1) pool.push(reduceFraction({ n: good, d: total - 1 }));
+    var choices = [answer];
+    var seen = {};
+    seen[valueKey(answer)] = true;
+    shuffle(rng, pool).forEach(function (c) {
+      if (choices.length >= 4) return;
+      var k = valueKey(c);
+      if (!seen[k] && !valuesEqual(c, answer)) { seen[k] = true; choices.push(c); }
+    });
     return {
       type: 'prob',
       prompt: { zh: '袋中有 ' + total + ' 個球，其中 ' + good + ' 個是紅球。隨機抽一個，抽到紅球的概率是多少？', en: 'A bag has ' + total + ' balls, ' + good + ' of them red. What is the probability of drawing a red ball?' },
       visual: null,
-      answer: { n: good, d: total },
+      answer: answer,
       math: { op: 'prob', good: good, total: total },
+      choices: shuffle(rng, choices),
       hint: { zh: '概率 = 紅球數 ÷ 總數。', en: 'Probability = red ÷ total.' }
     };
   }
@@ -1718,19 +1754,22 @@
   /* 圓錐 / 球體（以 π 表示） */
   function genCone(rng, o) {
     var q = pick(rng, SOLID_PAIRS);
-    var zhPrompt, enPrompt, hint;
+    var zhPrompt, enPrompt, hintZh, hintEn;
     if (q.kind === 'coneV') {
       zhPrompt = '圓錐半徑 ' + q.r + ' cm、高 ' + q.h + ' cm，體積是多少？（以 π 表示）';
       enPrompt = 'A cone has radius ' + q.r + ' cm and height ' + q.h + ' cm. What is its volume? (in terms of π)';
-      hint = '圓錐體積 = π r² h / 3。';
+      hintZh = '圓錐體積 = π r² h / 3。';
+      hintEn = 'Cone volume = π r² h / 3.';
     } else if (q.kind === 'sphereV') {
       zhPrompt = '球體半徑 ' + q.r + ' cm，體積是多少？（以 π 表示）';
       enPrompt = 'A sphere has radius ' + q.r + ' cm. What is its volume? (in terms of π)';
-      hint = '球體積 = 4π r³ / 3。';
+      hintZh = '球體積 = 4π r³ / 3。';
+      hintEn = 'Sphere volume = 4π r³ / 3.';
     } else {
       zhPrompt = '球體半徑 ' + q.r + ' cm，表面積是多少？（以 π 表示）';
       enPrompt = 'A sphere has radius ' + q.r + ' cm. What is its surface area? (in terms of π)';
-      hint = '球表面積 = 4π r²。';
+      hintZh = '球表面積 = 4π r²。';
+      hintEn = 'Sphere surface area = 4π r².';
     }
     return {
       type: 'cone',
@@ -1739,7 +1778,7 @@
       answer: q.coef + 'π',
       math: { op: 'cone', kind: q.kind, r: q.r, h: q.h || 0, coef: q.coef },
       choices: circleChoices(rng, q.coef, 'π'),
-      hint: { zh: hint, en: hint }
+      hint: { zh: hintZh, en: hintEn }
     };
   }
 
@@ -2418,6 +2457,7 @@
         if (cand < min || cand > max) cand = randInt(rng, min, max);
       }
       if (!frac && cand < min) continue;
+      if (valuesEqual(cand, answer)) continue;
       var k = valueKey(cand);
       if (!seen[k]) { seen[k] = true; out.push(cand); }
     }
@@ -2518,7 +2558,7 @@
       case 'comparegroup': return math.a + '_' + math.b + '_' + math.mode;
     }
     var parts = [math.op];
-    var keys = ['a', 'b', 'c', 'd', 'r', 'h', 'mode', 'form', 'n', 'x', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w', 'base', 'val', 'which', 'good', 'total', 'askSum', 'sum', 'prod', 'angle'];
+    var keys = ['a', 'b', 'c', 'd', 'r', 'h', 'mode', 'form', 'n', 'x', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w', 'base', 'val', 'which', 'good', 'total', 'askSum', 'sum', 'prod', 'angle', 'e', 'e1', 'e2', 'dist'];
     keys.forEach(function (k) {
       if (math[k] != null) parts.push(k + '=' + math[k]);
     });
@@ -2574,6 +2614,8 @@
     if (!gen) throw new Error('未實現的題目類型: ' + typeSpec.t);
     var p = gen(rng, o);
     p.type = typeSpec.t;
+    /* 計算得出的分數答案一律化簡；「看圖寫分數」保留圖示的等份數 */
+    if (isFraction(p.answer) && p.type !== 'fraction') p.answer = reduceFraction(p.answer);
     p.difficultyStep = step;
     p.answerMax = o.max;
     p.answerMin = o.min;
@@ -2750,6 +2792,8 @@
     isFraction: isFraction,
     valueKey: valueKey,
     renderValue: renderValue,
+    valuesEqual: valuesEqual,
+    reduceFraction: reduceFraction,
     normalizeInput: normalizeInput,
     generateProblem: generateProblem,
     generateSet: generateSet,
