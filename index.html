@@ -18,14 +18,14 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <a class="skip-link" href="#main">跳至主要內容</a>
+  <a class="skip-link" id="skipLink" href="#main">跳至主要內容</a>
   <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
   <div class="app" id="app">
     <header class="topbar" id="topbar">
       <button class="icon-btn" id="backBtn" type="button" aria-label="返回" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
-      <div class="topbar-title" id="topbarTitle"></div>
+      <h2 class="topbar-title" id="topbarTitle"></h2>
       <div class="topbar-right">
         <span class="topbar-chip" id="topbarStars" title="總星星"></span>
         <button class="icon-btn" id="langBtn" type="button" title="語言 / Language" aria-label="切換語言 / Switch language"></button>

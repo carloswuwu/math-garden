@@ -195,8 +195,8 @@
     state.quizStart = s.quizStart || Date.now();
     state.locked = false;
     state.hintShown = false;
-    show('practice');
     renderQuestion(state.problems[state.index]);
+    show('practice');
     saveSession(); // 刷新 savedAt：繼續學習後再給 24 小時
   }
 
@@ -309,6 +309,15 @@
   function applyLang() {
     var code = state.lang === 'en' ? 'en' : 'zh-Hant-HK';
     document.documentElement.setAttribute('lang', code);
+    /* 靜態 ARIA 文案（skip link、頂欄按鈕、星星標題）也跟語言切換 */
+    var skip = $('skipLink');
+    if (skip) skip.textContent = t('a11y.skipLink');
+    [['backBtn', 'a11y.back'], ['settingsBtn', 'a11y.settings'], ['topbarStars', 'a11y.stars']].forEach(function (pair) {
+      var el = $(pair[0]);
+      if (el) el.setAttribute('aria-label', t(pair[1]));
+    });
+    var langBtn = $('langBtn');
+    if (langBtn) langBtn.setAttribute('aria-label', state.lang === 'zh' ? t('a11y.languageZh') : t('a11y.languageEn'));
   }
 
   /* ---------------- 音效 ---------------- */
@@ -397,10 +406,58 @@
     return s;
   }
 
+  /* 圖示的文字替代：屏幕閱讀器會讀出圖中表達的內容；未能描述的圖示標為裝飾性 */
+  function visualAlt(visual, math) {
+    var v = visual || {};
+    var tpl = function (key, tokens) { return t('a11y.visual.' + key, tokens || {}); };
+    switch (v.kind) {
+      case 'count': return tpl('count', { n: v.n });
+      case 'compare': return tpl('compare', { a: v.a, b: v.b });
+      case 'counters': return tpl('counters', { a: v.a, b: v.b, op: (math && math.op) || '+' });
+      case 'grid': return tpl('grid', { a: v.a, b: v.b });
+      case 'fraction': return tpl('fraction', { n: v.n, d: v.d });
+      case 'triangle': return tpl('triangle', { b: v.b, h: v.h });
+      case 'circle': return tpl('circle', { r: v.r });
+      case 'cuboid': return tpl('cuboid', { l: v.l, w: v.w, h: v.h });
+      case 'plane': return tpl('plane');
+      case 'rect': return tpl('rect', { l: v.l, w: v.w });
+      case 'compass': return tpl('compass');
+      case 'cone': return tpl('cone');
+      case 'sphere': return tpl('sphere');
+      case 'pie': return tpl('pie', { pct: v.pct });
+      case 'cylinder': return tpl('cylinder');
+      case 'symmetry': return tpl('symmetry');
+      case 'righttri': return tpl('righttri');
+      case 'polygon': return tpl('polygon', { n: v.n });
+      case 'parallel': return tpl('parallel');
+      case 'angletype': return tpl('angletype') + ' · ' + tpl('angle_' + v.kind);
+      case 'quadri': return tpl('quadri');
+      case 'circleang': return tpl('circleang');
+      case 'clock': return tpl('clock');
+      case 'numberline': return tpl('numberline');
+      case 'barchart': return tpl('barchart');
+      case 'percentgrid': return tpl('percentgrid', { pct: v.pct });
+      case 'twotri': return tpl('twotri');
+      case 'centre': return tpl('centre');
+      case 'oddeven': return tpl('oddeven');
+      case 'shape': return tpl('shape') + ' · ' + tpl('shape_' + v.shape);
+      default: return tpl('generic');
+    }
+  }
+
   function renderVisual(container, visual, math) {
     container.innerHTML = '';
-    if (!visual) { container.style.display = 'none'; return; }
+    if (!visual) {
+      container.style.display = 'none';
+      container.removeAttribute('role');
+      container.removeAttribute('aria-label');
+      container.removeAttribute('aria-hidden');
+      return;
+    }
     container.style.display = 'flex';
+    container.setAttribute('role', 'img');
+    container.setAttribute('aria-label', visualAlt(visual, math));
+    container.removeAttribute('aria-hidden');
     var html = '';
     var op = math ? math.op : null;
     switch (visual.kind) {
@@ -1017,7 +1074,9 @@
     /* 導航後把焦點移到畫面標題，並透過 live region 宣告，避免焦點掉到 body */
     var current = $('screen-' + screen);
     var heading = current && current.querySelector('h1, .page-title');
-    if (heading) {
+    if (current && heading) {
+      if (!heading.id) heading.id = 'screen-' + screen + '-title';
+      current.setAttribute('aria-labelledby', heading.id);
       if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
       try { heading.focus({ preventScroll: true }); } catch (e) { try { heading.focus(); } catch (e2) { /* 忽略 */ } }
     }
@@ -1030,9 +1089,7 @@
     var onHome = state.screen === 'home';
     back.hidden = onHome;
     $('langBtn').textContent = state.lang === 'zh' ? 'EN' : '繁體';
-    $('langBtn').setAttribute('aria-label', state.lang === 'zh'
-      ? '切換語言（英文）'
-      : 'Switch language (Traditional Chinese)');
+    $('langBtn').setAttribute('aria-label', state.lang === 'zh' ? t('a11y.languageZh') : t('a11y.languageEn'));
     $('topbarStars').textContent = '⭐ ' + totalStars();
 
     var title = '';
@@ -1132,11 +1189,10 @@
   /* 錯誤邊界：畫面渲染失敗時給可恢復的卡片，先保住進度（匯出）再回首頁 */
   function renderError(err) {
     try { if (window.console && window.console.error) window.console.error(err); } catch (e) { /* 忽略 */ }
-    try { show('home'); } catch (e) { /* 忽略 */ }
     var box = $('screen-home');
     if (!box) return;
     box.innerHTML = '<div class="result-card"><div class="big">⚠️</div>' +
-      '<h2>' + t('error.title') + '</h2>' +
+      '<h1>' + t('error.title') + '</h1>' +
       '<p class="page-sub">' + t('error.body') + '</p>' +
       '<div class="result-actions">' +
       '<button class="btn secondary" id="errorExport" type="button">📤 ' + t('error.export') + '</button>' +
@@ -1146,6 +1202,9 @@
     if (exportBtn) exportBtn.addEventListener('click', function () { exportProgress(); });
     var homeBtn = $('errorHome');
     if (homeBtn) homeBtn.addEventListener('click', function () { navigate(HOME_ROUTE); });
+    try { show('home'); } catch (e) { /* 忽略 */ }
+    var announcer = $('announcer');
+    if (announcer) announcer.textContent = t('error.title');
   }
 
   function back() {
@@ -1363,9 +1422,7 @@
 
   /* 選項的無障礙名稱：例如「選項 2：5」/「Choice 2: 5」 */
   function choiceAriaLabel(index, text) {
-    return state.lang === 'zh'
-      ? '選項 ' + (index + 1) + '：' + text
-      : 'Choice ' + (index + 1) + ': ' + text;
+    return t('a11y.choice', { i: index + 1, text: text });
   }
 
   function startPractice(skillId) {
@@ -1380,8 +1437,9 @@
     state.quizStart = 0;
     state.locked = false;
     state.hintShown = false;
-    show('practice');
     nextPracticeProblem();
+    show('practice');
+    saveSession();
   }
 
   function nextPracticeProblem() {
@@ -1408,8 +1466,8 @@
     state.locked = false;
     state.hintShown = false;
     state.quizStart = Date.now();
-    show('practice');
     renderQuestion(state.problems[0]);
+    show('practice');
     saveSession();
   }
 
@@ -1442,20 +1500,20 @@
     if (state.mode === 'exam') {
       var examStage = getStage(state.examStage);
       pctNow = Math.round(state.index / state.problems.length * 100);
-      headHtml = '<div class="practice-head"><span class="p-title">📝 ' + t('exam.title') + ' · ' + L(examStage) + '</span>' +
+      headHtml = '<div class="practice-head"><h1 class="p-title">📝 ' + t('exam.title') + ' · ' + L(examStage) + '</h1>' +
         '<span class="p-count">' + t('practice.question', { i: state.index + 1, n: state.problems.length }) + '</span></div>' +
         progressBarHTML(pctNow, t('practice.question', { i: state.index + 1, n: state.problems.length }));
     } else if (isQuiz) {
       var done = state.index;
       pctNow = Math.round(done / state.problems.length * 100);
-      headHtml = '<div class="practice-head"><span class="p-title">' + t('quiz.title') + '</span>' +
+      headHtml = '<div class="practice-head"><h1 class="p-title">' + t('quiz.title') + '</h1>' +
         '<span class="p-count">' + t('practice.question', { i: state.index + 1, n: state.problems.length }) + '</span></div>' +
         progressBarHTML(pctNow, t('practice.question', { i: state.index + 1, n: state.problems.length }));
     } else {
       var practice = (skill.mastery && skill.mastery.practice) || 10;
       var c = skillProgress(skill.id).correct;
       pctNow = Math.min(100, Math.round(c / practice * 100));
-      headHtml = '<div class="practice-head"><span class="p-title">' + nameOf(skill) + '</span>' +
+      headHtml = '<div class="practice-head"><h1 class="p-title">' + nameOf(skill) + '</h1>' +
         '<span class="p-count">' + t('practice.progress') + ' ' + c + '/' + practice + '</span></div>' +
         progressBarHTML(pctNow, t('practice.progress') + ' ' + c + '/' + practice);
     }
@@ -1720,7 +1778,7 @@
     $('screen-practice').innerHTML =
       '<div class="result-card">' +
       '<div class="big">' + (grade.stars >= 2 ? '🎉' : (grade.stars >= 1 ? '👍' : '💪')) + '</div>' +
-      '<h2>' + t('quiz.result') + '</h2>' +
+      '<h1>' + t('quiz.result') + '</h1>' +
       '<p class="page-sub">' + nameOf(skill) + '</p>' +
       '<div class="score">' + t('quiz.score', { c: grade.correct, t: grade.total }) + '</div>' +
       '<div class="result-stars">' + starsHtml + '</div>' +
@@ -1732,6 +1790,9 @@
 
     $('quizBack').addEventListener('click', function () { navigate({ screen: 'stage', stageId: skillStageId(state.skillId) }); });
     $('quizRetry').addEventListener('click', function () { startQuiz(state.skillId); });
+    show('practice');
+    var quizAnnouncer = $('announcer');
+    if (quizAnnouncer) quizAnnouncer.textContent = t('quiz.result');
   }
 
   /* ---------------- 綜合考試（模擬試卷） ---------------- */
@@ -1749,9 +1810,9 @@
     state.locked = false;
     state.hintShown = false;
     state.quizStart = Date.now();
-    show('practice');
     if (!state.problems.length) { toast(t('exam.empty')); renderStage(stageId); return; }
     renderQuestion(state.problems[0]);
+    show('practice');
     saveSession();
   }
 
@@ -1798,7 +1859,7 @@
     $('screen-practice').innerHTML =
       '<div class="result-card">' +
       '<div class="big">' + (grade.stars >= 2 ? '🎉' : (grade.stars >= 1 ? '👍' : '💪')) + '</div>' +
-      '<h2>' + t('exam.result') + '</h2>' +
+      '<h1>' + t('exam.result') + '</h1>' +
       '<p class="page-sub">' + L(stage) + '</p>' +
       '<div class="score">' + t('quiz.score', { c: grade.correct, t: grade.total }) + '</div>' +
       '<div class="result-stars">' + starsHtml + '</div>' +
@@ -1810,6 +1871,9 @@
       '</div></div>';
     $('examBack').addEventListener('click', function () { navigate({ screen: 'stage', stageId: state.examStage }); });
     $('examRetry').addEventListener('click', function () { renderGradeExam(state.examStage); });
+    show('practice');
+    var examAnnouncer = $('announcer');
+    if (examAnnouncer) examAnnouncer.textContent = t('exam.result');
   }
 
   /* ---------------- 家長中心 ---------------- */
@@ -1879,6 +1943,22 @@
     });
   }
 
+  /* 對話框開啟時把背景（主內容／頂欄／更新 chip／skip link）設為 inert + aria-hidden，
+   * 關閉時還原；焦點只在對話框內循環。 */
+  function setBackgroundInert(on) {
+    ['main', 'topbar', 'updateChip', 'skipLink'].forEach(function (id) {
+      var el = $(id);
+      if (!el) return;
+      if (on) {
+        el.setAttribute('inert', '');
+        el.setAttribute('aria-hidden', 'true');
+      } else {
+        el.removeAttribute('inert');
+        el.removeAttribute('aria-hidden');
+      }
+    });
+  }
+
   function showModal(innerHTML, opener) {
     var modal = $('modal');
     if (!modal) return;
@@ -1892,6 +1972,7 @@
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', heading ? heading.id : 'modalTitle');
     modalState.open = true;
+    setBackgroundInert(true);
     var items = modalFocusables();
     if (!focusEl(items[0])) focusEl(modal);
   }
@@ -1906,6 +1987,7 @@
     modal.innerHTML = '';
     modalState.open = false;
     modalState.opener = null;
+    setBackgroundInert(false);
     if (wasOpen && !(opts && opts.restore === false)) {
       if (!restoreFocus(opener)) focusScreen();
     }
