@@ -7,15 +7,15 @@
 | Item | Value |
 |---|---|
 | Repo | `C:\Users\Carlos\Documents\deepseek-harness\math` |
-| Branch / HEAD | `main` @ `c4018db` (Phase 1 landed; docs commit on top) |
+| Branch / HEAD | `main` @ `efb2c3e` (Phase 2 landed; docs commit on top) |
 | Live | https://carloswuwu.github.io/math-garden/ (GitHub Pages, deploy from `main` root) |
-| CI | `.github/workflows/tests.yml` — three node suites on every push/PR |
-| Content | 14 stages, **111 skills**, 102 lessons, 127 type entries; Pre-K → university |
-| Code size | `math-core.js` 3,777 lines · `app.js` 2,274 · `curriculum.js` 1,086 · `lessons.js` 597 · `style.css` 729 |
-| Tests | core **571,764** assertions · ui **183** · generators **111,680** (111 skills) |
+| CI | `.github/workflows/tests.yml` — four node suites on every push/PR |
+| Content | 14 stages, **111 skills**, 102 lessons, 127 type entries, **85 generator types**; Pre-K → university |
+| Code size | `math-core.js` 4,062 lines · `app.js` 2,274 · `curriculum.js` 1,086 · `lessons.js` 597 · `style.css` 729 · `formulas.js` 91 |
+| Tests | core **574,377** assertions · ui **189** · generators **116,818** · contract **9,649** (111 skills) |
 | Persistence | progress schema **v2** (`mathpath.progress`), legacy v1 key migrated, sanitized import |
 | In-flight session | `sessionStorage['mathpath.session.v1']` (24 h TTL, practice/quiz/exam only, never in progress) |
-| Offline | SW cache `math-garden-v10`, 20 KaTeX woff2 precached, nav-only shell fallback |
+| Offline | SW cache `math-garden-v11`, 20 KaTeX woff2 precached, nav-only shell fallback |
 | Local preview | `$env:PORT=8080; node tests/serve.js` → http://localhost:8080 (also LAN/tailnet) |
 | Dev env | Windows, PowerShell 5.1, Node 20; tests deps in `tests/` with `package-lock.json` |
 
@@ -47,6 +47,15 @@
 12. In-flight session resume: `sessionStorage['mathpath.session.v1']` for practice/quiz/exam `{v, route, mode, stageId, skillId, problems, index, correct, results, quizStart, savedAt}`; 24 h TTL; every problem re-validated with `MathCore.checkAnswer(p, p.answer)` and the route re-checked against unlocks; written on start/advance/restore, cleared on finish/reset/import. Reload mid-quiz restores question/index/results when the URL targets the same route; the home screen otherwise shows a Continue card. Progress schema untouched.
 13. Route error boundary (`renderRouteSafely`) renders a recoverable card that offers **Export progress** before returning home.
 
+### Landed in this cycle: Phase 2 — contract tests (do not re-report)
+
+14. `MATH_SPEC` beside `GENERATORS`: `math.op → answerFromMath(math)` with mode branches, deriving the answer from `p.math` only. `MathCore.answerFromMath` + `generateProblem({selfCheck:true})`; the duplicated `computeAnswer` is deleted from `tests/core.test.js` (oracle now single-owner).
+15. `sanitizeProgress` fuzz (400 random payloads): never throws, extraction caps hold (500 skills / 60 typeAcc / 20 lastProblems / 100 stageExams), JSON round-trip → re-sanitize is idempotent, 1 MB payload handled; the UI import path rejects >1 MB with a localized message and a valid import still works.
+16. New `tests/contract.test.js` (no jsdom, ~10k assertions): MATH_SPEC self-check over every curriculum type/mode, asset manifest (HTML refs / manifest icons / SW precache relative + present), i18n parity (`t()` literals zh+en, every skill name/goal/lesson, no CJK in en prompts/hints), solver coverage (no null steps; last step states the displayed answer), formula/skill parity.
+17. `explain()` extended to cover count, compare, comparegroup, fraction, missing and the add/sub/mul/two-step word modes — every type reachable from “看一步步示範” now returns steps ending in the displayed answer.
+18. `formulas.js` items now carry the supported skill ids; a `FORMULA_SKILL_TYPES` contract ensures every skill whose type is promised by the sheet is tagged, and tags resolve to playable skills.
+19. CI runs four suites (local total ≈5 s); `npm test --prefix tests` matches CI.
+
 ## 2. Architecture map
 
 ```
@@ -59,27 +68,30 @@ index.html  (7 ordered <script> globals + KaTeX vendor)
   ├─ vendor/katex   math rendering
   └─ app.js         state, screens, rendering, storage, dialogs, keyboard, SW registration
 sw.js               cache + offline
-tests/              core.test.js, ui.test.js (jsdom), generators.test.js, serve.js
+tests/              core.test.js, ui.test.js (jsdom), generators.test.js, contract.test.js, serve.js
 ```
 
 **Contracts (informal but load-bearing):**
 - `Problem { type, prompt{zh,en}, visual, answer, choices, math, hint, sig, solution? }`.
-- Five consumers of `math`: choice builder, `mathSig`, `explain/SOLVERS`, `renderVisual`, and the test oracle (`tests/core.test.js computeAnswer`). Any new mode must satisfy all five.
-- Progress: `{version:2, lang, sound, theme, stars, streak, badges, skills, stageExams}`; `MathCore.sanitizeProgress()` is the only writer path.
+- Consumers of `math`: choice builder, `mathSig`, `explain/SOLVERS`, `renderVisual`, `MathCore.answerFromMath` (MATH_SPEC), and the test suites. Any new mode must satisfy all of them.
+- `MATH_SPEC` (beside `GENERATORS`): `math.op → answerFromMath(math)` with per-mode branches; it re-derives the expected answer from `p.math` **only** (never reads `p.answer`) and is the single oracle. `generateProblem({selfCheck:true})` throws on a mismatch, `tests/core.test.js` uses it instead of its old `computeAnswer`, and `tests/contract.test.js` checks every curriculum type/mode.
+- Progress: `{version:2, lang, sound, theme, stars, streak, badges, skills, stageExams}`; `MathCore.sanitizeProgress()` is the only writer path (fuzzed: never throws, caps 500/60/20/100, JSON round-trip idempotent, 1 MB payload safe).
 - Navigation: pure `parseHash(hash)`/`serializeRoute(route)` + `parentOf(route)`/`currentRoute()`; `resolveRoute()` validates against `Curriculum` and unlock rules (unknown → home, locked → nearest ancestor). `show(screen)` toggles `hidden`, syncs the hash (replace on re-render / push on screen change), moves focus to the heading and announces via `#announcer`. `hashchange`/`popstate` re-render from the URL; all click entries go through `navigate(route)` so the error boundary in `renderRouteSafely()` applies. Hash routes only — path routes would 404 on Pages reload and break `file://`.
 - In-flight session: `sessionStorage['mathpath.session.v1']` for practice/quiz/exam; `readSession()/saveSession()/clearSession()/restoreSession()`; home Continue card. It is never written to the progress schema.
+- Content parity: every `formulas.js` item carries `skills` (real playable skill ids); `FORMULA_SKILL_TYPES` in `tests/contract.test.js` lists the types the sheet promises, and every skill using one of those types must be tagged.
 
 **Verification commands**
 
 ```powershell
 cd C:\Users\Carlos\Documents\deepseek-harness\math
-node tests/core.test.js        # engine + math oracle
-node tests/ui.test.js          # jsdom UI behaviour
+node tests/core.test.js        # engine, MATH_SPEC oracle, schema fuzz
+node tests/ui.test.js          # jsdom UI behaviour, router/resume
 node tests/generators.test.js  # generator/explain/content contracts
+node tests/contract.test.js    # MATH_SPEC, assets, i18n, solver coverage, formulas
 node --check app.js; node --check math-core.js
 ```
 
-CI additionally does `npm ci --prefix tests` then the three suites.
+CI additionally does `npm ci --prefix tests` then the four suites (~5 s local total).
 
 ## 3. Known open debt (not fixed)
 
@@ -100,10 +112,9 @@ CI additionally does `npm ci --prefix tests` then the three suites.
 - **No build:** 7 globals, script-order coupling, no minification/tree-shaking, unhashed assets; file:// double-click is a supported path.
 - **SW lifecycle:** manual `CACHE` version, no user-visible update prompt (auto-reload removed), `skipWaiting` still immediate.
 - **i18n split:** UI strings in `i18n.js`, item/lesson strings hardcoded `{zh,en}` in generators/lessons; ARIA strings inline in `app.js`.
-- **Test oracle duplication:** `tests/core.test.js computeAnswer` re-implements generator math (kept in sync manually).
 - **Error boundary/observability:** route renders are wrapped (`renderRouteSafely`) but a failure inside a direct event handler still surfaces via the console; no global `window.onerror` handler or telemetry.
 - **A11y remainder:** informative SVG visuals have no text alternative; background not `inert` when dialog open; targets are 42 px (WCAG suggests 44); no `tests/a11y.test.js`/axe subset.
-- **Content/spec drift:** formula sheet is standalone, not tagged to skills; no parity test.
+- **Formula content depth:** the sheet is tagged and parity-tested now, but the omissions in the Mathematics list (median, GP `r ≠ 1`, AP sum, log base/domain, binomial `r` convention) are still open; only the declared `FORMULA_SKILL_TYPES` are promised covered, and skill tags are hand-curated.
 - **Repo metadata:** GitHub description still says “Pre-K to Primary 6”.
 
 ## 4. The plan
@@ -123,19 +134,26 @@ Decisions / deviations from the original sketch:
 - `pushState`/`replaceState` are wrapped: on `file://` or restricted contexts they fall back to assigning `location.hash` (deduped by `lastHash`).
 - Session restore refreshes `savedAt` (24 h window restarts on Continue).
 
-**Acceptance met:** Back/Forward works home→stage→lesson; reload mid-quiz restores same question/index/results; invalid or locked links redirect; all three suites green; no route state added to progress schema. Covered by ui assertions 19–27.
+**Acceptance met:** Back/Forward works home→stage→lesson; reload mid-quiz restores same question/index/results; invalid or locked links redirect; all suites green; no route state added to progress schema. Covered by ui assertions 19–27.
 
 **Do not:** add a router library; use `history.pushState` path routes (Pages 404s on reload, file:// breaks); put quiz problems in progress; auto-resume stale sessions; push history on every re-render.
 
-### Phase 2 — Contract tests (cheap, high leverage)
-1. **MATH_SPEC:** one table `type(+mode) → answerFromMath` owned beside `GENERATORS`; use it in a dev self-check and in `core.test.js`; delete the duplicated `computeAnswer`.
-2. **Schema fuzz:** random JSON through `sanitizeProgress` (never throws; caps hold: 500 skills / 60 typeAcc / 20 lastProblems / 100 stageExams); export→import→export idempotent; 1 MB guard.
-3. **Asset manifest:** every `src`/`href` in `index.html`, manifest icon, and SW precache entry exists on disk and is relative.
-4. **i18n parity:** every `t('…')` literal has zh+en; every playable skill has zh/en name+goal and an existing lesson; en item text has no CJK.
-5. **Solver coverage:** every type/mode reachable by the lesson “step-by-step” button returns steps (no null) and the last step contains the rendered answer.
-6. **Content parity:** tag formula items with skill ids and assert coverage; extend `curriculum types ⊆ GENERATOR_TYPES` to `SOLVERS`.
+### Phase 2 — Contract tests — ✅ landed (`a96a5a2` engine/tests, `efb2c3e` contract/formulas)
 
-**Acceptance:** CI ≤ 10 s; deleting `computeAnswer` loses no coverage.
+Implemented as sketched:
+1. **MATH_SPEC:** one table beside `GENERATORS` mapping `math.op` (+ mode branches inside each function) to the derived answer; `answerFromMath(problem)` is the single oracle. `generateProblem({selfCheck:true})` uses it as a dev self-check, `tests/core.test.js` imports it, and the old `computeAnswer`/`applyOp` duplicate is gone.
+2. **Schema fuzz:** in `tests/core.test.js` — 400 seeded random JSON payloads through `sanitizeProgress` (never throws, JSON round-trip cleaning idempotent, caps asserted), over-cap truncation asserted, and a >1 MB payload handled. UI import rejects >1 MB; valid import covered.
+3. **Asset manifest:** `tests/contract.test.js` checks every relative `src`/`href` in `index.html`, every manifest icon, and every `sw.js` precache entry exists on disk and is relative, with no SW duplicates and no HTML/manifest reference missing from precache.
+4. **i18n parity:** every `t('…')` literal (prefix forms like `t('colors.' + c)` included) resolves in zh+en; every playable skill has zh/en name+goal and a lesson with intro/example/tip; generated en prompts/hints contain no CJK. Fixed the one dangling key (`parent.importedTooLarge`).
+5. **Solver coverage:** every curriculum type/mode returns zh+en steps with no empty string; the last step states the displayed answer (localized labels for direction/centre/colour answers; case-insensitive for English labels). Added solvers for count, compare, comparegroup, fraction, missing and word add/sub/mul/two-step.
+6. **Content parity:** every formula item carries `skills`; tags must be playable skills, and every skill whose type is listed in `FORMULA_SKILL_TYPES` must be tagged somewhere. “Curriculum types ⊆ explainable” is enforced through the solver-coverage loop (SOLVERS + `explain()` fallback together).
+
+Decisions / deviations from the sketch:
+- The table is keyed by `math.op` (type + mode collapses to the op a generator emits) rather than by literal type name; completeness is enforced over all 85 `GENERATOR_TYPES` instead.
+- The “types ⊆ SOLVERS” check is expressed as full `explain()` coverage, because many types are intentionally handled by the fallback switch rather than a dedicated `SOLVERS` entry.
+- Formula coverage is a declared type list (`FORMULA_SKILL_TYPES`, 26 types), not every skill: the sheet does not document e.g. counting, place value or fraction arithmetic; the residual formula depth debt is listed in §3.
+
+**Acceptance met:** no duplicated `computeAnswer` remains and coverage grew (core 571,764 → 574,377 assertions; ui 183 → 189; generators 111,680 → 116,818; contract 9,649 new). Four suites total ≈5 s locally, so CI stays well under 10 s.
 
 ### Phase 3 — Build + SW lifecycle
 1. **esbuild, not Vite** (preserve static/file:// model). Stage A: bundle the existing seven files in order into one IIFE `dist/app.<hash>.js` with zero source edits; `dist/index.html` keeps vendor KaTeX as a classic script. Stage B: generate `sw.js` precache list + cache version from the build manifest. Then C–E: convert data modules to ESM behind the unchanged `window.*` API, split `math-core.js` into `core/` modules, split `app.js` (router/screens/dialog/visual/a11y), drop globals.
@@ -158,9 +176,9 @@ Decisions / deviations from the original sketch:
 ### 30 / 60 / 90-day shape
 | Window | Ship |
 |---|---|
-| 0–30 d | **Phase 1 routing & resume (landed)**; SW font precache + safe fallback (done); Phase 2 contract tests; land a11y tests; formula/skill parity lint |
-| 31–60 d | esbuild phases A–B, generated SW, hashed assets, update banner; result routes / history polish for finished runs |
-| 61–90 d | Phases C–E modular split, text alternatives, perf/Lighthouse gates, content/spec parity report, docs/ADRs |
+| 0–30 d | **Phase 1 routing & resume (landed)**; **Phase 2 contract tests (landed)**; SW font precache + safe fallback (done); Phase 4 a11y test boot + ARIA string centralization |
+| 31–60 d | Phase 3 esbuild A–B, generated SW, hashed assets, update banner; result routes / history polish for finished runs |
+| 61–90 d | Phases C–E modular split, text alternatives, perf/Lighthouse gates, formula depth fixes, docs/ADRs |
 
 ## 5. Agent playbook (proven in this repo)
 
@@ -168,7 +186,7 @@ Use **three parallel specialists** when the task spans math, architecture and UI
 
 - **Mathematician (read-only):** audit `math-core.js` generators, `curriculum.js`, `lessons.js`, `formulas.js`, `curriculum-outline.js`. Method: seeded generation, independent recomputation from `math`, choice/explain invariants, HK/DSE conventions. Report P0/P1/P2 with file:line and concrete fix; state what was verified correct.
 - **Architect (read-only):** inspect `app.js`, `sw.js`, `index.html`, tests, CI. Deliver decision-oriented memo: concrete state/routing model, build strategy (esbuild single IIFE), SW lifecycle, a11y architecture, contract tests, 30/60/90 plan. Say what NOT to do.
-- **Coder (sole writer):** scope e.g. `app.js, index.html, style.css, tests/ui.test.js`. Implement, add jsdom tests, run all three suites 5×, report files/tests/counts, leave uncommitted for the lead to review/commit.
+- **Coder (sole writer):** scope e.g. `app.js, index.html, style.css, tests/ui.test.js`. Implement, add jsdom tests, run all four suites 5×, report files/tests/counts, leave uncommitted for the lead to review/commit.
 
 Coordination rules:
 1. Declare write scopes in the prompt; readers must not edit.
@@ -185,21 +203,22 @@ node --check math-core.js
 node tests/core.test.js
 node tests/ui.test.js
 node tests/generators.test.js
+node tests/contract.test.js
 git status --short            # expect only intended files
 git add -A; git commit -m "…"
 git push origin main          # needs credential store; run outside sandbox if needed
 ```
 
-Then: wait for the `tests` workflow (GitHub Actions) to go green, confirm Pages deployed, hard-refresh the live site. Bump the SW cache whenever shipped assets change (currently `math-garden-v10`); if the build pipeline lands, this becomes generated.
+Then: wait for the `tests` workflow (GitHub Actions) to go green, confirm Pages deployed, hard-refresh the live site. Bump the SW cache whenever shipped assets change (currently `math-garden-v11`); if the build pipeline lands, this becomes generated.
 
 ## 7. Bootstrap prompt for the new session
 
-> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Phase 1 (routing & resume) is landed — do not redo it. Then continue with **Phase 2 — Contract tests**: add the MATH_SPEC `type(+mode) → answerFromMath` table and delete the duplicated `computeAnswer`; add the `sanitizeProgress` schema fuzz, the asset manifest check, i18n parity, solver-coverage and content-parity tests. Keep all three suites green (and CI ≤ 10 s), add tests for every new contract, then commit by scope and push. Keep the existing innerHTML renderer and file:// support.
+> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Phases 1 (routing & resume) and 2 (contract tests) are landed — do not redo them. Then continue with **Phase 3 — Build + SW lifecycle**: use esbuild (not Vite) to bundle the existing seven scripts in load order into one hashed IIFE `dist/app.<hash>.js` with zero source edits while keeping vendor KaTeX as a classic script and preserving file:// support; generate `sw.js` precache + cache name from the build manifest; add the “new version” chip (no auto-reload) and point `play-math.bat`/Pages at `dist/`. Keep all four suites green (CI ≤ 10 s), commit by scope and push, then confirm CI and Pages. Do not introduce path-based routes or a module-only build that breaks double-click.
 
 ## 8. Key references
 
-- Engine: `math-core.js` — `GENERATORS`, `SOLVERS`, `generateProblem`, `generateSet`, `explain`, `sanitizeProgress`, `mathSig`.
+- Engine: `math-core.js` — `GENERATORS`, `MATH_SPEC`, `answerFromMath`, `SOLVERS`, `generateProblem` (`{selfCheck}`), `generateSet`, `explain`, `sanitizeProgress`, `mathSig`.
 - UI/state: `app.js` — `state`, `show()`, `navigate()`, `parseHash/serializeRoute/resolveRoute/parentOf/currentRoute`, `readSession/saveSession/restoreSession`, `renderQuestion`, `startPractice/Quiz`, `finishExam`, `showModal/closeModal`, `registerSW`, `applyLang`.
-- Content: `curriculum.js` (skills/types/levels), `lessons.js` (teaching text), `i18n.js` (UI strings), `formulas.js`, `curriculum-outline.js`.
-- Tests: `tests/core.test.js` (oracle + invariants), `tests/generators.test.js` (contracts, pool floors, explain), `tests/ui.test.js` (jsdom flows, router/Back-Forward, session resume, a11y, keyboard).
+- Content: `curriculum.js` (skills/types/levels), `lessons.js` (teaching text), `i18n.js` (UI strings), `formulas.js` (items tagged with `skills`), `curriculum-outline.js`.
+- Tests: `tests/core.test.js` (MATH_SPEC oracle + invariants + schema fuzz), `tests/generators.test.js` (contracts, pool floors, explain), `tests/ui.test.js` (jsdom flows, router/Back-Forward, session resume, a11y, keyboard, import), `tests/contract.test.js` (MATH_SPEC self-check, assets, i18n, solver coverage, formulas).
 - CI: `.github/workflows/tests.yml`; test deps: `tests/package.json` + `tests/package-lock.json`.

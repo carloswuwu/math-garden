@@ -75,10 +75,12 @@
 
 > 交接文件與完整路線圖：**[docs/PLAN.md](docs/PLAN.md)**（目前狀態、架構、待辦與新對話的啟動提示）。
 
-核心邏輯測試（無需安裝依賴）：
+不需要額外依賴的純邏輯／內容契約測試：
 
 ```bash
-node tests/core.test.js
+node tests/core.test.js         # 答案 oracle（MATH_SPEC）、判分、掌握度、進度清洗
+node tests/generators.test.js   # 生成器性質、題庫池大小、解題步驟不變量
+node tests/contract.test.js     # MATH_SPEC 自檢、素材清單、i18n、解題覆蓋、公式／技能對齊
 ```
 
 界面邏輯測試（需先安裝測試依賴）：
@@ -88,8 +90,10 @@ npm install --prefix tests        # 或 pnpm install --dir tests --config.node-l
 node tests/ui.test.js
 ```
 
-- `tests/core.test.js`：對 10 種題型做大量抽樣，交叉驗證答案、選項唯一性、掌握度與自適應邏輯。
-- `tests/ui.test.js`：用 jsdom 加載整個應用，驗證首頁渲染、語言切換、導航、練習答對、測驗推進、進度持久化與恢復。
+- `tests/core.test.js`：對所有題型做大量抽樣，用 `MathCore.answerFromMath`（唯一的 MATH_SPEC）交叉驗證答案、選項唯一性、掌握度、自適應與 `sanitizeProgress` 模糊測試。
+- `tests/ui.test.js`：用 jsdom 加載整個應用，驗證首頁渲染、語言切換、路由／Back-Forward、練習與測驗、session 恢復、進度持久化與匯入。
+- `tests/generators.test.js`：生成器性質（選項、分數、概率、題幹）、題庫池下限、難度階梯與解題步驟。
+- `tests/contract.test.js`：跨層契約——`MATH_SPEC` 自檢、HTML/manifest/SW 素材存在且相對、`t()` 字面量與技能／課堂中英齊全、每個題型都有解題步驟並以答案收尾、公式與技能標記對齊。
 - `tests/make_icon.py`：重新生成應用圖標（需要 Pillow）。
 
 ## 說明
