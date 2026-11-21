@@ -696,6 +696,26 @@ h1, h2, h3, p { margin: 0; }
 .color-choice { flex-direction: row; gap: 10px; justify-content: center; }
 .big-num { font-family: var(--font-display); font-size: 46px; font-weight: 800; }
 
+/* ---------- 繼續上次（首頁 Continue 卡） ---------- */
+.continue-card {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; text-align: left;
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  background: var(--green-l);
+  border: 2.5px solid var(--line);
+  border-radius: 20px 22px 19px 21px / 21px 19px 22px 20px;
+  box-shadow: 5px 5px 0 rgba(51, 46, 38, 0.18);
+  color: var(--ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.continue-card:hover { transform: translateY(-2px); }
+.continue-card:active { transform: translateY(2px); box-shadow: 2px 2px 0 rgba(51, 46, 38, 0.18); }
+.continue-emoji { font-size: 26px; line-height: 1; flex: none; }
+.continue-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.continue-title { font-family: var(--font-display); font-weight: 800; font-size: 18px; }
+.continue-sub { font-family: var(--font-hand); font-size: 14px; color: var(--ink-2); }
+
 /* ---------- ?踵?撘?---------- */
 @media (max-width: 480px) {
   .stage-grid { gap: 14px 12px; }

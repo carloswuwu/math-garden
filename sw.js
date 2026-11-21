@@ -4,7 +4,7 @@
  *   - 其他同源資源：網路優先，失敗時回退快取；沒有快取就回傳錯誤
  *     （絕不以 index.html 冒充 JS/CSS，避免瀏覽器拿到 HTML）
  *   - 快取版本號更新時遞增，舊快取會被清除。 */
-const CACHE = 'math-garden-v9';
+const CACHE = 'math-garden-v10';
 const NAV_TIMEOUT_MS = 3000;
 const ASSETS = [
   './',
