@@ -718,6 +718,22 @@ h1, h2, h3, p { margin: 0; }
 .challenge-count { font-family: var(--font-hand); font-size: 13px; font-weight: 700; }
 .challenge-arrow { font-family: var(--font-display); font-size: 24px; font-weight: 800; }
 
+/* ---------- 鍵入答案（挑戰區：不提供選項） ---------- */
+.answer-row { display: flex; gap: 10px; align-items: stretch; margin-bottom: 8px; }
+.answer-input {
+  flex: 1; min-width: 0;
+  padding: 12px 16px;
+  font-family: var(--font-display); font-size: 22px; font-weight: 800;
+  color: var(--ink);
+  background: var(--card);
+  border: 2.5px solid var(--line);
+  border-radius: 14px 16px 13px 15px;
+  box-shadow: inset 0 2px 0 rgba(51, 46, 38, 0.08);
+}
+.answer-input:focus-visible { outline: 3px dashed var(--blue); outline-offset: 3px; }
+.answer-input:disabled { opacity: 0.55; }
+.answer-hint { font-size: 13px; color: var(--ink-2); margin-bottom: 14px; }
+
 /* ---------- 新版本提示（Service Worker waiting） ---------- */
 .update-chip {
   position: fixed;
