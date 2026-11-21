@@ -165,7 +165,7 @@ for (const skill of skills) {
   let typedCount = 0;
   challengeSkills.forEach((skill) => {
     for (let i = 0; i < 40; i++) {
-      const p = M.generateProblem(skill, { seed: 3000 + i * 17, difficultyStep: i % 2 });
+      const p = M.generateProblem(skill, { seed: 3000 + i * 17, difficultyStep: i % 3 });
       check(p.input === 'text', '挑戰題應為鍵入答案 ' + skill.id + '#' + i);
       check(!Array.isArray(p.choices) || p.choices.length === 0, '挑戰題不應有選項 ' + skill.id + '#' + i);
       check(M.checkAnswer(p, String(M.renderValue(p.answer))).correct, '挑戰題答案可判對 ' + skill.id + '#' + i);

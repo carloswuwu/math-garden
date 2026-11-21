@@ -472,4 +472,36 @@ for (let seed = 1; seed <= N; seed++) {
   }
 })();
 
+/* 11. 公平性：first-attempt 練習計分 + 可設定的 quizPass 及格線 */
+(() => {
+  const skill = SKILLS.addition;
+  const p = C.generateProblem(skill, { seed: 1 });
+  const prog = C.newProgress();
+  C.applyResult(prog, skill, p, false);
+  check(prog.skills[skill.id].correct === 0 && prog.skills[skill.id].attempts === 1, '首次答錯：不計 correct、記錄一次嘗試');
+  C.applyResult(prog, skill, p, true, { credit: false });
+  check(prog.skills[skill.id].correct === 0, '重試答對不計 correct（不膨脹掌握度）');
+  check(prog.skills[skill.id].attempts === 2, '重試仍記錄嘗試次數');
+  check(prog.skills[skill.id].consecCorrect === 0, '重試答對不計連對');
+  C.applyResult(prog, skill, p, true);
+  check(prog.skills[skill.id].correct === 1, '首答答對才計 correct');
+  check(prog.skills[skill.id].consecCorrect === 1, '首答答對累積連對');
+
+  check(C.quizStars(0.8) === 2, '預設及格線 0.8：80% 得 2 星');
+  check(C.quizStars(0.8, 0.9) === 1, '技能及格線 0.9：80% 只得 1 星');
+  check(C.quizStars(0.9, 0.9) === 2, '技能及格線 0.9：90% 得 2 星');
+  check(C.quizStars(0.95, 0.9) === 3, '95% 得 3 星');
+  const ten = [];
+  for (let i = 0; i < 10; i++) ten.push({ correct: i < 9 });
+  check(C.gradeQuiz(ten, 0.9).stars === 2, 'gradeQuiz 使用自訂及格線');
+  const hardSkill = { id: 't.hard', levels: [{}], mastery: { practice: 10, quizPass: 0.9 } };
+  const prog2 = C.newProgress();
+  C.applyQuizResult(prog2, hardSkill, 0.85);
+  check(prog2.skills['t.hard'].quizStars === 1, 'applyQuizResult 尊重技能 quizPass=0.9');
+  check(!prog2.skills['t.hard'].mastered, '未達自訂及格線不算掌握');
+  C.applyQuizResult(prog2, hardSkill, 0.9);
+  check(prog2.skills['t.hard'].quizStars === 2, '達自訂及格線得 2 星');
+  check(prog2.skills['t.hard'].mastered, '達自訂及格線即掌握');
+})();
+
 console.log(`✓ math-core 全部通過（${checks} 項斷言）`);

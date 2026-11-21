@@ -577,7 +577,7 @@ async function main() {
   wCh.__mathApp.navigate({ screen: 'quiz', skillId: 'challenge.nt' });
   const stCh = wCh.__mathApp.getState();
   check(stCh.mode === 'quiz' && stCh.problems.length === 10, '挑戰測驗固定 10 題');
-  check(stCh.problems.every((p) => ['modpow', 'gcdlcm', 'remainderSystem'].indexOf(p.math.op) !== -1), '數論挑戰題型正確');
+  check(stCh.problems.every((p) => ['modpow', 'gcdlcm', 'remainderSystem', 'lastdigit'].indexOf(p.math.op) !== -1), '數論挑戰題型正確');
   check(wCh.location.hash === '#/quiz/challenge.nt', '挑戰 quiz route 同步');
   check(!dCh.querySelector('#screen-practice .choice'), '挑戰測驗不提供選項（不能靠猜）');
   const typedField = dCh.getElementById('typedAnswer');
@@ -653,6 +653,43 @@ async function main() {
   const stRunP2 = wRun.__mathApp.getState();
   check(stRunP2.mode === 'practice' && stRunP2.skillId === 'prek.count', '第三個練習回到 prek.count');
   check(stRunP2.problems.every((p) => p.type === 'count'), '第三個練習沒有沿用上一個測驗題目');
+
+  /* 35. 練習公平性：首答才計掌握度，重試答對只顯示回饋 */
+  const ctxFair = boot();
+  const dFair = ctxFair.d, wFair = ctxFair.w;
+  dFair.querySelector('#screen-home .stage-card[data-stage="prek"]').click();
+  dFair.querySelector('#screen-stage .skill-card[data-skill="prek.count"]').click();
+  dFair.getElementById('lessonPractice').click();
+  const fairProblem = wFair.__mathApp.currentProblem();
+  const fairChoices = Array.from(dFair.querySelectorAll('#screen-practice .choice'));
+  const fairWrong = fairChoices.find((b) => b.getAttribute('data-key') !== wFair.MathCore.valueKey(fairProblem.answer));
+  const fairCorrect = fairChoices.find((b) => b.getAttribute('data-key') === wFair.MathCore.valueKey(fairProblem.answer));
+  fairWrong.click();
+  fairCorrect.click();
+  check(!dFair.getElementById('nextBtn').hidden, '重試答對後仍可下一題');
+  let fairSp = wFair.__mathApp.getProgress().skills['prek.count'];
+  check(fairSp.correct === 0, '重試答對不計 correct（首答才計）');
+  check(fairSp.attempts === 2, '兩次嘗試都已記錄');
+  dFair.getElementById('nextBtn').click();
+  const fairProblem2 = wFair.__mathApp.currentProblem();
+  const fairCorrect2 = Array.from(dFair.querySelectorAll('#screen-practice .choice'))
+    .find((b) => b.getAttribute('data-key') === wFair.MathCore.valueKey(fairProblem2.answer));
+  fairCorrect2.click();
+  fairSp = wFair.__mathApp.getProgress().skills['prek.count'];
+  check(fairSp.correct === 1, '下一題首答答對才計 correct');
+
+  /* 鍵入答案練習同樣是首答才計分 */
+  const ctxFair2 = boot();
+  const dFair2 = ctxFair2.d, wFair2 = ctxFair2.w;
+  wFair2.__mathApp.navigate({ screen: 'practice', skillId: 'challenge.geo' });
+  const typedFair = wFair2.__mathApp.currentProblem();
+  dFair2.getElementById('typedAnswer').value = String(Number(wFair2.MathCore.renderValue(typedFair.answer)) + 1);
+  dFair2.getElementById('typedSubmit').click();
+  dFair2.getElementById('typedAnswer').value = wFair2.MathCore.renderValue(typedFair.answer);
+  dFair2.getElementById('typedSubmit').click();
+  const fairTypedSp = wFair2.__mathApp.getProgress().skills['challenge.geo'];
+  check(fairTypedSp.correct === 0, '鍵入答案重試答對不計 correct');
+  check(fairTypedSp.attempts === 2, '鍵入答案練習記錄兩次嘗試');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
