@@ -1,0 +1,23 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install test dependencies
+        run: npm ci --prefix tests
+      - name: Engine property tests
+        run: node tests/core.test.js
+      - name: UI behaviour tests
+        run: node tests/ui.test.js
+      - name: Generator / content contract tests
+        run: node tests/generators.test.js
