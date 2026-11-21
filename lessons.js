@@ -134,7 +134,7 @@
     },
 
     'g3.fraction': {
-      zh: { title: '分數入門', intro: '把一個整體平均分成幾份，取其中幾份就是「幾分之幾」。', example: '把圓平均分成 4 份，涂了 3 份，就是 3/4。', tip: '上面是分子（涂色份數），下面是分母（總份數）。' },
+      zh: { title: '分數入門', intro: '把一個整體平均分成幾份，取其中幾份就是「幾分之幾」。', example: '把圓平均分成 4 份，涂了 3 份，就是 3/4。', tip: '上面是分子（塗色份數），下面是分母（總份數）。' },
       en: { title: 'Intro to Fractions', intro: 'Split a whole into equal parts; the shaded parts make a fraction.', example: 'A circle split into 4 equal parts with 3 shaded is 3/4.', tip: 'Top number = shaded parts (numerator); bottom = total parts (denominator).' },
       visual: { kind: 'fraction', n: 3, d: 4 }
     },
@@ -166,7 +166,7 @@
     },
 
     'g4.area': {
-      zh: { title: '長方形面積與周長', intro: '面積 = 長 × 闊；周長 = (長 + 闊) × 2。', example: '長 5 cm、闊 3 cm：面積 15 cm²，周長 16 cm。', tip: '面積用「平方」，周長用「長度」。' },
+      zh: { title: '長方形面積與周界', intro: '面積 = 長 × 闊；周界 = (長 + 闊) × 2。', example: '長 5 cm、闊 3 cm：面積 15 cm²，周界 16 cm。', tip: '面積用「平方」，周界用「長度」。' },
       en: { title: 'Area & Perimeter', intro: 'Area = length × width; perimeter = (length + width) × 2.', example: '5 cm by 3 cm: area 15 cm², perimeter 16 cm.', tip: 'Area is in square units; perimeter is a length.' },
       visual: null
     },

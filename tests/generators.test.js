@@ -33,23 +33,16 @@ function check(cond, msg) {
 const CJK = /[\u4e00-\u9fff]/;
 const GARBAGE = /undefined|NaN|Infinity/;
 
-/* 目前已知「回憶型題庫」偏小（內容債，見審閱報告 P1）；值為每階段最高難度下
- * generateSet(10) 的實測下限。若再下降即屬回歸。新技能若低於 10 而沒有列在這裡，測試會失敗。 */
+/* 目前已知偏小的題庫（內容債）；值為「各題型合併後」在最高難度下的實測下限。
+ * 若再下降即屬回歸；新技能若低於 10 而沒有列在這裡，測試會失敗。
+ * g2.direction 受指南針只有四個方向所限，合併後最多 4 個不同答案。 */
 const KNOWN_SMALL_POOLS = {
-  'g2.mul25': 9,
-  'g2.mul34': 9,
-  'g3.multable': 9,
-  'g2.fact': 7,
-  'g3.angle': 6,
   'ms.s2.polygon': 6,
-  'g3.shape': 7,
-  'g6.symmetry': 5,
   'ms.s2.congruent': 3,
   'ms.s2.quad': 5,
   'ms.s2.approx': 3,
   'ms.s3.pichart': 7,
-  'g2.direction': 3,
-  'g3.time24': 5,
+  'g2.direction': 4,
   'ms.s3.cone': 6,
   'ms.s3.centre': 4
 };
@@ -114,6 +107,24 @@ for (const skill of skills) {
           check(!/圓點|dots/.test(p.hint.zh + p.hint.en), '數字題仍在講圓點提示 ' + tag);
         }
 
+        /* 4b. 位值與百分數應用的一致性 */
+        if (spec.t === 'placevalue') {
+          const m = p.math;
+          const exp = m.mode === 'tens' ? m.tens : m.mode === 'ones' ? m.ones : m.mode === 'value' ? m.tens * 10 : m.n;
+          check(p.answer === exp, '位值答案與模式不一致 ' + tag);
+        }
+        if (spec.t === 'percent' && (p.math.kind === 'increase' || p.math.kind === 'decrease')) {
+          const m = p.math;
+          const exp = m.whole * (m.kind === 'increase' ? 1 + m.p / 100 : 1 - m.p / 100);
+          check(Math.abs(p.answer - exp) < 1e-9, '百分數增減答案錯誤 ' + tag);
+        }
+
+        /* 4c. π 一律寫成 π，不是 1π */
+        const piPieces = (typeof p.answer === 'string' && p.answer.indexOf('π') >= 0 ? [p.answer] : []).concat(
+          p.choices.filter((c) => typeof c === 'string' && c.indexOf('π') >= 0)
+        );
+        piPieces.forEach((v) => check(v !== '1π', 'π 標籤不應寫成 1π ' + tag));
+
         /* 5. 英文提示不得是中文 */
         check(!(p.hint && p.hint.en && CJK.test(p.hint.en)), '英文提示含中文 ' + tag);
       }
@@ -121,14 +132,16 @@ for (const skill of skills) {
   }
 }
 
-/* 6. 題庫池大小（最高難度下應能出 10 道不重複的題） */
+/* 6. 題庫池大小：把該技能所有題型合併，最高難度下應能出 10 道不重複的題 */
 for (const skill of skills) {
-  const steps = Math.max(1, (skill.levels || []).length);
-  const set = M.generateSet(skill, 10, { seed: 7, difficultyStep: steps - 1 });
-  const sigs = new Set(set.map((p) => p.sig));
+  const step = Math.max(0, (skill.levels || []).length - 1);
+  const sigs = new Set();
+  for (const spec of skill.types.map((t) => (typeof t === 'string' ? { t } : t))) {
+    const probe = { id: skill.id, types: [spec.t], levels: skill.levels };
+    M.generateSet(probe, 10, { seed: 7, difficultyStep: step }).forEach((p) => sigs.add(p.sig));
+  }
   const floor = KNOWN_SMALL_POOLS[skill.id] != null ? KNOWN_SMALL_POOLS[skill.id] : 10;
   check(sigs.size >= floor, '題庫池太小 ' + skill.id + '：' + sigs.size + ' < ' + floor);
-  check(set.length >= floor, 'generateSet 產出不足 ' + skill.id + '：' + set.length + ' < ' + floor);
 }
 
 /* 7. 難度階梯：同一技能高階平均答案應大於低階 */

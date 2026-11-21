@@ -15,6 +15,7 @@
   var STORE_KEY = 'mathpath.progress.v1';
   var QUIZ_LENGTH = 10;
   var EXAM_LENGTH = 20;
+  var EXAM_PASS = 0.9; // 綜合考試達 90% 即可解鎖下一階段
 
   /* ---------------- 狀態 ---------------- */
   var state = {
@@ -144,7 +145,7 @@
     var hasReal = stageSkills(stage).some(function (s) { return !s.scaffold; });
     if (!hasReal) return false;
     var ex = (progress.stageExams || {})[stage.id];
-    return !!(ex && ex.perfect); // 需於該階段綜合考試取得滿分
+    return !!(ex && (ex.passed || ex.perfect)); // 綜合考試達 90% 即完成此階段（舊存檔的 perfect 仍相容）
   }
   function stageUnlocked(stageId) {
     var real = realStageList();
@@ -1251,11 +1252,13 @@
     var grade = MathCore.gradeQuiz(state.results);
     var seconds = Math.round((Date.now() - state.quizStart) / 1000);
 
-    // 記錄綜合考試成績；滿分即視為「完成本階段」
+    // 記錄綜合考試成績；達 90% 即視為「完成本階段」，滿分另作紀錄
+    var passed = grade.total > 0 && grade.percent >= EXAM_PASS;
     var perfect = grade.total > 0 && grade.correct === grade.total;
     progress.stageExams = progress.stageExams || {};
     var prev = progress.stageExams[state.examStage] || {};
     progress.stageExams[state.examStage] = {
+      passed: !!(prev.passed || prev.perfect || passed),
       perfect: !!(prev.perfect || perfect),
       best: Math.max(prev.best || 0, Math.round(grade.percent * 100))
     };
@@ -1272,7 +1275,7 @@
       '<div class="score">' + t('quiz.score', { c: grade.correct, t: grade.total }) + '</div>' +
       '<div class="result-stars">' + starsHtml + '</div>' +
       '<p class="page-sub">' + Math.round(grade.percent * 100) + '% · ' + t('quiz.time') + '：' + Math.floor(seconds / 60) + ':' + String(seconds % 60).padStart(2, '0') + '</p>' +
-      '<p class="page-sub">' + (perfect ? t('exam.perfectUnlock') : t('exam.needPerfect')) + '</p>' +
+      '<p class="page-sub">' + (passed ? (perfect ? t('exam.perfectUnlock') : t('exam.passUnlock')) : t('exam.needPass')) + '</p>' +
       '<div class="result-actions">' +
       '<button class="btn secondary" id="examBack" type="button">' + t('quiz.back') + '</button>' +
       '<button class="btn" id="examRetry" type="button">' + t('quiz.retry') + '</button>' +
@@ -1356,7 +1359,7 @@
       }
       progress.stageExams = {};
       realStageList().forEach(function (st) {
-        progress.stageExams[st.id] = { perfect: true, best: 100 };
+        progress.stageExams[st.id] = { passed: true, perfect: true, best: 100 };
       });
       saveProgress();
       modal.hidden = true;

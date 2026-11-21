@@ -19,6 +19,7 @@ function applyOp(op, a, b) {
 }
 
 function computeAnswer(math) {
+  const pi = (k) => (k === 1 ? '' : k) + 'π';
   if (math.op === 'count') return math.n;
   if (math.op === 'frac') return { n: math.n, d: math.d };
   if (math.op === 'compare') return math.mode === 'max' ? Math.max(math.a, math.b) : Math.min(math.a, math.b);
@@ -35,6 +36,8 @@ function computeAnswer(math) {
   }
   if (math.op === 'percent') {
     if (math.kind === 'of') return math.p * math.whole / 100;
+    if (math.kind === 'increase') return math.whole * (100 + math.p) / 100;
+    if (math.kind === 'decrease') return math.whole * (100 - math.p) / 100;
     return math.pct;
   }
   if (math.op === 'ratio') return math.q * math.k;
@@ -59,7 +62,7 @@ function computeAnswer(math) {
   if (math.op === 'quad') return math.askSum ? math.sum : math.prod;
   if (math.op === 'stats') { var s = math.nums.slice().sort(function (x, y) { return x - y; }); return s[(s.length - 1) / 2]; }
   if (math.op === 'triangle') return math.b * math.h / 2;
-  if (math.op === 'circle') return math.mode === 'area' ? (math.r * math.r) + 'π' : (2 * math.r) + 'π';
+  if (math.op === 'circle') return math.mode === 'area' ? pi(math.r * math.r) : pi(2 * math.r);
   if (math.op === 'volume') return math.l * math.w * math.h;
   if (math.op === 'coord') return math.mode === 'dist' ? math.dist : '(' + math.mx + ', ' + math.my + ')';
   if (math.op === 'warea') return math.a * math.b;
@@ -68,6 +71,13 @@ function computeAnswer(math) {
   if (math.op === 'wspeed') return math.a * math.b / 60;
   if (math.op === 'wprofit') return math.b;
   if (math.op === 'wcompound') return Math.round(math.a * Math.pow(1 + math.b / 100, math.c));
+  if (math.op === 'wtwostep') return math.a * math.b - math.c;
+  if (math.op === 'placevalue') {
+    if (math.mode === 'tens') return math.tens;
+    if (math.mode === 'ones') return math.ones;
+    if (math.mode === 'value') return math.tens * 10;
+    return math.n;
+  }
   if (math.op === 'perimeter') return 2 * (math.l + math.w);
   if (math.op === 'polygon') return (math.n - 2) * 180;
   if (math.op === 'angle') return math.a;
@@ -85,7 +95,7 @@ function computeAnswer(math) {
   if (math.op === 'symmetry') return math.a;
   if (math.op === 'liketerms') return math.mode === 'sub' ? math.a - math.b : math.a + math.b;
   if (math.op === 'polycoeff') return math.mode === 'deg' ? math.d : math.c;
-  if (math.op === 'arclen') return math.coef + 'π';
+  if (math.op === 'arclen') return pi(math.coef);
   if (math.op === 'mode') return math.m;
   if (math.op === 'asum') return math.n * (2 * math.a + (math.n - 1) * math.d) / 2;
   if (math.op === 'invvar') return math.k / math.c;
@@ -103,14 +113,14 @@ function computeAnswer(math) {
   if (math.op === 'congruent') return math.a;
   if (math.op === 'similar') return math.k;
   if (math.op === 'quadshape') return math.a;
-  if (math.op === 'cylinder') return math.coef + 'π';
+  if (math.op === 'cylinder') return pi(math.coef);
   if (math.op === 'sinterest') return math.p * math.r * math.n / 100;
   if (math.op === 'expand') return math.mode === 'coeff' ? math.a + math.b : math.a * math.b;
   if (math.op === 'pichart') return math.pct * 360 / 100;
   if (math.op === 'approx') return math.a / 2;
   if (math.op === 'direction') return math.k;
   if (math.op === 'time24') return math.a;
-  if (math.op === 'cone') return math.coef + 'π';
+  if (math.op === 'cone') return pi(math.coef);
   if (math.op === 'centre') return math.k;
   if (math.op === 'circleangle') return math.mode === 'centre' ? 2 * math.a : math.a;
   if (math.op === 'binomial') {
@@ -137,6 +147,7 @@ const SKILLS = {
   count:          { id: 't.count',     types: ['count'],                     levels: [{ min: 1, max: 10 }] },
   compare:        { id: 't.compare',   types: ['compare'],                   levels: [{ min: 1, max: 10 }] },
   comparegroup:   { id: 't.compareg',  types: ['comparegroup'],              levels: [{ min: 1, max: 10 }] },
+  placevalue:     { id: 't.pv',        types: ['placevalue'],                levels: [{ min: 10, max: 99 }] },
   addition:       { id: 't.add',       types: ['addition'],                  levels: [{ max: 10 }, { max: 20 }] },
   subtraction:    { id: 't.sub',       types: ['subtraction'],               levels: [{ max: 10 }, { max: 20 }] },
   numberbonds:    { id: 't.bonds',     types: ['numberbonds'],               levels: [{ max: 10 }, { max: 20 }] },
@@ -146,6 +157,7 @@ const SKILLS = {
   division:       { id: 't.div',       types: ['division'],                  levels: [{ maxDivisor: 9, maxQuotient: 9 }] },
   fraction:       { id: 't.frac',      types: ['fraction'],                  levels: [{ minDen: 2, maxDen: 8 }] },
   word:           { id: 't.word',      types: ['word'],                      levels: [{ max: 20, maxFactor: 9 }] },
+  wordTwoStep:    { id: 't.word2',     types: ['word'],                      levels: [{ ops: ['twoStep'], max: 100, maxFactor: 9 }] },
   multidigit:     { id: 't.muldig',    types: ['multidigit'],                levels: [{}] },
   fractionadd:    { id: 't.fradd',     types: ['fractionadd'],               levels: [{}] },
   decimal:        { id: 't.dec',       types: ['decimal'],                   levels: [{}] },

@@ -17,8 +17,18 @@
           { zh: '正方形面積', en: 'Area of square', latex: 'A = a^2' },
           { zh: '長方形面積', en: 'Area of rectangle', latex: 'A = l w' },
           { zh: '三角形面積', en: 'Area of triangle', latex: 'A = \\dfrac{1}{2} b h' },
+          { zh: '長方形周界', en: 'Perimeter of rectangle', latex: 'P = 2(l + w)' },
+          { zh: '正方形周界', en: 'Perimeter of square', latex: 'P = 4a' },
           { zh: '圓周長', en: 'Circumference', latex: 'C = 2 \\pi r' },
           { zh: '圓面積', en: 'Area of circle', latex: 'A = \\pi r^2' }
+        ]
+      },
+      {
+        zh: '百分數、速率與平均', en: 'Percentage, Rate & Average', items: [
+          { zh: '百分率（部分 ÷ 整體）', en: 'Percentage', latex: 'p\\% = \\dfrac{P}{W} \\times 100\\%' },
+          { zh: '增加百分率', en: 'Percentage increase', latex: "V' = V(1 + r)" },
+          { zh: '減少百分率', en: 'Percentage decrease', latex: "V' = V(1 - r)" },
+          { zh: '速率', en: 'Speed', latex: 'v = \\dfrac{d}{t}' }
         ]
       },
       {
@@ -51,9 +61,9 @@
       },
       {
         zh: '概率與統計', en: 'Probability & Statistics', items: [
-          { zh: '概率', en: 'Probability', latex: 'P(E) = \\dfrac{\\text{符合條件的結果數}}{\\text{總結果數}}' },
+          { zh: '概率', en: 'Probability', latex: 'P(E) = \\dfrac{n(E)}{n(S)}' },
           { zh: '平均數', en: 'Mean', latex: '\\bar{x} = \\dfrac{x_1 + x_2 + \\cdots + x_n}{n}' },
-          { zh: '中位數', en: 'Median', latex: '\\text{把數據由小到大排列，取中間值}' }
+          { zh: '中位數', en: 'Median', latex: '\\tilde{x}' }
         ]
       }
     ]

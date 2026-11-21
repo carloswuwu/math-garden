@@ -98,7 +98,7 @@
       zh: { name: '100 以內的數', goal: '會比較 100 以內數的大小，認識十位和個位。' },
       en: { name: 'Numbers within 100', goal: 'Compare numbers within 100 and understand tens and ones.' },
       lesson: 'g1.place100',
-      types: ['compare'],
+      types: ['compare', 'placevalue'],
       levels: [{ min: 1, max: 20 }, { min: 1, max: 100 }],
       mastery: { practice: 10, quizPass: 0.8 }
     },
@@ -233,7 +233,7 @@
       en: { name: 'Mixed Word Problems', goal: 'Solve one- and two-step real-world problems.' },
       lesson: 'g3.word',
       types: ['word'],
-      levels: [{ ops: ['add', 'sub', 'mul'], max: 100, maxFactor: 9 }],
+      levels: [{ ops: ['add', 'sub', 'mul', 'twoStep'], max: 100, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
 
@@ -271,7 +271,7 @@
 
     'g4.area': {
       id: 'g4.area', stage: 'g4', order: 4,
-      zh: { name: '長方形面積與周長', goal: '會計算長方形的面積和周長。' },
+      zh: { name: '長方形面積與周界', goal: '會計算長方形的面積和周界。' },
       en: { name: 'Area & Perimeter', goal: 'Find the area and perimeter of rectangles.' },
       lesson: 'g4.area',
       types: ['area'],
@@ -535,14 +535,14 @@
       id: 'g4.word', stage: 'g4', order: 6,
       zh: { name: '應用題', goal: '會用加減乘和面積解決應用題。' },
       en: { name: 'Word Problems', goal: 'Solve word problems with +, −, × and area.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area'], max: 100, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'twoStep'], max: 100, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'g5.word': {
       id: 'g5.word', stage: 'g5', order: 4,
       zh: { name: '應用題', goal: '會解決較複雜的應用題。' },
       en: { name: 'Word Problems', goal: 'Solve more complex word problems.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound', 'twoStep'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'g6.circle': {
@@ -563,7 +563,7 @@
       id: 'g6.word', stage: 'g6', order: 6,
       zh: { name: '應用題', goal: '會綜合運用所學解決應用題。' },
       en: { name: 'Word Problems', goal: 'Solve mixed word problems.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound', 'twoStep'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'ms.s1.coord': {
@@ -577,42 +577,42 @@
       id: 'ms.s1.word', stage: 'ms1', order: 5,
       zh: { name: '應用題', goal: '會用數學解決應用題。' },
       en: { name: 'Word Problems', goal: 'Solve word problems.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound', 'twoStep'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'ms.s2.word': {
       id: 'ms.s2.word', stage: 'ms2', order: 3,
       zh: { name: '應用題', goal: '會解決應用題。' },
       en: { name: 'Word Problems', goal: 'Solve word problems.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound', 'twoStep'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'ms.s3.word': {
       id: 'ms.s3.word', stage: 'ms3', order: 3,
       zh: { name: '應用題', goal: '會解決應用題。' },
       en: { name: 'Word Problems', goal: 'Solve word problems.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound', 'twoStep'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'hs.s4.word': {
       id: 'hs.s4.word', stage: 'hs1', order: 4,
       zh: { name: '應用題', goal: '會解決應用題。' },
       en: { name: 'Word Problems', goal: 'Solve word problems.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound', 'twoStep'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'hs.s5.word': {
       id: 'hs.s5.word', stage: 'hs2', order: 4,
       zh: { name: '應用題', goal: '會解決應用題。' },
       en: { name: 'Word Problems', goal: 'Solve word problems.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound', 'twoStep'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     'hs.s6.word': {
       id: 'hs.s6.word', stage: 'hs3', order: 3,
       zh: { name: '應用題', goal: '會解決應用題。' },
       en: { name: 'Word Problems', goal: 'Solve word problems.' },
-      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound'], max: 1000, maxFactor: 9 }],
+      lesson: 'generic.word', types: ['word'], levels: [{ ops: ['add', 'sub', 'mul', 'area', 'percent', 'ratio', 'speed', 'profit', 'compound', 'twoStep'], max: 1000, maxFactor: 9 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
 

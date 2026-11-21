@@ -10,7 +10,7 @@
     tagline: '陪孩子一步步學數學',
     langName: '繁體中文',
 
-    home: { title: '選擇年級', subtitle: '從學前到大學，一步一步來', stars: '⭐ {n} 顆星', streak: '🔥 連續 {n} 天', continue: '繼續', parent: '家長中心', settings: '設置', unlocked: '已解鎖 {u} / {t} 個階段', stageCount: '解鎖 {u}/{t}', nextHint: '完成本階段的綜合考試並取得滿分，即可解鎖下一階段' },
+    home: { title: '選擇年級', subtitle: '從學前到大學，一步一步來', stars: '⭐ {n} 顆星', streak: '🔥 連續 {n} 天', continue: '繼續', parent: '家長中心', settings: '設置', unlocked: '已解鎖 {u} / {t} 個階段', stageCount: '解鎖 {u}/{t}', nextHint: '完成本階段的綜合考試並取得 90% 或以上，即可解鎖下一階段' },
 
     stage: { back: '返回', goal: '目標', unlockedCount: '{u}/{t} 已解鎖' },
 
@@ -62,7 +62,7 @@
 
     formulas: { title: '公式一覽' },
 
-    exam: { title: '綜合考試', result: '模擬試卷完成', empty: '此年級暫無可考題目', perfectUnlock: '🎉 滿分！已解鎖下一階段', needPerfect: '考取滿分即可解鎖下一階段' },
+    exam: { title: '綜合考試', result: '模擬試卷完成', empty: '此年級暫無可考題目', perfectUnlock: '🎉 滿分！已解鎖下一階段', passUnlock: '🎉 已達標（90%）！已解鎖下一階段', needPass: '取得 90% 或以上即可解鎖下一階段', needPerfect: '考取滿分即可解鎖下一階段' },
 
     direction: { east: '東', south: '南', west: '西', north: '北' },
     centre: { incentre: '內心', circumcentre: '外心', centroid: '重心', orthocentre: '垂心' },
@@ -77,7 +77,7 @@
     tagline: 'Step-by-step math for your child',
     langName: 'English',
 
-    home: { title: 'Choose a Grade', subtitle: 'From Pre-K to College, one step at a time', stars: '⭐ {n} stars', streak: '🔥 {n}-day streak', continue: 'Continue', parent: 'Parent', settings: 'Settings', unlocked: '{u} / {t} stages unlocked', stageCount: '{u}/{t} unlocked', nextHint: 'Get full marks on the stage mock exam to unlock the next one' },
+    home: { title: 'Choose a Grade', subtitle: 'From Pre-K to College, one step at a time', stars: '⭐ {n} stars', streak: '🔥 {n}-day streak', continue: 'Continue', parent: 'Parent', settings: 'Settings', unlocked: '{u} / {t} stages unlocked', stageCount: '{u}/{t} unlocked', nextHint: 'Score 90% or above on the stage mock exam to unlock the next one' },
 
     stage: { back: 'Back', goal: 'Goal', unlockedCount: '{u}/{t} unlocked' },
 
@@ -129,7 +129,7 @@
 
     formulas: { title: 'Formula Sheet' },
 
-    exam: { title: 'Mock Exam', result: 'Mock exam complete', empty: 'No questions for this grade yet', perfectUnlock: '🎉 Full marks! Next stage unlocked', needPerfect: 'Get full marks to unlock the next stage' },
+    exam: { title: 'Mock Exam', result: 'Mock exam complete', empty: 'No questions for this grade yet', perfectUnlock: '🎉 Full marks! Next stage unlocked', passUnlock: '🎉 90% or above — next stage unlocked', needPass: 'Score 90% or above to unlock the next stage', needPerfect: 'Get full marks to unlock the next stage' },
 
     direction: { east: 'East', south: 'South', west: 'West', north: 'North' },
     centre: { incentre: 'Incentre', circumcentre: 'Circumcentre', centroid: 'Centroid', orthocentre: 'Orthocentre' },

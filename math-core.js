@@ -310,25 +310,39 @@
     var n = randInt(rng, 1, d - 1);
     return {
       type: 'fraction',
-      prompt: { zh: '涂色部分用分數表示是多少？', en: 'What fraction is shaded?' },
+      prompt: { zh: '塗色部分用分數表示是多少？', en: 'What fraction is shaded?' },
       visual: { kind: 'fraction', n: n, d: d },
       answer: { n: n, d: d },
       math: { op: 'frac', n: n, d: d },
-      hint: { zh: '分母是總份數，分子是涂色的份數。', en: 'Denominator = total parts, numerator = shaded parts.' }
+      hint: { zh: '分母是總份數，分子是塗色的份數。', en: 'Denominator = total parts, numerator = shaded parts.' }
     };
   }
+
+  var WORD_NAMES = [
+    { zh: '小明', en: 'Sam' }, { zh: '小美', en: 'Mia' },
+    { zh: '志強', en: 'Kai' }, { zh: '家寶', en: 'Bo' }
+  ];
+  var WORD_ITEMS = [
+    { zh: '蘋果', en: 'apples', en1: 'apple' },
+    { zh: '貼紙', en: 'stickers', en1: 'sticker' },
+    { zh: '波子', en: 'marbles', en1: 'marble' },
+    { zh: '書', en: 'books', en1: 'book' }
+  ];
 
   function genWord(rng, o) {
     var op = pick(rng, o.ops || ['add', 'sub', 'mul']);
     var a, b, c = null, answer, prompt, mathOp;
+    var who = pick(rng, WORD_NAMES);
+    var item = pick(rng, WORD_ITEMS);
+    var pl = function (n) { return n === 1 ? item.en1 : item.en; };
     if (op === 'add') {
       a = randInt(rng, o.min != null ? o.min : 1, o.max != null ? o.max : 20);
       b = randInt(rng, 1, o.max != null ? o.max : 20);
       answer = a + b;
       mathOp = 'add';
       prompt = {
-        zh: '小明有 ' + a + ' 個蘋果，媽媽又給了他 ' + b + ' 個，一共有幾個？',
-        en: 'Sam has ' + a + ' apples and gets ' + b + ' more. How many in all?'
+        zh: who.zh + '有 ' + a + ' 個' + item.zh + '，又得到了 ' + b + ' 個，一共有幾個？',
+        en: who.en + ' has ' + a + ' ' + pl(a) + ' and gets ' + b + ' more. How many in all?'
       };
     } else if (op === 'sub') {
       a = randInt(rng, 2, o.max != null ? o.max : 20);
@@ -336,8 +350,8 @@
       answer = a - b;
       mathOp = 'sub';
       prompt = {
-        zh: '小明有 ' + a + ' 個蘋果，吃了 ' + b + ' 個，還剩幾個？',
-        en: 'Sam has ' + a + ' apples and eats ' + b + '. How many are left?'
+        zh: who.zh + '有 ' + a + ' 個' + item.zh + '，用掉了 ' + b + ' 個，還剩幾個？',
+        en: who.en + ' has ' + a + ' ' + pl(a) + ' and uses ' + b + '. How many are left?'
       };
     } else if (op === 'mul') {
       a = randInt(rng, 2, o.maxFactor != null ? o.maxFactor : 9);
@@ -345,8 +359,8 @@
       answer = a * b;
       mathOp = 'mul';
       prompt = {
-        zh: '每盒有 ' + a + ' 個，一共有 ' + b + ' 盒，一共有幾個？',
-        en: 'There are ' + a + ' in each box and ' + b + ' boxes. How many in all?'
+        zh: '每盒有 ' + a + ' 個' + item.zh + '，共有 ' + b + ' 盒，一共有幾個？',
+        en: 'There are ' + a + ' ' + pl(a) + ' in each box and ' + b + ' boxes. How many in all?'
       };
     } else if (op === 'area') {
       a = randInt(rng, 2, 12);
@@ -396,6 +410,16 @@
       prompt = {
         zh: '把 $' + prin + ' 存入銀行，年利率 ' + rate + '%（複利息），' + c + ' 年後本利和是多少？',
         en: '$' + prin + ' is deposited at ' + rate + '% p.a. compounded annually. What is the amount after ' + c + ' years?'
+      };
+    } else if (op === 'twoStep') {
+      a = randInt(rng, 2, o.maxFactor != null ? o.maxFactor : 9);
+      b = randInt(rng, 2, o.maxFactor != null ? o.maxFactor : 9);
+      c = randInt(rng, 1, a * b - 1);
+      answer = a * b - c;
+      mathOp = 'wtwostep';
+      prompt = {
+        zh: '每盒有 ' + a + ' 個' + item.zh + '，共有 ' + b + ' 盒，送出了 ' + c + ' 個，還剩幾個？',
+        en: 'There are ' + a + ' ' + pl(a) + ' in each box and ' + b + ' boxes. ' + c + ' are given away. How many are left?'
       };
     } else {
       var p = randInt(rng, 1, 3), q = randInt(rng, 1, 3);
@@ -597,7 +621,8 @@
 
   /* 百分數 */
   function genPercent(rng, o) {
-    if (rng() < 0.5) {
+    var roll = rng();
+    if (roll < 0.4) {
       var p = pick(rng, [5, 10, 15, 20, 25, 30, 40, 50, 60, 75]);
       var k = randInt(rng, 1, 3);
       var whole = 100 * k;
@@ -611,16 +636,37 @@
         hint: { zh: '先算 1%（除以 100），再乘以 ' + p + '。', en: 'Find 1% (divide by 100), then multiply by ' + p + '.' }
       };
     }
-    var pct = pick(rng, [10, 20, 25, 50, 75]);
-    var whole2 = pick(rng, [40, 60, 80, 120, 200]);
-    var part = whole2 * pct / 100;
+    if (roll < 0.7) {
+      var pct = pick(rng, [10, 20, 25, 50, 75]);
+      var whole2 = pick(rng, [40, 60, 80, 120, 200]);
+      var part = whole2 * pct / 100;
+      return {
+        type: 'percent',
+        prompt: { zh: part + ' 是 ' + whole2 + ' 的百分之幾？', en: part + ' is what percent of ' + whole2 + '?' },
+        visual: { kind: 'percentgrid', pct: pct },
+        answer: pct,
+        math: { op: 'percent', kind: 'what', pct: pct, whole: whole2, part: part },
+        hint: { zh: '用「部分 ÷ 整體 × 100%」。', en: 'Use part ÷ whole × 100%.' }
+      };
+    }
+    /* 增加／減少百分率（P6 百分數應用） */
+    var base = pick(rng, [40, 80, 120, 200, 500]);
+    var rate = pick(rng, [10, 20, 25, 50]);
+    var up = rng() < 0.5;
+    var changed = base * (up ? 100 + rate : 100 - rate) / 100;
     return {
       type: 'percent',
-      prompt: { zh: part + ' 是 ' + whole2 + ' 的百分之幾？', en: part + ' is what percent of ' + whole2 + '?' },
-      visual: { kind: 'percentgrid', pct: pct },
-      answer: pct,
-      math: { op: 'percent', kind: 'what', pct: pct, whole: whole2, part: part },
-      hint: { zh: '用「部分 ÷ 整體 × 100%」。', en: 'Use part ÷ whole × 100%.' }
+      prompt: {
+        zh: '某數是 ' + base + '，' + (up ? '增加' : '減少') + ' ' + rate + '% 後是多少？',
+        en: 'A number is ' + base + '. What is it after a ' + rate + '% ' + (up ? 'increase' : 'decrease') + '?'
+      },
+      visual: { kind: 'percentgrid', pct: rate },
+      answer: changed,
+      math: { op: 'percent', kind: up ? 'increase' : 'decrease', p: rate, whole: base, result: changed },
+      hint: {
+        zh: up ? '增加 ' + rate + '%：原數 × (1 + ' + rate + '/100)。' : '減少 ' + rate + '%：原數 × (1 − ' + rate + '/100)。',
+        en: up ? 'Increase: multiply by (1 + ' + rate + '/100).' : 'Decrease: multiply by (1 − ' + rate + '/100).'
+      }
     };
   }
 
@@ -641,7 +687,7 @@
     };
   }
 
-  /* 長方形面積 / 周長 */
+  /* 長方形面積 / 周界 */
   function genArea(rng, o) {
     var l = randInt(rng, 2, 20);
     var w = randInt(rng, 2, 20);
@@ -650,13 +696,13 @@
     return {
       type: 'area',
       prompt: {
-        zh: '長方形的長是 ' + l + ' cm，闊是 ' + w + ' cm，' + (askArea ? '面積' : '周長') + '是多少？',
+        zh: '長方形的長是 ' + l + ' cm，闊是 ' + w + ' cm，' + (askArea ? '面積' : '周界') + '是多少？',
         en: 'A rectangle is ' + l + ' cm by ' + w + ' cm. What is its ' + (askArea ? 'area' : 'perimeter') + '?'
       },
       visual: null,
       answer: answer,
       math: { op: 'area', l: l, w: w, mode: askArea ? 'area' : 'perimeter' },
-      hint: { zh: askArea ? '面積 = 長 × 闊。' : '周長 = (長 + 闊) × 2。', en: askArea ? 'Area = length × width.' : 'Perimeter = (length + width) × 2.' }
+      hint: { zh: askArea ? '面積 = 長 × 闊。' : '周界 = (長 + 闊) × 2。', en: askArea ? 'Area = length × width.' : 'Perimeter = (length + width) × 2.' }
     };
   }
 
@@ -1037,7 +1083,7 @@
         type: 'circle',
         prompt: { zh: '圓的半徑是 ' + r + ' cm，面積是多少？（以 π 表示）', en: 'A circle has radius ' + r + ' cm. What is its area? (in terms of π)' },
         visual: { kind: 'circle', r: r },
-        answer: (r * r) + suf,
+        answer: piLabel(r * r, suf),
         math: { op: 'circle', r: r, mode: 'area' },
         choices: circleChoices(rng, r * r, suf),
         hint: { zh: '圓面積 = π r²。', en: 'Area = π r².' }
@@ -1047,21 +1093,26 @@
       type: 'circle',
       prompt: { zh: '圓的半徑是 ' + r + ' cm，周長是多少？（以 π 表示）', en: 'A circle has radius ' + r + ' cm. What is its circumference? (in terms of π)' },
       visual: { kind: 'circle', r: r },
-      answer: (2 * r) + suf,
+      answer: piLabel(2 * r, suf),
       math: { op: 'circle', r: r, mode: 'circ' },
       choices: circleChoices(rng, 2 * r, suf),
       hint: { zh: '圓周長 = 2π r。', en: 'Circumference = 2π r.' }
     };
   }
 
+  /* 以 π 表示的係數標籤：1π 一律寫成 π */
+  function piLabel(k, suf) {
+    return (k === 1 ? '' : k) + (suf || 'π');
+  }
+
   function circleChoices(rng, k, suf) {
-    var out = [k + suf];
+    var out = [piLabel(k, suf)];
     var seen = {}; seen[k] = true;
     var guard = 0;
     while (out.length < 4 && guard++ < 100) {
-      var cand = k + pick(rng, [1, 2, -1, 3, -2]);
-      if (cand <= 0) cand = k + 1;
-      if (!seen[cand]) { seen[cand] = true; out.push(cand + suf); }
+      var d = pick(rng, [-3, -2, -1, 1, 2, 3]);
+      var cand = Math.max(1, k + d);
+      if (!seen[cand]) { seen[cand] = true; out.push(piLabel(cand, suf)); }
     }
     return shuffle(rng, out);
   }
@@ -1131,7 +1182,13 @@
     { zh: '一個周角是多少度？', en: 'How many degrees is a full turn?', a: 360 },
     { zh: '銳角小於多少度？', en: 'An acute angle is less than how many degrees?', a: 90 },
     { zh: '鈍角大於多少度？', en: 'An obtuse angle is greater than how many degrees?', a: 90 },
-    { zh: '任何凸多邊形的外角和是多少度？', en: 'What is the sum of exterior angles of any convex polygon?', a: 360 }
+    { zh: '任何凸多邊形的外角和是多少度？', en: 'What is the sum of exterior angles of any convex polygon?', a: 360 },
+    { zh: '三角形的內角和是多少度？', en: 'What is the sum of the interior angles of a triangle?', a: 180 },
+    { zh: '四邊形的內角和是多少度？', en: 'What is the sum of the interior angles of a quadrilateral?', a: 360 },
+    { zh: '正方形每個內角是多少度？', en: 'What is each interior angle of a square?', a: 90 },
+    { zh: '等邊三角形每個內角是多少度？', en: 'What is each angle of an equilateral triangle?', a: 60 },
+    { zh: '時針每小時轉過多少度？', en: 'How many degrees does the hour hand turn in one hour?', a: 30 },
+    { zh: '分針每分鐘轉過多少度？', en: 'How many degrees does the minute hand turn in one minute?', a: 6 }
   ];
 
   var UNIT_FACTS = [
@@ -1141,7 +1198,14 @@
     { zh: '1 年 = ? 個月', en: '1 year = ? months', a: 12 },
     { zh: '1 千克 = ? 克', en: '1 kg = ? g', a: 1000 },
     { zh: '1 米 = ? 釐米', en: '1 m = ? cm', a: 100 },
-    { zh: '1 打 = ? 個', en: '1 dozen = ? items', a: 12 }
+    { zh: '1 打 = ? 個', en: '1 dozen = ? items', a: 12 },
+    { zh: '1 分鐘 = ? 秒', en: '1 minute = ? seconds', a: 60 },
+    { zh: '1 小時 = ? 秒', en: '1 hour = ? seconds', a: 3600 },
+    { zh: '1 釐米 = ? 毫米', en: '1 cm = ? mm', a: 10 },
+    { zh: '1 千米 = ? 米', en: '1 km = ? m', a: 1000 },
+    { zh: '1 米 = ? 毫米', en: '1 m = ? mm', a: 1000 },
+    { zh: '1 升 = ? 毫升', en: '1 L = ? mL', a: 1000 },
+    { zh: '1 公斤 = ? 克', en: '1 kilogram = ? grams', a: 1000 }
   ];
 
   /* 周界 */
@@ -1202,12 +1266,29 @@
   function genFact(rng, o) {
     var i = Math.floor(rng() * UNIT_FACTS.length);
     var q = UNIT_FACTS[i];
+    var a = q.a;
+    /* 換算的干擾項要像「數錯位」：×10、÷10、×2、±10/±100，而不是隨機數 */
+    var pool = [a * 10, a + 10, a - 10];
+    if (a >= 100) pool.push(a + 100, a - 100);
+    if (a % 10 === 0) pool.push(a / 10);
+    if (a % 2 === 0) pool.push(a * 2);
+    var choices = [a];
+    shuffle(rng, pool).forEach(function (v) {
+      if (choices.length >= 4) return;
+      if (v > 0 && v !== a && choices.indexOf(v) === -1) choices.push(v);
+    });
+    var guard = 0;
+    while (choices.length < 4 && guard++ < 50) {
+      var c = a + randInt(rng, 2, 9) * (rng() < 0.5 ? -1 : 1) * 10;
+      if (c > 0 && choices.indexOf(c) === -1) choices.push(c);
+    }
     return {
       type: 'fact',
       prompt: { zh: q.zh, en: q.en },
       visual: null,
-      answer: q.a,
-      math: { op: 'fact', a: q.a, k: i },
+      answer: a,
+      choices: shuffle(rng, choices),
+      math: { op: 'fact', a: a, k: i },
       hint: { zh: '想一想常用的換算。', en: 'Recall the common conversion.' }
     };
   }
@@ -1310,7 +1391,12 @@
     { zh: '正方體有幾個面？', en: 'How many faces does a cube have?', a: 6, kind: 'cube' },
     { zh: '長方體有幾個面？', en: 'How many faces does a cuboid have?', a: 6, kind: 'cuboid' },
     { zh: '正方體有幾個頂點？', en: 'How many vertices does a cube have?', a: 8, kind: 'cube' },
-    { zh: '圓柱體有幾個圓形面？', en: 'How many circular faces does a cylinder have?', a: 2, kind: 'cylinder' }
+    { zh: '圓柱體有幾個圓形面？', en: 'How many circular faces does a cylinder have?', a: 2, kind: 'cylinder' },
+    { zh: '五邊形有幾條邊？', en: 'How many sides does a pentagon have?', a: 5, kind: 'pentagon' },
+    { zh: '六邊形有幾條邊？', en: 'How many sides does a hexagon have?', a: 6, kind: 'hexagon' },
+    { zh: '正方體有幾條稜？', en: 'How many edges does a cube have?', a: 12, kind: 'cube' },
+    { zh: '長方體有幾個頂點？', en: 'How many vertices does a cuboid have?', a: 8, kind: 'cuboid' },
+    { zh: '正方形有幾個頂點？', en: 'How many vertices does a square have?', a: 4, kind: 'square' }
   ];
 
   var SYM_FACTS = [
@@ -1318,7 +1404,13 @@
     { zh: '長方形有幾條對稱軸？', en: 'How many lines of symmetry does a rectangle have?', a: 2 },
     { zh: '等邊三角形有幾條對稱軸？', en: 'How many lines of symmetry does an equilateral triangle have?', a: 3 },
     { zh: '等腰三角形有幾條對稱軸？', en: 'How many lines of symmetry does an isosceles triangle have?', a: 1 },
-    { zh: '菱形有幾條對稱軸？', en: 'How many lines of symmetry does a rhombus have?', a: 2 }
+    { zh: '菱形有幾條對稱軸？', en: 'How many lines of symmetry does a rhombus have?', a: 2 },
+    { zh: '平行四邊形有幾條對稱軸？', en: 'How many lines of symmetry does a parallelogram have?', a: 0 },
+    { zh: '箏形有幾條對稱軸？', en: 'How many lines of symmetry does a kite have?', a: 1 },
+    { zh: '正五邊形有幾條對稱軸？', en: 'How many lines of symmetry does a regular pentagon have?', a: 5 },
+    { zh: '正六邊形有幾條對稱軸？', en: 'How many lines of symmetry does a regular hexagon have?', a: 6 },
+    { zh: '正八邊形有幾條對稱軸？', en: 'How many lines of symmetry does a regular octagon have?', a: 8 },
+    { zh: '等腰梯形有幾條對稱軸？', en: 'How many lines of symmetry does an isosceles trapezium have?', a: 1 }
   ];
 
   var ARCLEN_PAIRS = [[3, 60], [3, 120], [3, 180], [6, 30], [6, 60], [6, 90], [6, 120], [6, 180], [9, 60], [9, 120], [9, 180], [12, 30], [12, 60], [12, 90], [12, 120], [12, 180]];
@@ -1407,7 +1499,7 @@
       type: 'arclen',
       prompt: { zh: '半徑 ' + r + ' cm、圓心角 ' + angle + '° 的扇形，弧長是多少？（以 π 表示）', en: 'A sector has radius ' + r + ' cm and central angle ' + angle + '°. What is its arc length? (in terms of π)' },
       visual: { kind: 'circle', r: r },
-      answer: coef + 'π',
+      answer: piLabel(coef),
       math: { op: 'arclen', r: r, angle: angle, coef: coef },
       choices: circleChoices(rng, coef, 'π'),
       hint: { zh: '弧長 = 2πr × (圓心角 ÷ 360°)。', en: 'Arc length = 2πr × (angle ÷ 360°).' }
@@ -1622,7 +1714,7 @@
       type: 'cylinder',
       prompt: { zh: '圓柱半徑 ' + r + ' cm、高 ' + h + ' cm，' + (askVol ? '體積' : '側面積') + '是多少？（以 π 表示）', en: 'A cylinder has radius ' + r + ' cm and height ' + h + ' cm. What is its ' + (askVol ? 'volume' : 'curved surface area') + '? (in terms of π)' },
       visual: { kind: 'cylinder' },
-      answer: coef + 'π',
+      answer: piLabel(coef),
       math: { op: 'cylinder', r: r, h: h, mode: askVol ? 'vol' : 'lat', coef: coef },
       choices: circleChoices(rng, coef, 'π'),
       hint: { zh: askVol ? '體積 = π r² h。' : '側面積 = 2π r h。', en: askVol ? 'Volume = π r² h.' : 'Curved surface area = 2π r h.' }
@@ -1691,8 +1783,54 @@
     { zh: '太陽從哪個方向升起？', en: 'In which direction does the sun rise?', k: 'east' },
     { zh: '太陽從哪個方向落下？', en: 'In which direction does the sun set?', k: 'west' },
     { zh: '與「東」相對的方向是？', en: 'Which direction is opposite to east?', k: 'west' },
-    { zh: '與「北」相對的方向是？', en: 'Which direction is opposite to north?', k: 'south' }
+    { zh: '與「北」相對的方向是？', en: 'Which direction is opposite to north?', k: 'south' },
+    { zh: '與「西」相對的方向是？', en: 'Which direction is opposite to west?', k: 'east' },
+    { zh: '與「南」相對的方向是？', en: 'Which direction is opposite to south?', k: 'north' },
+    { zh: '面向北，向右轉後面向哪個方向？', en: 'Facing north, which direction are you facing after turning right?', k: 'east' },
+    { zh: '面向東，向左轉後面向哪個方向？', en: 'Facing east, which direction are you facing after turning left?', k: 'north' },
+    { zh: '面向南，向右轉後面向哪個方向？', en: 'Facing south, which direction are you facing after turning right?', k: 'west' },
+    { zh: '面向西，向左轉後面向哪個方向？', en: 'Facing west, which direction are you facing after turning left?', k: 'south' }
   ];
+
+  /* 24 小時制：隨機出「24→12」或「12→24」，而不是固定五題 */
+  function genTime24(rng, o) {
+    var answer, prompt, hint, k;
+    if (rng() < 0.5) {
+      var h24 = randInt(rng, 13, 23);
+      answer = h24 - 12;
+      k = 'to12';
+      prompt = {
+        zh: h24 + ':00 是下午／晚上幾點？',
+        en: h24 + ':00 is what time in the afternoon/evening?'
+      };
+      hint = { zh: '24 小時制減 12，就是下午／晚上的 12 小時制時間。', en: 'Subtract 12 from 24-hour time to get the PM 12-hour time.' };
+    } else {
+      var h12 = randInt(rng, 1, 11);
+      answer = h12 + 12;
+      k = 'to24';
+      prompt = {
+        zh: '下午 ' + h12 + ' 時是 24 小時制的幾點？',
+        en: h12 + ' pm is what time on the 24-hour clock?'
+      };
+      hint = { zh: '下午時間加 12，就是 24 小時制。', en: 'Add 12 to a PM time to get the 24-hour clock.' };
+    }
+    var choices = [answer];
+    shuffle(rng, [-3, -2, -1, 1, 2, 3]).forEach(function (d) {
+      if (choices.length >= 4) return;
+      var c = answer + d;
+      if (c < 0 || c > 24) return;
+      if (choices.indexOf(c) === -1) choices.push(c);
+    });
+    return {
+      type: 'time24',
+      prompt: prompt,
+      visual: null,
+      answer: answer,
+      choices: shuffle(rng, choices),
+      math: { op: 'time24', a: answer, k: k },
+      hint: hint
+    };
+  }
 
   var TIME24_FACTS = [
     { zh: '15:00 是下午幾點？', en: '15:00 is what time in the afternoon?', a: 3 },
@@ -1737,20 +1875,6 @@
     };
   }
 
-  /* 24 小時制 */
-  function genTime24(rng, o) {
-    var i = Math.floor(rng() * TIME24_FACTS.length);
-    var q = TIME24_FACTS[i];
-    return {
-      type: 'time24',
-      prompt: { zh: q.zh, en: q.en },
-      visual: null,
-      answer: q.a,
-      math: { op: 'time24', a: q.a, k: i },
-      hint: { zh: '下午 = 12 小時制 + 12。', en: 'PM = 12-hour time + 12.' }
-    };
-  }
-
   /* 圓錐 / 球體（以 π 表示） */
   function genCone(rng, o) {
     var q = pick(rng, SOLID_PAIRS);
@@ -1775,7 +1899,7 @@
       type: 'cone',
       prompt: { zh: zhPrompt, en: enPrompt },
       visual: { kind: q.kind === 'coneV' ? 'cone' : 'sphere' },
-      answer: q.coef + 'π',
+      answer: piLabel(q.coef),
       math: { op: 'cone', kind: q.kind, r: q.r, h: q.h || 0, coef: q.coef },
       choices: circleChoices(rng, q.coef, 'π'),
       hint: { zh: hintZh, en: hintEn }
@@ -1965,7 +2089,7 @@
           };
         }
         return {
-          zh: ['周長 = (長 + 闊) × 2。', '(' + m.l + ' + ' + m.w + ') × 2 = ' + p.answer + ' cm。'],
+          zh: ['周界 = (長 + 闊) × 2。', '(' + m.l + ' + ' + m.w + ') × 2 = ' + p.answer + ' cm。'],
           en: ['Perimeter = (length + width) × 2.', '(' + m.l + ' + ' + m.w + ') × 2 = ' + p.answer + ' cm.']
         };
       case 'fractionof':
@@ -2345,10 +2469,61 @@
     }
   }
 
+  /* 位值：十位、個位、位值與合成（P1「100 以內的數」） */
+  function genPlacevalue(rng, o) {
+    var max = Math.min(99, o.max != null ? o.max : 99);
+    var min = Math.max(10, o.min != null ? o.min : 10);
+    var n = randInt(rng, min, Math.max(min, max));
+    var tens = Math.floor(n / 10);
+    var ones = n % 10;
+    var mode = pick(rng, ['tens', 'ones', 'value', 'compose']);
+    var prompt, answer;
+    if (mode === 'tens') {
+      prompt = { zh: n + ' 的十位數字是多少？', en: 'What is the tens digit of ' + n + '?' };
+      answer = tens;
+    } else if (mode === 'ones') {
+      prompt = { zh: n + ' 的個位數字是多少？', en: 'What is the ones digit of ' + n + '?' };
+      answer = ones;
+    } else if (mode === 'value') {
+      prompt = { zh: '在 ' + n + ' 中，十位數字代表多少？', en: 'In ' + n + ', what value does the tens digit represent?' };
+      answer = tens * 10;
+    } else {
+      prompt = { zh: tens + ' 個十和 ' + ones + ' 個一合起來是多少？', en: 'What number is ' + tens + ' tens and ' + ones + ' ones?' };
+      answer = n;
+    }
+    var choices = [answer];
+    if (mode === 'tens' || mode === 'ones') {
+      shuffle(rng, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).forEach(function (d) {
+        if (choices.length < 4 && d !== answer) choices.push(d);
+      });
+    } else if (mode === 'value') {
+      shuffle(rng, [10, 20, 30, 40, 50, 60, 70, 80, 90]).forEach(function (v) {
+        if (choices.length < 4 && v !== answer) choices.push(v);
+      });
+    } else {
+      shuffle(rng, [n - 1, n + 1, n - 2, n + 2, n - 3, n + 3, n + 10]).forEach(function (v) {
+        if (choices.length < 4 && v >= 10 && v <= 99) choices.push(v);
+      });
+    }
+    return {
+      type: 'placevalue',
+      prompt: prompt,
+      visual: null,
+      answer: answer,
+      choices: shuffle(rng, choices),
+      math: { op: 'placevalue', mode: mode, n: n, tens: tens, ones: ones },
+      hint: {
+        zh: '十位在左、個位在右；十位數字代表幾個十。',
+        en: 'Tens digit on the left, ones on the right; the tens digit counts tens.'
+      }
+    };
+  }
+
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
     comparegroup: genCompareGroup,
+    placevalue: genPlacevalue,
     addition: genAddition,
     subtraction: genSubtraction,
     numberbonds: genNumberBonds,

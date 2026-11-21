@@ -8,7 +8,7 @@
   "orientation": "portrait",
   "background_color": "#FAF3E0",
   "theme_color": "#4FA96B",
-  "lang": "zh-CN",
+  "lang": "zh-Hant-HK",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },

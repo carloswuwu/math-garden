@@ -115,6 +115,12 @@ async function main() {
   check(stageCards2b.length === 2, '綜合考試滿分後應顯示 2 個階段（學前 + 一年級）');
   check(Array.from(stageCards2b).some(function (c) { return c.getAttribute('data-stage') === 'g1'; }), '一年級應已解鎖');
 
+  // 新規則：90% 即可通過（passed），未達 90% 仍不解鎖
+  const seed2c = JSON.stringify({ version: 1, lang: 'zh', sound: false, theme: 'light', streak: { lastDay: null, count: 0 }, badges: [], stars: 0, skills: passedSkills, stageExams: { prek: { passed: true, best: 90 } } });
+  check(boot(seed2c).d.querySelectorAll('#screen-home .stage-card').length === 2, '綜合考試 90% 應解鎖下一階段');
+  const seed2d = JSON.stringify({ version: 1, lang: 'zh', sound: false, theme: 'light', streak: { lastDay: null, count: 0 }, badges: [], stars: 0, skills: passedSkills, stageExams: { prek: { passed: false, best: 85 } } });
+  check(boot(seed2d).d.querySelectorAll('#screen-home .stage-card').length === 1, '85% 不應解鎖下一階段');
+
   /* 9. 比大小：顏色選擇題（通過 prek.count 後解鎖 prek.compare） */
   const seed3 = JSON.stringify({
     version: 1, lang: 'zh', sound: false, theme: 'light',
