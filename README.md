@@ -52,6 +52,7 @@
 - ⭐ **掌握度與解鎖**：答對達標即掌握，逐個解鎖下一知識點。
 - 👨‍👩‍👦 **家長中心**：查看總星星、連續天數、各技能掌握度，導出 / 導入 / 重置進度。
 - 🌗 淺色 / 深色自動切換，手機、平板、電腦都適配。
+- ♿ 無障礙：每畫面單一 h1、鍵盤與讀屏名稱、對話框焦點陷阱、題目圖示文字替代，並以 axe-core 子集自動檢查。
 - 🔤 中英雙語一鍵切換（界面與全部課程內容）。
 - 📴 無第三方依賴、無網絡請求（在線版僅首次加載需要網絡）。
 
@@ -99,15 +100,17 @@ node tests/generators.test.js   # 生成器性質、題庫池大小、解題步�
 node tests/contract.test.js     # MATH_SPEC 自檢、素材清單、i18n、解題覆蓋、公式／技能對齊、dist 一致性
 ```
 
-界面邏輯測試（需先安裝測試依賴）：
+界面與無障礙測試（需先安裝測試依賴，會一併安裝 axe-core）：
 
 ```bash
 npm install --prefix tests        # 或 pnpm install --dir tests --config.node-linker=hoisted
 node tests/ui.test.js
+node tests/a11y.test.js
 ```
 
 - `tests/core.test.js`：對所有題型做大量抽樣，用 `MathCore.answerFromMath`（唯一的 MATH_SPEC）交叉驗證答案、選項唯一性、掌握度、自適應與 `sanitizeProgress` 模糊測試。
 - `tests/ui.test.js`：用 jsdom 加載整個應用，驗證首頁渲染、語言切換、路由／Back-Forward、練習與測驗、session 恢復、進度持久化與匯入、更新 chip；另外對 `dist/` 打包版做一次冒煙測試（沒有 dist 時自動跳過）。
+- `tests/a11y.test.js`：無障礙契約——每個畫面恰好一個 h1、aria-labelledby、無重複 id、所有按鈕／開關有名稱、導航聚焦標題、live region 宣告、對話框背景 inert／aria-hidden、語言切換同步 ARIA、題目附圖的文字替代，以及 axe-core（jsdom 支援的規則）0 violations。
 - `tests/generators.test.js`：生成器性質（選項、分數、概率、題幹）、題庫池下限、難度階梯與解題步驟。
 - `tests/contract.test.js`：跨層契約——`MATH_SPEC` 自檢、HTML/manifest/SW 素材存在且相對、`t()` 字面量與技能／課堂中英齊全、每個題型都有解題步驟並以答案收尾、公式與技能標記對齊、`dist/` 與生成的 SW 自我一致（hash、precache 清單、更新流程、gzip 體積）。
 - `tests/make_icon.py`：重新生成應用圖標（需要 Pillow）。
