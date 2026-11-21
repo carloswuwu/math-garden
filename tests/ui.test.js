@@ -520,6 +520,27 @@ async function main() {
     check(!!dd.getElementById('updateChip'), 'dist index 帶更新 chip');
   }
 
+  /* 31. 組卷：固定種子下測驗/考試長度正確、題目互不重複、模板有變化 */
+  const unlockSeed = JSON.stringify({
+    version: 2, lang: 'zh', sound: false, theme: 'light', skills: {},
+    stageExams: { prek: { passed: true, perfect: true, best: 100 } }
+  });
+  const ctxComp = boot(unlockSeed);
+  const wComp = ctxComp.w, dComp = ctxComp.d;
+  wComp.Date.now = function () { return 1700000000000; };
+  wComp.__mathApp.navigate({ screen: 'quiz', skillId: 'g1.add20' });
+  const stQuiz = wComp.__mathApp.getState();
+  check(stQuiz.mode === 'quiz' && stQuiz.problems.length === 10, '測驗固定 10 題');
+  check(new Set(stQuiz.problems.map((p) => p.sig)).size === 10, '測驗題目互不重複');
+  check(new Set(stQuiz.problems.map((p) => wComp.MathCore.templateSig(p))).size >= 2,
+    '測驗題目模板有變化（不再只換數字）');
+  wComp.__mathApp.navigate({ screen: 'exam', stageId: 'g1' });
+  const stExam = wComp.__mathApp.getState();
+  check(stExam.mode === 'exam' && stExam.problems.length === 20, '綜合考試固定 20 題');
+  check(new Set(stExam.problems.map((p) => p.sig)).size === 20, '綜合考試題目互不重複');
+  check(new Set(stExam.problems.map((p) => p.skillId)).size >= 4, '綜合考試覆蓋多個技能');
+  check(!dComp.getElementById('screen-practice').hidden, '綜合考試已渲染');
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }

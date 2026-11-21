@@ -423,4 +423,53 @@ for (let seed = 1; seed <= N; seed++) {
   }
 })();
 
+/* 10. 題組組成：templateSig / composeSet / composeExam */
+(() => {
+  check(typeof C.templateSig === 'function' && typeof C.contextSig === 'function', 'templateSig/contextSig 應已導出');
+  check(typeof C.composeSet === 'function' && typeof C.composeExam === 'function', 'composeSet/composeExam 應已導出');
+
+  /* templateSig 忽略數字但保留模式；contextSig 忽略題幹數字 */
+  const t1 = C.templateSig({ type: 'word', math: { op: 'wunit', n1: 2, n2: 3, cost1: 10, unit: 5 }, prompt: { en: '2 items cost $10' } });
+  const t2 = C.templateSig({ type: 'word', math: { op: 'wunit', n1: 4, n2: 1, cost1: 20, unit: 5 }, prompt: { en: '4 items cost $20' } });
+  const t3 = C.templateSig({ type: 'word', math: { op: 'wmoney2', n1: 2, n2: 3 }, prompt: { en: '...' } });
+  check(t1 === t2, 'templateSig 應忽略數字（同一模板）');
+  check(t1 !== t3, 'templateSig 應保留模式差異');
+  check(C.contextSig({ type: 'x', prompt: { en: '3 apples and 5 pears' } }) === C.contextSig({ type: 'x', prompt: { en: '7 apples and 1 pears' } }),
+    'contextSig 應忽略數字');
+
+  /* composeSet：所有測試技能在 5 個種子下都補滿 10 題，且唯一題數達 min(10, 題庫大小) */
+  Object.keys(SKILLS).forEach((name) => {
+    const skill = SKILLS[name];
+    const specCount = skill.types.length;
+    for (let seed = 1; seed <= 5; seed++) {
+      const set = C.composeSet(skill, 10, { seed: seed * 97, difficultyStep: 0 });
+      check(set.length === 10, 'composeSet 應補滿 10 題 ' + name + ' seed' + seed);
+      const sigs = new Set(set.map((p) => p.sig));
+      const pool = new Set();
+      for (let i = 0; i < 400; i++) {
+        const ti = specCount > 1 ? i % specCount : 0;
+        pool.add(C.generateProblem(skill, { seed: 5000 + i * 7, difficultyStep: 0, typeIndex: ti }).sig);
+      }
+      check(sigs.size >= Math.min(10, pool.size), 'composeSet 唯一題數不足 ' + name + ' got=' + sigs.size + ' pool=' + pool.size);
+    }
+  });
+
+  /* composeExam：20 題、不重複、標記 skillId */
+  const examSkills = [SKILLS.addition, SKILLS.multiplication, SKILLS.fraction, SKILLS.average, SKILLS.percent];
+  for (let seed = 1; seed <= 20; seed++) {
+    const exam = C.composeExam(examSkills, 20, { seed: seed * 31, maxPerSkill: 3 });
+    check(exam.length === 20, 'composeExam 應出 20 題 seed' + seed);
+    check(new Set(exam.map((p) => p.sig)).size === 20, 'composeExam 不應有完全重複 seed' + seed);
+    check(exam.every((p) => !!p.skillId), 'composeExam 應標記 skillId seed' + seed);
+  }
+
+  /* 有足夠模板的應用題：10 題至少 6 個不同模板 */
+  const wordSkill = { id: 't.deepword', types: ['word'], levels: [{ ops: ['wunit', 'wmoney2', 'wreverse', 'wprofit2', 'wratio2', 'wrate2', 'wgeo2', 'wdata2', 'wtable', 'wequation'], max: 2000, maxFactor: 12 }] };
+  for (let seed = 1; seed <= 10; seed++) {
+    const set = C.composeSet(wordSkill, 10, { seed: seed * 7, difficultyStep: 0 });
+    check(set.length === 10, '深度應用題題組應有 10 題');
+    check(new Set(set.map((p) => C.templateSig(p))).size >= 6, '深度應用題模板多樣性不足 seed' + seed);
+  }
+})();
+
 console.log(`✓ math-core 全部通過（${checks} 項斷言）`);

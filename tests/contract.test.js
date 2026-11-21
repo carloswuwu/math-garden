@@ -56,12 +56,14 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
   const usedOps = new Set();
   for (const skill of skills) {
     const steps = Math.max(1, Math.min(3, (skill.levels || []).length));
-    for (const spec of skill.types.map((t) => (typeof t === 'string' ? { t } : t))) {
+    const specs = skill.types.map((t) => (typeof t === 'string' ? { t } : t));
+    for (let ti = 0; ti < specs.length; ti++) {
+      const spec = specs[ti];
       usedTypes.add(spec.t);
       for (let step = 0; step < steps; step++) {
         for (let i = 0; i < 8; i++) {
-          const tag = skill.id + '/' + spec.t + '/step' + step + '/#' + i;
-          const p = M.generateProblem(skill, { type: spec.t, seed: 41 + i * 31 + step * 7, difficultyStep: step, selfCheck: true });
+          const tag = skill.id + '/' + spec.t + '#' + ti + '/step' + step + '/#' + i;
+          const p = M.generateProblem(skill, { typeIndex: ti, seed: 41 + i * 31 + step * 7, difficultyStep: step, selfCheck: true });
           usedOps.add(p.math.op);
           check(Object.prototype.hasOwnProperty.call(M.MATH_SPEC, p.math.op), 'MATH_SPEC 缺少 op ' + p.math.op + ' ' + tag);
           check(M.valuesEqual(p.answer, M.answerFromMath(p)), 'MATH_SPEC 推導答案不一致 ' + tag);
@@ -193,12 +195,14 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
   const lastMissing = [];
   for (const skill of skills) {
     const steps = Math.max(1, Math.min(3, (skill.levels || []).length));
-    for (const spec of skill.types.map((t) => (typeof t === 'string' ? { t } : t))) {
+    const specs = skill.types.map((t) => (typeof t === 'string' ? { t } : t));
+    for (let ti = 0; ti < specs.length; ti++) {
+      const spec = specs[ti];
       coveredTypes.add(spec.t);
       for (let step = 0; step < steps; step++) {
         for (let i = 0; i < 6; i++) {
-          const tag = skill.id + '/' + spec.t + '/step' + step;
-          const p = M.generateProblem(skill, { type: spec.t, seed: 601 + i * 29 + step * 13, difficultyStep: step });
+          const tag = skill.id + '/' + spec.t + '#' + ti + '/step' + step;
+          const p = M.generateProblem(skill, { typeIndex: ti, seed: 601 + i * 29 + step * 13, difficultyStep: step });
           let ex = null;
           try { ex = M.explain(p); } catch (e) { check(false, 'explain 拋錯 ' + tag + ': ' + e.message); }
           if (!ex) { nulls.add(spec.t); continue; }
@@ -218,6 +222,46 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
   check(nulls.size === 0, '以下題型沒有解題步驟：' + [...nulls].join(', '));
   check(lastMissing.length === 0, '解題最後一步未包含答案（' + lastMissing.length + '）：' + lastMissing.slice(0, 8).join(' | '));
   check(coveredTypes.size === M.GENERATOR_TYPES.length, '解題覆蓋應達全部題型（' + coveredTypes.size + '/' + M.GENERATOR_TYPES.length + '）');
+
+  /* 深度應用題模式必須真的透過課程 ops 出現（不只是實作了函數） */
+  const DEEP_OPS = ['wunit', 'wmoney2', 'wreverse', 'wprofit2', 'wratio2', 'wrate2', 'wgeo2', 'wdata2', 'wtable', 'wequation'];
+  const wordOps = new Set();
+  for (const skill of skills) {
+    if (!skill.types.some((t) => (typeof t === 'string' ? t : t.t) === 'word')) continue;
+    const steps = Math.max(1, (skill.levels || []).length);
+    for (let step = 0; step < steps; step++) {
+      for (let i = 0; i < 40; i++) {
+        wordOps.add(M.generateProblem(skill, { type: 'word', seed: 9000 + i * 13 + step * 7, difficultyStep: step }).math.op);
+      }
+    }
+  }
+  DEEP_OPS.forEach((op) => check(wordOps.has(op), '深度應用題模式未接進課程 ops：' + op));
+
+  /* 結構多樣性：同一技能 10 題的模板數量應有提升（有足夠模板的題型） */
+  const M2 = M;
+  ['g6.word', 'hs.s6.word'].forEach((sid) => {
+    const skill = C.skills[sid];
+    if (!skill) return;
+    const set = M2.composeSet(skill, 10, { seed: 1234, difficultyStep: Math.max(1, (skill.levels || []).length - 1) });
+    check(set.length === 10, sid + ' composeSet 應出 10 題');
+    check(new Set(set.map((p) => p.sig)).size === 10, sid + ' composeSet 不應有完全重複');
+    check(new Set(set.map((p) => M2.templateSig(p))).size >= 6, sid + ' composeSet 模板多樣性不足');
+  });
+
+  /* 每個階段的綜合考試：固定 20 題、不重複、覆蓋該階多個技能 */
+  C.stages.forEach((stage) => {
+    const stageSkills = [];
+    stage.topics.forEach((topic) => topic.skills.forEach((id) => {
+      const skill = C.skills[id];
+      if (skill && !skill.scaffold && (skill.types || []).length) stageSkills.push(skill);
+    }));
+    if (!stageSkills.length) return;
+    const exam = M2.composeExam(stageSkills, 20, { seed: 4321, maxPerSkill: 3 });
+    check(exam.length === 20, stage.id + ' 綜合考試應出 20 題');
+    check(new Set(exam.map((p) => p.sig)).size === 20, stage.id + ' 綜合考試不應有重複題');
+    check(exam.every((p) => !!p.skillId), stage.id + ' 綜合考試應標記技能');
+    check(new Set(exam.map((p) => p.skillId)).size >= Math.min(3, stageSkills.length), stage.id + ' 綜合考試應覆蓋多個技能');
+  });
 })();
 
 /* ---------------- 5. 公式與技能對齊 ---------------- */
