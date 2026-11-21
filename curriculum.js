@@ -955,6 +955,66 @@
       en: { name: 'Intro to Derivatives', goal: 'Differentiate x^n.' },
       lesson: 'hs.s6.derivative', types: ['derivative'], levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'challenge.nt': {
+      id: 'challenge.nt', stage: 'challenge', order: 1,
+      zh: { name: '數論挑戰', goal: '用餘數、因數倍數與同餘解決競賽數論題。' },
+      en: { name: 'Number Theory Challenge', goal: 'Use remainders, factors and congruences to solve olympiad-style number theory.' },
+      lesson: 'challenge.nt',
+      types: ['modpow', 'gcdlcm', 'remainderSystem'],
+      levels: [
+        { maxBase: 6, maxExp: 3, maxMod: 10, maxNum: 24 },
+        { maxBase: 9, maxExp: 5, maxMod: 13, maxNum: 36 }
+      ],
+      mastery: { practice: 8, quizPass: 0.8 }
+    },
+    'challenge.count': {
+      id: 'challenge.count', stage: 'challenge', order: 2,
+      zh: { name: '組合計數', goal: '用排列組合、路徑數與容斥原理計數。' },
+      en: { name: 'Counting Challenge', goal: 'Count with permutations, paths and inclusion–exclusion.' },
+      lesson: 'challenge.count',
+      types: ['pathcount', 'handshake', 'arrange', 'inclusion'],
+      levels: [
+        { maxSteps: 5, maxPeople: 20, maxNum: 120 },
+        { maxSteps: 6, maxPeople: 30, maxNum: 200 }
+      ],
+      mastery: { practice: 8, quizPass: 0.8 }
+    },
+    'challenge.geo': {
+      id: 'challenge.geo', stage: 'challenge', order: 3,
+      zh: { name: '幾何與時間', goal: '計算時針分針夾角與梯形面積等競賽幾何題。' },
+      en: { name: 'Geometry & Time Challenge', goal: 'Work out clock-hand angles and trapezium areas.' },
+      lesson: 'challenge.geo',
+      types: ['clockangle', 'trapezoid'],
+      levels: [{ maxSide: 10, maxHeight: 8 }, { maxSide: 12, maxHeight: 10 }],
+      mastery: { practice: 8, quizPass: 0.8 }
+    },
+    'challenge.logic': {
+      id: 'challenge.logic', stage: 'challenge', order: 4,
+      zh: { name: '邏輯與規律', goal: '破解數列規律並用鴿巢原理作保證性推理。' },
+      en: { name: 'Logic & Patterns Challenge', goal: 'Crack number patterns and reason with the pigeonhole principle.' },
+      lesson: 'challenge.logic',
+      types: ['seqnext', 'pigeon'],
+      levels: [{ maxColors: 4, maxSame: 3 }, { maxColors: 5, maxSame: 4 }],
+      mastery: { practice: 8, quizPass: 0.8 }
+    },
+    'challenge.algebra': {
+      id: 'challenge.algebra', stage: 'challenge', order: 5,
+      zh: { name: '代數與應用', goal: '解決工程合作與混合濃度等多步應用題。' },
+      en: { name: 'Algebra & Applied Challenge', goal: 'Solve multi-step work-rate and mixture problems.' },
+      lesson: 'challenge.algebra',
+      types: ['workrate', 'mixture'],
+      levels: [{}, {}],
+      mastery: { practice: 8, quizPass: 0.8 }
+    },
+    'challenge.prob': {
+      id: 'challenge.prob', stage: 'challenge', order: 6,
+      zh: { name: '概率遊戲', goal: '計算骰子點數和與硬幣正面的古典概率。' },
+      en: { name: 'Probability Games', goal: 'Compute dice-sum and coin-toss classical probabilities.' },
+      lesson: 'challenge.prob',
+      types: ['diceprob', 'coinprob'],
+      levels: [{}, {}],
+      mastery: { practice: 8, quizPass: 0.8 }
     }
   };
 
@@ -1079,6 +1139,15 @@
         { id: 'col.calc', zh: '微積分', en: 'Calculus', skills: ['col.calculus'] },
         { id: 'col.lin', zh: '線性代數', en: 'Linear Algebra', skills: ['col.linalg'] },
         { id: 'col.prob', zh: '概率統計', en: 'Statistics', skills: ['col.prob'] }
+      ] },
+    { id: 'challenge', zh: '挑戰區', en: 'Challenge', desc: { zh: '奧林匹克風格的額外難題：數論、計數、幾何、邏輯、代數與概率', en: 'Extra-hard olympiad-style problems: number theory, counting, geometry, logic, algebra and probability' }, color: '#B07C2A', emoji: '🏆',
+      topics: [
+        { id: 'chal.nt', zh: '數論', en: 'Number Theory', skills: ['challenge.nt'] },
+        { id: 'chal.count', zh: '組合計數', en: 'Counting', skills: ['challenge.count'] },
+        { id: 'chal.geo', zh: '幾何與時間', en: 'Geometry & Time', skills: ['challenge.geo'] },
+        { id: 'chal.logic', zh: '邏輯與規律', en: 'Logic & Patterns', skills: ['challenge.logic'] },
+        { id: 'chal.algebra', zh: '代數與應用', en: 'Algebra & Applied', skills: ['challenge.algebra'] },
+        { id: 'chal.prob', zh: '概率遊戲', en: 'Probability Games', skills: ['challenge.prob'] }
       ] }
   ];
 

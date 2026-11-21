@@ -112,6 +112,13 @@
 
     formulas: { title: '公式一覽' },
 
+    challenge: {
+      title: '挑戰區',
+      desc: '奧林匹克風格的額外難題：數論、計數、幾何、邏輯、代數與概率',
+      progress: '已掌握 {m}/{t} 個挑戰',
+      hint: '這些題目比年級課程更難，慢慢想、多試幾個方法！'
+    },
+
     update: {
       available: '有新版本',
       reload: '重新載入',
@@ -241,6 +248,13 @@
     outline: { title: 'Curriculum Outline', covered: 'covered in this app' },
 
     formulas: { title: 'Formula Sheet' },
+
+    challenge: {
+      title: 'Challenge Arena',
+      desc: 'Extra-hard olympiad-style problems: number theory, counting, geometry, logic, algebra and probability',
+      progress: '{m}/{t} challenges mastered',
+      hint: 'These are harder than the grade lessons — slow down and try more than one method!'
+    },
 
     update: {
       available: 'New version',

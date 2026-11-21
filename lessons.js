@@ -590,6 +590,36 @@
       zh: { title: '概率與統計', intro: '期望值 E(X) = Σ x·P(x)；二項概率 P = C(n, k) ÷ 2ⁿ（公平硬幣）。', example: '擲兩枚硬幣，剛好一個正面的概率 = C(2,1)/4 = 1/2。', tip: '先列出所有結果，再加權平均或數組合。' },
       en: { title: 'Probability & Statistics', intro: 'Expected value E(X) = Σ x·P(x); binomial probability P = C(n, k) ÷ 2ⁿ for fair coins.', example: 'Two coins, exactly one head: C(2,1)/4 = 1/2.', tip: 'List outcomes, then average or count combinations.' },
       visual: null
+    },
+    'challenge.nt': {
+      zh: { title: '數論挑戰', intro: '餘數、因數倍數與同餘是競賽數論的三大法寶。大指數取餘數時，每乘一次就取餘數；同餘問題可以先列出其中一個條件的所有可能，再檢查另一個。', example: '例：2^5 ÷ 7 的餘數——2→4→1→2→4，所以餘 4。', tip: '不要死算大數，善用「取餘數」和「找出週期」。' },
+      en: { title: 'Number Theory Challenge', intro: 'Remainders, factors/multiples and congruences are the toolkit of olympiad number theory. Take the remainder after each multiplication for powers, and for simultaneous remainders list the numbers satisfying one condition then test the other.', example: 'Example: 2^5 ÷ 7 — remainders go 2→4→1→2→4, so the answer is 4.', tip: 'Avoid huge numbers: reduce modulo at every step and look for cycles.' },
+      visual: null
+    },
+    'challenge.count': {
+      zh: { title: '組合計數', intro: '數路徑、握手、排列與重複字母、容斥原理，核心都是「有系統地數，避免重複」。', example: '例：3×3 方格由左下走到右上，共 C(6,3) = 20 條路徑。', tip: '先問「是不是每條路都一樣長？」，再決定用組合數還是分類討論。' },
+      en: { title: 'Counting Challenge', intro: 'Paths, handshakes, arrangements with repeated letters and inclusion–exclusion all come down to counting systematically without double counting.', example: 'Example: on a 3×3 grid, paths from corner to opposite corner = C(6,3) = 20.', tip: 'Ask whether all objects have the same length; then use combinations or cases.' },
+      visual: null
+    },
+    'challenge.geo': {
+      zh: { title: '幾何與時間', intro: '時針每小時 30°、分針每分鐘 6°；梯形面積 = （上底 + 下底）× 高 ÷ 2。', example: '例：3:30 時，分針 180°、時針 105°，夾角 75°。', tip: '先寫出兩枝針各自的角度，再取較小的夾角。' },
+      en: { title: 'Geometry & Time Challenge', intro: 'The hour hand moves 30° per hour and the minute hand 6° per minute; trapezium area = (sum of parallel sides) × height ÷ 2.', example: 'Example: at 3:30 the minute hand is at 180° and the hour hand at 105°, so the angle is 75°.', tip: 'Write down both hand angles, then take the smaller angle.' },
+      visual: null
+    },
+    'challenge.logic': {
+      zh: { title: '邏輯與規律', intro: '數列題先看差、再看比，或看是否為平方數／三角數；「保證」題用最壞情況加鴿巢原理。', example: '例：3 種顏色，要保證有 2 隻同色，最壞先各取 1 隻，再多取 1 隻 = 4 隻。', tip: '規律題可先寫出差或比，再預測下一項。' },
+      en: { title: 'Logic & Patterns Challenge', intro: 'For sequences look at differences, then ratios, or recognise squares/triangular numbers; for "guaranteed" questions use the worst case and pigeonhole principle.', example: 'Example: 3 colours, guarantee 2 of the same — worst case take 1 of each, then one more = 4.', tip: 'Write the differences or ratios first, then predict the next term.' },
+      visual: null
+    },
+    'challenge.algebra': {
+      zh: { title: '代數與應用', intro: '工程問題把整項工作看成 1；混合問題先算溶質總量，再除以總量求濃度。', example: '例：甲 6 天、乙 12 天完成同一工作，合作需 6×12÷(6+12) = 4 天。', tip: '先寫出「每天完成幾分之幾」或「溶質有多少」。' },
+      en: { title: 'Algebra & Applied Challenge', intro: 'Treat the whole job as 1 for work problems; for mixtures find the total solute first, then divide by the total volume.', example: 'Example: Ann takes 6 days and Ben 12 days; together = 6×12÷(6+12) = 4 days.', tip: 'Write "fraction done per day" or "amount of solute" first.' },
+      visual: null
+    },
+    'challenge.prob': {
+      zh: { title: '概率遊戲', intro: '古典概率 = 有利結果數 ÷ 所有等可能結果數。兩粒骰子共 36 個結果；n 枚硬幣共 2^n 個。', example: '例：兩粒骰子和為 7 有 6 個結果，概率 = 6/36 = 1/6。', tip: '先把所有結果列成整齊的表格，再數有利結果。' },
+      en: { title: 'Probability Games', intro: 'Classical probability = favourable outcomes ÷ equally likely outcomes. Two dice have 36 outcomes; n coins have 2^n.', example: 'Example: sum 7 with two dice has 6 outcomes, so P = 6/36 = 1/6.', tip: 'Write all outcomes as a neat table first, then count the favourable ones.' },
+      visual: null
     }
   };
 

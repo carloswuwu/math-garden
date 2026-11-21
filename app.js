@@ -261,7 +261,9 @@
   /* 通過測驗（≧2 星）才算過關，用於逐步解鎖 */
   function isPassed(skill) { return (skillProgress(skill.id).quizStars || 0) >= 2; }
   function realStageList() {
+    /* 挑戰區是額外難題區，不屬於年級解鎖鏈；由首頁的挑戰卡直接進入。 */
     return Curriculum.stages.filter(function (st) {
+      if (st.id === 'challenge') return false;
       return stageSkills(st).some(function (s) { return !s.scaffold; });
     });
   }
@@ -272,6 +274,7 @@
     return !!(ex && (ex.passed || ex.perfect)); // 綜合考試達 90% 即完成此階段（舊存檔的 perfect 仍相容）
   }
   function stageUnlocked(stageId) {
+    if (stageId === 'challenge') return true; // 挑戰區永遠開放
     var real = realStageList();
     for (var i = 0; i < real.length; i++) {
       if (real[i].id === stageId) return i === 0 || stageComplete(real[i - 1]);
@@ -995,6 +998,7 @@
 
   /* 技能在階段內是否仍被順序解鎖規則擋住（與 renderStage 的 prevMastered 規則一致） */
   function skillLockedInStage(skill) {
+    if (skill.stage === 'challenge') return false; // 挑戰技能全部開放
     var stage = getStage(skill.stage);
     if (!stage) return true;
     var prevMastered = true;
@@ -1228,6 +1232,19 @@
         '<span class="continue-sub">' + esc(session.name) + ' · ' + t('practice.question', { i: session.index + 1, n: session.total }) + '</span>' +
         '</span></button>';
     }
+    var challengeStage = getStage('challenge');
+    if (challengeStage) {
+      var chTotal = 0, chPassed = 0;
+      stageSkills(challengeStage).forEach(function (sk) { chTotal++; if (masteryOf(sk).mastered) chPassed++; });
+      html += '<button class="challenge-card" id="homeChallengeBtn" type="button">' +
+        '<span class="challenge-emoji" aria-hidden="true">' + challengeStage.emoji + '</span>' +
+        '<span class="challenge-body">' +
+        '<span class="challenge-title">' + t('challenge.title') + '</span>' +
+        '<span class="challenge-sub">' + t('challenge.desc') + '</span>' +
+        '<span class="challenge-count">' + t('challenge.progress', { m: chPassed, t: chTotal }) + '</span>' +
+        '</span>' +
+        '<span class="challenge-arrow" aria-hidden="true">→</span></button>';
+    }
     html += '<div class="stage-grid">';
     realStages.forEach(function (stage) {
       if (!stageUnlocked(stage.id)) return; // 未解鎖的階段不顯示
@@ -1257,6 +1274,8 @@
     $('homeParentBtn').addEventListener('click', function () { navigate({ screen: 'parent' }); });
     var continueBtn = $('homeContinue');
     if (continueBtn) continueBtn.addEventListener('click', resumeSession);
+    var challengeBtn = $('homeChallengeBtn');
+    if (challengeBtn) challengeBtn.addEventListener('click', function () { navigate({ screen: 'stage', stageId: 'challenge' }); });
     show('home');
   }
 
@@ -1266,6 +1285,11 @@
     state.stageId = stageId;
     var stage = getStage(stageId);
     var stats = stageSkillStats(stage);
+    if (stageId === 'challenge') {
+      var chTotal = 0, chPassed = 0;
+      stageSkills(stage).forEach(function (sk) { chTotal++; if (masteryOf(sk).mastered) chPassed++; });
+      stats = { total: chTotal, unlocked: chTotal, passed: chPassed };
+    }
 
     var hasReal = stageSkills(stage).some(function (s) { return !s.scaffold && s.types && s.types.length; });
     var html = '<h1 class="page-title">' + stage.emoji + ' ' + L(stage) + '</h1>' +
@@ -1279,6 +1303,7 @@
       topic.skills.forEach(function (id) {
         var skill = getSkill(id);
         var locked = !prevMastered && idx > 0;
+        if (stageId === 'challenge') locked = false; // 挑戰技能不順序鎖定
         var ms = masteryOf(skill);
         prevMastered = ms.mastered || skill.scaffold;
         html += renderSkillCard(skill, ms, locked);

@@ -3741,6 +3741,118 @@
           zh: ['d/dx(ax^n) = a·n·x^(n−1)。', m.mode === 'coeff' ? '係數 = ' + m.a + ' × ' + m.n + ' = ' + p.answer + '。' : '次數 = ' + m.n + ' − 1 = ' + p.answer + '。'],
           en: ['d/dx(ax^n) = a·n·x^(n−1).', m.mode === 'coeff' ? 'Coefficient = ' + m.a + ' × ' + m.n + ' = ' + p.answer + '.' : 'Degree = ' + m.n + ' − 1 = ' + p.answer + '.']
         };
+      case 'modpow': {
+        var mp = 1;
+        var mpZh = ['由 ' + m.a + '^1 開始，每步乘 ' + m.a + ' 並取除以 ' + m.m + ' 的餘數。'];
+        var mpEn = ['Start from ' + m.a + '^1; multiply by ' + m.a + ' and take the remainder mod ' + m.m + ' each step.'];
+        for (var mi = 0; mi < m.b; mi++) {
+          mp = (mp * m.a) % m.m;
+          mpZh.push('第 ' + (mi + 1) + ' 次：餘數 ' + mp + '。');
+          mpEn.push('Step ' + (mi + 1) + ': remainder ' + mp + '.');
+        }
+        mpZh.push('所以 ' + m.a + '^' + m.b + ' ÷ ' + m.m + ' 的餘數 = ' + renderValue(p.answer) + '。');
+        mpEn.push('So the remainder of ' + m.a + '^' + m.b + ' ÷ ' + m.m + ' is ' + renderValue(p.answer) + '.');
+        return { zh: mpZh, en: mpEn };
+      }
+      case 'gcdlcm': {
+        var gv = gcdInt(m.a, m.b);
+        if (m.mode === 'gcd') {
+          return {
+            zh: [m.a + ' 和 ' + m.b + ' 的公因數中最大的是 ' + gv + '。', 'HCF = ' + renderValue(p.answer) + '。'],
+            en: ['The largest common factor of ' + m.a + ' and ' + m.b + ' is ' + gv + '.', 'HCF = ' + renderValue(p.answer) + '.']
+          };
+        }
+        return {
+          zh: ['先求 HCF = ' + gv + '。', 'LCM = ' + m.a + ' × ' + m.b + ' ÷ ' + gv + ' = ' + renderValue(p.answer) + '。'],
+          en: ['First find HCF = ' + gv + '.', 'LCM = ' + m.a + ' × ' + m.b + ' ÷ ' + gv + ' = ' + renderValue(p.answer) + '.']
+        };
+      }
+      case 'remainderSystem':
+        return {
+          zh: ['逐個檢查滿足除以 ' + m.a + ' 餘 ' + m.r1 + ' 的數：' + m.r1 + '、' + (m.r1 + m.a) + '、' + (m.r1 + 2 * m.a) + '…', '第一個同時除以 ' + m.b + ' 餘 ' + m.r2 + ' 的數是 ' + renderValue(p.answer) + '。'],
+          en: ['Check numbers leaving remainder ' + m.r1 + ' mod ' + m.a + ': ' + m.r1 + ', ' + (m.r1 + m.a) + ', ' + (m.r1 + 2 * m.a) + '…', 'The first one that also leaves remainder ' + m.r2 + ' mod ' + m.b + ' is ' + renderValue(p.answer) + '.']
+        };
+      case 'pathcount': {
+        var ptotal = m.m + m.n;
+        return {
+          zh: ['共要走 ' + ptotal + ' 步，選其中 ' + m.m + ' 步向右。', '路徑數 = C(' + ptotal + ',' + m.m + ') = ' + renderValue(p.answer) + '。'],
+          en: ['There are ' + ptotal + ' steps in total; choose ' + m.m + ' of them to go right.', 'Number of paths = C(' + ptotal + ',' + m.m + ') = ' + renderValue(p.answer) + '.']
+        };
+      }
+      case 'handshake':
+        return {
+          zh: ['每人和其他 ' + (m.n - 1) + ' 人各握一次，共 ' + m.n + ' × ' + (m.n - 1) + ' 次，但每次被數了兩次。', '握手次數 = ' + m.n + ' × ' + (m.n - 1) + ' ÷ 2 = ' + renderValue(p.answer) + '。'],
+          en: ['Each of the ' + m.n + ' people shakes ' + (m.n - 1) + ' hands, but every handshake is counted twice.', 'Handshakes = ' + m.n + ' × ' + (m.n - 1) + ' ÷ 2 = ' + renderValue(p.answer) + '.']
+        };
+      case 'arrange': {
+        var countsA = {};
+        for (var ai = 0; ai < m.word.length; ai++) countsA[m.word[ai]] = (countsA[m.word[ai]] || 0) + 1;
+        var repeated = Object.keys(countsA).filter(function (ch) { return countsA[ch] > 1; }).map(function (ch) { return ch + '×' + countsA[ch]; });
+        return {
+          zh: ['字母數 ' + m.word.length + '，全排列 ' + m.word.length + '!；重複字母：' + (repeated.length ? repeated.join('、') : '沒有') + '。', '排列數 = ' + renderValue(p.answer) + '。'],
+          en: ['There are ' + m.word.length + ' letters: ' + m.word.length + '! arrangements, divided by repeats (' + (repeated.length ? repeated.join(', ') : 'none') + ').', 'Arrangements = ' + renderValue(p.answer) + '.']
+        };
+      }
+      case 'inclusion': {
+        var lc = (m.a / gcdInt(m.a, m.b)) * m.b;
+        return {
+          zh: [m.a + ' 的倍數有 ' + Math.floor(m.n / m.a) + ' 個，' + m.b + ' 的倍數有 ' + Math.floor(m.n / m.b) + ' 個。', '同時是兩者倍數（' + lc + ' 的倍數）有 ' + Math.floor(m.n / lc) + ' 個，所以要減去。', '答案 = ' + renderValue(p.answer) + '。'],
+          en: ['There are ' + Math.floor(m.n / m.a) + ' multiples of ' + m.a + ' and ' + Math.floor(m.n / m.b) + ' multiples of ' + m.b + '.', 'Those counted twice are the ' + Math.floor(m.n / lc) + ' multiples of ' + lc + ', so subtract them.', 'Answer = ' + renderValue(p.answer) + '.']
+        };
+      }
+      case 'clockangle': {
+        var hourDeg = 30 * m.h + 0.5 * m.m;
+        var minDeg = 6 * m.m;
+        return {
+          zh: ['分針在 ' + minDeg + '°，時針在 ' + hourDeg + '°。', '較小夾角 = ' + renderValue(p.answer) + '°。'],
+          en: ['The minute hand is at ' + minDeg + '° and the hour hand at ' + hourDeg + '°.', 'The smaller angle is ' + renderValue(p.answer) + '°.']
+        };
+      }
+      case 'trapezoid':
+        return {
+          zh: ['梯形面積 = (上底 + 下底) × 高 ÷ 2。', '= (' + m.a + ' + ' + m.b + ') × ' + m.h + ' ÷ 2 = ' + renderValue(p.answer) + ' cm²。'],
+          en: ['Area of a trapezium = (sum of parallel sides) × height ÷ 2.', '= (' + m.a + ' + ' + m.b + ') × ' + m.h + ' ÷ 2 = ' + renderValue(p.answer) + ' cm².']
+        };
+      case 'seqnext': {
+        var ruleZh, ruleEn;
+        if (m.mode === 'triangle') { ruleZh = '每項是 1+2+…+k（三角數）。'; ruleEn = 'Each term is a triangular number 1+2+…+k.'; }
+        else if (m.mode === 'fib') { ruleZh = '每項是前兩項之和。'; ruleEn = 'Each term is the sum of the previous two.'; }
+        else if (m.mode === 'mixed') { ruleZh = '每項 = 前一項 × 2 + ' + m.add + '。'; ruleEn = 'Each term = previous × 2 + ' + m.add + '.'; }
+        else { ruleZh = '每項是 k² + 1。'; ruleEn = 'Each term is k² + 1.'; }
+        return {
+          zh: [ruleZh, '下一個數 = ' + renderValue(p.answer) + '。'],
+          en: [ruleEn, 'The next number is ' + renderValue(p.answer) + '.']
+        };
+      }
+      case 'pigeon':
+        return {
+          zh: ['最壞情況：先每種顏色各取 ' + (m.k - 1) + ' 隻，共 ' + m.colors + ' × ' + (m.k - 1) + ' = ' + (m.colors * (m.k - 1)) + ' 隻。', '再多取一隻就保證有 ' + m.k + ' 隻同色，所以最少 = ' + renderValue(p.answer) + ' 隻。'],
+          en: ['Worst case: take ' + (m.k - 1) + ' of each colour = ' + m.colors + ' × ' + (m.k - 1) + ' = ' + (m.colors * (m.k - 1)) + '.', 'One more guarantees ' + m.k + ' of a colour, so the minimum is ' + renderValue(p.answer) + '.']
+        };
+      case 'workrate':
+        return {
+          zh: ['甲每天完成 1/' + m.a + '，乙每天完成 1/' + m.b + '。', '合作所需時間 = 1 ÷ (1/' + m.a + ' + 1/' + m.b + ') = ' + renderValue(p.answer) + ' 天。'],
+          en: ['Ann does 1/' + m.a + ' of the job per day; Ben does 1/' + m.b + '.', 'Time together = 1 ÷ (1/' + m.a + ' + 1/' + m.b + ') = ' + renderValue(p.answer) + ' days.']
+        };
+      case 'mixture':
+        return {
+          zh: ['兩杯的糖量共 ' + m.x + ' × ' + m.p1 + '% + ' + m.y + ' × ' + m.p2 + '% = ' + (m.x * m.p1 / 100 + m.y * m.p2 / 100) + ' 升。', '濃度 = 糖量 ÷ 總體積 × 100% = ' + renderValue(p.answer) + '%。'],
+          en: ['Sugar = ' + m.x + ' × ' + m.p1 + '% + ' + m.y + ' × ' + m.p2 + '% = ' + (m.x * m.p1 / 100 + m.y * m.p2 / 100) + ' litres.', 'Concentration = sugar ÷ total volume × 100% = ' + renderValue(p.answer) + '%.']
+        };
+      case 'diceprob': {
+        var ways = 6 - Math.abs(m.s - 7);
+        return {
+          zh: ['和為 ' + m.s + ' 的組合有 ' + ways + ' 個，全部結果有 36 個。', '概率 = ' + ways + '/36 = ' + renderValue(p.answer) + '。'],
+          en: ['There are ' + ways + ' outcomes with sum ' + m.s + ' out of 36 equally likely outcomes.', 'Probability = ' + ways + '/36 = ' + renderValue(p.answer) + '.']
+        };
+      }
+      case 'coinprob': {
+        var succ = factInt(m.n) / (factInt(m.k) * factInt(m.n - m.k));
+        return {
+          zh: ['剛好 ' + m.k + ' 個正面的組合有 C(' + m.n + ',' + m.k + ') = ' + succ + ' 個。', '概率 = ' + succ + '/2^' + m.n + ' = ' + renderValue(p.answer) + '。'],
+          en: ['There are C(' + m.n + ',' + m.k + ') = ' + succ + ' ways to get exactly ' + m.k + ' heads.', 'Probability = ' + succ + '/2^' + m.n + ' = ' + renderValue(p.answer) + '.']
+        };
+      }
       default:
         return null;
     }
@@ -3793,6 +3905,310 @@
         zh: '十位在左、個位在右；十位數字代表幾個十。',
         en: 'Tens digit on the left, ones on the right; the tens digit counts tens.'
       }
+    };
+  }
+
+  /* ---------------- 挑戰區：奧林匹克風格加難題 ---------------- */
+  /* 13 個新的高難度題型；全部答案為整數或最簡分數，並由 MATH_SPEC / explain 完整支援。 */
+
+  function genModpow(rng, o) {
+    var a = randInt(rng, 2, o.maxBase || 9);
+    var b = randInt(rng, 2, o.maxExp || 5);
+    var m = randInt(rng, 5, o.maxMod || 13);
+    var r = 1;
+    for (var i = 0; i < b; i++) r = (r * a) % m;
+    return {
+      type: 'modpow',
+      prompt: { zh: '求 ' + a + '^' + b + ' 除以 ' + m + ' 的餘數。', en: 'What is the remainder when ' + a + '^' + b + ' is divided by ' + m + '?' },
+      visual: null,
+      answer: r,
+      math: { op: 'modpow', a: a, b: b, m: m },
+      hint: { zh: '每乘一次就取餘數，數字便不會太大。', en: 'Take the remainder after each multiplication so the numbers stay small.' }
+    };
+  }
+
+  function genGcdlcm(rng, o) {
+    var a = randInt(rng, 6, o.maxNum || 36);
+    var b = randInt(rng, 6, o.maxNum || 36);
+    if (a === b) b += 2;
+    var mode = pick(rng, ['gcd', 'lcm']);
+    var g = gcdInt(a, b);
+    var answer = mode === 'gcd' ? g : (a / g) * b;
+    return {
+      type: 'gcdlcm',
+      prompt: mode === 'gcd'
+        ? { zh: a + ' 和 ' + b + ' 的最大公因數（HCF）是多少？', en: 'What is the highest common factor (HCF) of ' + a + ' and ' + b + '?' }
+        : { zh: a + ' 和 ' + b + ' 的最小公倍數（LCM）是多少？', en: 'What is the lowest common multiple (LCM) of ' + a + ' and ' + b + '?' },
+      visual: null,
+      answer: answer,
+      math: { op: 'gcdlcm', a: a, b: b, mode: mode },
+      hint: { zh: mode === 'gcd' ? '列出兩數的公因數，取最大。' : 'LCM = a × b ÷ HCF。', en: mode === 'gcd' ? 'List the common factors and take the largest.' : 'LCM = a × b ÷ HCF.' }
+    };
+  }
+
+  function genRemainderSystem(rng, o) {
+    var a = randInt(rng, 3, 7);
+    var b = randInt(rng, 5, 9);
+    while (gcdInt(a, b) !== 1 || b === a) b = randInt(rng, 5, 9);
+    var r1 = randInt(rng, 0, a - 1);
+    var r2 = randInt(rng, 0, b - 1);
+    var n = 0;
+    for (var x = 1; x <= 1000; x++) {
+      if (x % a === r1 && x % b === r2) { n = x; break; }
+    }
+    if (!n) { r1 = 1; r2 = 1; n = 1; while (!(n % a === 1 && n % b === 1)) n++; }
+    return {
+      type: 'remainderSystem',
+      prompt: {
+        zh: '一個正整數除以 ' + a + ' 餘 ' + r1 + '，除以 ' + b + ' 餘 ' + r2 + '。最小的正整數是多少？',
+        en: 'A positive integer leaves remainder ' + r1 + ' when divided by ' + a + ', and remainder ' + r2 + ' when divided by ' + b + '. What is the smallest such integer?'
+      },
+      visual: null,
+      answer: n,
+      math: { op: 'remainderSystem', a: a, b: b, r1: r1, r2: r2 },
+      hint: { zh: '由大數的倍數加上餘數開始逐個檢查。', en: 'List multiples of the larger number plus its remainder, then check the other condition.' }
+    };
+  }
+
+  function genPathcount(rng, o) {
+    var m = randInt(rng, 3, o.maxSteps || 6);
+    var n = randInt(rng, 3, o.maxSteps || 6);
+    var answer = factInt(m + n) / (factInt(m) * factInt(n));
+    return {
+      type: 'pathcount',
+      prompt: {
+        zh: '在 ' + m + ' × ' + n + ' 的方格紙上，由左下角走到右上角，每次只可向右或向上走一格，共有多少條不同路徑？',
+        en: 'On an ' + m + ' by ' + n + ' grid, how many different shortest paths are there from the bottom-left corner to the top-right corner, moving only right or up one square at a time?'
+      },
+      visual: null,
+      answer: answer,
+      math: { op: 'pathcount', m: m, n: n },
+      hint: { zh: '共要走 ' + (m + n) + ' 步，選其中 ' + m + ' 步向右：C(' + (m + n) + ',' + m + ')。', en: 'There are ' + (m + n) + ' steps in total; choose ' + m + ' of them to go right: C(' + (m + n) + ',' + m + ').' }
+    };
+  }
+
+  function genHandshake(rng, o) {
+    var n = randInt(rng, 5, o.maxPeople || 30);
+    return {
+      type: 'handshake',
+      prompt: {
+        zh: n + ' 個人聚會，每兩個人互相握手一次，一共握手多少次？',
+        en: 'At a party, every pair of the ' + n + ' people shakes hands exactly once. How many handshakes are there in total?'
+      },
+      visual: null,
+      answer: n * (n - 1) / 2,
+      math: { op: 'handshake', n: n },
+      hint: { zh: '每人和其他 ' + (n - 1) + ' 人握手；每次握手被數了兩次。', en: 'Each person shakes ' + (n - 1) + ' hands, and each handshake is counted twice.' }
+    };
+  }
+
+  var ARRANGE_WORDS = ['LEVEL', 'BANANA', 'APPLE', 'MATHS', 'SUCCESS', 'BALLOON', 'KANGAROO'];
+
+  function genArrange(rng, o) {
+    var word = pick(rng, ARRANGE_WORDS);
+    var counts = {};
+    for (var i = 0; i < word.length; i++) counts[word[i]] = (counts[word[i]] || 0) + 1;
+    var denom = 1;
+    Object.keys(counts).forEach(function (ch) { denom *= factInt(counts[ch]); });
+    var answer = factInt(word.length) / denom;
+    return {
+      type: 'arrange',
+      prompt: {
+        zh: '把單詞 ' + word + ' 的所有字母重新排列，共有多少種不同的排列？',
+        en: 'How many different arrangements can be made using all the letters of the word ' + word + '?'
+      },
+      visual: null,
+      answer: answer,
+      math: { op: 'arrange', word: word },
+      hint: { zh: '全排列 ' + word.length + '!，再除以重複字母的排列數。', en: 'Start with ' + word.length + '! and divide by the arrangements of the repeated letters.' }
+    };
+  }
+
+  function genInclusion(rng, o) {
+    var n = randInt(rng, 30, o.maxNum || 200);
+    var a = randInt(rng, 2, 7);
+    var b = randInt(rng, 3, 9);
+    while (b === a) b = randInt(rng, 3, 9);
+    var l = (a / gcdInt(a, b)) * b;
+    var answer = Math.floor(n / a) + Math.floor(n / b) - Math.floor(n / l);
+    return {
+      type: 'inclusion',
+      prompt: {
+        zh: '在 1 到 ' + n + ' 之中，是 ' + a + ' 的倍數或是 ' + b + ' 的倍數的整數共有多少個？',
+        en: 'How many integers from 1 to ' + n + ' are multiples of ' + a + ' or ' + b + '?'
+      },
+      visual: null,
+      answer: answer,
+      math: { op: 'inclusion', n: n, a: a, b: b },
+      hint: { zh: '兩類相加後，要減去同時是兩者倍數（即 lcm 的倍數）的重複部分。', en: 'Add the two counts, then subtract the multiples of the LCM that were counted twice.' }
+    };
+  }
+
+  function genClockangle(rng, o) {
+    var h = randInt(rng, 1, 12);
+    var m = pick(rng, [0, 10, 20, 30, 40, 50]);
+    var diff = Math.abs(30 * h - 5.5 * m);
+    var answer = Math.min(diff, 360 - diff);
+    return {
+      type: 'clockangle',
+      prompt: {
+        zh: '時鐘顯示 ' + h + ':' + (m < 10 ? '0' + m : m) + '，時針與分針的較小夾角是多少度？',
+        en: 'A clock shows ' + h + ':' + (m < 10 ? '0' + m : m) + '. What is the smaller angle between the hour hand and the minute hand, in degrees?'
+      },
+      visual: null,
+      answer: answer,
+      math: { op: 'clockangle', h: h, m: m },
+      hint: { zh: '時針 = 30h + 0.5m 度；分針 = 6m 度；取兩者之差的較小角。', en: 'Hour hand = 30h + 0.5m degrees; minute hand = 6m degrees; take the smaller angle between them.' }
+    };
+  }
+
+  function genTrapezoid(rng, o) {
+    var a = randInt(rng, 4, o.maxSide || 12);
+    var b = randInt(rng, 4, o.maxSide || 12);
+    if (a === b) b += 2;
+    var h = randInt(rng, 3, o.maxHeight || 10);
+    if (((a + b) * h) % 2 !== 0) h += 1;
+    return {
+      type: 'trapezoid',
+      prompt: {
+        zh: '梯形的上底是 ' + a + ' cm，下底是 ' + b + ' cm，高是 ' + h + ' cm，面積是多少 cm²？',
+        en: 'A trapezium has parallel sides ' + a + ' cm and ' + b + ' cm and height ' + h + ' cm. What is its area in cm²?'
+      },
+      visual: null,
+      answer: (a + b) * h / 2,
+      math: { op: 'trapezoid', a: a, b: b, h: h },
+      hint: { zh: '梯形面積 = (上底 + 下底) × 高 ÷ 2。', en: 'Area of a trapezium = (sum of parallel sides) × height ÷ 2.' }
+    };
+  }
+
+  function genSeqnext(rng, o) {
+    var mode = pick(rng, ['triangle', 'fib', 'mixed', 'square']);
+    var terms = [];
+    var answer, math;
+    if (mode === 'triangle') {
+      var n = randInt(rng, 5, 8);
+      for (var i = 1; i <= n; i++) terms.push(i * (i + 1) / 2);
+      answer = (n + 1) * (n + 2) / 2;
+      math = { op: 'seqnext', mode: mode, n: n };
+    } else if (mode === 'fib') {
+      var f1 = randInt(rng, 1, 5), f2 = randInt(rng, 2, 7);
+      terms = [f1, f2];
+      while (terms.length < 5) terms.push(terms[terms.length - 1] + terms[terms.length - 2]);
+      answer = terms[4] + terms[3];
+      math = { op: 'seqnext', mode: mode, terms: terms.slice() };
+    } else if (mode === 'mixed') {
+      var start = randInt(rng, 1, 4), add = randInt(rng, 1, 3);
+      terms = [start];
+      while (terms.length < 5) terms.push(terms[terms.length - 1] * 2 + add);
+      answer = terms[4] * 2 + add;
+      math = { op: 'seqnext', mode: mode, terms: terms.slice(), add: add };
+    } else {
+      var sq = randInt(rng, 4, 8);
+      for (var j = 1; j <= sq; j++) terms.push(j * j + 1);
+      answer = (sq + 1) * (sq + 1) + 1;
+      math = { op: 'seqnext', mode: mode, n: sq };
+    }
+    return {
+      type: 'seqnext',
+      prompt: {
+        zh: '觀察數列：' + terms.join('、') + '，下一個數是多少？',
+        en: 'Study the sequence: ' + terms.join(', ') + '. What is the next number?'
+      },
+      visual: null,
+      answer: answer,
+      math: math,
+      hint: { zh: '先找出相鄰兩數的差或倍數關係。', en: 'Look for a pattern in the differences or ratios between terms.' }
+    };
+  }
+
+  function genPigeon(rng, o) {
+    var colors = randInt(rng, 3, o.maxColors || 5);
+    var k = randInt(rng, 2, o.maxSame || 4);
+    return {
+      type: 'pigeon',
+      prompt: {
+        zh: '袋中有 ' + colors + ' 種顏色的襪子（每種數量足夠）。最少要取出多少隻，才能保證其中有 ' + k + ' 隻同色？',
+        en: 'A bag contains socks of ' + colors + ' colours (enough of each). What is the smallest number of socks you must take to be certain that ' + k + ' of them have the same colour?'
+      },
+      visual: null,
+      answer: colors * (k - 1) + 1,
+      math: { op: 'pigeon', colors: colors, k: k },
+      hint: { zh: '最壞情況：每種顏色都先取 ' + (k - 1) + ' 隻，再取一隻。', en: 'Worst case: take ' + (k - 1) + ' of each colour first, then one more.' }
+    };
+  }
+
+  var WORKRATE_PAIRS = [[6, 12], [12, 6], [10, 15], [15, 10], [20, 5], [5, 20], [8, 24], [24, 8], [12, 4], [4, 12]];
+
+  function genWorkrate(rng, o) {
+    var pair = pick(rng, WORKRATE_PAIRS);
+    var a = pair[0], b = pair[1];
+    return {
+      type: 'workrate',
+      prompt: {
+        zh: '甲獨自完成一項工作要 ' + a + ' 天，乙獨自完成要 ' + b + ' 天。兩人合作，多少天可以完成？',
+        en: 'Ann can finish a job alone in ' + a + ' days and Ben can finish it alone in ' + b + ' days. How many days will they take working together?'
+      },
+      visual: null,
+      answer: a * b / (a + b),
+      math: { op: 'workrate', a: a, b: b },
+      hint: { zh: '合作一天完成 1/a + 1/b，時間 = 1 ÷ (1/a + 1/b)。', en: 'Together they do 1/a + 1/b per day, so time = 1 ÷ (1/a + 1/b).' }
+    };
+  }
+
+  function genMixture(rng, o) {
+    var x, y, p1, p2, answer;
+    var guard = 0;
+    do {
+      x = randInt(rng, 5, 40);
+      y = randInt(rng, 5, 40);
+      p1 = pick(rng, [10, 20, 30, 40, 50]);
+      p2 = pick(rng, [10, 20, 30, 40, 50]);
+      answer = (x * p1 + y * p2) / (x + y);
+      guard++;
+    } while (!Number.isInteger(answer) && guard < 300);
+    if (!Number.isInteger(answer)) { x = 20; y = 20; p1 = 20; p2 = 40; answer = 30; }
+    return {
+      type: 'mixture',
+      prompt: {
+        zh: '把 ' + x + ' 升 ' + p1 + '% 的糖水與 ' + y + ' 升 ' + p2 + '% 的糖水混合，混合後的濃度是多少%？',
+        en: x + ' litres of ' + p1 + '% sugar solution are mixed with ' + y + ' litres of ' + p2 + '% sugar solution. What is the concentration of the mixture, in %?'
+      },
+      visual: null,
+      answer: answer,
+      math: { op: 'mixture', x: x, p1: p1, y: y, p2: p2 },
+      hint: { zh: '先算兩杯各自的糖量，再除以總體積。', en: 'Find the sugar in each part first, then divide by the total volume.' }
+    };
+  }
+
+  function genDiceprob(rng, o) {
+    var s = randInt(rng, 2, 12);
+    var ways = 6 - Math.abs(s - 7);
+    return {
+      type: 'diceprob',
+      prompt: {
+        zh: '擲兩粒公平骰子，點數和是 ' + s + ' 的概率是多少？',
+        en: 'Two fair dice are rolled. What is the probability that the sum is ' + s + '?'
+      },
+      visual: null,
+      answer: { n: ways, d: 36 },
+      math: { op: 'diceprob', s: s },
+      hint: { zh: '列出和為 ' + s + ' 的組合數，再除以 36。', en: 'Count the outcomes with sum ' + s + ' and divide by 36.' }
+    };
+  }
+
+  function genCoinprob(rng, o) {
+    var n = randInt(rng, 3, 6);
+    var k = randInt(rng, 1, n - 1);
+    return {
+      type: 'coinprob',
+      prompt: {
+        zh: '擲 ' + n + ' 枚公平硬幣，剛好有 ' + k + ' 個正面的概率是多少？',
+        en: 'A fair coin is tossed ' + n + ' times. What is the probability of getting exactly ' + k + ' heads?'
+      },
+      visual: null,
+      answer: { n: factInt(n) / (factInt(k) * factInt(n - k)), d: Math.pow(2, n) },
+      math: { op: 'coinprob', n: n, k: k },
+      hint: { zh: '成功組合數 C(' + n + ',' + k + ') 除以 2^' + n + '。', en: 'Divide the number of successful combinations C(' + n + ',' + k + ') by 2^' + n + '.' }
     };
   }
 
@@ -3881,7 +4297,22 @@
     centre: genCentre,
     circleangle: genCircleangle,
     binomial: genBinomial,
-    derivative: genDerivative
+    derivative: genDerivative,
+    modpow: genModpow,
+    gcdlcm: genGcdlcm,
+    remainderSystem: genRemainderSystem,
+    pathcount: genPathcount,
+    handshake: genHandshake,
+    arrange: genArrange,
+    inclusion: genInclusion,
+    clockangle: genClockangle,
+    trapezoid: genTrapezoid,
+    seqnext: genSeqnext,
+    pigeon: genPigeon,
+    workrate: genWorkrate,
+    mixture: genMixture,
+    diceprob: genDiceprob,
+    coinprob: genCoinprob
   };
 
   /* 題型目錄：直接由註冊表產生，新增生成器即自動納入 */
@@ -3991,6 +4422,50 @@
       return m.paid - sum;
     },
     wequation: function (m) { return (m.result - m.b) / m.a; },
+    modpow: function (m) {
+      var r = 1;
+      for (var i = 0; i < m.b; i++) r = (r * m.a) % m.m;
+      return r;
+    },
+    gcdlcm: function (m) {
+      var g = gcdInt(m.a, m.b);
+      return m.mode === 'gcd' ? g : (m.a / g) * m.b;
+    },
+    remainderSystem: function (m) {
+      for (var n = 1; n <= 5000; n++) if (n % m.a === m.r1 && n % m.b === m.r2) return n;
+      throw new Error('remainderSystem 無解');
+    },
+    pathcount: function (m) { return factInt(m.m + m.n) / (factInt(m.m) * factInt(m.n)); },
+    handshake: function (m) { return m.n * (m.n - 1) / 2; },
+    arrange: function (m) {
+      var counts = {};
+      for (var i = 0; i < m.word.length; i++) counts[m.word[i]] = (counts[m.word[i]] || 0) + 1;
+      var denom = 1;
+      Object.keys(counts).forEach(function (ch) { denom *= factInt(counts[ch]); });
+      return factInt(m.word.length) / denom;
+    },
+    inclusion: function (m) {
+      var l = (m.a / gcdInt(m.a, m.b)) * m.b;
+      return Math.floor(m.n / m.a) + Math.floor(m.n / m.b) - Math.floor(m.n / l);
+    },
+    clockangle: function (m) {
+      var diff = Math.abs(30 * m.h - 5.5 * m.m);
+      return Math.min(diff, 360 - diff);
+    },
+    trapezoid: function (m) { return (m.a + m.b) * m.h / 2; },
+    seqnext: function (m) {
+      if (m.mode === 'triangle') return (m.n + 1) * (m.n + 2) / 2;
+      if (m.mode === 'fib') return m.terms[m.terms.length - 1] + m.terms[m.terms.length - 2];
+      if (m.mode === 'mixed') return m.terms[m.terms.length - 1] * 2 + m.add;
+      return (m.n + 1) * (m.n + 1) + 1;
+    },
+    pigeon: function (m) { return m.colors * (m.k - 1) + 1; },
+    workrate: function (m) { return m.a * m.b / (m.a + m.b); },
+    mixture: function (m) { return (m.x * m.p1 + m.y * m.p2) / (m.x + m.y); },
+    diceprob: function (m) { return { n: 6 - Math.abs(m.s - 7), d: 36 }; },
+    coinprob: function (m) {
+      return { n: factInt(m.n) / (factInt(m.k) * factInt(m.n - m.k)), d: Math.pow(2, m.n) };
+    },
     placevalue: function (m) {
       if (m.mode === 'tens') return m.tens;
       if (m.mode === 'ones') return m.ones;
@@ -4155,6 +4630,9 @@
   /* 每個類型合理的干擾項數值上界 */
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
+    if (['modpow', 'gcdlcm', 'remainderSystem', 'pathcount', 'handshake', 'arrange', 'inclusion', 'clockangle', 'trapezoid', 'seqnext', 'pigeon', 'workrate', 'mixture'].indexOf(p.type) !== -1) {
+      return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
+    }
     if (p.type === 'quadsolve') return 120;
     if (p.type === 'binomial') return 500;
     if (p.type === 'circleprop') return 200;

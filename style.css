@@ -696,6 +696,28 @@ h1, h2, h3, p { margin: 0; }
 .color-choice { flex-direction: row; gap: 10px; justify-content: center; }
 .big-num { font-family: var(--font-display); font-size: 46px; font-weight: 800; }
 
+/* ---------- 挑戰區（首頁入口卡） ---------- */
+.challenge-card {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; text-align: left;
+  margin: 0 0 18px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, #FFF3C4, #FFE0A3);
+  border: 2.5px solid var(--line);
+  border-radius: 22px 18px 20px 19px / 19px 20px 18px 22px;
+  box-shadow: 6px 6px 0 rgba(51, 46, 38, 0.24);
+  color: var(--ink);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+.challenge-card:hover { transform: translateY(-2px); }
+.challenge-card:active { transform: translateY(2px); box-shadow: 2px 2px 0 rgba(51, 46, 38, 0.24); }
+.challenge-emoji { font-size: 30px; line-height: 1; flex: none; }
+.challenge-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.challenge-title { font-family: var(--font-display); font-weight: 800; font-size: 20px; }
+.challenge-sub { font-size: 13px; color: var(--ink-2); }
+.challenge-count { font-family: var(--font-hand); font-size: 13px; font-weight: 700; }
+.challenge-arrow { font-family: var(--font-display); font-size: 24px; font-weight: 800; }
+
 /* ---------- 新版本提示（Service Worker waiting） ---------- */
 .update-chip {
   position: fixed;
