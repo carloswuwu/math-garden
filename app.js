@@ -201,6 +201,7 @@
   }
 
   function confetti() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     var box = $('confetti');
     var colors = ['#FF9500', '#34C759', '#007AFF', '#AF52DE', '#FF2D55', '#FFCC00'];
     for (var i = 0; i < 22; i++) {
@@ -740,6 +741,15 @@
     screens.forEach(function (s) { $('screen-' + s).hidden = (s !== screen); });
     try { window.scrollTo(0, 0); } catch (e) { /* jsdom 無此實現 */ }
     updateTopbar();
+    /* 導航後把焦點移到畫面標題，並透過 live region 宣告，避免焦點掉到 body */
+    var current = $('screen-' + screen);
+    var heading = current && current.querySelector('h1, .page-title');
+    if (heading) {
+      if (!heading.hasAttribute('tabindex')) heading.setAttribute('tabindex', '-1');
+      try { heading.focus({ preventScroll: true }); } catch (e) { try { heading.focus(); } catch (e2) { /* 忽略 */ } }
+    }
+    var announcer = $('announcer');
+    if (announcer) announcer.textContent = ($('topbarTitle') || {}).textContent || '';
   }
 
   function updateTopbar() {
@@ -1807,13 +1817,8 @@
       navigator.serviceWorker.register('sw.js').then(function (reg) {
         reg.update().catch(function () { /* 忽略 */ });
       }).catch(function () { /* 忽略 */ });
-      // 有新版 Service Worker 接管時自動重新載入，確保拿到最新版本
-      var reloading = false;
-      navigator.serviceWorker.addEventListener('controllerchange', function () {
-        if (reloading) return;
-        reloading = true;
-        window.location.reload();
-      });
+      /* 不再在 controllerchange 時自動重新載入：更新可能在測驗中途發生，
+       * 交由下一次導航（網路優先）或設定頁的「強制更新」處理。 */
     });
   }
 

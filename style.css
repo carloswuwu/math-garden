@@ -130,6 +130,23 @@ h1, h2, h3, p { margin: 0; }
   outline-offset: 3px;
 }
 
+/* 無障礙：螢幕閱讀器限定內容與「跳至主內容」連結 */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: absolute; left: 12px; top: -64px; z-index: 200;
+  background: var(--card); color: var(--ink);
+  border: 2px solid var(--line); border-radius: 12px;
+  padding: 10px 14px;
+  font-family: var(--font-display); font-weight: 800;
+  box-shadow: var(--shadow-s);
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: 12px; }
+
 /* 自訂按鈕 / 控件：加大焦點環，保持手繪虛線語言但更清楚可見 */
 .btn:focus-visible,
 .icon-btn:focus-visible,
