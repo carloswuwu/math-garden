@@ -50,6 +50,15 @@ const KNOWN_SMALL_POOLS = {
 const skills = Object.values(C.skills).filter((s) => !s.scaffold && (s.types || []).length);
 check(skills.length > 90, '應載入 90+ 個有題目的技能');
 
+/* 0. 題型目錄必須涵蓋課程實際使用的每一個 type */
+{
+  const declared = new Set(M.GENERATOR_TYPES);
+  const used = new Set();
+  for (const s of skills) for (const t of s.types) used.add(typeof t === 'string' ? t : t.t);
+  [...used].forEach((t) => check(declared.has(t), 'GENERATOR_TYPES 缺少題型 ' + t));
+  check(declared.size > 0, 'GENERATOR_TYPES 不應為空');
+}
+
 for (const skill of skills) {
   const specs = skill.types.map((t) => (typeof t === 'string' ? { t } : t));
   const steps = Math.max(1, Math.min(3, (skill.levels || []).length));
@@ -172,6 +181,25 @@ for (const skill of skills) {
   }
   const floor = KNOWN_SMALL_POOLS[skill.id] != null ? KNOWN_SMALL_POOLS[skill.id] : 10;
   check(sigs.size >= floor, '題庫池太小 ' + skill.id + '：' + sigs.size + ' < ' + floor);
+}
+
+/* 8. 題目標識：不同 math 內容不得共用同一個 sig（防止去重失效） */
+function stableOf(value) {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return '[' + value.map(stableOf).join(',') + ']';
+  return '{' + Object.keys(value).sort().map((k) => JSON.stringify(k) + ':' + stableOf(value[k])).join(',') + '}';
+}
+for (const skill of skills) {
+  for (const spec of skill.types.map((t) => (typeof t === 'string' ? { t } : t))) {
+    const maths = new Set();
+    const sigs = new Set();
+    for (let i = 0; i < 120; i++) {
+      const p = M.generateProblem(skill, { type: spec.t, seed: 800 + i });
+      maths.add(stableOf(p.math));
+      sigs.add(p.sig);
+    }
+    check(sigs.size === maths.size, 'sig 碰撞 ' + skill.id + '/' + spec.t + '：maths=' + maths.size + ' sigs=' + sigs.size);
+  }
 }
 
 /* 7. 難度階梯：同一技能高階平均答案應大於低階 */

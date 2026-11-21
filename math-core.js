@@ -19,20 +19,8 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var GENERATOR_TYPES = [
-    'count', 'compare', 'comparegroup', 'addition', 'subtraction', 'numberbonds',
-    'missing', 'multiplication', 'division', 'fraction', 'word',
-    'multidigit', 'fractionadd', 'decimal', 'decimalmul', 'average',
-    'equation', 'percent', 'ratio', 'area', 'fractionof',
-    'directed', 'exprsub', 'linear', 'pythagoras', 'simul', 'indices', 'inequality',
-    'log', 'fx', 'trig', 'ap', 'gp', 'prob', 'quad', 'stats',
-    'triangle', 'circle', 'volume', 'coord',
-    'perimeter', 'polygon', 'angle', 'money', 'fact', 'quadsolve', 'line', 'variation',
-    'oddeven',
-    'shape', 'symmetry', 'liketerms', 'polycoeff', 'arclen', 'mode', 'asum', 'invvar', 'comb', 'range', 'circleeq',
-    'parallel', 'sqrt', 'congruent', 'similar', 'quadshape', 'cylinder', 'sinterest', 'expand', 'pichart', 'approx',
-    'direction', 'time24', 'cone', 'centre', 'circleangle', 'binomial', 'derivative'
-  ];
+  /* 題型目錄由 GENERATORS 的鍵自動產生，避免清單與實作脫節 */
+  var GENERATOR_TYPES;
 
   /* ---------------- 可播種隨機數 ---------------- */
 
@@ -2184,14 +2172,6 @@
     };
   }
 
-  var TIME24_FACTS = [
-    { zh: '15:00 是下午幾點？', en: '15:00 is what time in the afternoon?', a: 3 },
-    { zh: '20:00 是晚上幾點？', en: '20:00 is what time in the evening?', a: 8 },
-    { zh: '13:00 是下午幾點？', en: '13:00 is what time in the afternoon?', a: 1 },
-    { zh: '16:30 是下午幾點半？', en: '16:30 is what time in the afternoon?', a: 4 },
-    { zh: '下午 5 時是 24 小時制的幾點？', en: '5 pm is what time on the 24-hour clock?', a: 17 }
-  ];
-
   var SOLID_PAIRS = [
     { kind: 'coneV', r: 3, h: 3, coef: 9 },
     { kind: 'coneV', r: 3, h: 6, coef: 18 },
@@ -3160,6 +3140,9 @@
     derivative: genDerivative
   };
 
+  /* 題型目錄：直接由註冊表產生，新增生成器即自動納入 */
+  GENERATOR_TYPES = Object.keys(GENERATORS);
+
   /* ---------------- 選項（干擾項）生成 ---------------- */
 
   function fractionDistractor(rng, ans) {
@@ -3284,22 +3267,18 @@
 
   /* ---------------- 技能配置輔助 ---------------- */
 
-  /* 題目的穩定標識（含操作數，用於去重與「避開最近題」） */
+  /* 穩定序列化：物件鍵排序、陣列保留次序。
+   * 用於題目標識與去重，避免像舊版那樣靠一份「欄位白名單」而漏掉新欄位。 */
+  function stableStringify(value) {
+    if (value === null || typeof value !== 'object') return JSON.stringify(value);
+    if (Array.isArray(value)) return '[' + value.map(stableStringify).join(',') + ']';
+    var keys = Object.keys(value).sort();
+    return '{' + keys.map(function (k) { return JSON.stringify(k) + ':' + stableStringify(value[k]); }).join(',') + '}';
+  }
+
+  /* 題目的穩定標識（完整 math 內容，用於去重與「避開最近題」） */
   function mathSig(math) {
-    switch (math.op) {
-      case 'count': return 'n' + math.n;
-      case 'frac': return math.n + '/' + math.d;
-      case 'compare': return math.a + '_' + math.b + '_' + math.mode;
-      case 'comparegroup': return math.a + '_' + math.b + '_' + math.mode;
-    }
-    var parts = [math.op];
-    var keys = ['a', 'b', 'c', 'd', 'r', 'h', 'mode', 'form', 'n', 'x', 'whole', 'p', 'q', 'k', 'kind', 'pct', 'part', 'result', 'l', 'w', 'base', 'val', 'which', 'good', 'total', 'askSum', 'sum', 'prod', 'angle', 'e', 'e1', 'e2', 'dist'];
-    keys.forEach(function (k) {
-      if (math[k] != null) parts.push(k + '=' + math[k]);
-    });
-    if (math.nums) parts.push('nums=' + math.nums.join(','));
-    if (math.blank) parts.push('blank=' + math.blank);
-    return parts.join('_');
+    return stableStringify(math);
   }
 
   function levelFor(skill, difficultyStep) {
