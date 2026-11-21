@@ -21,3 +21,5 @@ jobs:
         run: node tests/ui.test.js
       - name: Generator / content contract tests
         run: node tests/generators.test.js
+      - name: Cross-layer contract tests (MATH_SPEC, assets, i18n, solvers, formulas)
+        run: node tests/contract.test.js
