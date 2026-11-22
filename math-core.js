@@ -211,6 +211,36 @@ var __MathCoreBundle = (() => {
     fx: function(m) {
       return m.a * m.x * m.x + m.b * m.x + m.c;
     },
+    compound: function(m) {
+      if (m.mode === "sinSum") return { n: m.a * m.e + m.b * m.d, d: m.c * m.f };
+      if (m.mode === "sinDiff") return { n: m.a * m.e - m.b * m.d, d: m.c * m.f };
+      if (m.mode === "cosSum") return { n: m.b * m.e - m.a * m.d, d: m.c * m.f };
+      return { n: m.a * m.e + m.b * m.d, d: m.b * m.e - m.a * m.d || 1 };
+    },
+    radian: function(m) {
+      if (m.mode === "convert") return { n: m.deg, d: 180 };
+      if (m.mode === "arc") return { n: m.r * m.deg, d: 180 };
+      var table = {
+        sin0: 0,
+        sin30: { n: 1, d: 2 },
+        sin45: "√2/2",
+        sin60: "√3/2",
+        sin90: 1,
+        sin180: 0,
+        cos0: 1,
+        cos30: "√3/2",
+        cos45: "√2/2",
+        cos60: { n: 1, d: 2 },
+        cos90: 0,
+        cos180: -1
+      };
+      return table[m.which + m.deg];
+    },
+    trigeq: function(m) {
+      if (m.mode === "sin") return 180;
+      if (m.mode === "cos") return 360;
+      return 180 + 2 * m.base;
+    },
     trigident: function(m) {
       if (m.mode === "pythagorean") return { n: m.b, d: m.c };
       if (m.mode === "double") return { n: 2 * m.a * m.b, d: m.c * m.c };
@@ -4587,6 +4617,134 @@ var __MathCoreBundle = (() => {
       hint: { zh: mode === "amplitude" ? "振幅 = |a|。" : "週期 = 360° ÷ |b|。", en: mode === "amplitude" ? "Amplitude = |a|." : "Period = 360° ÷ |b|." }
     };
   }
+  function genCompound(rng, o) {
+    var t1 = pick(rng, TRIG_TRIPLES);
+    var t2 = pick(rng, TRIG_TRIPLES);
+    var mode = pick(rng, ["sinSum", "sinDiff", "cosSum", "tanSum"]);
+    var a = t1[0], b = t1[1], c = t1[2];
+    var d = t2[0], e = t2[1], f = t2[2];
+    if (mode === "sinSum") {
+      return {
+        type: "compound",
+        prompt: { zh: "已知 $\\sin A = \\frac{" + a + "}{" + c + "}$、$\\cos A = \\frac{" + b + "}{" + c + "}$，$\\sin B = \\frac{" + d + "}{" + f + "}$、$\\cos B = \\frac{" + e + "}{" + f + "}$，A、B 為銳角。求 $\\sin(A+B)$。", en: "Given $\\sin A = \\frac{" + a + "}{" + c + "}$, $\\cos A = \\frac{" + b + "}{" + c + "}$, $\\sin B = \\frac{" + d + "}{" + f + "}$, $\\cos B = \\frac{" + e + "}{" + f + "}$ with A, B acute, find $\\sin(A+B)$." },
+        visual: null,
+        answer: reduceFraction({ n: a * e + b * d, d: c * f }),
+        math: { op: "compound", mode, a, b, c, d, e, f },
+        hint: { zh: "$\\sin(A+B) = \\sin A\\cos B + \\cos A\\sin B$。", en: "$\\sin(A+B) = \\sin A\\cos B + \\cos A\\sin B$." }
+      };
+    }
+    if (mode === "sinDiff") {
+      if (a / b < d / e) {
+        var tt = [a, b, c];
+        a = d;
+        b = e;
+        c = f;
+        d = tt[0];
+        e = tt[1];
+        f = tt[2];
+      }
+      return {
+        type: "compound",
+        prompt: { zh: "已知 $\\sin A = \\frac{" + a + "}{" + c + "}$、$\\cos A = \\frac{" + b + "}{" + c + "}$，$\\sin B = \\frac{" + d + "}{" + f + "}$、$\\cos B = \\frac{" + e + "}{" + f + "}$，A、B 為銳角。求 $\\sin(A-B)$。", en: "Given $\\sin A = \\frac{" + a + "}{" + c + "}$, $\\cos A = \\frac{" + b + "}{" + c + "}$, $\\sin B = \\frac{" + d + "}{" + f + "}$, $\\cos B = \\frac{" + e + "}{" + f + "}$ with A, B acute, find $\\sin(A-B)$." },
+        visual: null,
+        answer: reduceFraction({ n: a * e - b * d, d: c * f }),
+        math: { op: "compound", mode, a, b, c, d, e, f },
+        hint: { zh: "$\\sin(A-B) = \\sin A\\cos B - \\cos A\\sin B$。", en: "$\\sin(A-B) = \\sin A\\cos B - \\cos A\\sin B$." }
+      };
+    }
+    if (mode === "cosSum") {
+      return {
+        type: "compound",
+        prompt: { zh: "已知 $\\sin A = \\frac{" + a + "}{" + c + "}$、$\\cos A = \\frac{" + b + "}{" + c + "}$，$\\sin B = \\frac{" + d + "}{" + f + "}$、$\\cos B = \\frac{" + e + "}{" + f + "}$，A、B 為銳角。求 $\\cos(A+B)$。", en: "Given $\\sin A = \\frac{" + a + "}{" + c + "}$, $\\cos A = \\frac{" + b + "}{" + c + "}$, $\\sin B = \\frac{" + d + "}{" + f + "}$, $\\cos B = \\frac{" + e + "}{" + f + "}$ with A, B acute, find $\\cos(A+B)$." },
+        visual: null,
+        answer: reduceFraction({ n: b * e - a * d, d: c * f }),
+        math: { op: "compound", mode, a, b, c, d, e, f },
+        hint: { zh: "$\\cos(A+B) = \\cos A\\cos B - \\sin A\\sin B$。", en: "$\\cos(A+B) = \\cos A\\cos B - \\sin A\\sin B$." }
+      };
+    }
+    var numTan = a * e + b * d;
+    var denTan = b * e - a * d;
+    if (denTan === 0) {
+      denTan = 1;
+    }
+    return {
+      type: "compound",
+      prompt: { zh: "已知 $\\tan A = \\frac{" + a + "}{" + b + "}$、$\\tan B = \\frac{" + d + "}{" + e + "}$，求 $\\tan(A+B)$。", en: "Given $\\tan A = \\frac{" + a + "}{" + b + "}$ and $\\tan B = \\frac{" + d + "}{" + e + "}$, find $\\tan(A+B)$." },
+      visual: null,
+      answer: reduceFraction({ n: numTan, d: denTan }),
+      math: { op: "compound", mode, a, b, c, d, e, f },
+      hint: { zh: "$\\tan(A+B) = \\dfrac{\\tan A + \\tan B}{1 - \\tan A\\tan B}$。", en: "$\\tan(A+B) = \\dfrac{\\tan A + \\tan B}{1 - \\tan A\\tan B}$." }
+    };
+  }
+  function genRadian(rng, o) {
+    var mode = pick(rng, ["convert", "arc"]);
+    if (mode === "convert") {
+      var deg = pick(rng, [30, 45, 60, 90, 120, 135, 150, 180, 270, 360]);
+      return {
+        type: "radian",
+        prompt: { zh: "把 $" + deg + "^\\circ$ 化成弧度，寫成 $k\\pi$ 的係數 $k$ 是多少？", en: "Convert $" + deg + "^\\circ$ to radians. What is the coefficient $k$ in $k\\pi$?" },
+        visual: { kind: "unitcircle" },
+        answer: reduceFraction({ n: deg, d: 180 }),
+        math: { op: "radian", mode, deg },
+        hint: { zh: "$180^\\circ = \\pi$，所以 $k = " + deg + "/180$。", en: "$180^\\circ = \\pi$, so $k = " + deg + "/180$." }
+      };
+    }
+    if (mode === "arc") {
+      var r = randInt(rng, 2, 10);
+      var ang = pick(rng, [30, 45, 60, 90, 120, 180]);
+      return {
+        type: "radian",
+        prompt: { zh: "半徑 " + r + " cm、圓心角 $" + ang + "^\\circ$，弧長是 $k\\pi$ cm。求 $k$。", en: "A sector has radius " + r + " cm and angle $" + ang + "^\\circ$. Its arc length is $k\\pi$ cm. Find $k$." },
+        visual: { kind: "unitcircle" },
+        answer: reduceFraction({ n: r * ang, d: 180 }),
+        math: { op: "radian", mode, r, deg: ang },
+        hint: { zh: "先把角度化成弧度，再用 $s = r\\theta$。", en: "Convert the angle to radians, then use $s = r\\theta$." }
+      };
+    }
+    var angles = [0, 30, 45, 60, 90, 180];
+    var beta = pick(rng, angles);
+    var which = pick(rng, ["sin", "cos"]);
+    var table = {
+      "sin0": 0,
+      "sin30": { n: 1, d: 2 },
+      "sin45": "sqrt2/2",
+      "sin60": "sqrt3/2",
+      "sin90": 1,
+      "sin180": 0,
+      "cos0": 1,
+      "cos30": "sqrt3/2",
+      "cos45": "sqrt2/2",
+      "cos60": { n: 1, d: 2 },
+      "cos90": 0,
+      "cos180": -1
+    };
+    var v = table[which + beta];
+    return {
+      type: "radian",
+      prompt: { zh: "單位圓上，$\\" + which + beta + "^\\circ$ 的值是多少？", en: "On the unit circle, what is $\\" + which + beta + "^\\circ$?" },
+      visual: { kind: "unitcircle" },
+      answer: v === "sqrt2/2" ? "√2/2" : v === "sqrt3/2" ? "√3/2" : v,
+      math: { op: "radian", mode, which, deg: beta },
+      hint: { zh: "記住特殊角的單位圓座標。", en: "Recall the unit-circle coordinates for special angles." }
+    };
+  }
+  function genTrigeq(rng, o) {
+    var mode = pick(rng, ["sin", "cos", "tan"]);
+    var base = mode === "tan" ? pick(rng, [30, 45, 60]) : pick(rng, [30, 45, 60, 120, 135, 150]);
+    var sum;
+    if (mode === "sin") sum = 180;
+    else if (mode === "cos") sum = 360;
+    else sum = 180 + 2 * base;
+    var label = mode === "sin" ? "\\sin" : mode === "cos" ? "\\cos" : "\\tan";
+    return {
+      type: "trigeq",
+      prompt: { zh: "在 $0^\\circ \\le \\theta < 360^\\circ$ 內，方程 $" + label + "\\theta = " + label + base + "^\\circ$ 有兩個解，求這兩個解的和（度）。", en: "For $0^\\circ \\le \\theta < 360^\\circ$, the equation $" + label + "\\theta = " + label + base + "^\\circ$ has two solutions. Find their sum in degrees." },
+      visual: { kind: "unitcircle" },
+      answer: sum,
+      math: { op: "trigeq", mode, base },
+      hint: { zh: "正弦兩解互補（和 180°）；餘弦兩解和 360°；正切兩解相差 180°。", en: "Sine solutions are supplementary (sum 180°); cosine solutions sum to 360°; tangent solutions differ by 180°." }
+    };
+  }
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -4716,7 +4874,10 @@ var __MathCoreBundle = (() => {
     gradcategory: genGradcategory,
     trigident: genTrigident,
     sinerule: genSinerule,
-    triggraph: genTriggraph
+    triggraph: genTriggraph,
+    compound: genCompound,
+    radian: genRadian,
+    trigeq: genTrigeq
   };
 
   // src/core/format.js
@@ -5974,6 +6135,19 @@ var __MathCoreBundle = (() => {
         return { zh: ["正弦定理：$dfrac{a}{sin A} = dfrac{b}{sin B}$。", "$a = bsin A / sin B = " + p.answer + "$。"], en: ["Sine rule: $dfrac{a}{sin A} = dfrac{b}{sin B}$.", "$a = bsin A / sin B = " + p.answer + "$."] };
       case "triggraph":
         return m.mode === "amplitude" ? { zh: ["$y = asin(bx)$ 的振幅是 |a|。", "振幅 = " + m.a + "。"], en: ["The amplitude of $y = asin(bx)$ is |a|.", "Amplitude = " + m.a + "."] } : { zh: ["週期 = 360° ÷ |b|。", "週期 = 360° ÷ " + m.b + " = " + p.answer + "°。"], en: ["Period = 360° ÷ |b|.", "Period = 360° ÷ " + m.b + " = " + p.answer + "°."] };
+      case "compound":
+        if (m.mode === "sinSum") return { zh: ["$sin(A+B)=sin Acos B+cos Asin B$。", "= " + m.a + "/" + m.c + "×" + m.e + "/" + m.f + " + " + m.b + "/" + m.c + "×" + m.d + "/" + m.f + " = " + renderValue(p.answer) + "。"], en: ["$sin(A+B)=sin Acos B+cos Asin B$.", "= " + m.a + "/" + m.c + "×" + m.e + "/" + m.f + " + " + m.b + "/" + m.c + "×" + m.d + "/" + m.f + " = " + renderValue(p.answer) + "."] };
+        if (m.mode === "sinDiff") return { zh: ["$sin(A-B)=sin Acos B-cos Asin B$。", "= " + renderValue(p.answer) + "。"], en: ["$sin(A-B)=sin Acos B-cos Asin B$.", "= " + renderValue(p.answer) + "."] };
+        if (m.mode === "cosSum") return { zh: ["$cos(A+B)=cos Acos B-sin Asin B$。", "= " + renderValue(p.answer) + "。"], en: ["$cos(A+B)=cos Acos B-sin Asin B$.", "= " + renderValue(p.answer) + "."] };
+        return { zh: ["$	an(A+B)=dfrac{	an A+	an B}{1-	an A	an B}$。", "= " + renderValue(p.answer) + "。"], en: ["$	an(A+B)=dfrac{	an A+	an B}{1-	an A	an B}$.", "= " + renderValue(p.answer) + "."] };
+      case "radian":
+        if (m.mode === "convert") return { zh: ["$180^circ=pi$，所以 $" + m.deg + "^circ=" + renderValue(p.answer) + "pi$。"], en: ["$180^circ=pi$, so $" + m.deg + "^circ=" + renderValue(p.answer) + "pi$."] };
+        if (m.mode === "arc") return { zh: ["$s=r	heta$，角度先化成弧度。", "=$" + renderValue(p.answer) + "pi$ cm。"], en: ["$s=r	heta$ after converting the angle to radians.", "=$" + renderValue(p.answer) + "pi$ cm."] };
+        return { zh: ["用單位圓特殊角座標。", "答案是 " + renderValue(p.answer) + "。"], en: ["Use the unit-circle coordinates for special angles.", "The answer is " + renderValue(p.answer) + "."] };
+      case "trigeq":
+        if (m.mode === "sin") return { zh: ["$sin	heta=sin " + m.base + "^circ$ 的兩解為 $" + m.base + "^circ$ 與 $" + (180 - m.base) + "^circ$。", "和 = 180°。"], en: ["$sin	heta=sin " + m.base + "^circ$ has solutions $" + m.base + "^circ$ and $" + (180 - m.base) + "^circ$.", "Sum = 180°."] };
+        if (m.mode === "cos") return { zh: ["$cos	heta=cos " + m.base + "^circ$ 的兩解和為 360°。"], en: ["$cos	heta=cos " + m.base + "^circ$ has solutions summing to 360°."] };
+        return { zh: ["$	an	heta=	an " + m.base + "^circ$ 的兩解相差 180°。", "和 = 180° + 2×" + m.base + "° = " + p.answer + "°。"], en: ["$	an	heta=	an " + m.base + "^circ$ has solutions differing by 180°.", "Sum = 180° + 2×" + m.base + "° = " + p.answer + "°."] };
       default:
         return null;
     }
@@ -6031,7 +6205,7 @@ var __MathCoreBundle = (() => {
   }
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
-    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory", "gradanalysis", "gradalgebra", "gradtopology", "gradmeasure", "gradgeometry", "gradcategory", "trigident", "sinerule", "triggraph"].indexOf(p.type) !== -1) {
+    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory", "gradanalysis", "gradalgebra", "gradtopology", "gradmeasure", "gradgeometry", "gradcategory", "trigident", "sinerule", "triggraph", "compound", "radian", "trigeq"].indexOf(p.type) !== -1) {
       return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
     }
     if (p.type === "quadsolve") return 120;

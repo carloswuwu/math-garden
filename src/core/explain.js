@@ -1237,6 +1237,19 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
         return m.mode === 'amplitude'
           ? { zh: ['$y = a\sin(bx)$ 的振幅是 |a|。', '振幅 = ' + m.a + '。'], en: ['The amplitude of $y = a\sin(bx)$ is |a|.', 'Amplitude = ' + m.a + '.'] }
           : { zh: ['週期 = 360° ÷ |b|。', '週期 = 360° ÷ ' + m.b + ' = ' + p.answer + '°。'], en: ['Period = 360° ÷ |b|.', 'Period = 360° ÷ ' + m.b + ' = ' + p.answer + '°.'] };
+      case 'compound':
+        if (m.mode === 'sinSum') return { zh: ['$\sin(A+B)=\sin A\cos B+\cos A\sin B$。', '= ' + m.a + '/' + m.c + '×' + m.e + '/' + m.f + ' + ' + m.b + '/' + m.c + '×' + m.d + '/' + m.f + ' = ' + renderValue(p.answer) + '。'], en: ['$\sin(A+B)=\sin A\cos B+\cos A\sin B$.', '= ' + m.a + '/' + m.c + '×' + m.e + '/' + m.f + ' + ' + m.b + '/' + m.c + '×' + m.d + '/' + m.f + ' = ' + renderValue(p.answer) + '.'] };
+        if (m.mode === 'sinDiff') return { zh: ['$\sin(A-B)=\sin A\cos B-\cos A\sin B$。', '= ' + renderValue(p.answer) + '。'], en: ['$\sin(A-B)=\sin A\cos B-\cos A\sin B$.', '= ' + renderValue(p.answer) + '.'] };
+        if (m.mode === 'cosSum') return { zh: ['$\cos(A+B)=\cos A\cos B-\sin A\sin B$。', '= ' + renderValue(p.answer) + '。'], en: ['$\cos(A+B)=\cos A\cos B-\sin A\sin B$.', '= ' + renderValue(p.answer) + '.'] };
+        return { zh: ['$\tan(A+B)=\dfrac{\tan A+\tan B}{1-\tan A\tan B}$。', '= ' + renderValue(p.answer) + '。'], en: ['$\tan(A+B)=\dfrac{\tan A+\tan B}{1-\tan A\tan B}$.', '= ' + renderValue(p.answer) + '.'] };
+      case 'radian':
+        if (m.mode === 'convert') return { zh: ['$180^\circ=\pi$，所以 $' + m.deg + '^\circ=' + renderValue(p.answer) + '\pi$。'], en: ['$180^\circ=\pi$, so $' + m.deg + '^\circ=' + renderValue(p.answer) + '\pi$.'] };
+        if (m.mode === 'arc') return { zh: ['$s=r\theta$，角度先化成弧度。', '=$' + renderValue(p.answer) + '\pi$ cm。'], en: ['$s=r\theta$ after converting the angle to radians.', '=$' + renderValue(p.answer) + '\pi$ cm.'] };
+        return { zh: ['用單位圓特殊角座標。', '答案是 ' + renderValue(p.answer) + '。'], en: ['Use the unit-circle coordinates for special angles.', 'The answer is ' + renderValue(p.answer) + '.'] };
+      case 'trigeq':
+        if (m.mode === 'sin') return { zh: ['$\sin\theta=\sin ' + m.base + '^\circ$ 的兩解為 $' + m.base + '^\circ$ 與 $' + (180 - m.base) + '^\circ$。', '和 = 180°。'], en: ['$\sin\theta=\sin ' + m.base + '^\circ$ has solutions $' + m.base + '^\circ$ and $' + (180 - m.base) + '^\circ$.', 'Sum = 180°.'] };
+        if (m.mode === 'cos') return { zh: ['$\cos\theta=\cos ' + m.base + '^\circ$ 的兩解和為 360°。'], en: ['$\cos\theta=\cos ' + m.base + '^\circ$ has solutions summing to 360°.'] };
+        return { zh: ['$\tan\theta=\tan ' + m.base + '^\circ$ 的兩解相差 180°。', '和 = 180° + 2×' + m.base + '° = ' + p.answer + '°。'], en: ['$\tan\theta=\tan ' + m.base + '^\circ$ has solutions differing by 180°.', 'Sum = 180° + 2×' + m.base + '° = ' + p.answer + '°.'] };
       default:
         return null;
     }

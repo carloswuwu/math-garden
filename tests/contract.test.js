@@ -485,9 +485,9 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
   const installBlock = (swSrc.match(/addEventListener\('install',[\s\S]*?\}\);/g) || []).join('');
   check(installBlock.indexOf('self.skipWaiting()') === -1, '安裝時不應自動 skipWaiting（更新要等使用者確認）');
 
-  /* 體積：advisory 上限 166 KB gzip（108 課教學步驟/常見錯誤 + 8 個新課堂與視覺化） */
+  /* 體積：advisory 上限 170 KB gzip（108 課教學步驟/常見錯誤 + 8 個新課堂與視覺化） */
   const gzipBytes = zlib.gzipSync(fs.readFileSync(path.join(DIST, appRef))).length;
-  check(gzipBytes <= 166 * 1024, 'bundle gzip 應 ≤ 166 KB，實際 ' + (gzipBytes / 1024).toFixed(1) + ' KB');
+  check(gzipBytes <= 170 * 1024, 'bundle gzip 應 ≤ 170 KB，實際 ' + (gzipBytes / 1024).toFixed(1) + ' KB');
 })();
 
 console.log('✓ 契約測試全部通過（' + checks + ' 項斷言，' + skills.length + ' 個技能）');

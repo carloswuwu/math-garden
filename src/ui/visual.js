@@ -69,6 +69,7 @@ function visualAlt(visual, math) {
       case 'linegraph': return tpl('linegraph');
       case 'matrix': return tpl('matrix', { a: v.a, b: v.b, c: v.c, d: v.d });
       case 'sinewave': return tpl('sinewave');
+      case 'unitcircle': return tpl('unitcircle');
       case 'percentgrid': return tpl('percentgrid', { pct: v.pct });
       case 'twotri': return tpl('twotri');
       case 'centre': return tpl('centre');
@@ -208,6 +209,9 @@ function renderVisual(container, visual, math) {
         break;
       case 'sinewave':
         html = sinewaveSVG();
+        break;
+      case 'unitcircle':
+        html = unitcircleSVG();
         break;
       case 'percentgrid':
         html = percentgridSVG(visual.pct);
@@ -494,6 +498,19 @@ function numberlineSVG() {
     }
     s += '</svg>';
     return s;
+  }
+
+function unitcircleSVG() {
+    var W = 220, H = 220, cx = 110, cy = 110, r = 80;
+    var ax = cx + r * Math.cos(-Math.PI / 4), ay = cy + r * Math.sin(-Math.PI / 4);
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="#007AFF" stroke-width="2.5"/>' +
+      '<line x1="' + (cx - r - 12) + '" y1="' + cy + '" x2="' + (cx + r + 12) + '" y2="' + cy + '" stroke="#333" stroke-width="1.5"/>' +
+      '<line x1="' + cx + '" y1="' + (cy - r - 12) + '" x2="' + cx + '" y2="' + (cy + r + 12) + '" stroke="#333" stroke-width="1.5"/>' +
+      '<line x1="' + cx + '" y1="' + cy + '" x2="' + ax.toFixed(1) + '" y2="' + ay.toFixed(1) + '" stroke="#FF9500" stroke-width="2.5"/>' +
+      '<circle cx="' + ax.toFixed(1) + '" cy="' + ay.toFixed(1) + '" r="4" fill="#FF9500"/>' +
+      '<text x="' + (cx + 14) + '" y="' + (cy - 10) + '" font-size="12" fill="#333">1</text>' +
+      '<text x="' + (cx - 14) + '" y="' + (cy + 18) + '" font-size="12" fill="#333">0</text></svg>';
   }
 
 function sinewaveSVG() {

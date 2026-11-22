@@ -61,6 +61,26 @@ var MATH_SPEC = {
   },
   log: function (m) { return m.mode === 'law' ? Math.round(Math.log(m.m * m.n) / Math.log(m.base)) : m.n; },
   fx: function (m) { return m.a * m.x * m.x + m.b * m.x + m.c; },
+  compound: function (m) {
+    if (m.mode === 'sinSum') return { n: m.a * m.e + m.b * m.d, d: m.c * m.f };
+    if (m.mode === 'sinDiff') return { n: m.a * m.e - m.b * m.d, d: m.c * m.f };
+    if (m.mode === 'cosSum') return { n: m.b * m.e - m.a * m.d, d: m.c * m.f };
+    return { n: m.a * m.e + m.b * m.d, d: m.b * m.e - m.a * m.d || 1 };
+  },
+  radian: function (m) {
+    if (m.mode === 'convert') return { n: m.deg, d: 180 };
+    if (m.mode === 'arc') return { n: m.r * m.deg, d: 180 };
+    var table = {
+      sin0: 0, sin30: { n: 1, d: 2 }, sin45: '√2/2', sin60: '√3/2', sin90: 1, sin180: 0,
+      cos0: 1, cos30: '√3/2', cos45: '√2/2', cos60: { n: 1, d: 2 }, cos90: 0, cos180: -1
+    };
+    return table[m.which + m.deg];
+  },
+  trigeq: function (m) {
+    if (m.mode === 'sin') return 180;
+    if (m.mode === 'cos') return 360;
+    return 180 + 2 * m.base;
+  },
   trigident: function (m) {
     if (m.mode === 'pythagorean') return { n: m.b, d: m.c };
     if (m.mode === 'double') return { n: 2 * m.a * m.b, d: m.c * m.c };

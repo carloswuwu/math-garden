@@ -73,7 +73,11 @@ var F = {
           { zh: '正弦定理', en: 'Sine rule', latex: '\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B} = \\dfrac{c}{\\sin C}', skills: ['hs.s5.sinerule'] },
           { zh: '餘弦定理', en: 'Cosine rule', latex: 'c^2 = a^2 + b^2 - 2ab\\cos C', skills: ['hs.s5.sinerule'] },
           { zh: '三角形面積（兩邊及夾角）', en: 'Area of triangle (SAS)', latex: 'A = \\dfrac{1}{2}ab\\sin C', skills: ['hs.s5.sinerule'] },
-          { zh: '正弦曲線的振幅與週期', en: 'Amplitude and period of sine curve', latex: 'y = a\\sin(bx):\\ \\text{amplitude} = |a|,\\ \\text{period} = \\dfrac{360^\\circ}{|b|}', skills: ['hs.s5.triggraph'] }
+          { zh: '正弦曲線的振幅與週期', en: 'Amplitude and period of sine curve', latex: 'y = a\\sin(bx):\\ \\text{amplitude} = |a|,\\ \\text{period} = \\dfrac{360^\\circ}{|b|}', skills: ['hs.s5.triggraph'] },
+          { zh: '複角公式', en: 'Compound-angle formulae', latex: '\\sin(A\\pm B)=\\sin A\\cos B\\pm\\cos A\\sin B,\\quad \\cos(A\\pm B)=\\cos A\\cos B\\mp\\sin A\\sin B', skills: ['hs.s5.compound'] },
+          { zh: '正切複角公式', en: 'Tangent compound angle', latex: '\\tan(A+B)=\\dfrac{\\tan A+\\tan B}{1-\\tan A\\tan B}', skills: ['hs.s5.compound'] },
+          { zh: '弧度與弧長', en: 'Radians and arc length', latex: '180^\\circ=\\pi,\\quad s=r\\theta,\\quad A=\\dfrac{1}{2}r^2\\theta', skills: ['hs.s5.radian'] },
+          { zh: '三角方程的一般解', en: 'General solutions', latex: '\\sin\\theta=\\sin\\alpha \\Rightarrow \\theta=n\\pi+(-1)^n\\alpha', skills: ['hs.s5.trigeq'] }
         ]
       },
       {

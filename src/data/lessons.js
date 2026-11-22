@@ -2352,5 +2352,98 @@ var L = {
   };
   Object.keys(TRIG_LESSONS).forEach(function (key) { L[key] = TRIG_LESSONS[key]; });
 
+
+  var TRIG2_LESSONS = {
+    'hs.s5.compound': {
+      zh: {
+        title: '複角公式',
+        intro: '複角公式把 $\sin(A\pm B)$、$\cos(A\pm B)$ 展開成 $\sin A,\cos A,\sin B,\cos B$ 的組合。',
+        steps: ['$\sin(A+B)=\sin A\cos B+\cos A\sin B$。', '$\cos(A+B)=\cos A\cos B-\sin A\sin B$。', '$\tan(A+B)=\dfrac{\tan A+\tan B}{1-\tan A\tan B}$。'],
+        example: '$\sin A=3/5,\cos A=4/5,\sin B=5/13,\cos B=12/13$，則 $\sin(A+B)=36/65+20/65=56/65$。',
+        tip: '正負號口訣：sin 同號、cos 異號。',
+        mistake: '把 $\sin(A+B)$ 當成 $\sin A+\sin B$。',
+        visual: null,
+        glossary: [
+          { term: '複角公式', def: '把兩角之和/差的三角函數展開。' },
+          { term: '二倍角', def: '複角公式中 A=B 的特例。' }
+        ]
+      },
+      en: {
+        title: 'Compound-angle Formulae',
+        intro: 'Compound-angle formulae expand $\sin(A\pm B)$ and $\cos(A\pm B)$ in terms of $\sin A,\cos A,\sin B,\cos B$.',
+        steps: ['$\sin(A+B)=\sin A\cos B+\cos A\sin B$.', '$\cos(A+B)=\cos A\cos B-\sin A\sin B$.', '$\tan(A+B)=\dfrac{\tan A+\tan B}{1-\tan A\tan B}$.'],
+        example: 'With $\sin A=3/5,\cos A=4/5,\sin B=5/13,\cos B=12/13$, $\sin(A+B)=36/65+20/65=56/65$.',
+        tip: 'Sign pattern: sin keeps the same sign, cos flips it.',
+        mistake: 'Writing $\sin(A+B)=\sin A+\sin B$.',
+        visual: null,
+        glossary: [
+          { term: 'Compound angle', def: 'Expanding a trig function of a sum or difference.' },
+          { term: 'Double angle', def: 'The special case A=B.' }
+        ]
+      }
+    },
+    'hs.s5.radian': {
+      zh: {
+        title: '弧度制與單位圓',
+        intro: '弧度用弧長與半徑之比量度角度：$180^\circ=\pi$，$360^\circ=2\pi$。',
+        steps: ['度轉弧度：乘以 $\pi/180$。', '弧長 $s=r\theta$（θ 用弧度）。', '扇形面積 $A=\frac12 r^2\theta$。'],
+        example: '$120^\circ=120\pi/180=2\pi/3$；半徑 6、圓心角 $30^\circ$ 的弧長 $=6\times\pi/6=\pi$。',
+        tip: '單位圓上半徑為 1，所以弧長數值等於角度（弧度）。',
+        mistake: '用弧度公式時把角度當成度數直接代入。',
+        visual: { kind: 'unitcircle' },
+        glossary: [
+          { term: '弧度', def: '弧長與半徑之比。' },
+          { term: '單位圓', def: '半徑為 1 的圓。' },
+          { term: '弧長', def: '$s=r\theta$。' }
+        ]
+      },
+      en: {
+        title: 'Radians & the Unit Circle',
+        intro: 'Radians measure angles by arc length over radius: $180^\circ=\pi$, $360^\circ=2\pi$.',
+        steps: ['Degrees to radians: multiply by $\pi/180$.', 'Arc length $s=r\theta$ with θ in radians.', 'Sector area $A=\frac12 r^2\theta$.'],
+        example: '$120^\circ=120\pi/180=2\pi/3$; a radius 6 sector with angle $30^\circ$ has arc length $6\times\pi/6=\pi$.',
+        tip: 'On the unit circle the radius is 1, so the arc length equals the angle in radians.',
+        mistake: 'Substituting degrees directly into a formula that needs radians.',
+        visual: { kind: 'unitcircle' },
+        glossary: [
+          { term: 'Radian', def: 'Arc length divided by radius.' },
+          { term: 'Unit circle', def: 'A circle of radius 1.' },
+          { term: 'Arc length', def: '$s=r\theta$.' }
+        ]
+      }
+    },
+    'hs.s5.trigeq': {
+      zh: {
+        title: '三角方程與一般解',
+        intro: '三角方程在一個週期內通常有兩個解；用單位圓或對稱性找出全部解。',
+        steps: ['$\sin\theta=\sin\alpha$：兩解互補，和 $180^\circ$。', '$\cos\theta=\cos\alpha$：兩解和 $360^\circ$。', '$\tan\theta=\tan\alpha$：兩解相差 $180^\circ$。'],
+        example: '$0^\circ\le\theta<360^\circ$，$\sin\theta=\sin30^\circ$ 的解是 30° 和 150°，和是 180°。',
+        tip: '先找一個解，再用對稱性找第二個解。',
+        mistake: '只寫出一個解，忘記另一個；或用錯對稱關係。',
+        visual: { kind: 'unitcircle' },
+        glossary: [
+          { term: '一般解', def: '包含所有周期解的表达式。' },
+          { term: '週期', def: '正弦/餘弦 360°，正切 180°。' },
+          { term: '對稱解', def: '由單位圓對稱性得到的另一個解。' }
+        ]
+      },
+      en: {
+        title: 'Trigonometric Equations',
+        intro: 'A trig equation usually has two solutions per cycle; use the unit circle or symmetry to find them all.',
+        steps: ['$\sin\theta=\sin\alpha$: the two solutions are supplementary and sum to $180^\circ$.', '$\cos\theta=\cos\alpha$: the two solutions sum to $360^\circ$.', '$\tan\theta=\tan\alpha$: the two solutions differ by $180^\circ$.'],
+        example: 'For $0^\circ\le\theta<360^\circ$, $\sin\theta=\sin30^\circ$ has solutions 30° and 150°, whose sum is 180°.',
+        tip: 'Find one solution, then use symmetry for the other.',
+        mistake: 'Giving only one solution, or using the wrong symmetry relation.',
+        visual: { kind: 'unitcircle' },
+        glossary: [
+          { term: 'General solution', def: 'An expression containing all periodic solutions.' },
+          { term: 'Period', def: '360° for sine/cosine, 180° for tangent.' },
+          { term: 'Symmetric solution', def: 'The other solution obtained from unit-circle symmetry.' }
+        ]
+      }
+    }
+  };
+  Object.keys(TRIG2_LESSONS).forEach(function (key) { L[key] = TRIG2_LESSONS[key]; });
+
   export { L as Lessons };
 

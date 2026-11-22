@@ -158,7 +158,7 @@ function boot() {
   check(!!m, 'dist/index.html 應引用 hashed bundle');
   const bundlePath = path.join(DIST, m[1]);
   const gzip = zlib.gzipSync(fs.readFileSync(bundlePath)).length;
-  check(gzip <= 166 * 1024, 'bundle gzip 應 ≤ 166 KB，實際 ' + (gzip / 1024).toFixed(1) + ' KB');
+  check(gzip <= 170 * 1024, 'bundle gzip 應 ≤ 170 KB，實際 ' + (gzip / 1024).toFixed(1) + ' KB');
 
   const sw = fs.readFileSync(path.join(DIST, 'sw.js'), 'utf8');
   const assets = [...sw.matchAll(/'\.\/([^']+)'/g)].map((x) => x[1]);

@@ -572,6 +572,24 @@ var skills = {
       en: { name: 'Trigonometric Graphs', goal: 'Find amplitude and period of sine/cosine curves.' },
       lesson: 'hs.s5.triggraph', types: ['triggraph'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
     },
+    'hs.s5.compound': {
+      id: 'hs.s5.compound', stage: 'hs2', order: 5,
+      zh: { name: '複角公式', goal: '會用 sin(A±B)、cos(A±B)、tan(A+B) 公式。' },
+      en: { name: 'Compound-angle Formulae', goal: 'Use sin(A±B), cos(A±B) and tan(A+B) formulae.' },
+      lesson: 'hs.s5.compound', types: ['compound'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.radian': {
+      id: 'hs.s5.radian', stage: 'hs2', order: 6,
+      zh: { name: '弧度制與單位圓', goal: '會換算弧度、求弧長及特殊角三角值。' },
+      en: { name: 'Radians & the Unit Circle', goal: 'Convert radians, find arc length and special-angle values.' },
+      lesson: 'hs.s5.radian', types: ['radian'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s5.trigeq': {
+      id: 'hs.s5.trigeq', stage: 'hs2', order: 7,
+      zh: { name: '三角方程與一般解', goal: '會在 0°–360° 內解簡單三角方程。' },
+      en: { name: 'Trigonometric Equations', goal: 'Solve simple trig equations in 0°–360°.' },
+      lesson: 'hs.s5.trigeq', types: ['trigeq'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
     'hs.s5.gp': {
       id: 'hs.s5.gp', stage: 'hs2', order: 2,
       zh: { name: '等比數列', goal: '會求等比數列的第 n 項。' },
@@ -1311,6 +1329,7 @@ var skills = {
       topics: [
         { id: 'hs2.seq', zh: '數列', en: 'Sequences', skills: ['hs.s5.ap', 'hs.s5.gp'] },
         { id: 'hs2.trig', zh: '三角學（續）', en: 'Trigonometry (cont.)', skills: ['hs.s5.sinerule', 'hs.s5.triggraph'] },
+        { id: 'hs2.trig2', zh: '三角學（二）', en: 'Trigonometry II', skills: ['hs.s5.compound', 'hs.s5.radian', 'hs.s5.trigeq'] },
         { id: 'hs2.prob', zh: '概率', en: 'Probability', skills: ['hs.s5.prob'] },
         { id: 'hs2.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s5.word'] },
         { id: 'hs2.alg', zh: '代數', en: 'Algebra', skills: ['hs.s5.variation'] },
