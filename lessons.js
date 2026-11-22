@@ -969,5 +969,433 @@
     });
   });
 
+
+  /* 教學深化（小學）：每一步如何做 + 最常見錯誤 */
+  var LESSON_DEEPEN_PRIMARY = {
+    'prek.count': {
+      zh: { steps: ['用手指指著物件，一個一個地數，不要跳過或重複。', '每數一個就說出一個數；最後說出的數就是總數。', '數完後換個方向再數一次，確認答案一樣。'], mistake: '數得太快而漏數或重複數同一個物件；或把最後一個數當成「還有幾個」。' },
+      en: { steps: ['Point to each object and count one by one; do not skip or double-count.', 'Say one number for each object; the last number you say is the total.', 'Count again in a different order to check the answer is the same.'], mistake: 'Counting too fast and skipping or repeating an object; treating the last number as “how many are left”.' }
+    },
+    'prek.compare': {
+      zh: { steps: ['把兩組物件一個對一個配對起來。', '配對後多出物件的那一組比較多；都沒有多出就一樣多。', '再用數字比較：數數時較後出現的數較大。'], mistake: '只憑排列的長短判斷多少；或兩組排得疏密不同就以為數量不同。' },
+      en: { steps: ['Match the objects in the two groups one-to-one.', 'The group with objects left over has more; if nothing is left over, they are equal.', 'Compare the numbers too: the number you reach later when counting is larger.'], mistake: 'Judging by how long the rows look; thinking the amount changed because one row is more spread out.' }
+    },
+    'prek.add10': {
+      zh: { steps: ['先數第一堆有多少個。', '從第一堆的最後一個數接着往上數第二堆。', '數到第二堆最後一個，說出的數就是答案。'], mistake: '兩堆都從 1 開始數而忘記接着數；或漏掉其中一堆的物件。' },
+      en: { steps: ['Count how many are in the first group.', 'Starting from that last number, keep counting on for the second group.', 'The last number you say is the total.'], mistake: 'Starting both groups from 1 instead of counting on; or missing objects from one group.' }
+    },
+    'prek.sub10': {
+      zh: { steps: ['先數出原本一共有多少個。', '把要拿走的逐一拿走並數出去。', '數剩下來的物件，就是答案。'], mistake: '拿走時多拿或少拿；或把「拿走幾個」當成答案。' },
+      en: { steps: ['Count the total you start with.', 'Take away the given number, counting them out one by one.', 'Count what is left; that is the answer.'], mistake: 'Taking away too many or too few; or giving the number taken away instead of what is left.' }
+    },
+    'prek.bonds10': {
+      zh: { steps: ['用實物把總數分成兩堆（例如 7 個分成 3 個和 4 個）。', '說出「7 可以分成 3 和 4」。', '用分解做加減：3 + ? = 7，就是問 7 分成 3 和幾。'], mistake: '只背分解而沒有用實物理解；或分成的兩部分加起來不等於總數。' },
+      en: { steps: ['Split the total into two groups with real objects (e.g. 7 into 3 and 4).', 'Say “7 can split into 3 and 4”.', 'Use the split for addition and subtraction: 3 + ? = 7 means 7 split into 3 and what.'], mistake: 'Memorising the split without understanding; or the two parts not adding back to the total.' }
+    },
+    'g1.add20': {
+      zh: { steps: ['看較大的數還差多少才到 10。', '把較小的數拆成「補到 10 的部分」和「剩下的部分」。', '先加補十，再加剩下的部分。'], mistake: '拆分時拆錯或忘記把剩下的部分加回去。' },
+      en: { steps: ['See how far the larger number is from 10.', 'Split the smaller number into “enough to make 10” and “the rest”.', 'Add to make 10 first, then add the rest.'], mistake: 'Splitting the number incorrectly or forgetting to add the remaining part back.' }
+    },
+    'g1.sub20': {
+      zh: { steps: ['想「減數加多少等於被減數」。', '用加法口訣找出這個數。', '用加法驗算：差 + 減數 = 被減數。'], mistake: '想加算減時方向搞反；或退位時借錯。' },
+      en: { steps: ['Ask: what plus the number being subtracted equals the starting number?', 'Use an addition fact to find it.', 'Check with addition: difference + subtracted number = starting number.'], mistake: 'Using subtraction the wrong way round; or borrowing incorrectly.' }
+    },
+    'g1.place100': {
+      zh: { steps: ['把兩位數拆成「幾個十 + 幾個一」。', '比較大小先看十位，十位相同再看個位。', '用位值表（十位／個位）寫出數字，避免調亂。'], mistake: '只比較數字而忽略位置；或把「幾個十」和「幾個一」倒轉。' },
+      en: { steps: ['Split a two-digit number into “tens + ones”.', 'Compare the tens digit first; if equal, compare the ones digit.', 'Write the number in a place-value table to avoid mixing up positions.'], mistake: 'Comparing digits without considering place value; swapping tens and ones.' }
+    },
+    'g1.addsub100': {
+      zh: { steps: ['把整十數看成「幾個十」。', '只計算十位的加減。', '答案後面補回一個 0。'], mistake: '忘記補 0；或把 30 + 20 算成 5。' },
+      en: { steps: ['Treat round tens as “how many tens”.', 'Add or subtract only the tens.', 'Put the zero back in the answer.'], mistake: 'Forgetting the zero; or writing 30 + 20 = 5.' }
+    },
+    'g1.word': {
+      zh: { steps: ['讀題，找出已知的數和所問的問題。', '判斷關鍵詞：「一共」用加，「還剩」用減。', '列式計算，並用完整句子回答（帶單位）。'], mistake: '看到數字就加；或只寫了算式而沒有回答問題。' },
+      en: { steps: ['Read the problem and identify the numbers and the question.', 'Use key words: “in total” suggests addition, “left” suggests subtraction.', 'Write the number sentence and answer in a full sentence with units.'], mistake: 'Adding because numbers appeared; or writing an expression without answering the question.' }
+    },
+    'g1.money': {
+      zh: { steps: ['看清楚付了多少錢、東西多少錢。', '找續 = 付的錢 − 價錢。', '用「價錢 + 找續 = 付的錢」驗算。'], mistake: '用價錢減付的錢；或把「元」和「角」混在一起直接加減。' },
+      en: { steps: ['Identify how much was paid and how much the item costs.', 'Change = paid − price.', 'Check with price + change = paid.'], mistake: 'Subtracting the wrong way round; or mixing dollars and cents without converting.' }
+    },
+    'g1.oddeven': {
+      zh: { steps: ['把物件兩個一組地分。', '剛好分完是偶數；剩下 1 個是奇數。', '看個位數字：0、2、4、6、8 是偶數；1、3、5、7、9 是奇數。'], mistake: '只記住 2、4、6、8 而漏掉 0；或把「下一個偶數」加 1。' },
+      en: { steps: ['Pair the objects into groups of two.', 'No remainder means even; one left over means odd.', 'Use the ones digit: 0, 2, 4, 6, 8 are even; 1, 3, 5, 7, 9 are odd.'], mistake: 'Forgetting 0 is even; or adding 1 to get the next even number.' }
+    },
+    'g2.addsub100r': {
+      zh: { steps: ['先算個位；個位滿 10 就向十位進 1。', '再算十位，記得加上進位的 1。', '減法先算個位；不夠減就向十位借 1 當 10。'], mistake: '忘記加進位的 1；或借位後十位沒有減 1。' },
+      en: { steps: ['Start with the ones; if the ones reach 10, carry 1 to the tens.', 'Then add the tens, including the carried 1.', 'For subtraction, start at the ones; if not enough, borrow 1 ten as 10 ones.'], mistake: 'Forgetting the carried 1; or not reducing the tens after borrowing.' }
+    },
+    'g2.mul25': {
+      zh: { steps: ['把乘法看成「幾個幾相加」。', '用口訣或跳數（2、4、6…／5、10、15…）計算。', '用除法驗算：積 ÷ 其中一個數 = 另一個數。'], mistake: '把 3 × 2 和 2 × 3 的答案算錯；或跳數時漏了一格。' },
+      en: { steps: ['Think of multiplication as repeated addition.', 'Use tables or skip counting (2, 4, 6... / 5, 10, 15...).', 'Check with division: product ÷ one factor = the other factor.'], mistake: 'Computing 3 × 2 or 2 × 3 incorrectly; or skipping a step when skip counting.' }
+    },
+    'g2.mul34': {
+      zh: { steps: ['3 的乘法每次加 3；4 的乘法每次加 4。', '記住 3 × 4 = 12 等常用口訣。', '用跳數檢查：3、6、9、12…'], mistake: '把 3 × 4 和 4 × 3 當成不同答案；或加錯次數。' },
+      en: { steps: ['The 3 times table adds 3 each time; the 4 times table adds 4.', 'Memorise facts such as 3 × 4 = 12.', 'Check by skip counting: 3, 6, 9, 12...'], mistake: 'Thinking 3 × 4 and 4 × 3 have different answers; or adding the wrong number of times.' }
+    },
+    'g2.div': {
+      zh: { steps: ['把總數平均分成指定份數。', '一份一份地分，直到分完。', '用乘法驗算：每份 × 份數 = 總數。'], mistake: '分成不平均的份；或把「份數」和「每份數量」倒轉。' },
+      en: { steps: ['Share the total equally into the given number of groups.', 'Give one to each group at a time until none are left.', 'Check with multiplication: each share × number of groups = total.'], mistake: 'Making unequal groups; or swapping the number of groups with the size of each share.' }
+    },
+    'g2.word': {
+      zh: { steps: ['讀題，找出已知數量和問題。', '判斷運算：合起來用加、拿走用減、幾個幾用乘。', '列式計算並寫出完整答案（帶單位）。'], mistake: '把「每盒 4 個、3 盒」算成 4 + 3；或漏掉最後的單位。' },
+      en: { steps: ['Read the problem and identify the quantities and the question.', 'Choose the operation: combine = add, take away = subtract, equal groups = multiply.', 'Calculate and write a complete answer with units.'], mistake: 'Adding 4 + 3 for “4 per box, 3 boxes”; or leaving out the units.' }
+    },
+    'g2.fact': {
+      zh: { steps: ['記住常用換算：1 小時 = 60 分鐘、1 米 = 100 釐米、1 千克 = 1000 克。', '大單位換小單位乘，小單位換大單位除。', '換算後檢查數值大小是否合理。'], mistake: '乘除方向搞反；或把 1 日 = 24 小時記成 12 小時。' },
+      en: { steps: ['Remember common conversions: 1 hour = 60 minutes, 1 metre = 100 cm, 1 kg = 1000 g.', 'Larger unit to smaller unit: multiply; smaller to larger: divide.', 'Check the size of the converted value is sensible.'], mistake: 'Multiplying when you should divide (or vice versa); or mixing up 24 hours and 12 hours in a day.' }
+    },
+    'g2.direction': {
+      zh: { steps: ['記住東、南、西、北的順序（順時針：東→南→西→北）。', '用太陽升起（東）和指南針確認方向。', '面向北方時，右手邊是東、左手邊是西。'], mistake: '把東南西北的順序記錯；或面向不同方向時左右混淆。' },
+      en: { steps: ['Remember the order east, south, west, north (clockwise).', 'Use sunrise (east) and a compass to confirm directions.', 'Facing north, east is on your right and west on your left.'], mistake: 'Getting the order of the compass directions wrong; or confusing left and right when facing a different way.' }
+    },
+    'g3.multable': {
+      zh: { steps: ['先背熟 6、7、8、9 的乘法口訣，從 6 × 6 開始。', '用已知口訣推未知：7 × 8 = 7 × 7 + 7。', '用除法驗算：42 ÷ 6 = 7，所以 6 × 7 = 42。'], mistake: '把 7 × 8 和 8 × 7 當成不同答案；或口訣背串。' },
+      en: { steps: ['Learn the 6, 7, 8 and 9 times tables, starting from 6 × 6.', 'Derive unknown facts from known ones: 7 × 8 = 7 × 7 + 7.', 'Check with division: 42 ÷ 6 = 7, so 6 × 7 = 42.'], mistake: 'Thinking 7 × 8 and 8 × 7 differ; or mixing up table entries.' }
+    },
+    'g3.mulfree': {
+      zh: { steps: ['把較大的數拆成容易算的數（例如 8 × 6 = 8 × 5 + 8）。', '用分配律或口訣計算。', '用估算檢查：8 × 6 應接近 8 × 5 = 40。'], mistake: '拆數後漏加一部分；或把乘號看成加號。' },
+      en: { steps: ['Split a larger factor into easier parts (e.g. 8 × 6 = 8 × 5 + 8).', 'Use the distributive law or times tables.', 'Estimate to check: 8 × 6 should be near 8 × 5 = 40.'], mistake: 'Splitting the number and forgetting one part; or reading × as +.' }
+    },
+    'g3.addsubbig': {
+      zh: { steps: ['把數字按位值對齊（個位對個位、十位對十位）。', '從個位開始加減，滿十進位、不夠減借位。', '用逆運算驗算。'], mistake: '沒有對齊位值；或進退位忘記加減 1。' },
+      en: { steps: ['Line up digits by place value (ones under ones, tens under tens).', 'Start at the ones; carry when reaching ten, borrow when not enough.', 'Check using the inverse operation.'], mistake: 'Not lining up place values; or forgetting to add/subtract 1 when carrying or borrowing.' }
+    },
+    'g3.muldiv': {
+      zh: { steps: ['先想相關的乘法口訣。', '乘法求積；除法想「幾乘幾等於被除數」。', '用乘除互逆驗算。'], mistake: '把被除數和除數倒轉；或口訣記錯。' },
+      en: { steps: ['Recall the related times-table fact.', 'For multiplication find the product; for division ask what times what gives the dividend.', 'Check using the inverse operation.'], mistake: 'Swapping dividend and divisor; or recalling the wrong table fact.' }
+    },
+    'g3.fraction': {
+      zh: { steps: ['把整體平均分成指定份數（分母）。', '取其中幾份（分子）。', '寫成幾分之幾，並檢查分子分母的意義。'], mistake: '沒有平均分就取份；或把分子分母寫反。' },
+      en: { steps: ['Split the whole into equal parts (denominator).', 'Take some of those parts (numerator).', 'Write the fraction and check what numerator and denominator mean.'], mistake: 'Taking parts without splitting equally; or writing numerator and denominator the wrong way round.' }
+    },
+    'g3.word': {
+      zh: { steps: ['讀題兩次，圈出數字和關鍵詞。', '先想要先求什麼（例如先求總數），再求最後答案。', '列式計算並用估算檢查。'], mistake: '只做一步就回答多步題；或忽略「用了／還剩」的次序。' },
+      en: { steps: ['Read twice and circle the numbers and key words.', 'Decide what to find first (e.g. the total), then the final answer.', 'Write the number sentence and check with estimation.'], mistake: 'Stopping after one step in a two-step problem; or ignoring the order of “used” and “left”.' }
+    },
+    'g3.angle': {
+      zh: { steps: ['認識直角 = 90°，平角 = 180°。', '用三角尺的直角比較：小於 90° 是銳角，大於 90° 是鈍角。', '用 90°／180° 檢查角度估計。'], mistake: '把接近 90° 的角誤判為直角；或把平角當成 90°。' },
+      en: { steps: ['Know that a right angle is 90° and a straight angle is 180°.', 'Compare with a right-angle square: less than 90° is acute, more than 90° is obtuse.', 'Check angle estimates against 90° and 180°.'], mistake: 'Calling an angle near 90° a right angle; or treating a straight angle as 90°.' }
+    },
+    'g3.shape': {
+      zh: { steps: ['數一數圖形的邊、頂點和面。', '分辨平面圖形（邊、頂點）和立體圖形（面、棱、頂點）。', '用實物或模型輔助檢查。'], mistake: '把立體圖形的「面」和平面圖形的「邊」混淆；數漏頂點。' },
+      en: { steps: ['Count the sides, vertices and faces of the shape.', 'Distinguish 2D shapes (sides, vertices) from solids (faces, edges, vertices).', 'Use an object or model to check.'], mistake: 'Confusing faces of a solid with sides of a 2D shape; or missing vertices.' }
+    },
+    'g3.time24': {
+      zh: { steps: ['下午 1 時到午夜 12 時，24 小時制 = 12 小時制 + 12。', '上午時間不變；中午 12 時 = 12:00。', '用 24 小時制讀法檢查（例如 17:00 是下午 5 時）。'], mistake: '忘記加 12；或把 12:00 和 00:00 混淆。' },
+      en: { steps: ['For 1 pm to midnight, 24-hour time = 12-hour time + 12.', 'Morning times stay the same; noon is 12:00.', 'Check by reading the 24-hour time back (e.g. 17:00 is 5 pm).'], mistake: 'Forgetting to add 12; or confusing 12:00 with 00:00.' }
+    }
+  };
+
+  Object.keys(LESSON_DEEPEN_PRIMARY).forEach(function (key) {
+    if (!L[key]) return;
+    ['zh', 'en'].forEach(function (lang) {
+      var d = LESSON_DEEPEN_PRIMARY[key][lang];
+      if (!d) return;
+      Object.keys(d).forEach(function (field) { L[key][lang][field] = d[field]; });
+    });
+  });
+
+
+  /* 教學深化（高小至中一） */
+  var LESSON_DEEPEN_MID = {
+    'g4.multidigit': {
+      zh: { steps: ['用豎式，把相同位值對齊。', '從個位開始乘或除，處理進位或餘數。', '用估算或逆運算檢查答案。'], mistake: '乘法漏加進位；或除法餘數沒有處理、寫錯位置。' },
+      en: { steps: ['Use column form and line up equal place values.', 'Start at the ones when multiplying or dividing; handle carries or remainders.', 'Check with estimation or the inverse operation.'], mistake: 'Forgetting to add a carry; or mishandling the remainder in division.' }
+    },
+    'g4.fractionadd': {
+      zh: { steps: ['確認分母相同（不同分母要先通分）。', '分子相加減，分母保持不變。', '化簡答案（如需要）。'], mistake: '把分母也相加；或忘記化簡。' },
+      en: { steps: ['Check the denominators are equal (find a common denominator if not).', 'Add or subtract the numerators; keep the denominator unchanged.', 'Simplify the answer if possible.'], mistake: 'Adding the denominators too; or forgetting to simplify.' }
+    },
+    'g4.decimal': {
+      zh: { steps: ['把小數點對齊（必要時補 0）。', '按整數加減法計算。', '答案的小數點與上面對齊。'], mistake: '沒有對齊小數點；或位數不同時漏補 0。' },
+      en: { steps: ['Line up the decimal points, adding zeros if needed.', 'Add or subtract as if they were whole numbers.', 'Place the decimal point in the answer directly below the others.'], mistake: 'Not lining up decimal points; or not adding place-holder zeros.' }
+    },
+    'g4.area': {
+      zh: { steps: ['寫出公式：面積 = 長 × 闊。', '代入長和闊，注意單位。', '用「面積 ÷ 長 = 闊」驗算。'], mistake: '把面積和周界公式混淆；或單位寫成 cm 而非 cm²。' },
+      en: { steps: ['Write the formula: area = length × width.', 'Substitute the length and width, keeping units consistent.', 'Check with area ÷ length = width.'], mistake: 'Mixing up area and perimeter formulas; or writing cm instead of cm².' }
+    },
+    'g4.triangle': {
+      zh: { steps: ['寫出公式：面積 = 底 × 高 ÷ 2。', '確認高是垂直於底的高。', '代入計算並用「面積 × 2 ÷ 底 = 高」驗算。'], mistake: '忘記除以 2；或把斜邊當成高。' },
+      en: { steps: ['Write the formula: area = base × height ÷ 2.', 'Make sure the height is perpendicular to the base.', 'Substitute and check with area × 2 ÷ base = height.'], mistake: 'Forgetting to divide by 2; or using a slanted side as the height.' }
+    },
+    'g4.perimeter': {
+      zh: { steps: ['沿圖形外圍走一圈，逐條邊相加。', '長方形周界 = 2 × (長 + 闊)。', '檢查單位是長度單位（cm）。'], mistake: '把面積和周界混淆；或漏加其中一條邊。' },
+      en: { steps: ['Walk around the outside of the shape and add every side.', 'Rectangle perimeter = 2 × (length + width).', 'Check the unit is a length unit (cm).'], mistake: 'Confusing area with perimeter; or missing a side.' }
+    },
+    'g5.decimalmul': {
+      zh: { steps: ['先當整數相乘或相除。', '數一數兩個數共有幾位小數，答案就點幾位小數。', '用估算檢查小數點位置是否合理。'], mistake: '小數點位數數錯；或除法忘記移動小數點。' },
+      en: { steps: ['Multiply or divide as if the numbers were whole numbers.', 'Count the total decimal places and put the point back accordingly.', 'Estimate to check the decimal point is in a sensible place.'], mistake: 'Counting decimal places incorrectly; or forgetting to move the decimal point in division.' }
+    },
+    'g5.average': {
+      zh: { steps: ['把所有數加起來。', '除以數的個數。', '用「平均數 × 個數 = 總和」驗算。'], mistake: '忘記除以個數；或加錯總和。' },
+      en: { steps: ['Add all the values.', 'Divide by how many values there are.', 'Check with average × count = total.'], mistake: 'Forgetting to divide by the count; or adding the values incorrectly.' }
+    },
+    'g5.fractionof': {
+      zh: { steps: ['先除以分母，求一份。', '再乘以分子，求幾份。', '用「答案 ÷ 原數 = 分數」檢查。'], mistake: '先乘後除次序錯；或把分子分母倒轉。' },
+      en: { steps: ['Divide by the denominator to find one part.', 'Multiply by the numerator to find that many parts.', 'Check with answer ÷ original number = fraction.'], mistake: 'Multiplying before dividing; or swapping numerator and denominator.' }
+    },
+    'g6.equation': {
+      zh: { steps: ['把含 x 的項和常數分開，常數移到等號另一邊（變號）。', '兩邊同時做相同的加減乘除，保持等式成立。', '把答案代回原方程驗算。'], mistake: '移項沒有變號；或只對一邊做運算。' },
+      en: { steps: ['Separate the x term from the constant; move the constant to the other side with the opposite sign.', 'Do the same operation to both sides to keep the equation balanced.', 'Substitute the answer back to check.'], mistake: 'Moving a term without changing its sign; or changing only one side.' }
+    },
+    'g6.circle': {
+      zh: { steps: ['寫出公式：周長 = 2πr，面積 = πr²。', '代入半徑，保留 π 或取近似值（依題目要求）。', '用直徑 = 2r 檢查。'], mistake: '把半徑和直徑混淆；或面積公式少了平方。' },
+      en: { steps: ['Write the formulas: circumference = 2πr, area = πr².', 'Substitute the radius, keeping π or using an approximation as asked.', 'Check using diameter = 2r.'], mistake: 'Confusing radius and diameter; or forgetting to square r in the area formula.' }
+    },
+    'g6.volume': {
+      zh: { steps: ['寫出長方體體積 = 長 × 闊 × 高。', '代入三個長度，單位要一致。', '用「體積 ÷ 底面積 = 高」驗算。'], mistake: '漏乘其中一個長度；或單位寫成 cm² 而非 cm³。' },
+      en: { steps: ['Write volume of a cuboid = length × width × height.', 'Substitute the three lengths with consistent units.', 'Check with volume ÷ base area = height.'], mistake: 'Missing one of the lengths; or writing cm² instead of cm³.' }
+    },
+    'g6.symmetry': {
+      zh: { steps: ['嘗試沿不同方向對摺，看兩邊是否完全重疊。', '數出所有能使圖形重疊的對稱軸。', '用鏡子或紙張輔助檢查。'], mistake: '只找到一條對稱軸就停；或把旋轉對稱當成對稱軸。' },
+      en: { steps: ['Try folding along different lines to see if the halves match exactly.', 'Count every line that makes the shape overlap itself.', 'Use a mirror or paper to check.'], mistake: 'Stopping after finding one line of symmetry; or confusing rotational symmetry with a mirror line.' }
+    },
+    'ms.s1.directed': {
+      zh: { steps: ['同號相加：取相同符號，絕對值相加。', '異號相加：取絕對值較大的符號，絕對值相減。', '乘除：同號得正、異號得負；先算括號。'], mistake: '把減負數當成加負數；或乘除符號規則記反。' },
+      en: { steps: ['Same signs when adding: keep the sign and add the sizes.', 'Different signs when adding: take the sign of the larger size and subtract the sizes.', 'Multiplication/division: same signs give positive, different signs give negative; brackets first.'], mistake: 'Treating subtracting a negative as adding a negative; or reversing the sign rules for × and ÷.' }
+    },
+    'ms.s1.coord': {
+      zh: { steps: ['距離：先算兩點的橫向差和縱向差。', '用畢氏定理：距離 = √(Δx² + Δy²)。', '中點：兩點坐標各自取平均。'], mistake: '距離忘記平方和開根號；中點只加不求平均。' },
+      en: { steps: ['For distance, find the horizontal and vertical differences.', 'Use Pythagoras: distance = √(Δx² + Δy²).', 'For the midpoint, average the two x-coordinates and the two y-coordinates.'], mistake: 'Forgetting to square and take the square root for distance; averaging only one coordinate for the midpoint.' }
+    },
+    'ms.s1.liketerms': {
+      zh: { steps: ['找出變數部分完全相同的項。', '把係數相加減，變數部分不變。', '檢查合併後是否已最簡。'], mistake: '把不同變數的項合併（如 3x + 5y）；或係數加錯。' },
+      en: { steps: ['Identify terms with exactly the same variable part.', 'Add or subtract the coefficients; keep the variable part unchanged.', 'Check the result cannot be simplified further.'], mistake: 'Combining unlike terms such as 3x + 5y; or adding coefficients incorrectly.' }
+    },
+    'ms.s1.parallel': {
+      zh: { steps: ['認出同位角、內錯角、同側內角的位置。', '同位角相等、內錯角相等、同側內角互補。', '用 180° 檢查互補關係。'], mistake: '把同位角和內錯角混淆；或互補角用 90°。' },
+      en: { steps: ['Identify corresponding angles, alternate angles and co-interior angles.', 'Corresponding angles are equal, alternate angles are equal, co-interior angles add to 180°.', 'Check supplementary pairs with 180°.'], mistake: 'Confusing corresponding and alternate angles; or using 90° for supplementary angles.' }
+    },
+    'ms.s1.sqrt': {
+      zh: { steps: ['找哪個數自乘等於被開方數。', '平方根取正數（除非題目指明負根）。', '用平方驗算：√64 = 8，因為 8² = 64。'], mistake: '把平方根和除以 2 混淆；或漏掉負根的可能。' },
+      en: { steps: ['Find the number that multiplies by itself to give the value.', 'Take the positive square root unless a negative root is specified.', 'Check by squaring: √64 = 8 because 8² = 64.'], mistake: 'Confusing square root with dividing by 2; or ignoring a possible negative root.' }
+    }
+  };
+
+  Object.keys(LESSON_DEEPEN_MID).forEach(function (key) {
+    if (!L[key]) return;
+    ['zh', 'en'].forEach(function (lang) {
+      var d = LESSON_DEEPEN_MID[key][lang];
+      if (!d) return;
+      Object.keys(d).forEach(function (field) { L[key][lang][field] = d[field]; });
+    });
+  });
+
+
+  /* 教學深化（中二至中三） */
+  var LESSON_DEEPEN_MS2 = {
+    'ms.s2.identity': {
+      zh: { steps: ['展開時每一項都要乘到：(x + a)(x + b) = x² + (a + b)x + ab。', '完全平方：(x + a)² = x² + 2ax + a²。', '平方差：(a + b)(a − b) = a² − b²。'], mistake: '完全平方漏掉中間項 2ax；或平方差符號搞錯。' },
+      en: { steps: ['Multiply every term when expanding: (x + a)(x + b) = x² + (a + b)x + ab.', 'Perfect square: (x + a)² = x² + 2ax + a².', 'Difference of squares: (a + b)(a − b) = a² − b².'], mistake: 'Missing the middle 2ax term in a perfect square; or getting the sign wrong in a difference of squares.' }
+    },
+    'ms.s2.polygon': {
+      zh: { steps: ['n 邊形內角和 = (n − 2) × 180°。', '正多邊形每個內角 = 內角和 ÷ n。', '外角和固定是 360°。'], mistake: '把 (n − 2) 寫成 n；或把外角和當成 180°。' },
+      en: { steps: ['Sum of interior angles of an n-gon = (n − 2) × 180°.', 'Each interior angle of a regular polygon = sum ÷ n.', 'The exterior angles always sum to 360°.'], mistake: 'Using n instead of (n − 2); or thinking exterior angles sum to 180°.' }
+    },
+    'ms.s2.polycoeff': {
+      zh: { steps: ['次數 = 最高次項的指數。', '係數 = 該項前面的數（包括符號）。', '常數項的次數是 0。'], mistake: '把次數和係數混淆；或忽略負號。' },
+      en: { steps: ['Degree = the highest exponent.', 'Coefficient = the number in front of the term, including its sign.', 'A constant term has degree 0.'], mistake: 'Confusing degree with coefficient; or ignoring a negative sign.' }
+    },
+    'ms.s2.congruent': {
+      zh: { steps: ['全等 = 形狀和大小完全相同，對應邊、對應角相等。', '判定方法：SSS、SAS、ASA、AAS、RHS。', '寫出對應頂點時要按順序對應。'], mistake: '把相似當成全等；或對應邊沒有按順序配對。' },
+      en: { steps: ['Congruent means same shape and size; corresponding sides and angles are equal.', 'Tests: SSS, SAS, ASA, AAS, RHS.', 'Write corresponding vertices in the matching order.'], mistake: 'Treating similar triangles as congruent; or pairing corresponding sides in the wrong order.' }
+    },
+    'ms.s2.similar': {
+      zh: { steps: ['相似 = 形狀相同、大小可不同；對應角相等、對應邊成比例。', '找比例因子：對應邊之比值。', '用比例求未知邊。'], mistake: '把對應邊配錯；或把面積比當成邊長比（面積比是邊長比的平方）。' },
+      en: { steps: ['Similar means same shape, possibly different size; equal corresponding angles and proportional corresponding sides.', 'Find the scale factor from a pair of corresponding sides.', 'Use the ratio to find an unknown side.'], mistake: 'Pairing the wrong corresponding sides; or treating an area ratio as a length ratio (area ratio is the square of the length ratio).' }
+    },
+    'ms.s2.quad': {
+      zh: { steps: ['按邊和角分類四邊形。', '平行四邊形：兩組對邊平行且相等；梯形：只有一組對邊平行。', '用對角線、對角、內角等性質檢查。'], mistake: '把梯形和一般四邊形混淆；或以為所有平行四邊形都是長方形。' },
+      en: { steps: ['Classify quadrilaterals by sides and angles.', 'Parallelogram: both pairs of opposite sides parallel and equal; trapezium: exactly one pair parallel.', 'Check using properties of diagonals, opposite angles and interior angles.'], mistake: 'Confusing a trapezium with a general quadrilateral; or assuming every parallelogram is a rectangle.' }
+    },
+    'ms.s2.sinterest': {
+      zh: { steps: ['單利息 = 本金 × 年利率 × 年數。', '年利率先化成小數（5% = 0.05）。', '本利和 = 本金 + 利息。'], mistake: '把百分數直接當整數乘；或把單利息和複利息混淆。' },
+      en: { steps: ['Simple interest = principal × annual rate × years.', 'Convert the rate to a decimal first (5% = 0.05).', 'Amount = principal + interest.'], mistake: 'Using the percentage as a whole number; or confusing simple with compound interest.' }
+    },
+    'ms.s2.approx': {
+      zh: { steps: ['四捨五入到某單位，最大絕對誤差 = 該單位的一半。', '寫出量度值的可能範圍（± 最大誤差）。', '相對誤差 = 最大絕對誤差 ÷ 量度值。'], mistake: '把最大誤差當成整個單位；或範圍只寫一邊。' },
+      en: { steps: ['When rounding to a unit, the maximum absolute error is half that unit.', 'Write the possible range of the measurement (± the maximum error).', 'Relative error = maximum absolute error ÷ measured value.'], mistake: 'Using the whole unit as the maximum error; or writing only one side of the range.' }
+    },
+    'ms.s3.inequality': {
+      zh: { steps: ['解法和方程相同：移項、合併、除以係數。', '兩邊乘或除以負數時，不等號要反向。', '把解代回檢查，並用數線表示。'], mistake: '除以負數忘記反向；或把 > 和 ≥ 混淆。' },
+      en: { steps: ['Solve like an equation: move terms, combine, divide by the coefficient.', 'When multiplying or dividing both sides by a negative, flip the inequality sign.', 'Check by substitution and show the solution on a number line.'], mistake: 'Forgetting to flip the sign when dividing by a negative; or confusing > with ≥.' }
+    },
+    'ms.s3.sector': {
+      zh: { steps: ['扇形面積 = πr² × (θ/360°)。', '弧長 = 2πr × (θ/360°)。', '先確認 θ 是圓心角。'], mistake: '把扇形面積當成整個圓；或角度沒有除以 360。' },
+      en: { steps: ['Sector area = πr² × (θ/360°).', 'Arc length = 2πr × (θ/360°).', 'Check that θ is the central angle.'], mistake: 'Using the whole circle area; or forgetting to divide the angle by 360.' }
+    },
+    'ms.s3.prism': {
+      zh: { steps: ['柱體體積 = 底面積 × 高。', '錐體體積 = 底面積 × 高 ÷ 3。', '先算底面積，再乘高。'], mistake: '錐體忘記除以 3；或把底面積當成體積。' },
+      en: { steps: ['Prism volume = base area × height.', 'Pyramid/cone volume = base area × height ÷ 3.', 'Find the base area first, then multiply by the height.'], mistake: 'Forgetting to divide a pyramid/cone by 3; or treating the base area as the volume.' }
+    },
+    'ms.s3.arclen': {
+      zh: { steps: ['弧長 = 2πr × (θ/360°)。', 'θ 是圓心角，不是圓周角。', '用整個圓周長 2πr 檢查比例。'], mistake: '把半徑當直徑；或角度比例算錯。' },
+      en: { steps: ['Arc length = 2πr × (θ/360°).', 'θ is the central angle, not an inscribed angle.', 'Check the fraction against the full circumference 2πr.'], mistake: 'Using the diameter instead of the radius; or miscalculating the angle fraction.' }
+    },
+    'ms.s3.mode': {
+      zh: { steps: ['把數據逐個數出現次數。', '出現次數最多的數就是眾數。', '可能有多個眾數或沒有眾數。'], mistake: '把眾數和中位數混淆；或多個眾數只寫一個。' },
+      en: { steps: ['Count how often each value appears.', 'The value that appears most often is the mode.', 'There may be more than one mode, or no mode.'], mistake: 'Confusing mode with median; or giving only one when there are several modes.' }
+    },
+    'ms.s3.cylinder': {
+      zh: { steps: ['圓柱體積 = πr²h。', '側面積 = 2πrh；總表面積 = 2πr² + 2πrh。', '確認 r 是半徑、h 是高。'], mistake: '把半徑當直徑；或表面積漏掉兩個底圓。' },
+      en: { steps: ['Cylinder volume = πr²h.', 'Curved surface area = 2πrh; total surface area = 2πr² + 2πrh.', 'Check that r is the radius and h is the height.'], mistake: 'Using the diameter instead of the radius; or leaving out the two circular ends in surface area.' }
+    },
+    'ms.s3.expand': {
+      zh: { steps: ['用分配律逐項相乘。', '(x + a)(x + b) = x² + (a + b)x + ab。', '合併同類項並檢查符號。'], mistake: '漏乘某一項；或負號處理錯。' },
+      en: { steps: ['Use the distributive law and multiply every pair of terms.', '(x + a)(x + b) = x² + (a + b)x + ab.', 'Combine like terms and check the signs.'], mistake: 'Missing a product; or making a sign error.' }
+    },
+    'ms.s3.pichart': {
+      zh: { steps: ['每一部分的圓心角 = 百分比 × 360°。', '各部分角度加起來應是 360°。', '用比例檢查數值是否合理。'], mistake: '把百分比當成角度直接寫；或角度總和不等於 360°。' },
+      en: { steps: ['Central angle of each sector = percentage × 360°.', 'The angles of all sectors should add to 360°.', 'Check the values with proportions.'], mistake: 'Writing the percentage as the angle; or angles not adding to 360°.' }
+    },
+    'ms.s3.cone': {
+      zh: { steps: ['圓錐體積 = πr²h ÷ 3。', '球體積 = 4πr³ ÷ 3；球表面積 = 4πr²。', '先確認半徑，再代入公式。'], mistake: '圓錐和圓柱體積公式混淆；球體積忘記除以 3。' },
+      en: { steps: ['Cone volume = πr²h ÷ 3.', 'Sphere volume = 4πr³ ÷ 3; sphere surface area = 4πr².', 'Confirm the radius before substituting.'], mistake: 'Confusing cone and cylinder volume; or forgetting to divide the sphere volume by 3.' }
+    },
+    'ms.s3.centre': {
+      zh: { steps: ['內心：角平分線交點；外心：垂直平分線交點。', '重心：中線交點；垂心：高的交點。', '用定義檢查交點位置。'], mistake: '把重心和垂心混淆；或把外心當成角平分線交點。' },
+      en: { steps: ['Incentre: intersection of angle bisectors; circumcentre: intersection of perpendicular bisectors.', 'Centroid: intersection of medians; orthocentre: intersection of altitudes.', 'Check the intersection using the definition.'], mistake: 'Confusing centroid and orthocentre; or mixing up the circumcentre with the angle bisectors.' }
+    }
+  };
+
+  Object.keys(LESSON_DEEPEN_MS2).forEach(function (key) {
+    if (!L[key]) return;
+    ['zh', 'en'].forEach(function (lang) {
+      var d = LESSON_DEEPEN_MS2[key][lang];
+      if (!d) return;
+      Object.keys(d).forEach(function (field) { L[key][lang][field] = d[field]; });
+    });
+  });
+
+
+  /* 教學深化（高中、大學、挑戰區） */
+  var LESSON_DEEPEN_SENIOR = {
+    'hs.s4.fx': {
+      zh: { steps: ['把 x 的值代入函數，每個 x 都換成該數。', '先算括號和平方，再乘除加減。', '用另一種代入方式或估算檢查。'], mistake: '代入負數不加括號；或平方和乘法的次序錯。' },
+      en: { steps: ['Substitute the value of x wherever x appears in the function.', 'Work out brackets and squares first, then multiply/divide, then add/subtract.', 'Check with a second substitution or estimation.'], mistake: 'Substituting a negative number without brackets; or doing squares and multiplication in the wrong order.' }
+    },
+    'hs.s4.trig': {
+      zh: { steps: ['認清直角三角形的對邊、鄰邊、斜邊（相對於角 θ）。', '$\\sin\\theta = \\frac{\\text{對邊}}{\\text{斜邊}}$、$\\cos\\theta = \\frac{\\text{鄰邊}}{\\text{斜邊}}$、$\\tan\\theta = \\frac{\\text{對邊}}{\\text{鄰邊}}$。', '用畢氏定理檢查三邊。'], mistake: '把對邊和鄰邊認錯；或分母用錯邊。' },
+      en: { steps: ['Identify the opposite, adjacent and hypotenuse relative to θ.', '$\\sin\\theta = \\frac{\\text{opposite}}{\\text{hypotenuse}}$, $\\cos\\theta = \\frac{\\text{adjacent}}{\\text{hypotenuse}}$, $\\tan\\theta = \\frac{\\text{opposite}}{\\text{adjacent}}$.', 'Check the sides with Pythagoras.'], mistake: 'Swapping opposite and adjacent; or using the wrong side as the denominator.' }
+    },
+    'hs.s4.quad2': {
+      zh: { steps: ['寫出 $a$、$b$、$c$（注意符號）。', '判別式 $D = b^{2} - 4ac$。', '$D > 0$ 兩實根、$D = 0$ 一重根、$D < 0$ 無實根。'], mistake: '$b$ 的符號代入錯；或把 $D = 0$ 當成無實根。' },
+      en: { steps: ['Write down $a$, $b$ and $c$, including signs.', 'Discriminant $D = b^{2} - 4ac$.', '$D > 0$: two real roots; $D = 0$: one repeated root; $D < 0$: no real roots.'], mistake: 'Substituting the sign of $b$ incorrectly; or calling $D = 0$ “no real roots”.' }
+    },
+    'hs.s4.line2': {
+      zh: { steps: ['把點 $(x, y)$ 代入直線方程。', '解出未知常數（如 $c$ 或 $m$）。', '用另一點或圖形檢查。'], mistake: '代入時 x、y 對調；或解方程符號錯。' },
+      en: { steps: ['Substitute the point $(x, y)$ into the line equation.', 'Solve for the unknown constant ($c$ or $m$).', 'Check with another point or the graph.'], mistake: 'Swapping x and y when substituting; or making a sign error when solving.' }
+    },
+    'hs.s4.circleprop': {
+      zh: { steps: ['認清圓心角、圓周角、同弓形角。', '圓心角 = 2 × 圓周角；同弓形圓周角相等；圓內接四邊形對角互補。', '切線垂直於過切點的半徑。'], mistake: '把圓心角和圓周角關係倒轉；或忘記對角互補。' },
+      en: { steps: ['Identify central angles, inscribed angles and angles in the same segment.', 'Central angle = 2 × inscribed angle; angles in the same segment are equal; opposite angles of a cyclic quadrilateral are supplementary.', 'A tangent is perpendicular to the radius at the point of contact.'], mistake: 'Reversing the central/inscribed angle relation; or forgetting opposite angles are supplementary.' }
+    },
+    'hs.s4.line': {
+      zh: { steps: ['斜率 $m = \\frac{y_2 - y_1}{x_2 - x_1}$。', '先算縱向差，再除以橫向差。', '用「向上／向右」檢查正負。'], mistake: 'x、y 的差倒轉；或分母為 0 時仍計算。' },
+      en: { steps: ['Slope $m = \\frac{y_2 - y_1}{x_2 - x_1}$.', 'Find the vertical change first, then divide by the horizontal change.', 'Check the sign using “up/right”.'], mistake: 'Swapping the x and y differences; or calculating when the denominator is 0 (vertical line).' }
+    },
+    'hs.s4.circleeq': {
+      zh: { steps: ['標準式 $x^{2} + y^{2} = r^{2}$，半徑 $r = \\sqrt{\\text{右邊}}$。', '圓心在原點；若不是，先配方。', '用圓心到圓上一點的距離檢查。'], mistake: '把 $r^{2}$ 當成 $r$；或配方時符號錯。' },
+      en: { steps: ['Standard form $x^{2} + y^{2} = r^{2}$, so radius $r = \\sqrt{\\text{right side}}$.', 'The centre is at the origin; if not, complete the square first.', 'Check with the distance from the centre to a point on the circle.'], mistake: 'Treating $r^{2}$ as $r$; or making sign errors when completing the square.' }
+    },
+    'hs.s4.circleangle': {
+      zh: { steps: ['找出同一段弧對應的圓心角和圓周角。', '圓心角 = 2 × 圓周角。', '用角度和 $360^{\\circ}$／$180^{\\circ}$ 檢查。'], mistake: '把 2 倍方向用反；或把不同弧的角配對。' },
+      en: { steps: ['Find the central and inscribed angles that stand on the same arc.', 'Central angle = 2 × inscribed angle.', 'Check with angle sums to $360^{\\circ}$ / $180^{\\circ}$.'], mistake: 'Applying the factor of 2 the wrong way; or pairing angles on different arcs.' }
+    },
+    'hs.s5.gp': {
+      zh: { steps: ['找出首項 $a$ 和公比 $r$（後項 ÷ 前項）。', '第 $n$ 項 $= a r^{n-1}$。', '用相鄰項比值檢查 $r$。'], mistake: '把 $r$ 算成前項除後項；或指數用成 $n$。' },
+      en: { steps: ['Find the first term $a$ and common ratio $r$ (a term ÷ the previous term).', 'nth term $= a r^{n-1}$.', 'Check $r$ using neighbouring terms.'], mistake: 'Computing $r$ as previous ÷ next; or using exponent $n$ instead of $n-1$.' }
+    },
+    'hs.s5.prob': {
+      zh: { steps: ['數出所有等可能結果總數。', '數出符合條件的有利結果。', '概率 = 有利 ÷ 總數，化簡並檢查在 0 與 1 之間。'], mistake: '把有利和總數倒轉；或把互斥事件重複計算。' },
+      en: { steps: ['Count the total number of equally likely outcomes.', 'Count the favourable outcomes.', 'Probability = favourable ÷ total; simplify and check it lies between 0 and 1.'], mistake: 'Swapping favourable outcomes and total; or double-counting mutually exclusive events.' }
+    },
+    'hs.s5.gpsum': {
+      zh: { steps: ['前 $n$ 項和 $= \\frac{a(r^{n}-1)}{r-1}$。', '無限和（$|r| < 1$）$= \\frac{a}{1-r}$。', '先確認是求和還是求某一項。'], mistake: '把 $r^{n}$ 寫成 $r \\times n$；或無限和忘記 $|r|<1$ 條件。' },
+      en: { steps: ['Sum of $n$ terms $= \\frac{a(r^{n}-1)}{r-1}$.', 'Sum to infinity ($|r| < 1$) $= \\frac{a}{1-r}$.', 'Check whether the question asks for a sum or a single term.'], mistake: 'Writing $r^{n}$ as $r \\times n$; or forgetting the $|r|<1$ condition for an infinite sum.' }
+    },
+    'hs.s5.dispersion': {
+      zh: { steps: ['排序數據。', '$Q_1$ = 下半部中位數，$Q_3$ = 上半部中位數。', '$\\text{IQR} = Q_3 - Q_1$。'], mistake: '未排序就取四分位；或把 IQR 當成 $Q_3 + Q_1$。' },
+      en: { steps: ['Sort the data.', '$Q_1$ = median of the lower half, $Q_3$ = median of the upper half.', '$\\text{IQR} = Q_3 - Q_1$.'], mistake: 'Taking quartiles without sorting; or using $Q_3 + Q_1$.' }
+    },
+    'hs.s5.variation': {
+      zh: { steps: ['正變：$y = kx$。', '用已知一對 $(x, y)$ 求 $k$。', '代入新 $x$ 求 $y$。'], mistake: '把正變當成反變；或 $k$ 算錯。' },
+      en: { steps: ['Direct variation: $y = kx$.', 'Use a known pair $(x, y)$ to find $k$.', 'Substitute the new $x$ to find $y$.'], mistake: 'Treating direct variation as inverse; or computing $k$ incorrectly.' }
+    },
+    'hs.s5.asum': {
+      zh: { steps: ['前 $n$ 項和 $= \\frac{n}{2}(\\text{首項} + \\text{末項})$。', '先確認項數 $n$。', '用逐項相加或公式互相驗算。'], mistake: '項數算成末項；或首末項配錯。' },
+      en: { steps: ['Sum of $n$ terms $= \\frac{n}{2}(\\text{first} + \\text{last})$.', 'Confirm the number of terms $n$.', 'Check by adding terms directly or using another formula.'], mistake: 'Using the last term as the number of terms; or pairing the wrong first and last terms.' }
+    },
+    'hs.s5.invvar': {
+      zh: { steps: ['反變：$y = \\frac{k}{x}$，即 $xy = k$。', '用已知一對求 $k$。', '代入新 $x$ 求 $y$。'], mistake: '把反變寫成 $y = kx$；或 $k$ 用加減求。' },
+      en: { steps: ['Inverse variation: $y = \\frac{k}{x}$, i.e. $xy = k$.', 'Use a known pair to find $k$.', 'Substitute the new $x$ to find $y$.'], mistake: 'Writing inverse variation as $y = kx$; or finding $k$ by adding instead of multiplying.' }
+    },
+    'hs.s6.quad': {
+      zh: { steps: ['兩根之和 $= -b$，兩根之積 $= c$（首項係數 1）。', '由根反求方程：$x^{2} - (\\text{和})x + (\\text{積}) = 0$。', '用因式分解檢查。'], mistake: '和忘記負號；或把積當成和。' },
+      en: { steps: ['Sum of roots $= -b$, product of roots $= c$ (leading coefficient 1).', 'From roots, form $x^{2} - (\\text{sum})x + (\\text{product}) = 0$.', 'Check by factorising.'], mistake: 'Forgetting the negative sign in the sum; or swapping sum and product.' }
+    },
+    'hs.s6.comb': {
+      zh: { steps: ['排列有序：$P(n,r) = \\frac{n!}{(n-r)!}$。', '組合無序：$C(n,r) = \\frac{n!}{r!(n-r)!}$。', '先問「順序重要嗎」再選公式。'], mistake: '把排列當組合；或階乘約簡錯。' },
+      en: { steps: ['Permutations (order matters): $P(n,r) = \\frac{n!}{(n-r)!}$.', 'Combinations (order does not matter): $C(n,r) = \\frac{n!}{r!(n-r)!}$.', 'Ask “does order matter?” before choosing.'], mistake: 'Using permutations for combinations; or simplifying factorials incorrectly.' }
+    },
+    'hs.s6.range': {
+      zh: { steps: ['分佈域 = 最大值 − 最小值。', '先排序找最大最小。', '用數據範圍檢查是否合理。'], mistake: '把分佈域和中位數混淆；或用錯最大／最小值。' },
+      en: { steps: ['Range = maximum − minimum.', 'Sort the data to find the largest and smallest.', 'Check the answer against the spread of the data.'], mistake: 'Confusing range with median; or using the wrong maximum/minimum.' }
+    },
+    'hs.s6.binomial': {
+      zh: { steps: ['$(x+1)^{n}$ 中 $x^{r}$ 的係數 $= C(n,r)$。', '用帕斯卡三角形或公式求 $C(n,r)$。', '展開檢查首尾項。'], mistake: '把 $n$ 和 $r$ 對調；或係數漏掉。' },
+      en: { steps: ['In $(x+1)^{n}$, the coefficient of $x^{r}$ is $C(n,r)$.', 'Find $C(n,r)$ from Pascal’s triangle or the formula.', 'Check the first and last terms of the expansion.'], mistake: 'Swapping $n$ and $r$; or omitting a coefficient.' }
+    },
+    'hs.s6.prob2': {
+      zh: { steps: ['兩枚骰子共有 $36$ 個有序結果。', '數有利結果；互補事件用 $1 - P(A)$。', '化簡並檢查 $0 \\le P \\le 1$。'], mistake: '只數組合（和為 7 的組合數）而非有序結果；或互補時用錯總數。' },
+      en: { steps: ['Two dice have $36$ ordered outcomes.', 'Count favourable outcomes; for a complement use $1 - P(A)$.', 'Simplify and check $0 \\le P \\le 1$.'], mistake: 'Counting unordered combinations instead of ordered outcomes; or using the wrong total for a complement.' }
+    },
+    'hs.s6.binomial2': {
+      zh: { steps: ['一般項係數 $= C(n,r)a^{n-r}$。', '先取組合數，再乘 $a$ 的次方。', '檢查 $0 \\le r \\le n$。'], mistake: '把 $a$ 的次方寫成 $r$；或 $C(n,r)$ 與 $C(n,n-r)$ 混淆。' },
+      en: { steps: ['General term coefficient $= C(n,r)a^{n-r}$.', 'Take the combination first, then multiply by the power of $a$.', 'Check $0 \\le r \\le n$.'], mistake: 'Writing the power of $a$ as $r$; or confusing $C(n,r)$ with $C(n,n-r)$.' }
+    },
+    'col.linalg': {
+      zh: { steps: ['二階行列式 $|A| = ad - bc$。', '矩陣乘法：行乘列，逐項相加。', '用單位矩陣或逆矩陣檢查。'], mistake: '行列式主對角線和副對角線符號錯；或矩陣乘法次序顛倒。' },
+      en: { steps: ['2×2 determinant $|A| = ad - bc$.', 'Matrix product: row times column, summing the products.', 'Check with the identity or inverse matrix.'], mistake: 'Getting the sign of the determinant terms wrong; or reversing the order of matrix multiplication.' }
+    },
+    'col.prob': {
+      zh: { steps: ['期望值 $E(X) = \\sum x \\cdot P(x)$。', '公平硬幣二項概率 $P = \\frac{C(n,k)}{2^{n}}$。', '檢查所有概率總和為 1。'], mistake: '期望值忘記乘概率；或二項分母用錯。' },
+      en: { steps: ['Expectation $E(X) = \\sum x \\cdot P(x)$.', 'Binomial probability for a fair coin $P = \\frac{C(n,k)}{2^{n}}$.', 'Check that all probabilities sum to 1.'], mistake: 'Forgetting to multiply by the probability in expectation; or using the wrong denominator.' }
+    },
+    'challenge.nt': {
+      zh: { steps: ['大指數取餘數：每乘一次就取餘數，並找出循環。', '同餘：先列出符合一個條件的所有可能，再檢查另一個條件。', '因數倍數：用 HCF／LCM 的關係。'], mistake: '直接硬算大數；或循環長度找錯。' },
+      en: { steps: ['For large powers, reduce modulo at every step and look for a cycle.', 'Congruences: list the numbers satisfying one condition, then test the other.', 'Factors/multiples: use the HCF/LCM relationship.'], mistake: 'Trying to compute the huge number directly; or finding the wrong cycle length.' }
+    },
+    'challenge.count': {
+      zh: { steps: ['方格路徑：在總步數中選向右／向上的步數 $= C(m+n,m)$。', '握手：$C(n,2)$；排列有重複字母要除以重複數。', '容斥：先加再減去重疊部分。'], mistake: '路徑數忘記選步數；或重複排列沒有除掉重複。' },
+      en: { steps: ['Grid paths: choose the number of right/up steps out of the total $= C(m+n,m)$.', 'Handshakes: $C(n,2)$; divide by repeated factorials for repeated letters.', 'Inclusion–exclusion: add first, then subtract the overlap.'], mistake: 'Forgetting to choose the steps for grid paths; or not dividing by repeated arrangements.' }
+    },
+    'challenge.geo': {
+      zh: { steps: ['時針每小時 $30^{\\circ}$、分針每分鐘 $6^{\\circ}$。', '夾角取較小的角（$\\le 180^{\\circ}$）。', '梯形面積 $= \\frac{(\\text{上底}+\\text{下底}) \\times \\text{高}}{2}$。'], mistake: '時針忘記加上分針帶動的角度；或夾角取成 $360^{\\circ}-$ 角。' },
+      en: { steps: ['Hour hand: $30^{\\circ}$ per hour; minute hand: $6^{\\circ}$ per minute.', 'Take the smaller angle ($\\le 180^{\\circ}$).', 'Trapezium area $= \\frac{(\\text{top}+\\text{bottom}) \\times \\text{height}}{2}$.'], mistake: 'Forgetting the hour hand also moves with the minutes; or taking $360^{\\circ}-$ angle instead of the smaller one.' }
+    },
+    'challenge.logic': {
+      zh: { steps: ['數列先看相鄰差，再看比或平方數／三角數。', '「保證」題用最壞情況 + 鴿巢原理。', '寫出規律並驗證下一項。'], mistake: '只看一兩項就猜規律；或保證題沒有考慮最壞情況。' },
+      en: { steps: ['For sequences, check differences first, then ratios, squares or triangular numbers.', 'Guarantee questions use the worst case plus the pigeonhole principle.', 'Write the rule and verify the next term.'], mistake: 'Guessing a rule from one or two terms; or not using the worst case in a guarantee question.' }
+    },
+    'challenge.algebra': {
+      zh: { steps: ['工程問題：整項工作 $= 1$，效率 $= \\frac{1}{\\text{時間}}$。', '混合問題：溶質總量 $\\div$ 總量 $=$ 濃度。', '合作時間 $= 1 \\div \\left(\\frac{1}{a} + \\frac{1}{b}\\right)$。'], mistake: '把工作總量當成時間相加；或混合時只加濃度。' },
+      en: { steps: ['Work problems: total job $= 1$, rate $= \\frac{1}{\\text{time}}$.', 'Mixtures: total solute $\\div$ total volume $=$ concentration.', 'Combined time $= 1 \\div \\left(\\frac{1}{a} + \\frac{1}{b}\\right)$.'], mistake: 'Adding times instead of rates; or adding concentrations directly in a mixture.' }
+    },
+    'challenge.prob': {
+      zh: { steps: ['列出所有等可能結果（有序數對）。', '數出有利結果。', '化簡概率並檢查 $0 \\le P \\le 1$。'], mistake: '把有序結果當成組合；或忘記化簡。' },
+      en: { steps: ['List all equally likely outcomes (ordered pairs).', 'Count the favourable outcomes.', 'Simplify the probability and check $0 \\le P \\le 1$.'], mistake: 'Treating ordered outcomes as combinations; or forgetting to simplify.' }
+    }
+  };
+
+  Object.keys(LESSON_DEEPEN_SENIOR).forEach(function (key) {
+    if (!L[key]) return;
+    ['zh', 'en'].forEach(function (lang) {
+      var d = LESSON_DEEPEN_SENIOR[key][lang];
+      if (!d) return;
+      Object.keys(d).forEach(function (field) { L[key][lang][field] = d[field]; });
+    });
+  });
+
   root.Lessons = L;
 })(typeof window !== 'undefined' ? window : globalThis);
