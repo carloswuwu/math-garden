@@ -719,6 +719,7 @@ async function main() {
   const deepSteps = dDeep.querySelectorAll('#screen-lesson .lesson-steps li');
   check(deepSteps.length === 4, '深化課堂有 4 個解題步驟，得到 ' + deepSteps.length);
   check(!!dDeep.querySelector('#screen-lesson .lesson-mistake'), '深化課堂有常見錯誤提示');
+  check(dDeep.querySelectorAll('#screen-lesson .lesson-glossary dt').length >= 2, '重點課堂有詞彙表');
   check((dDeep.querySelector('#screen-lesson .lesson-mistake').textContent || '').length > 10, '常見錯誤有內容');
   check(dDeep.querySelectorAll('#screen-lesson .katex').length >= 1, '課堂公式以 KaTeX 排版');
   check((dDeep.querySelector('#screen-lesson').textContent || '').indexOf('$') === -1, '課堂畫面沒有未渲染的 $ 標記');
@@ -728,6 +729,25 @@ async function main() {
   check(dDeep.querySelectorAll('#screen-practice .prompt-text .katex').length >= 1, '方程題以 KaTeX 排版');
   check((dDeep.querySelector('#screen-practice .prompt-text').textContent || '').indexOf('$') === -1, '方程題幹沒有未渲染的 $ 標記');
   check((dDeep.querySelector('#screen-practice .prompt-text').textContent || '').indexOf('^') === -1, '方程題幹沒有 raw ^');
+
+  /* 37. 大學綜合考試橫向覆蓋：加入 S6 技能，20 題仍不重複 */
+  const collegeSeed = JSON.stringify({
+    version: 2, lang: 'zh', sound: false, theme: 'light', skills: {},
+    stageExams: {
+      prek: { passed: true }, g1: { passed: true }, g2: { passed: true }, g3: { passed: true },
+      g4: { passed: true }, g5: { passed: true }, g6: { passed: true },
+      ms1: { passed: true }, ms2: { passed: true }, ms3: { passed: true },
+      hs1: { passed: true }, hs2: { passed: true }, hs3: { passed: true }
+    }
+  });
+  const ctxCollege = boot(collegeSeed);
+  const wCollege = ctxCollege.w;
+  wCollege.__mathApp.navigate({ screen: 'exam', stageId: 'college' });
+  const stCollege = wCollege.__mathApp.getState();
+  check(stCollege.mode === 'exam' && stCollege.problems.length === 20, '大學考試仍為 20 題');
+  check(new Set(stCollege.problems.map((p) => p.sig)).size === 20, '大學考試題目互不重複');
+  check(stCollege.problems.some((p) => p.skillId && p.skillId.indexOf('col.') === 0), '大學考試包含大學技能');
+  check(stCollege.problems.some((p) => p.skillId && p.skillId.indexOf('hs.s6.') === 0), '大學考試加入 S6 技能以擴闊覆蓋');
 
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);

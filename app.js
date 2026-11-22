@@ -910,6 +910,11 @@
       if (l.mistake) {
         html += '<div class="lesson-label">' + t("lesson.mistake") + '</div><p class="lesson-text lesson-mistake">' + renderMath(l.mistake) + "</p>";
       }
+      if (l.glossary && l.glossary.length) {
+        html += '<div class="lesson-label">' + t("lesson.glossary") + '</div><dl class="lesson-glossary">' + l.glossary.map(function(g) {
+          return "<div><dt>" + renderMath(g.term) + "</dt><dd>" + renderMath(g.def) + "</dd></div>";
+        }).join("") + "</dl>";
+      }
       html += '</div><div class="lesson-card" style="margin-top:12px"><button class="btn secondary big" id="lessonExample" type="button">📖 ' + t("lesson.showExample") + '</button><div id="exampleBox" hidden></div></div>';
     } else {
       html += '<div class="lesson-card"><p class="lesson-text">' + t("skill.comingText") + "</p></div>";
@@ -1365,6 +1370,14 @@
     var skills = stageSkills(stage).filter(function(s) {
       return !s.scaffold && s.types && s.types.length;
     });
+    if (stage.id === "college") {
+      var prev = getStage("hs3");
+      if (prev) {
+        stageSkills(prev).forEach(function(s) {
+          if (s && !s.scaffold && s.types && s.types.length && skills.indexOf(s) === -1) skills.push(s);
+        });
+      }
+    }
     if (!skills.length) return [];
     var rng = MathCore.seedRandom(Date.now() & 4294967295);
     var exam = MathCore.composeExam(skills, n, {

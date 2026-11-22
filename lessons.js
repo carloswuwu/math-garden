@@ -1319,6 +1319,122 @@
       });
     });
   });
+  var LESSON_GLOSSARY = {
+    "g6.percent": {
+      zh: { glossary: [
+        { term: "百分數", def: "以 100 為分母的分數，例如 25% = 25/100 = 0.25。" },
+        { term: "折扣", def: "售價比原價減少的百分比；售價 = 原價 × (1 − 折扣率)。" },
+        { term: "增長率", def: "增加量佔原值的百分比；新值 = 原值 × (1 + 增長率)。" }
+      ] },
+      en: { glossary: [
+        { term: "Percentage", def: "A fraction with denominator 100, e.g. 25% = 25/100 = 0.25." },
+        { term: "Discount", def: "The percentage taken off the original price; price = original × (1 − rate)." },
+        { term: "Growth rate", def: "The increase as a percentage of the original; new value = original × (1 + rate)." }
+      ] }
+    },
+    "challenge.nt": {
+      zh: { glossary: [
+        { term: "同餘", def: "兩個數除以同一個數後餘數相同，記作 a ≡ b (mod m)。" },
+        { term: "餘數", def: "整數除法中未除盡的部分；每乘一次就取餘數可避免大數。" },
+        { term: "互質", def: "兩個數的最大公因數是 1。" }
+      ] },
+      en: { glossary: [
+        { term: "Congruence", def: "Two numbers with the same remainder modulo m: a ≡ b (mod m)." },
+        { term: "Remainder", def: "What is left after integer division; reduce modulo at each step." },
+        { term: "Coprime", def: "Two numbers whose greatest common divisor is 1." }
+      ] }
+    },
+    "challenge.count": {
+      zh: { glossary: [
+        { term: "排列", def: "有序的安排；n 個物件取 r 個的排列數是 P(n,r)。" },
+        { term: "組合", def: "不計順序的選法；n 個取 r 個是 C(n,r)。" },
+        { term: "容斥原理", def: "先加各集合大小，再減去重疊部分以避免重複計算。" }
+      ] },
+      en: { glossary: [
+        { term: "Permutation", def: "An ordered arrangement; P(n,r) orders r of n objects." },
+        { term: "Combination", def: "A selection where order does not matter; C(n,r)." },
+        { term: "Inclusion–exclusion", def: "Add set sizes, then subtract overlaps to avoid double counting." }
+      ] }
+    },
+    "challenge.geo": {
+      zh: { glossary: [
+        { term: "圓心角", def: "頂點在圓心、由兩條半徑夾出的角。" },
+        { term: "梯形", def: "只有一組對邊平行的四邊形；面積 = (上底 + 下底) × 高 ÷ 2。" },
+        { term: "夾角", def: "兩條射線之間的角；時鐘題取較小的角（≤180°）。" }
+      ] },
+      en: { glossary: [
+        { term: "Central angle", def: "An angle at the centre between two radii." },
+        { term: "Trapezium", def: "A quadrilateral with one pair of parallel sides; area = (a+b)h/2." },
+        { term: "Included angle", def: "The angle between two rays; clock questions use the smaller angle (≤180°)." }
+      ] }
+    },
+    "challenge.logic": {
+      zh: { glossary: [
+        { term: "鴿巢原理", def: "把 n+1 隻鴿子放進 n 個巢，至少一個巢有兩隻。" },
+        { term: "公差", def: "等差數列中相鄰兩項的固定差。" },
+        { term: "最壞情況", def: "「保證」題要考慮最不利的抽取順序。" }
+      ] },
+      en: { glossary: [
+        { term: "Pigeonhole principle", def: "Put n+1 pigeons into n holes and one hole has at least two." },
+        { term: "Common difference", def: "The fixed gap between consecutive terms of an arithmetic sequence." },
+        { term: "Worst case", def: "Guarantee questions must consider the least favourable order." }
+      ] }
+    },
+    "challenge.algebra": {
+      zh: { glossary: [
+        { term: "工作效率", def: "單位時間完成的工作量；把整項工作看成 1，效率 = 1 ÷ 時間。" },
+        { term: "濃度", def: "溶質佔全部溶液的比例，通常以百分數表示。" },
+        { term: "相對速率", def: "相遇時相加、追及時相減的速率。" }
+      ] },
+      en: { glossary: [
+        { term: "Work rate", def: "Work done per unit time; take the whole job as 1, rate = 1 ÷ time." },
+        { term: "Concentration", def: "Solute as a fraction of the whole solution, usually a percentage." },
+        { term: "Relative speed", def: "Add speeds when moving towards, subtract when chasing." }
+      ] }
+    },
+    "challenge.prob": {
+      zh: { glossary: [
+        { term: "古典概率", def: "有利結果數 ÷ 所有等可能結果數。" },
+        { term: "樣本空間", def: "所有可能結果的集合；兩粒骰子的樣本空間有 36 個有序結果。" },
+        { term: "互補事件", def: "A 不發生；P(not A) = 1 − P(A)。" }
+      ] },
+      en: { glossary: [
+        { term: "Classical probability", def: "Favourable outcomes ÷ all equally likely outcomes." },
+        { term: "Sample space", def: "The set of all outcomes; two dice give 36 ordered outcomes." },
+        { term: "Complement", def: "A does not happen; P(not A) = 1 − P(A)." }
+      ] }
+    },
+    "ms.s3.indices": {
+      zh: { glossary: [
+        { term: "底數", def: "被乘方的數，例如 2³ 中的 2。" },
+        { term: "指數", def: "次方的次數，例如 2³ 中的 3。" },
+        { term: "負指數", def: "a⁻ⁿ = 1 ÷ aⁿ。" }
+      ] },
+      en: { glossary: [
+        { term: "Base", def: "The number being raised to a power, e.g. 2 in 2³." },
+        { term: "Exponent", def: "The power, e.g. 3 in 2³." },
+        { term: "Negative exponent", def: "a⁻ⁿ = 1 ÷ aⁿ." }
+      ] }
+    },
+    "hs.s4.log": {
+      zh: { glossary: [
+        { term: "對數", def: "指數的逆運算：log_b x = y 表示 bʸ = x。" },
+        { term: "真數", def: "對數符號內的數，必須大於 0。" },
+        { term: "底數", def: "對數的底，必須大於 0 且不等於 1。" }
+      ] },
+      en: { glossary: [
+        { term: "Logarithm", def: "The inverse of a power: log_b x = y means bʸ = x." },
+        { term: "Argument", def: "The number inside the log; it must be greater than 0." },
+        { term: "Base", def: "The base of the log; greater than 0 and not 1." }
+      ] }
+    }
+  };
+  Object.keys(LESSON_GLOSSARY).forEach(function(key) {
+    if (!L[key]) return;
+    ["zh", "en"].forEach(function(lang) {
+      if (LESSON_GLOSSARY[key][lang]) L[key][lang].glossary = LESSON_GLOSSARY[key][lang].glossary;
+    });
+  });
 
   // data-entry.js
   (typeof window !== "undefined" ? window : globalThis).Lessons = L;

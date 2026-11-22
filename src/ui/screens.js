@@ -192,6 +192,12 @@ import { app } from './context.js';
       if (l.mistake) {
         html += '<div class="lesson-label">' + t('lesson.mistake') + '</div><p class="lesson-text lesson-mistake">' + renderMath(l.mistake) + '</p>';
       }
+      if (l.glossary && l.glossary.length) {
+        html += '<div class="lesson-label">' + t('lesson.glossary') + '</div><dl class="lesson-glossary">' +
+          l.glossary.map(function (g) {
+            return '<div><dt>' + renderMath(g.term) + '</dt><dd>' + renderMath(g.def) + '</dd></div>';
+          }).join('') + '</dl>';
+      }
       html += '</div>' +
         '<div class="lesson-card" style="margin-top:12px">' +
         '<button class="btn secondary big" id="lessonExample" type="button">📖 ' + t('lesson.showExample') + '</button>' +
