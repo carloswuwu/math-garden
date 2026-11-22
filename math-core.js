@@ -3730,178 +3730,19 @@ var __MathCoreBundle = (() => {
     dicecompare: genDicecompare
   };
 
-  // src/core/progress.js
-  function defaultSkillProgress() {
-    return {
-      attempts: 0,
-      correct: 0,
-      consecCorrect: 0,
-      consecWrong: 0,
-      difficultyStep: 0,
-      lastSeen: 0,
-      typeAcc: {},
-      stars: 0,
-      mastered: false,
-      quizStars: 0,
-      quizBest: 0,
-      lastProblems: []
-    };
-  }
-  function newProgress() {
-    return { version: 2, lang: "zh", sound: true, theme: "light", stars: 0, streak: { lastDay: null, count: 0 }, badges: [], skills: {}, stageExams: {} };
-  }
-  function sanitizeProgress(input) {
-    var base = newProgress();
-    if (!input || typeof input !== "object" || Array.isArray(input)) return base;
-    var num = function(v, d) {
-      return typeof v === "number" && isFinite(v) ? v : d;
-    };
-    var int = function(v, d, min, max) {
-      var n = Math.floor(num(v, d));
-      if (n < min) n = min;
-      if (max != null && n > max) n = max;
-      return n;
-    };
-    var bool = function(v, d) {
-      return typeof v === "boolean" ? v : d;
-    };
-    base.lang = input.lang === "en" || input.lang === "zh" ? input.lang : "zh";
-    base.sound = bool(input.sound, true);
-    base.theme = input.theme === "dark" || input.theme === "light" || input.theme === "auto" ? input.theme : "light";
-    base.stars = int(input.stars, 0, 0, 1e6);
-    if (input.streak && typeof input.streak === "object") {
-      base.streak.lastDay = typeof input.streak.lastDay === "string" || input.streak.lastDay === null ? input.streak.lastDay : null;
-      base.streak.count = int(input.streak.count, 0, 0, 1e5);
-    }
-    if (Array.isArray(input.badges)) {
-      base.badges = input.badges.filter(function(b) {
-        return typeof b === "string";
-      }).slice(0, 100);
-    }
-    if (input.skills && typeof input.skills === "object" && !Array.isArray(input.skills)) {
-      Object.keys(input.skills).slice(0, 500).forEach(function(id) {
-        var s = input.skills[id];
-        if (!s || typeof s !== "object") return;
-        var sp = {
-          attempts: int(s.attempts, 0, 0, 1e6),
-          correct: int(s.correct, 0, 0, 1e6),
-          consecCorrect: int(s.consecCorrect, 0, 0, 100),
-          consecWrong: int(s.consecWrong, 0, 0, 100),
-          difficultyStep: int(s.difficultyStep, 0, 0, 20),
-          lastSeen: num(s.lastSeen, 0),
-          typeAcc: {},
-          stars: int(s.stars, 0, 0, 3),
-          mastered: bool(s.mastered, false),
-          quizStars: int(s.quizStars, 0, 0, 3),
-          quizBest: int(s.quizBest, 0, 0, 100),
-          lastProblems: Array.isArray(s.lastProblems) ? s.lastProblems.slice(-20) : []
-        };
-        if (s.typeAcc && typeof s.typeAcc === "object") {
-          Object.keys(s.typeAcc).slice(0, 60).forEach(function(t) {
-            var a = s.typeAcc[t];
-            if (a && typeof a === "object") sp.typeAcc[t] = { a: int(a.a, 0, 0, 1e6), c: int(a.c, 0, 0, 1e6) };
-          });
-        }
-        base.skills[id] = sp;
+  // src/core/format.js
+  var CARET_TOKEN_RE = /(?:\([A-Za-z0-9.+\-−×÷/ ]+\)|[A-Za-z0-9.]+)\s*\^\s*(?:\{[A-Za-z0-9.+\-−]+\}|\([A-Za-z0-9.+\-−]+\)|[A-Za-z0-9.]+)/g;
+  function formatMathText(text) {
+    if (typeof text !== "string" || text.indexOf("^") === -1) return text;
+    return text.split(/(\$[^$]*\$)/).map(function(part, idx) {
+      if (idx % 2 === 1) return part;
+      return part.replace(CARET_TOKEN_RE, function(tok) {
+        return "$" + tok.replace(/−/g, "-") + "$";
       });
-    }
-    if (input.stageExams && typeof input.stageExams === "object" && !Array.isArray(input.stageExams)) {
-      Object.keys(input.stageExams).slice(0, 100).forEach(function(id) {
-        var e = input.stageExams[id];
-        if (!e || typeof e !== "object") return;
-        base.stageExams[id] = {
-          passed: bool(e.passed, false) || bool(e.perfect, false),
-          perfect: bool(e.perfect, false),
-          best: int(e.best, 0, 0, 100)
-        };
-      });
-    }
-    base.version = 2;
-    return base;
-  }
-  function practiceStars(correct, practice) {
-    if (correct >= practice) return 3;
-    if (correct >= Math.ceil(practice * 0.66)) return 2;
-    if (correct >= Math.ceil(practice * 0.33)) return 1;
-    return 0;
-  }
-  function quizStars(percent, pass) {
-    var threshold = typeof pass === "number" && pass > 0 && pass <= 1 ? pass : 0.8;
-    if (percent >= Math.min(0.95, threshold + 0.15)) return 3;
-    if (percent >= threshold) return 2;
-    if (percent >= threshold * 0.75) return 1;
-    return 0;
-  }
-  function masteryStatus(progress, skill) {
-    var sp = progress.skills[skill.id] || defaultSkillProgress();
-    var practice = skill.mastery && skill.mastery.practice || 10;
-    var pStars = practiceStars(sp.correct, practice);
-    var qStars = sp.quizStars || 0;
-    var stars = Math.max(pStars, qStars);
-    var mastered = qStars >= 2;
-    return { practiceStars: pStars, quizStars: qStars, stars, mastered, practice };
-  }
-  function applyResult(progress, skill, problem, correct, opts) {
-    opts = opts || {};
-    if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
-    var sp = progress.skills[skill.id];
-    sp.attempts += 1;
-    sp.lastSeen = Date.now();
-    var acc = sp.typeAcc[problem.type] || { a: 0, c: 0 };
-    acc.a += 1;
-    var credit = opts.credit !== false;
-    if (correct && credit) {
-      acc.c += 1;
-      sp.correct += 1;
-      sp.consecCorrect += 1;
-      sp.consecWrong = 0;
-      if (sp.consecCorrect >= 3) {
-        sp.difficultyStep += 1;
-        sp.consecCorrect = 0;
-      }
-    } else if (correct) {
-      sp.consecCorrect = 0;
-    } else {
-      sp.consecWrong += 1;
-      sp.consecCorrect = 0;
-      if (sp.consecWrong >= 2) {
-        sp.difficultyStep = Math.max(0, sp.difficultyStep - 1);
-        sp.consecWrong = 0;
-      }
-    }
-    var levels = skill.levels || [{ min: skill.min, max: skill.max }];
-    sp.difficultyStep = Math.max(0, Math.min(sp.difficultyStep, levels.length - 1));
-    sp.typeAcc[problem.type] = acc;
-    sp.lastProblems.push({ type: problem.type, sig: problem.sig });
-    if (sp.lastProblems.length > 3) sp.lastProblems.shift();
-    var st = masteryStatus(progress, skill);
-    sp.stars = st.stars;
-    sp.mastered = st.mastered;
-    return progress;
-  }
-  function applyQuizResult(progress, skill, percent) {
-    if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
-    var sp = progress.skills[skill.id];
-    var pass = skill.mastery && skill.mastery.quizPass || 0.8;
-    var qs = quizStars(percent, pass);
-    sp.quizStars = Math.max(sp.quizStars || 0, qs);
-    sp.quizBest = Math.max(sp.quizBest || 0, Math.round(percent * 100));
-    var st = masteryStatus(progress, skill);
-    sp.stars = st.stars;
-    sp.mastered = st.mastered;
-    return progress;
-  }
-  function gradeQuiz(results, pass) {
-    var correct = 0, total = results.length;
-    results.forEach(function(r) {
-      if (r.correct) correct++;
-    });
-    var percent = total ? correct / total : 0;
-    return { correct, total, percent, stars: quizStars(percent, pass) };
+    }).join("");
   }
 
-  // src/core/index.js
-  var GENERATOR_TYPES;
+  // src/core/explain.js
   var SOLVERS = {
     gp: function(p) {
       var m = p.math, ans = renderValue(p.answer);
@@ -5025,7 +4866,8 @@ var __MathCoreBundle = (() => {
       en: ex.en.map(formatMathText)
     };
   }
-  GENERATOR_TYPES = Object.keys(GENERATORS);
+
+  // src/core/choices.js
   function fractionDistractor(rng, ans) {
     var d = randInt(rng, 2, Math.max(ans.d + 2, 4));
     var n = randInt(rng, 1, d - 1);
@@ -5151,6 +4993,8 @@ var __MathCoreBundle = (() => {
     if (p.type === "fx") return -40;
     return 0;
   }
+
+  // src/core/signatures.js
   function stableStringify(value) {
     if (value === null || typeof value !== "object") return JSON.stringify(value);
     if (Array.isArray(value)) return "[" + value.map(stableStringify).join(",") + "]";
@@ -5158,16 +5002,6 @@ var __MathCoreBundle = (() => {
     return "{" + keys.map(function(k) {
       return JSON.stringify(k) + ":" + stableStringify(value[k]);
     }).join(",") + "}";
-  }
-  var CARET_TOKEN_RE = /(?:\([A-Za-z0-9.+\-−×÷/ ]+\)|[A-Za-z0-9.]+)\s*\^\s*(?:\{[A-Za-z0-9.+\-−]+\}|\([A-Za-z0-9.+\-−]+\)|[A-Za-z0-9.]+)/g;
-  function formatMathText(text) {
-    if (typeof text !== "string" || text.indexOf("^") === -1) return text;
-    return text.split(/(\$[^$]*\$)/).map(function(part, idx) {
-      if (idx % 2 === 1) return part;
-      return part.replace(CARET_TOKEN_RE, function(tok) {
-        return "$" + tok.replace(/−/g, "-") + "$";
-      });
-    }).join("");
   }
   function mathSig(math) {
     return stableStringify(math);
@@ -5192,6 +5026,100 @@ var __MathCoreBundle = (() => {
     var text = problem.prompt && problem.prompt.en ? String(problem.prompt.en) : "";
     return problem.type + ":" + text.replace(/\d+(?:\.\d+)?/g, "#").replace(/\s+/g, " ").trim();
   }
+
+  // src/core/problem.js
+  function levelFor(skill, difficultyStep) {
+    var levels = skill.levels || [{ min: skill.min, max: skill.max }];
+    var idx = Math.max(0, Math.min(difficultyStep || 0, levels.length - 1));
+    var lvl = levels[idx] || {};
+    var out = {};
+    Object.keys(lvl).forEach(function(k) {
+      out[k] = lvl[k];
+    });
+    if (out.min == null) out.min = skill.min;
+    if (out.max == null) out.max = skill.max;
+    out.forms = out.forms || skill.forms;
+    out.ops = out.ops || skill.ops;
+    return out;
+  }
+  function typeList(skill) {
+    return (skill.types || []).map(function(t) {
+      return typeof t === "string" ? { t } : t;
+    });
+  }
+  function generateProblem(skill, opts) {
+    opts = opts || {};
+    var types = typeList(skill);
+    if (!types.length) throw new Error("技能缺少題目類型: " + (skill.id || "?"));
+    var typeSpec = null;
+    if (opts.typeIndex != null) {
+      typeSpec = types[opts.typeIndex];
+      if (!typeSpec) throw new Error("題目類型索引越界: " + opts.typeIndex);
+    } else if (opts.type) {
+      for (var i = 0; i < types.length; i++) if (types[i].t === opts.type) {
+        typeSpec = types[i];
+        break;
+      }
+      if (!typeSpec) throw new Error("未知題目類型: " + opts.type);
+    } else {
+      typeSpec = types[0];
+    }
+    var rng = opts.rng || seedRandom(opts.seed != null ? opts.seed : 1);
+    var step = opts.difficultyStep != null ? opts.difficultyStep : 0;
+    var lvl = levelFor(skill, step);
+    var o = {};
+    for (var k in lvl) o[k] = lvl[k];
+    if (typeSpec.opts) for (var k2 in typeSpec.opts) o[k2] = typeSpec.opts[k2];
+    var gen = GENERATORS[typeSpec.t];
+    if (!gen) throw new Error("未實現的題目類型: " + typeSpec.t);
+    var p = gen(rng, o);
+    p.type = typeSpec.t;
+    if (isFraction(p.answer) && p.type !== "fraction") p.answer = reduceFraction(p.answer);
+    p.difficultyStep = step;
+    if (p.prompt) {
+      p.prompt = { zh: formatMathText(p.prompt.zh), en: formatMathText(p.prompt.en) };
+    }
+    if (p.hint) {
+      p.hint = { zh: formatMathText(p.hint.zh), en: formatMathText(p.hint.en) };
+    }
+    p.answerMax = o.max;
+    p.answerMin = o.min;
+    if (o.input) p.input = "text";
+    if (p.input) {
+      delete p.choices;
+    } else if (!p.choices) {
+      p.choices = buildChoices(rng, p.answer, { min: distractorMin(p, o), max: distractorMax(p, o), base: p.base });
+    }
+    delete p.base;
+    p.sig = p.type + ":" + mathSig(p.math);
+    if (opts.selfCheck) {
+      var expected = answerFromMath(p);
+      if (!valuesEqual(p.answer, expected)) {
+        throw new Error("答案與 MATH_SPEC 不一致: " + p.type + " " + p.sig + " answer=" + renderValue(p.answer) + " expected=" + renderValue(expected));
+      }
+    }
+    return p;
+  }
+  function generateSet(skill, count, opts) {
+    opts = opts || {};
+    var rng = opts.rng || seedRandom(opts.seed != null ? opts.seed : 1);
+    var step = opts.difficultyStep != null ? opts.difficultyStep : 0;
+    var types = typeList(skill);
+    var out = [];
+    var seen = {};
+    var guardTotal = 0;
+    while (out.length < count && guardTotal++ < count * 200) {
+      var idx = types.length > 1 ? Math.floor(rng() * types.length) : 0;
+      var p = generateProblem(skill, { rng, difficultyStep: step, typeIndex: idx });
+      if (!seen[p.sig]) {
+        seen[p.sig] = true;
+        out.push(p);
+      }
+    }
+    return out;
+  }
+
+  // src/core/compose.js
   function composeSet(skill, count, opts) {
     opts = opts || {};
     var rng = opts.rng || seedRandom(opts.seed != null ? opts.seed : 1);
@@ -5303,96 +5231,180 @@ var __MathCoreBundle = (() => {
     }
     return opts.shuffle === false ? out : shuffle(rng, out);
   }
-  function levelFor(skill, difficultyStep) {
-    var levels = skill.levels || [{ min: skill.min, max: skill.max }];
-    var idx = Math.max(0, Math.min(difficultyStep || 0, levels.length - 1));
-    var lvl = levels[idx] || {};
-    var out = {};
-    Object.keys(lvl).forEach(function(k) {
-      out[k] = lvl[k];
-    });
-    if (out.min == null) out.min = skill.min;
-    if (out.max == null) out.max = skill.max;
-    out.forms = out.forms || skill.forms;
-    out.ops = out.ops || skill.ops;
-    return out;
+
+  // src/core/progress.js
+  function defaultSkillProgress() {
+    return {
+      attempts: 0,
+      correct: 0,
+      consecCorrect: 0,
+      consecWrong: 0,
+      difficultyStep: 0,
+      lastSeen: 0,
+      typeAcc: {},
+      stars: 0,
+      mastered: false,
+      quizStars: 0,
+      quizBest: 0,
+      lastProblems: []
+    };
   }
-  function typeList(skill) {
-    return (skill.types || []).map(function(t) {
-      return typeof t === "string" ? { t } : t;
-    });
+  function newProgress() {
+    return { version: 2, lang: "zh", sound: true, theme: "light", stars: 0, streak: { lastDay: null, count: 0 }, badges: [], skills: {}, stageExams: {} };
   }
-  function generateProblem(skill, opts) {
+  function sanitizeProgress(input) {
+    var base = newProgress();
+    if (!input || typeof input !== "object" || Array.isArray(input)) return base;
+    var num = function(v, d) {
+      return typeof v === "number" && isFinite(v) ? v : d;
+    };
+    var int = function(v, d, min, max) {
+      var n = Math.floor(num(v, d));
+      if (n < min) n = min;
+      if (max != null && n > max) n = max;
+      return n;
+    };
+    var bool = function(v, d) {
+      return typeof v === "boolean" ? v : d;
+    };
+    base.lang = input.lang === "en" || input.lang === "zh" ? input.lang : "zh";
+    base.sound = bool(input.sound, true);
+    base.theme = input.theme === "dark" || input.theme === "light" || input.theme === "auto" ? input.theme : "light";
+    base.stars = int(input.stars, 0, 0, 1e6);
+    if (input.streak && typeof input.streak === "object") {
+      base.streak.lastDay = typeof input.streak.lastDay === "string" || input.streak.lastDay === null ? input.streak.lastDay : null;
+      base.streak.count = int(input.streak.count, 0, 0, 1e5);
+    }
+    if (Array.isArray(input.badges)) {
+      base.badges = input.badges.filter(function(b) {
+        return typeof b === "string";
+      }).slice(0, 100);
+    }
+    if (input.skills && typeof input.skills === "object" && !Array.isArray(input.skills)) {
+      Object.keys(input.skills).slice(0, 500).forEach(function(id) {
+        var s = input.skills[id];
+        if (!s || typeof s !== "object") return;
+        var sp = {
+          attempts: int(s.attempts, 0, 0, 1e6),
+          correct: int(s.correct, 0, 0, 1e6),
+          consecCorrect: int(s.consecCorrect, 0, 0, 100),
+          consecWrong: int(s.consecWrong, 0, 0, 100),
+          difficultyStep: int(s.difficultyStep, 0, 0, 20),
+          lastSeen: num(s.lastSeen, 0),
+          typeAcc: {},
+          stars: int(s.stars, 0, 0, 3),
+          mastered: bool(s.mastered, false),
+          quizStars: int(s.quizStars, 0, 0, 3),
+          quizBest: int(s.quizBest, 0, 0, 100),
+          lastProblems: Array.isArray(s.lastProblems) ? s.lastProblems.slice(-20) : []
+        };
+        if (s.typeAcc && typeof s.typeAcc === "object") {
+          Object.keys(s.typeAcc).slice(0, 60).forEach(function(t) {
+            var a = s.typeAcc[t];
+            if (a && typeof a === "object") sp.typeAcc[t] = { a: int(a.a, 0, 0, 1e6), c: int(a.c, 0, 0, 1e6) };
+          });
+        }
+        base.skills[id] = sp;
+      });
+    }
+    if (input.stageExams && typeof input.stageExams === "object" && !Array.isArray(input.stageExams)) {
+      Object.keys(input.stageExams).slice(0, 100).forEach(function(id) {
+        var e = input.stageExams[id];
+        if (!e || typeof e !== "object") return;
+        base.stageExams[id] = {
+          passed: bool(e.passed, false) || bool(e.perfect, false),
+          perfect: bool(e.perfect, false),
+          best: int(e.best, 0, 0, 100)
+        };
+      });
+    }
+    base.version = 2;
+    return base;
+  }
+  function practiceStars(correct, practice) {
+    if (correct >= practice) return 3;
+    if (correct >= Math.ceil(practice * 0.66)) return 2;
+    if (correct >= Math.ceil(practice * 0.33)) return 1;
+    return 0;
+  }
+  function quizStars(percent, pass) {
+    var threshold = typeof pass === "number" && pass > 0 && pass <= 1 ? pass : 0.8;
+    if (percent >= Math.min(0.95, threshold + 0.15)) return 3;
+    if (percent >= threshold) return 2;
+    if (percent >= threshold * 0.75) return 1;
+    return 0;
+  }
+  function masteryStatus(progress, skill) {
+    var sp = progress.skills[skill.id] || defaultSkillProgress();
+    var practice = skill.mastery && skill.mastery.practice || 10;
+    var pStars = practiceStars(sp.correct, practice);
+    var qStars = sp.quizStars || 0;
+    var stars = Math.max(pStars, qStars);
+    var mastered = qStars >= 2;
+    return { practiceStars: pStars, quizStars: qStars, stars, mastered, practice };
+  }
+  function applyResult(progress, skill, problem, correct, opts) {
     opts = opts || {};
-    var types = typeList(skill);
-    if (!types.length) throw new Error("技能缺少題目類型: " + (skill.id || "?"));
-    var typeSpec = null;
-    if (opts.typeIndex != null) {
-      typeSpec = types[opts.typeIndex];
-      if (!typeSpec) throw new Error("題目類型索引越界: " + opts.typeIndex);
-    } else if (opts.type) {
-      for (var i = 0; i < types.length; i++) if (types[i].t === opts.type) {
-        typeSpec = types[i];
-        break;
+    if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
+    var sp = progress.skills[skill.id];
+    sp.attempts += 1;
+    sp.lastSeen = Date.now();
+    var acc = sp.typeAcc[problem.type] || { a: 0, c: 0 };
+    acc.a += 1;
+    var credit = opts.credit !== false;
+    if (correct && credit) {
+      acc.c += 1;
+      sp.correct += 1;
+      sp.consecCorrect += 1;
+      sp.consecWrong = 0;
+      if (sp.consecCorrect >= 3) {
+        sp.difficultyStep += 1;
+        sp.consecCorrect = 0;
       }
-      if (!typeSpec) throw new Error("未知題目類型: " + opts.type);
+    } else if (correct) {
+      sp.consecCorrect = 0;
     } else {
-      typeSpec = types[0];
-    }
-    var rng = opts.rng || seedRandom(opts.seed != null ? opts.seed : 1);
-    var step = opts.difficultyStep != null ? opts.difficultyStep : 0;
-    var lvl = levelFor(skill, step);
-    var o = {};
-    for (var k in lvl) o[k] = lvl[k];
-    if (typeSpec.opts) for (var k2 in typeSpec.opts) o[k2] = typeSpec.opts[k2];
-    var gen = GENERATORS[typeSpec.t];
-    if (!gen) throw new Error("未實現的題目類型: " + typeSpec.t);
-    var p = gen(rng, o);
-    p.type = typeSpec.t;
-    if (isFraction(p.answer) && p.type !== "fraction") p.answer = reduceFraction(p.answer);
-    p.difficultyStep = step;
-    if (p.prompt) {
-      p.prompt = { zh: formatMathText(p.prompt.zh), en: formatMathText(p.prompt.en) };
-    }
-    if (p.hint) {
-      p.hint = { zh: formatMathText(p.hint.zh), en: formatMathText(p.hint.en) };
-    }
-    p.answerMax = o.max;
-    p.answerMin = o.min;
-    if (o.input) p.input = "text";
-    if (p.input) {
-      delete p.choices;
-    } else if (!p.choices) {
-      p.choices = buildChoices(rng, p.answer, { min: distractorMin(p, o), max: distractorMax(p, o), base: p.base });
-    }
-    delete p.base;
-    p.sig = p.type + ":" + mathSig(p.math);
-    if (opts.selfCheck) {
-      var expected = answerFromMath(p);
-      if (!valuesEqual(p.answer, expected)) {
-        throw new Error("答案與 MATH_SPEC 不一致: " + p.type + " " + p.sig + " answer=" + renderValue(p.answer) + " expected=" + renderValue(expected));
+      sp.consecWrong += 1;
+      sp.consecCorrect = 0;
+      if (sp.consecWrong >= 2) {
+        sp.difficultyStep = Math.max(0, sp.difficultyStep - 1);
+        sp.consecWrong = 0;
       }
     }
-    return p;
+    var levels = skill.levels || [{ min: skill.min, max: skill.max }];
+    sp.difficultyStep = Math.max(0, Math.min(sp.difficultyStep, levels.length - 1));
+    sp.typeAcc[problem.type] = acc;
+    sp.lastProblems.push({ type: problem.type, sig: problem.sig });
+    if (sp.lastProblems.length > 3) sp.lastProblems.shift();
+    var st = masteryStatus(progress, skill);
+    sp.stars = st.stars;
+    sp.mastered = st.mastered;
+    return progress;
   }
-  function generateSet(skill, count, opts) {
-    opts = opts || {};
-    var rng = opts.rng || seedRandom(opts.seed != null ? opts.seed : 1);
-    var step = opts.difficultyStep != null ? opts.difficultyStep : 0;
-    var types = typeList(skill);
-    var out = [];
-    var seen = {};
-    var guardTotal = 0;
-    while (out.length < count && guardTotal++ < count * 200) {
-      var idx = types.length > 1 ? Math.floor(rng() * types.length) : 0;
-      var p = generateProblem(skill, { rng, difficultyStep: step, typeIndex: idx });
-      if (!seen[p.sig]) {
-        seen[p.sig] = true;
-        out.push(p);
-      }
-    }
-    return out;
+  function applyQuizResult(progress, skill, percent) {
+    if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
+    var sp = progress.skills[skill.id];
+    var pass = skill.mastery && skill.mastery.quizPass || 0.8;
+    var qs = quizStars(percent, pass);
+    sp.quizStars = Math.max(sp.quizStars || 0, qs);
+    sp.quizBest = Math.max(sp.quizBest || 0, Math.round(percent * 100));
+    var st = masteryStatus(progress, skill);
+    sp.stars = st.stars;
+    sp.mastered = st.mastered;
+    return progress;
   }
+  function gradeQuiz(results, pass) {
+    var correct = 0, total = results.length;
+    results.forEach(function(r) {
+      if (r.correct) correct++;
+    });
+    var percent = total ? correct / total : 0;
+    return { correct, total, percent, stars: quizStars(percent, pass) };
+  }
+
+  // src/core/index.js
+  var GENERATOR_TYPES;
+  GENERATOR_TYPES = Object.keys(GENERATORS);
   function checkAnswer(problem, input) {
     var expected = problem.answer;
     var parsed = normalizeInput(input, expected);
