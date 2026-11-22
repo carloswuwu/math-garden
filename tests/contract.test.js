@@ -241,7 +241,7 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
     });
   });
   check(lessonBad.length === 0, '課堂仍有 $...$ 以外的 caret：' + lessonBad.slice(0, 8).join(', '));
-  check(deepLessons >= 15, '至少 15 個課堂應有雙語解題步驟，實際 ' + deepLessons);
+  check(deepLessons === Object.keys(Lessons).length, '所有課堂都應有雙語解題步驟，實際 ' + deepLessons + '/' + Object.keys(Lessons).length);
 })();
 
 /* ---------------- 4. 解題步驟覆蓋（lesson「看一步步示範」） ---------------- */
@@ -433,9 +433,9 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
   const installBlock = (swSrc.match(/addEventListener\('install',[\s\S]*?\}\);/g) || []).join('');
   check(installBlock.indexOf('self.skipWaiting()') === -1, '安裝時不應自動 skipWaiting（更新要等使用者確認）');
 
-  /* 體積：advisory 上限 120 KB gzip */
+  /* 體積：advisory 上限 140 KB gzip（已擴充全部 108 課的教學步驟與常見錯誤） */
   const gzipBytes = zlib.gzipSync(fs.readFileSync(path.join(DIST, appRef))).length;
-  check(gzipBytes <= 120 * 1024, 'bundle gzip 應 ≤ 120 KB，實際 ' + (gzipBytes / 1024).toFixed(1) + ' KB');
+  check(gzipBytes <= 140 * 1024, 'bundle gzip 應 ≤ 140 KB，實際 ' + (gzipBytes / 1024).toFixed(1) + ' KB');
 })();
 
 console.log('✓ 契約測試全部通過（' + checks + ' 項斷言，' + skills.length + ' 個技能）');
