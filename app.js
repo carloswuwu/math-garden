@@ -4,7 +4,7 @@
   var root = typeof window !== "undefined" ? window : globalThis;
   var MathCore = root.MathCore;
   var I18N = root.I18N;
-  var Curriculum = root.Curriculum;
+  var Curriculum2 = root.Curriculum;
   var CurriculumOutline = root.CurriculumOutline;
   var Formulas = root.Formulas;
   var Lessons = root.Lessons;
@@ -156,10 +156,10 @@
 
   // src/ui/selectors.js
   function getSkill(id) {
-    return Curriculum.skills[id];
+    return Curriculum2.skills[id];
   }
   function getStage(id) {
-    for (var i = 0; i < Curriculum.stages.length; i++) if (Curriculum.stages[i].id === id) return Curriculum.stages[i];
+    for (var i = 0; i < Curriculum2.stages.length; i++) if (Curriculum2.stages[i].id === id) return Curriculum2.stages[i];
     return null;
   }
   function stageSkills(stage) {
@@ -181,12 +181,12 @@
   function totalStars() {
     var sum = 0;
     for (var id in progress.skills) {
-      if (Curriculum.skills[id]) sum += progress.skills[id].stars || 0;
+      if (Curriculum2.skills[id]) sum += progress.skills[id].stars || 0;
     }
     return sum;
   }
-  function realStageList() {
-    return Curriculum.stages.filter(function(st) {
+  function realStageList2() {
+    return Curriculum2.stages.filter(function(st) {
       if (st.id === "challenge") return false;
       return stageSkills(st).some(function(s) {
         return !s.scaffold;
@@ -203,7 +203,7 @@
   }
   function stageUnlocked(stageId) {
     if (stageId === "challenge") return true;
-    var real = realStageList();
+    var real = realStageList2();
     for (var i = 0; i < real.length; i++) {
       if (real[i].id === stageId) return i === 0 || stageComplete(real[i - 1]);
     }
@@ -694,12 +694,6 @@
     if (isVisible(el)) return focusEl(el);
     return false;
   }
-  function focusScreen() {
-    var screen = $("screen-" + state.screen);
-    if (!screen) return false;
-    var node = screen.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-    return focusEl(node);
-  }
   function isTypingTarget(el) {
     if (!el) return false;
     var tag = (el.tagName || "").toUpperCase();
@@ -770,7 +764,7 @@
 
   // src/ui/screens.js
   function renderHome2() {
-    var realStages = realStageList();
+    var realStages = realStageList2();
     var unlockedCount = 0;
     var session = app.sessionSummary();
     var html = '<h1 class="page-title">' + t("home.title") + '</h1><p class="page-sub">' + t("home.subtitle") + "</p>";
@@ -965,8 +959,8 @@
   }
   function renderParent() {
     var masteredCount = 0, totalCount = 0, sumStars = totalStars();
-    Object.keys(Curriculum.skills).forEach(function(id) {
-      var s = Curriculum.skills[id];
+    Object.keys(Curriculum2.skills).forEach(function(id) {
+      var s = Curriculum2.skills[id];
       if (s.scaffold) return;
       totalCount++;
       if (masteryOf(s).mastered) masteredCount++;
@@ -974,7 +968,7 @@
     var html = '<h1 class="page-title">' + t("parent.title") + '</h1><div class="panel"><h2>' + t("parent.overview") + '</h2><div class="stat-row"><div class="stat"><div class="v">' + sumStars + '</div><div class="k">' + t("parent.totalStars") + '</div></div><div class="stat"><div class="v">' + (progress.streak.count || 0) + '</div><div class="k">' + t("parent.streak") + '</div></div><div class="stat"><div class="v">' + masteredCount + "/" + totalCount + '</div><div class="k">' + t("parent.masteredSkills") + "</div></div></div></div>";
     html += '<div class="panel"><h2>' + t("parent.skills") + "</h2>";
     var hasAny = false;
-    Curriculum.stages.forEach(function(stage) {
+    Curriculum2.stages.forEach(function(stage) {
       stageSkills(stage).forEach(function(skill) {
         if (skill.scaffold) return;
         var sp = skillProgress(skill.id);
@@ -1987,75 +1981,10 @@
     return arr[Math.floor(Math.random() * arr.length)];
   }
 
-  // src/ui/index.js
-  function handlePracticeKeys(e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
-    if (isTypingTarget(e.target)) return;
-    var choices = choiceButtons();
-    if (!choices.length) return;
-    var key = e.key;
-    if (key === "Enter" || key === " " || key === "Spacebar") {
-      var activeBtn = document.activeElement;
-      if (activeBtn && choices.indexOf(activeBtn) !== -1 && !activeBtn.disabled) {
-        e.preventDefault();
-        if (!state.locked) activeBtn.click();
-      }
-      return;
-    }
-    if (/^[1-9]$/.test(key)) {
-      var idx = Number(key) - 1;
-      if (idx >= choices.length) return;
-      var btn = choices[idx];
-      if (btn.disabled || btn.getAttribute("aria-disabled") === "true") return;
-      e.preventDefault();
-      focusEl(btn);
-      if (!state.locked) btn.click();
-      return;
-    }
-    var isNext = key === "ArrowRight" || key === "ArrowDown";
-    var isPrev = key === "ArrowLeft" || key === "ArrowUp";
-    if (!isNext && !isPrev) return;
-    e.preventDefault();
-    var n = choices.length;
-    var dir = isNext ? 1 : -1;
-    var cur = choices.indexOf(document.activeElement);
-    if (cur === -1) {
-      for (var j = 0; j < n; j++) {
-        var cand = choices[dir === 1 ? j : n - 1 - j];
-        if (!cand.disabled) {
-          focusEl(cand);
-          break;
-        }
-      }
-      return;
-    }
-    var nextIdx = cur;
-    for (var k = 0; k < n; k++) {
-      nextIdx = (nextIdx + dir + n) % n;
-      if (!choices[nextIdx].disabled) {
-        focusEl(choices[nextIdx]);
-        break;
-      }
-    }
-  }
-  function onGlobalKeydown(e) {
-    if (modalState.open) {
-      if (e.key === "Escape" || e.key === "Esc") {
-        e.preventDefault();
-        closeModal();
-        return;
-      }
-      if (e.key === "Tab") {
-        trapModalTab(e);
-        return;
-      }
-      return;
-    }
-    if (state.screen !== "practice") return;
-    var screen = $("screen-practice");
-    if (!screen || screen.hidden) return;
-    handlePracticeKeys(e);
-  }
+  // src/ui/sw-state.js
+  var updateState = { worker: null, accepted: false };
+
+  // src/ui/dialog.js
   function showModal(innerHTML, opener) {
     var modal = $("modal");
     if (!modal) return;
@@ -2178,11 +2107,12 @@
       saveProgress();
       clearSession();
       var opener = closeModal({ restore: false });
-      renderHome2();
+      renderHome();
       if (!restoreFocus(opener)) focusScreen();
     });
   }
-  var updateState = { worker: null, accepted: false };
+
+  // src/ui/sw.js
   function showUpdateChip(waiting) {
     updateState.worker = waiting || null;
     var chip = $("updateChip");
@@ -2254,6 +2184,78 @@
       });
     }).then(done).catch(done);
   }
+
+  // src/ui/keyboard.js
+  function handlePracticeKeys(e) {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (isTypingTarget(e.target)) return;
+    var choices = choiceButtons();
+    if (!choices.length) return;
+    var key = e.key;
+    if (key === "Enter" || key === " " || key === "Spacebar") {
+      var activeBtn = document.activeElement;
+      if (activeBtn && choices.indexOf(activeBtn) !== -1 && !activeBtn.disabled) {
+        e.preventDefault();
+        if (!state.locked) activeBtn.click();
+      }
+      return;
+    }
+    if (/^[1-9]$/.test(key)) {
+      var idx = Number(key) - 1;
+      if (idx >= choices.length) return;
+      var btn = choices[idx];
+      if (btn.disabled || btn.getAttribute("aria-disabled") === "true") return;
+      e.preventDefault();
+      focusEl(btn);
+      if (!state.locked) btn.click();
+      return;
+    }
+    var isNext = key === "ArrowRight" || key === "ArrowDown";
+    var isPrev = key === "ArrowLeft" || key === "ArrowUp";
+    if (!isNext && !isPrev) return;
+    e.preventDefault();
+    var n = choices.length;
+    var dir = isNext ? 1 : -1;
+    var cur = choices.indexOf(document.activeElement);
+    if (cur === -1) {
+      for (var j = 0; j < n; j++) {
+        var cand = choices[dir === 1 ? j : n - 1 - j];
+        if (!cand.disabled) {
+          focusEl(cand);
+          break;
+        }
+      }
+      return;
+    }
+    var nextIdx = cur;
+    for (var k = 0; k < n; k++) {
+      nextIdx = (nextIdx + dir + n) % n;
+      if (!choices[nextIdx].disabled) {
+        focusEl(choices[nextIdx]);
+        break;
+      }
+    }
+  }
+  function onGlobalKeydown(e) {
+    if (modalState.open) {
+      if (e.key === "Escape" || e.key === "Esc") {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+      if (e.key === "Tab") {
+        trapModalTab(e);
+        return;
+      }
+      return;
+    }
+    if (state.screen !== "practice") return;
+    var screen = $("screen-practice");
+    if (!screen || screen.hidden) return;
+    handlePracticeKeys(e);
+  }
+
+  // src/ui/index.js
   function init() {
     bindTopbar();
     applyTheme();
