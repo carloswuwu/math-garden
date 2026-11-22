@@ -796,3 +796,7 @@ h1, h2, h3, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* 矩陣：顯示模式公式可橫向滾動，避免窄螢幕被壓縮 */
+.katex-display { overflow-x: auto; overflow-y: hidden; margin: 8px 0; }
+.matrix-visual { display: flex; justify-content: center; padding: 6px 0; font-size: 1.1em; }
