@@ -156,7 +156,7 @@ Measured on the current build (local, warm JIT); budgets in parentheses are the 
 | `composeExam(20)` p95 | ~0.4 ms | < 400 ms |
 | jsdom boot p95 | ~64 ms | < 5000 ms |
 | jsdom route render p95 | ~500 ms | < 2000 ms |
-| bundle gzip | 150.7 KB | ≤ 153 KB |
+| bundle gzip | 154.9 KB | ≤ 157 KB |
 | SW precache payload | 0.99 MB | ≤ 1.2 MB |
 | Lighthouse accessibility | 1.000 | ≥ 0.95 |
 
