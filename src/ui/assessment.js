@@ -339,6 +339,15 @@ import { app } from './context.js';
    * 約 2/3 題目用最高難度級別，其餘用學習者目前級別（至少 1），令試卷不再全部最淺。 */
   function buildGradeExam(stage, n) {
     var skills = stageSkills(stage).filter(function (s) { return !s.scaffold && s.types && s.types.length; });
+    /* 大學階段只有 3 個技能，加入 S6 技能令 20 題考試有足夠橫向覆蓋 */
+    if (stage.id === 'college') {
+      var prev = getStage('hs3');
+      if (prev) {
+        stageSkills(prev).forEach(function (s) {
+          if (s && !s.scaffold && s.types && s.types.length && skills.indexOf(s) === -1) skills.push(s);
+        });
+      }
+    }
     if (!skills.length) return [];
     var rng = MathCore.seedRandom(Date.now() & 0xffffffff);
     var exam = MathCore.composeExam(skills, n, {
