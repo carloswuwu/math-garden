@@ -691,6 +691,32 @@ async function main() {
   check(fairTypedSp.correct === 0, '鍵入答案重試答對不計 correct');
   check(fairTypedSp.attempts === 2, '鍵入答案練習記錄兩次嘗試');
 
+  /* 36. 教學深化與 KaTeX 排版：步驟/常見錯誤有渲染，公式不再顯示 raw ^ */
+  const deepSeed = JSON.stringify({
+    version: 2, lang: 'zh', sound: false, theme: 'light',
+    skills: { 'g6.equation': { mastered: true, quizStars: 2, correct: 10 } },
+    stageExams: {
+      prek: { passed: true }, g1: { passed: true }, g2: { passed: true }, g3: { passed: true },
+      g4: { passed: true }, g5: { passed: true }, g6: { passed: true }
+    }
+  });
+  const ctxDeep = boot(deepSeed);
+  const dDeep = ctxDeep.d, wDeep = ctxDeep.w;
+  wDeep.eval(fs.readFileSync(path.join(ROOT, 'vendor/katex/katex.min.js'), 'utf8'));
+  wDeep.__mathApp.navigate({ screen: 'lesson', skillId: 'g6.percent' });
+  const deepSteps = dDeep.querySelectorAll('#screen-lesson .lesson-steps li');
+  check(deepSteps.length === 4, '深化課堂有 4 個解題步驟，得到 ' + deepSteps.length);
+  check(!!dDeep.querySelector('#screen-lesson .lesson-mistake'), '深化課堂有常見錯誤提示');
+  check((dDeep.querySelector('#screen-lesson .lesson-mistake').textContent || '').length > 10, '常見錯誤有內容');
+  check(dDeep.querySelectorAll('#screen-lesson .katex').length >= 1, '課堂公式以 KaTeX 排版');
+  check((dDeep.querySelector('#screen-lesson').textContent || '').indexOf('$') === -1, '課堂畫面沒有未渲染的 $ 標記');
+  check((dDeep.querySelector('#screen-lesson').textContent || '').indexOf('^') === -1, '課堂畫面沒有 raw ^');
+
+  wDeep.__mathApp.navigate({ screen: 'practice', skillId: 'g6.equation' });
+  check(dDeep.querySelectorAll('#screen-practice .prompt-text .katex').length >= 1, '方程題以 KaTeX 排版');
+  check((dDeep.querySelector('#screen-practice .prompt-text').textContent || '').indexOf('$') === -1, '方程題幹沒有未渲染的 $ 標記');
+  check((dDeep.querySelector('#screen-practice .prompt-text').textContent || '').indexOf('^') === -1, '方程題幹沒有 raw ^');
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }

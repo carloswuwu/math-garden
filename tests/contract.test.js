@@ -160,7 +160,22 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
         check(lesson[lang] && typeof lesson[lang].intro === 'string' && lesson[lang].intro.length > 0, '課堂缺 intro ' + skill.id + '/' + lang);
         check(lesson[lang] && typeof lesson[lang].example === 'string' && lesson[lang].example.length > 0, '課堂缺 example ' + skill.id + '/' + lang);
         check(lesson[lang] && typeof lesson[lang].tip === 'string' && lesson[lang].tip.length > 0, '課堂缺 tip ' + skill.id + '/' + lang);
+        var l = lesson[lang];
+        if (l.steps !== undefined) {
+          check(Array.isArray(l.steps) && l.steps.length >= 3, '課堂 steps 應為至少 3 步的陣列 ' + skill.id + '/' + lang);
+          l.steps.forEach(function (st) {
+            check(typeof st === 'string' && st.trim().length > 0, '課堂 steps 有空步驟 ' + skill.id + '/' + lang);
+          });
+        }
+        if (l.mistake !== undefined) {
+          check(typeof l.mistake === 'string' && l.mistake.trim().length > 0, '課堂 mistake 應為非空字串 ' + skill.id + '/' + lang);
+        }
       });
+      if (lesson.zh && lesson.en) {
+        var zs = Array.isArray(lesson.zh.steps) ? lesson.zh.steps.length : 0;
+        var es = Array.isArray(lesson.en.steps) ? lesson.en.steps.length : 0;
+        check(zs === es, '課堂中英 steps 數不一致 ' + skill.id + '/' + zs + '/' + es);
+      }
     }
   });
 
@@ -174,6 +189,59 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
     }
   }
   check(cjkHits.size === 0, '英文題幹／提示含中文：' + [...cjkHits].join(', '));
+})();
+
+/* ---------------- 3b. 顯示格式：raw caret 必須包在 $...$ 內 ---------------- */
+(() => {
+  function caretOutsideMath(text) {
+    return /\^/.test(String(text).replace(/\$[^$]*\$/g, ''));
+  }
+  const bad = [];
+  const sample = [];
+  for (const skill of skills) {
+    for (const spec of skill.types.map((t) => (typeof t === 'string' ? { t } : t))) {
+      const p = M.generateProblem(skill, { type: spec.t, seed: 9101, difficultyStep: 1 });
+      [['prompt.zh', p.prompt.zh], ['prompt.en', p.prompt.en], ['hint.zh', p.hint.zh], ['hint.en', p.hint.en]].forEach(([where, text]) => {
+        if (caretOutsideMath(text)) bad.push(skill.id + '/' + spec.t + '/' + where);
+      });
+      const ex = M.explain(p);
+      if (ex) {
+        ['zh', 'en'].forEach((lang) => ex[lang].forEach((st, i) => {
+          if (caretOutsideMath(st)) bad.push(skill.id + '/' + spec.t + '/explain.' + lang + '#' + i);
+        }));
+      }
+      sample.push(p);
+    }
+  }
+  check(bad.length === 0, '題幹/提示/解題步驟仍有 $...$ 以外的 caret：' + bad.slice(0, 8).join(', '));
+  check(sample.length > 100, '格式抽查應覆蓋全部題型，實際 ' + sample.length);
+
+  check(M.formatMathText('4^3 = ?') === '$4^3$ = ?', 'formatMathText 應把 4^3 包成 $4^3$');
+  check(M.formatMathText('第 n 項 = a × r^(n−1)').indexOf('$r^(n-1)$') !== -1, 'formatMathText 應處理括號次方');
+  check(M.formatMathText('已有 $x^2$ 和 2^10') === '已有 $x^2$ 和 $2^10$', 'formatMathText 不應重複包裹既有 $...$');
+
+  const lessonBad = [];
+  let deepLessons = 0;
+  Object.keys(Lessons).forEach((key) => {
+    const entry = Lessons[key];
+    if (entry && entry.zh && entry.en && Array.isArray(entry.zh.steps) && Array.isArray(entry.en.steps)) deepLessons++;
+    ['zh', 'en'].forEach((lang) => {
+      const l = entry[lang];
+      if (!l) return;
+      ['intro', 'example', 'tip', 'mistake'].forEach((field) => {
+        if (typeof l[field] !== 'string') return;
+        const formatted = M.formatMathText(l[field]);
+        if (caretOutsideMath(formatted)) lessonBad.push(key + '/' + lang + '/' + field);
+      });
+      if (Array.isArray(l.steps)) {
+        l.steps.forEach((st, i) => {
+          if (caretOutsideMath(M.formatMathText(st))) lessonBad.push(key + '/' + lang + '/step' + i);
+        });
+      }
+    });
+  });
+  check(lessonBad.length === 0, '課堂仍有 $...$ 以外的 caret：' + lessonBad.slice(0, 8).join(', '));
+  check(deepLessons >= 15, '至少 15 個課堂應有雙語解題步驟，實際 ' + deepLessons);
 })();
 
 /* ---------------- 4. 解題步驟覆蓋（lesson「看一步步示範」） ---------------- */
