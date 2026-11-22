@@ -43,7 +43,9 @@ const DATA_MODULES = [
   { source: 'src/data/curriculum.js', rootFile: 'curriculum.js', exportName: 'Curriculum', globalName: 'Curriculum' },
   { source: 'src/data/curriculum-outline.js', rootFile: 'curriculum-outline.js', exportName: 'CurriculumOutline', globalName: 'CurriculumOutline' },
   { source: 'src/data/formulas.js', rootFile: 'formulas.js', exportName: 'Formulas', globalName: 'Formulas' },
-  { source: 'src/data/lessons.js', rootFile: 'lessons.js', exportName: 'Lessons', globalName: 'Lessons' }
+  { source: 'src/data/lessons.js', rootFile: 'lessons.js', exportName: 'Lessons', globalName: 'Lessons' },
+  /* Stage D：引擎 ESM 來源；生成 UMD root wrapper（瀏覽器 window.MathCore、Node require）。 */
+  { source: 'src/core/index.js', rootFile: 'math-core.js', exportName: 'MathCore', globalName: 'MathCore', umd: true }
 ];
 
 /* 直接複製到 dist 的根目錄檔案 */
@@ -91,7 +93,35 @@ function walkFiles(dir) {
 }
 
 function generateDataModules() {
+  const header = (m) => '/* 由 tools/build.js 從 ' + m.source + ' 生成 —— 請勿手改；改 ' + m.source + ' 後重新 npm run build。 */\n';
   DATA_MODULES.forEach((m) => {
+    if (m.umd) {
+      /* 引擎：先 bundle 成 globalName IIFE，再用 UMD 外殼接上 Node require 與 window 全局 */
+      const result = esbuild.buildSync({
+        stdin: {
+          contents: "export { " + m.exportName + " } from './" + m.source + "';\n",
+          resolveDir: ROOT,
+          sourcefile: 'core-entry.js',
+          loader: 'js'
+        },
+        bundle: true,
+        format: 'iife',
+        globalName: '__MathCoreBundle',
+        platform: 'browser',
+        target: ['es2020'],
+        write: false,
+        legalComments: 'none',
+        charset: 'utf8'
+      });
+      const code = result.outputFiles[0].text.replace(/\r\n?/g, '\n');
+      const umd = '(function (root) {\n' +
+        '  var factory = function () {\n' + code + '\n  return __MathCoreBundle.' + m.exportName + ';\n  };\n' +
+        "  if (typeof module === 'object' && module.exports) { module.exports = factory(); }\n" +
+        '  else { root.' + m.globalName + ' = factory(); }\n' +
+        "})(typeof globalThis !== 'undefined' ? globalThis : this);\n";
+      fs.writeFileSync(path.join(ROOT, m.rootFile), header(m) + umd);
+      return;
+    }
     const entry = "import { " + m.exportName + " } from './" + m.source + "';\n" +
       "(typeof window !== 'undefined' ? window : globalThis)." + m.globalName + " = " + m.exportName + ";\n";
     const result = esbuild.buildSync({
@@ -109,8 +139,7 @@ function generateDataModules() {
       legalComments: 'none',
       charset: 'utf8'
     });
-    const header = '/* 由 tools/build.js 從 ' + m.source + ' 生成 —— 請勿手改；改 ' + m.source + ' 後重新 npm run build。 */\n';
-    fs.writeFileSync(path.join(ROOT, m.rootFile), header + result.outputFiles[0].text.replace(/\r\n?/g, '\n'));
+    fs.writeFileSync(path.join(ROOT, m.rootFile), header(m) + result.outputFiles[0].text.replace(/\r\n?/g, '\n'));
   });
 }
 

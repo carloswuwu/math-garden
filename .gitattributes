@@ -1,4 +1,5 @@
 # Phase 5: these files are source (ESM) or generated from src/ by tools/build.js; keep LF for deterministic builds
+math-core.js text eol=lf
 src/** text eol=lf
 i18n.js text eol=lf
 curriculum.js text eol=lf

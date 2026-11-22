@@ -51,6 +51,16 @@ const CJK = /[\u4e00-\u9fff]/;
     const rootSrc = fs.readFileSync(rootPath, 'utf8');
     check(rootSrc.startsWith('/* 由 tools/build.js 從 src/data/' + name + '.js 生成'), 'root ' + name + '.js 應是生成檔（含 header）');
   });
+
+  /* Stage D：引擎 ESM 來源（rng/values/index）與生成的 UMD math-core wrapper */
+  ['rng', 'values', 'index'].forEach((name) => {
+    const p = path.join(ROOT, 'src', 'core', name + '.js');
+    check(fs.existsSync(p), '缺少 ESM 引擎模組 src/core/' + name + '.js');
+    check(/export\s+(const|\{|function|\{)/.test(fs.readFileSync(p, 'utf8')), 'src/core/' + name + '.js 應是 ESM 匯出');
+  });
+  const coreRoot = fs.readFileSync(path.join(ROOT, 'math-core.js'), 'utf8');
+  check(coreRoot.startsWith('/* 由 tools/build.js 從 src/core/index.js 生成'), 'root math-core.js 應是生成檔（含 header）');
+  check(coreRoot.indexOf('module.exports') !== -1 && coreRoot.indexOf('root.MathCore') !== -1, 'math-core.js 應保留 UMD（Node require + window.MathCore）');
 })();
 const skills = Object.values(C.skills).filter((s) => !s.scaffold && (s.types || []).length);
 const typeOf = (t) => (typeof t === 'string' ? t : t.t);
