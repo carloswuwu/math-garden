@@ -17,11 +17,11 @@ jobs:
         run: npm ci
       - name: Build dist
         run: npm run build
-      - name: Verify committed dist is current
+      - name: Verify committed dist and generated data wrappers are current
         run: |
-          if [ -n "$(git status --porcelain -- dist)" ]; then
-            echo "::error::dist/ is out of date — run 'npm run build' and commit the result."
-            git status --porcelain -- dist
+          if [ -n "$(git status --porcelain -- dist i18n.js curriculum.js curriculum-outline.js formulas.js lessons.js)" ]; then
+            echo "::error::dist/ or generated data wrappers are out of date — run 'npm run build' and commit the result."
+            git status --porcelain -- dist i18n.js curriculum.js curriculum-outline.js formulas.js lessons.js
             exit 1
           fi
       - name: Install test dependencies

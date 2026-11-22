@@ -35,6 +35,17 @@ const SOURCE_SCRIPTS = [
   'app.js'
 ];
 
+/* Phase 5 Stage C：內容模組以 ESM（src/data/*.js）為來源，
+ * 建置時再生成 root classic wrapper，讓 file:// / legacy 分支部署照舊載入。
+ * 生成的 root 檔案是建置產物，CI 會驗證它們與來源同步。 */
+const DATA_MODULES = [
+  { source: 'src/data/i18n.js', rootFile: 'i18n.js', exportName: 'I18N', globalName: 'I18N' },
+  { source: 'src/data/curriculum.js', rootFile: 'curriculum.js', exportName: 'Curriculum', globalName: 'Curriculum' },
+  { source: 'src/data/curriculum-outline.js', rootFile: 'curriculum-outline.js', exportName: 'CurriculumOutline', globalName: 'CurriculumOutline' },
+  { source: 'src/data/formulas.js', rootFile: 'formulas.js', exportName: 'Formulas', globalName: 'Formulas' },
+  { source: 'src/data/lessons.js', rootFile: 'lessons.js', exportName: 'Lessons', globalName: 'Lessons' }
+];
+
 /* 直接複製到 dist 的根目錄檔案 */
 const ROOT_ASSETS = [
   'style.css',
@@ -79,7 +90,34 @@ function walkFiles(dir) {
   return out;
 }
 
+function generateDataModules() {
+  DATA_MODULES.forEach((m) => {
+    const entry = "import { " + m.exportName + " } from './" + m.source + "';\n" +
+      "(typeof window !== 'undefined' ? window : globalThis)." + m.globalName + " = " + m.exportName + ";\n";
+    const result = esbuild.buildSync({
+      stdin: {
+        contents: entry,
+        resolveDir: ROOT,
+        sourcefile: 'data-entry.js',
+        loader: 'js'
+      },
+      bundle: true,
+      format: 'iife',
+      platform: 'browser',
+      target: ['es2020'],
+      write: false,
+      legalComments: 'none',
+      charset: 'utf8'
+    });
+    const header = '/* 由 tools/build.js 從 ' + m.source + ' 生成 —— 請勿手改；改 ' + m.source + ' 後重新 npm run build。 */\n';
+    fs.writeFileSync(path.join(ROOT, m.rootFile), header + result.outputFiles[0].text.replace(/\r\n?/g, '\n'));
+  });
+}
+
 function build() {
+  /* ---- 0. 內容模組：ESM → root classic wrapper ---- */
+  generateDataModules();
+
   /* ---- 1. 收集所有輸入（正規化後） ---- */
   const inputs = new Map();
   inputs.set('index.html', readNormalized(path.join(ROOT, 'index.html')));

@@ -1,0 +1,10 @@
+# Phase 5: these files are source (ESM) or generated from src/ by tools/build.js; keep LF for deterministic builds
+src/** text eol=lf
+i18n.js text eol=lf
+curriculum.js text eol=lf
+curriculum-outline.js text eol=lf
+formulas.js text eol=lf
+lessons.js text eol=lf
+dist/**/*.js text eol=lf
+dist/**/*.css text eol=lf
+dist/index.html text eol=lf

@@ -37,6 +37,21 @@ function check(cond, msg) {
 }
 
 const CJK = /[\u4e00-\u9fff]/;
+
+/* Phase 5 Stage C：內容模組以 ESM（src/data/）為來源，root classic 檔案由建置生成 */
+(() => {
+  const names = ['i18n', 'curriculum', 'curriculum-outline', 'formulas', 'lessons'];
+  names.forEach((name) => {
+    const srcPath = path.join(ROOT, 'src', 'data', name + '.js');
+    check(fs.existsSync(srcPath), '缺少 ESM 內容模組 src/data/' + name + '.js');
+    const src = fs.readFileSync(srcPath, 'utf8');
+    check(/export\s+(const|\{)/.test(src), 'src/data/' + name + '.js 應是 ESM 匯出');
+    const rootPath = path.join(ROOT, name + '.js');
+    check(fs.existsSync(rootPath), '缺少生成的 root classic wrapper：' + name + '.js');
+    const rootSrc = fs.readFileSync(rootPath, 'utf8');
+    check(rootSrc.startsWith('/* 由 tools/build.js 從 src/data/' + name + '.js 生成'), 'root ' + name + '.js 應是生成檔（含 header）');
+  });
+})();
 const skills = Object.values(C.skills).filter((s) => !s.scaffold && (s.types || []).length);
 const typeOf = (t) => (typeof t === 'string' ? t : t.t);
 
