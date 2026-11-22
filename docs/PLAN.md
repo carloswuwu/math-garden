@@ -10,10 +10,10 @@
 | Branch / HEAD | `main` @ `db4ab98` (Phases 1–5 complete + post-roadmap batch: Pages Actions switch, P1 content tranche, offline check/glossary; docs commit on top) |
 | Live | https://carloswuwu.github.io/math-garden/ — **Pages source is now “GitHub Actions”**; `pages.yml` deploys the built `dist/` on every main push |
 | CI | `.github/workflows/tests.yml` — build, stale-`dist`/wrapper check, six node suites, real-Chrome Lighthouse a11y gate, cold-offline check |
-| Content | **15 stages** (14 grades + 🏆 Challenge), **125 skills**, **116 lessons — all deepened, 17 with glossaries**, **113 generator types**; `word` has **24 modes**, challenge arena has **20 olympiad-style types across 6 topics with 3 difficulty tiers**; **小五 9 skills** (異分母分數、分數乘除、面積二、體積一、旋轉對稱) and **大學 6 skills** (微積分二、線代二、統計二); Pre-K → university |
+| Content | **15 stages**, **131 skills**, **122 lessons — all deepened, 23 with glossaries**, **118 generator types**; `word` has **24 modes**; challenge arena **20 olympiad-style types across 6 topics with 3 difficulty tiers**; **小五 13 skills** (異分母分數、分數乘除、面積二、體積一、旋轉對稱、近似值/估算、統計圖、代數符號、圓的認識) and **大學 8 skills** (微積分二、線代二、統計二、微分方程、數論); Pre-K → university |
 | Code size | ESM sources: `src/core/` 14 modules (~4.5k lines), `src/ui/` 22 modules (~2.5k lines), `src/data/` 5 modules; generated wrappers `math-core.js` (~4.2k) and `app.js` (~2.5k); `style.css` 794 · `formulas.js` 91 |
-| Build | `tools/build.js` (190) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.7567a4eebd4b.js` **448.5 KB raw / 141.7 KB gzip** (advisory 145 KB), generated `dist/sw.js`; content ESM in `src/data/`, engine ESM in `src/core/`, UI ESM in `src/ui/`, generated classic/UMD wrappers; `dist/` + wrappers committed and CI fails on drift |
-| Tests | core **575,439** assertions · ui **273** · generators **174,978** · contract **16,601** · a11y **205** · perf **26** checks (+ Lighthouse a11y **1.000** + cold-offline check); UI/a11y/perf boot the built IIFE |
+| Build | `tools/build.js` (190) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.47727d6f972f.js` **467.5 KB raw / 148.1 KB gzip** (advisory 150 KB), generated `dist/sw.js`; content ESM in `src/data/`, engine ESM in `src/core/`, UI ESM in `src/ui/`, generated classic/UMD wrappers; `dist/` + wrappers committed and CI fails on drift |
+| Tests | core **575,439** assertions · ui **276** · generators **179,555** · contract **17,134** · a11y **205** · perf **26** checks (+ Lighthouse a11y **1.000** + cold-offline check); UI/a11y/perf boot the built IIFE |
 | A11y | one h1 per screen + `aria-labelledby`, focus-to-heading + live-region announcements, accessible names on all controls (incl. labelled typed-answer fields), modal background `inert`/`aria-hidden`, generated `role="img"` text alternatives for question visuals, 44 px icon targets, ARIA strings in `i18n.js`, axe-core 4.10.2 jsdom subset (0 violations on 13 screens) |
 | Persistence | progress schema **v2** (`mathpath.progress`), legacy v1 key migrated, sanitized import |
 | In-flight session | `sessionStorage['mathpath.session.v1']` (24 h TTL, practice/quiz/exam only, never in progress) |
@@ -168,6 +168,9 @@
 72. **小五課程審計（對照教育局《數學教育學習領域課程指引（小一至中六）2017》補充資料：https://www.edb.gov.hk/attachment/tc/curriculum-development/kla/ma/curr/pmc2017_tc.pdf ）：** 原本 g5 只有 4 個技能，對照 P5 學習單位後確認缺漏：異分母分數加減（5N2/5N3）、分數乘除（5N3/5N6）、面積（二）平行四邊形/三角形/梯形（5M1）、體積（一）（5M2）、旋轉對稱（5S-E1）。已新增 5 個技能（g5 由 4→**9**）、5 個 generator 類型/模式、雙語課堂與視覺化，並把 g5 topics 擴為數與運算、度量、數據處理、圖形與空間、解決問題。仍可選補：多位數近似/估計、複合棒形圖/折線圖、代數符號（一）、圓的認識。
 73. **大學加深：** 新增 `col.calculus2`（冪函數定積分/導數值）、`col.linalg2`（2×2 行列式、矩陣乘法元素）、`col.stats2`（方差/標準差），大學由 3→**6** 個技能，全部有 MATH_SPEC、explain()、雙語課堂與詞彙表。
 74. **更多視覺化/詞彙表：** 新增平行四邊形/梯形 SVG 與文字替代，面積、體積、旋轉對稱、分數乘除等新課堂都有視覺化；新課堂全部帶雙語詞彙表（全站 17 課有 glossary）。因 8 個新課堂令 bundle gzip 由 134.0→**141.7 KB**，advisory/perf gate 由 140 調整為 **145 KB**（仍遠低於 1.2 MB precache 預算）。
+
+75. **小五第二輪補齊（對照 EDB P5 其餘學習單位）：** 新增近似值/估算（rounding）、統計圖（chartread：棒形圖與折線圖的相差/總和/變化）、代數符號（一）（exprsub 代入求值）、圓的認識（circleparts：半徑/直徑互算）；g5 由 9→**13** 個技能，topic 加入「代數」。新增動態棒形圖與折線圖 SVG、文字替代、雙語課堂與詞彙表。
+76. **大學再加深：** 新增微分方程（歐拉法一步估計）與數論（歐拉 φ 函數、模乘法反元素），大學由 6→**8** 個技能。全站現有 **131 技能 / 122 課 / 23 個詞彙表課堂**，bundle 148.1 KB gzip，advisory/perf gate 上調至 **150 KB**（precache 1.05 MB，仍遠低於 1.2 MB）。
 
 ## 2. Architecture map
 
@@ -349,7 +352,7 @@ Decisions / deviations:
 |---|---|
 | 0–30 d | **Phase 1 routing & resume (landed)**; **Phase 2 contract tests (landed)**; **Phase 3 A–B build/SW/update chip (landed)**; **Phase 3.5 assessment depth & word problems (landed)**; **Phase 4 accessibility remainder (landed)**; **🏆 challenge arena + tier 2 (landed)**; **typed-answer anti-guessing mode (landed)**; **assessment fairness fixes (landed)**; **lesson depth + KaTeX formatting (landed)** |
 | 31–60 d | extend typed entry (curated challenge tiers, selected grade-5/6 assessments, optional two-part answers); expand the challenge arena (more olympiad archetypes, curated competition sets); audit P1 content follow-ups (single-level ladders, remaining word archetypes, tiny pools, exam width, per-mode typeAcc); deepen lesson delivery (visual worked examples, bilingual glossary, diagrams); switch Pages source to Actions and verify dist deploy + cold offline; real-browser axe/Lighthouse pass |
-| 61–90 d | **Phase 5 complete** + post-roadmap batches: Pages Actions switch, P1 content, offline/glossary, **g5 4→9 skills**, **college 3→6 skills** with visuals/glossaries. Optional next: g5 approximation/charts/algebra/circle, audit P2, real-device check |
+| 61–90 d | **Phase 5 complete** + post-roadmap batches: Pages Actions switch, P1 content, offline/glossary, **g5 4→13 skills**, **college 3→8 skills** with visuals/glossaries. Optional next: P5 factors/multiples & percentages depth, audit P2, real-device check |
 
 ## 5. Agent playbook (proven in this repo)
 
@@ -390,7 +393,7 @@ Then: wait for the `tests` workflow (GitHub Actions) to go green; if Pages sourc
 
 ## 7. Bootstrap prompt for the new session
 
-> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. **Phases 1–5 are complete**, and the post-roadmap batches are landed: Pages source switched to GitHub Actions, per-mode typeAcc/tiny-pool/word-archetype/college-exam content, cold-offline check, lesson glossaries, **小五 expanded 4→9 skills** (unlike fractions, fraction ×/÷, area II, volume I, rotational symmetry) and **大學 expanded 3→6 skills** (calculus II, linear algebra II, statistics II) with new visuals/glossaries. Do not redo these. Remaining optional work: g5 approximation/compound bar charts/symbolic algebra/circle recognition, mathematician-audit P2, more lesson visuals/glossary coverage, real-device spot check. Keep all six suites + `npm run lighthouse` + `npm run offline-check` green, rebuild `dist/` and generated wrappers whenever any `src/` or `style.css` changes, commit by scope, push and confirm CI **and** the Pages Actions deployment publishes the new hash.
+> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. **Phases 1–5 are complete**, and the post-roadmap batches are landed: Pages source switched to GitHub Actions, per-mode typeAcc/tiny-pool/word-archetype/college-exam content, cold-offline check, lesson glossaries, **小五 expanded 4→13 skills** (unlike fractions, fraction ×/÷, area II, volume I, rotational symmetry, approximation, charts, algebraic symbols, circles), **大學 expanded 3→8 skills** (calculus II, linear algebra II, statistics II, ODE/Euler, number theory), with new visuals/glossaries. Do not redo these. Remaining optional work: P5 factor/multiple and percentages depth, more lesson visuals/glossary coverage, mathematician-audit P2, real-device spot check. Keep all six suites + `npm run lighthouse` + `npm run offline-check` green, rebuild `dist/` and generated wrappers whenever any `src/` or `style.css` changes, commit by scope, push and confirm CI **and** the Pages Actions deployment publishes the new hash.
 
 ## 8. Key references
 
