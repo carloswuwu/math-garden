@@ -43,7 +43,13 @@ index.html ── classic root wrappers (generated) ─────────�
 | `src/data/curriculum-outline.js` | Parent-facing syllabus outline (ESM source) | `CurriculumOutline` export → generated `curriculum-outline.js` |
 | `src/data/formulas.js` | Formula reference items tagged with skills (ESM source) | `Formulas` export → generated `formulas.js` |
 | `src/data/lessons.js` | 108 bilingual lessons (ESM source) | `Lessons` export → generated `lessons.js` |
-| `src/core/index.js` | Engine ESM entry: generators, explain, composition, grading composition (imports the split modules) | `MathCore` export → generated `math-core.js` UMD |
+| `src/core/format.js` | `formatMathText` (caret expressions outside `$...$` → KaTeX) | ESM imports |
+| `src/core/signatures.js` | `stableStringify`, `mathSig`, `templateSig`, `contextSig` (dedupe/diversity) | ESM imports |
+| `src/core/choices.js` | Distractor generation: `buildChoices`, `distractorMax/Min`, `fractionDistractor` | ESM imports |
+| `src/core/explain.js` | `SOLVERS` + `explain` (worked solutions; last step contains the displayed answer) | ESM imports |
+| `src/core/problem.js` | `levelFor`, `typeList`, `generateProblem`, `generateSet` | ESM imports |
+| `src/core/compose.js` | `composeSet` (10-item quiz), `composeExam` (20-item exam) | ESM imports |
+| `src/core/index.js` | Assembly layer: imports all modules, `GENERATOR_TYPES`, `checkAnswer`, `nextProblem`, exports `MathCore` | `MathCore` export → generated `math-core.js` UMD |
 | `src/core/rng.js` | Seeded RNG: `seedRandom`, `randInt`, `pick`, `shuffle` | ESM imports |
 | `src/core/values.js` | Value/fraction helpers: `isFraction`, `gcdInt`, `reduceFraction`, `valueKey`, `renderValue`, `valuesEqual`, `normalizeInput` | ESM imports |
 | `src/core/facts.js` | Shared factorial helper (`factInt`) | ESM imports |
@@ -155,8 +161,8 @@ Current source is order-coupled classic scripts; Phase 5 converts to ESM **while
 
 1. **Foundation** (done): architecture map, ADRs, performance budgets in CI.
 2. **Content modules** (done): `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` now live in `src/data/*.js` as ESM; build step 0 generates the classic root wrappers with the unchanged `window.*` API; CI verifies wrappers are in sync.
-3. **Engine modules** (in progress): `src/core/index.js` is now the ESM engine entry; extracted so far: `rng`, `values`, `facts`, `display`, `generators` (all `gen*` + `GENERATORS`), `math-spec` (oracle), `progress` (mastery/grading). `math-core.js` is a generated UMD wrapper. Remaining extracts: `explain` (SOLVERS + explain) and `compose` behind the unchanged `window.MathCore` API.
-4. **UI modules**: split `app.js` into `ui/router`, `ui/state`, `ui/screens/*`, `ui/dialog`, `ui/visual`, `ui/a11y`, `ui/sw`; `app/index` keeps `window.__mathApp`.
+3. **Engine modules** (done): the engine is fully split behind the unchanged `window.MathCore`: `rng`, `values`, `facts`, `display`, `format`, `signatures`, `choices`, `generators`, `math-spec`, `explain`, `progress`, `problem`, `compose`; `src/core/index.js` (≈374 lines) only assembles the API, keeps `checkAnswer`/`nextProblem` and exports `MathCore`. `math-core.js` remains a generated UMD wrapper.
+4. **UI modules** (next): split `app.js` into `ui/router`, `ui/state`, `ui/screens/*`, `ui/dialog`, `ui/visual`, `ui/a11y`, `ui/sw`; `app/index` keeps `window.__mathApp`.
 5. **Tooling/tests**: tests load the built IIFE (contract/UI/a11y/perf) instead of eval'ing root wrappers; keep file:// by committing the classic bundle as today.
 
 Guardrails for every slice: one module/commit, all six suites green, `dist/` rebuilt and committed, public APIs unchanged, no change to stored progress/session schemas.
