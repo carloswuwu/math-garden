@@ -58,7 +58,11 @@ index.html ── classic root wrappers (generated) ─────────�
 | `src/core/math-spec.js` | `MATH_SPEC` answer oracle + `answerFromMath` | ESM imports |
 | `src/core/progress.js` | `defaultSkillProgress`, `sanitizeProgress`, stars/mastery, `applyResult`, `applyQuizResult`, `gradeQuiz` | ESM imports |
 | `math-core.js` | **Generated UMD wrapper** of `src/core/index.js` (browser `window.MathCore`, Node `require`) | `window.MathCore` / `module.exports` |
-| `app.js` | Router, screens, state, progress, session, dialogs, SW update chip, language, a11y (still classic source) | `window.__mathApp` (test/debug API) |
+| `src/ui/index.js` | UI ESM source: state, screens, routing/navigation, progress/session, dialogs, SW update chip, language, a11y; exports `init` | side-effect build → generated `app.js` |
+| `src/ui/globals.js` | Bridge to `window.MathCore`/`I18N`/`Curriculum`/... for the classic build | ESM imports |
+| `src/ui/format.js` | `esc`, `renderMath` (KaTeX with graceful fallback) | ESM imports |
+| `src/ui/router.js` | Pure route helpers: `parseHash`, `serializeRoute`, `sameRoute` | ESM imports |
+| `app.js` | **Generated classic IIFE** of `src/ui/index.js` (side effects set `window.__mathApp`) | `window.__mathApp` (test/debug API) |
 | `tools/build.js` / `tools/sw-template.js` | Deterministic bundle, dist assembly, SW generation | build script |
 | `tests/*.test.js` | Six suites: engine, UI (jsdom), generators, cross-layer contract, a11y (axe), performance budgets | `npm test` |
 
@@ -162,7 +166,7 @@ Current source is order-coupled classic scripts; Phase 5 converts to ESM **while
 1. **Foundation** (done): architecture map, ADRs, performance budgets in CI.
 2. **Content modules** (done): `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` now live in `src/data/*.js` as ESM; build step 0 generates the classic root wrappers with the unchanged `window.*` API; CI verifies wrappers are in sync.
 3. **Engine modules** (done): the engine is fully split behind the unchanged `window.MathCore`: `rng`, `values`, `facts`, `display`, `format`, `signatures`, `choices`, `generators`, `math-spec`, `explain`, `progress`, `problem`, `compose`; `src/core/index.js` (≈374 lines) only assembles the API, keeps `checkAnswer`/`nextProblem` and exports `MathCore`. `math-core.js` remains a generated UMD wrapper.
-4. **UI modules** (next): split `app.js` into `ui/router`, `ui/state`, `ui/screens/*`, `ui/dialog`, `ui/visual`, `ui/a11y`, `ui/sw`; `app/index` keeps `window.__mathApp`.
+4. **UI modules** (in progress): `src/ui/index.js` is now the ESM UI source; `globals` (window bridge), `format` (`esc`/`renderMath`) and `router` (pure hash parsing) are extracted. Build step 0 generates a classic `app.js` IIFE that still sets `window.__mathApp`. Next: split the remaining screens/state/dialog/visual/a11y/SW code out of `src/ui/index.js`.
 5. **Tooling/tests**: tests load the built IIFE (contract/UI/a11y/perf) instead of eval'ing root wrappers; keep file:// by committing the classic bundle as today.
 
 Guardrails for every slice: one module/commit, all six suites green, `dist/` rebuilt and committed, public APIs unchanged, no change to stored progress/session schemas.
