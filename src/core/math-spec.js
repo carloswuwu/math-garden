@@ -263,6 +263,9 @@ var MATH_SPEC = {
     }
     return count;
   },
+  gradmeasure: function (m) { return m.mode === 'interval' ? m.b - m.a : m.n; },
+  gradgeometry: function (m) { return m.mode === 'curvature' ? { n: 1, d: m.r } : { n: 1, d: m.r * m.r }; },
+  gradcategory: function (m) { return m.mode === 'functions' ? Math.pow(m.n, m.m) : Math.pow(m.k, m.k); },
   gradtopology: function (m) { return m.mode === 'discrete' ? Math.pow(2, m.n) : 1 + Math.pow(2, m.n - 1); },
   fraccompare: function (m) {
     if (m.mode === 'simplify') return { n: m.n, d: m.d };

@@ -2128,5 +2128,113 @@ var L = {
     L[key] = GRAD_LESSONS[key];
   });
 
+
+  var GRAD_EXTRA_LESSONS = {
+    'grad.measure': {
+      zh: {
+        title: '測度論',
+        intro: '測度是「大小」的推廣：長度、面積、元素個數都是測度。',
+        steps: ['勒貝格測度：區間 [a,b] 的測度 = b − a。', '計數測度：有限集合的測度 = 元素個數。', '空集測度為 0，測度可加。'],
+        example: '區間 [2,7] 的勒貝格測度 = 5；集合 {1,3,5} 在計數測度下 = 3。',
+        tip: '同一集合可以有不同的測度，取決於用哪個測度空間。',
+        mistake: '把「集合的元素個數」和「長度」混為一談。',
+        visual: { kind: 'numberline' },
+        glossary: [
+          { term: '測度', def: '把集合對應到「大小」的函數。' },
+          { term: '勒貝格測度', def: '實數線上推廣的長度。' },
+          { term: '計數測度', def: '集合的元素個數。' }
+        ]
+      },
+      en: {
+        title: 'Measure Theory',
+        intro: 'A measure generalises size: length, area and cardinality are all measures.',
+        steps: ['Lebesgue measure: [a,b] has measure b − a.', 'Counting measure: a finite set’s measure is its cardinality.', 'The empty set has measure 0, and measures are additive.'],
+        example: '[2,7] has Lebesgue measure 5; {1,3,5} has counting measure 3.',
+        tip: 'The same set can carry different measures depending on the measure space.',
+        mistake: 'Confusing cardinality with length.',
+        visual: { kind: 'numberline' },
+        glossary: [
+          { term: 'Measure', def: 'A function assigning a size to sets.' },
+          { term: 'Lebesgue measure', def: 'The generalised length on the real line.' },
+          { term: 'Counting measure', def: 'The number of elements of a set.' }
+        ]
+      }
+    },
+    'grad.geometry': {
+      zh: {
+        title: '微分幾何',
+        intro: '曲率描述曲線或曲面彎曲的程度；圓的半徑越小，曲率越大。',
+        steps: ['圓的曲率 κ = 1/r。', '球面的高斯曲率 K = 1/r²。', '半徑越大，曲率越小。'],
+        example: '半徑 4 的圓，曲率 = 1/4；半徑 3 的球面，高斯曲率 = 1/9。',
+        tip: '曲率的單位是長度的倒數。',
+        mistake: '把曲率當成半徑，或忘記平方。',
+        visual: { kind: 'circle', r: 4 },
+        glossary: [
+          { term: '曲率', def: '曲線或曲面偏離直線/平面的程度。' },
+          { term: '高斯曲率', def: '曲面內在彎曲程度的量度。' },
+          { term: '半徑', def: '圓心到圓周的距離。' }
+        ]
+      },
+      en: {
+        title: 'Differential Geometry',
+        intro: 'Curvature measures how much a curve or surface bends; a smaller circle has larger curvature.',
+        steps: ['Circle curvature κ = 1/r.', 'Sphere Gaussian curvature K = 1/r².', 'Larger radius means smaller curvature.'],
+        example: 'A circle of radius 4 has curvature 1/4; a sphere of radius 3 has Gaussian curvature 1/9.',
+        tip: 'Curvature has units of inverse length.',
+        mistake: 'Confusing curvature with radius, or forgetting to square.',
+        visual: { kind: 'circle', r: 4 },
+        glossary: [
+          { term: 'Curvature', def: 'How much a curve or surface deviates from straight/flat.' },
+          { term: 'Gaussian curvature', def: 'The intrinsic bending of a surface.' },
+          { term: 'Radius', def: 'Distance from the centre to the circle.' }
+        ]
+      }
+    },
+    'grad.category': {
+      zh: {
+        title: '範疇論入門',
+        intro: '範疇論用「物件」和「態射」統一描述數學結構；集合範疇中態射就是函數。',
+        steps: ['由 m 元素集到 n 元素集的函數數 = nᵐ。', '自同態是物件到自己的態射。', 'k 元素集合的自同態數 = kᵏ。'],
+        example: '2 元素集到 3 元素集有 3²=9 個函數；3 元素集有 3³=27 個自同態。',
+        tip: '每個輸入獨立選擇輸出，所以用次方而非乘法。',
+        mistake: '把函數數算成 m × n，或忘記每個輸入都有 n 個選擇。',
+        visual: { kind: 'count', n: 5 },
+        glossary: [
+          { term: '範疇', def: '由物件和態射組成的結構。' },
+          { term: '態射', def: '物件之間的箭頭；集合範疇中即函數。' },
+          { term: '自同態', def: '物件到自身的態射。' }
+        ]
+      },
+      en: {
+        title: 'Category Theory Intro',
+        intro: 'Category theory describes mathematical structures via objects and morphisms; in the category of sets, morphisms are functions.',
+        steps: ['Functions from an m-set to an n-set: nᵐ.', 'An endomorphism is a morphism from an object to itself.', 'A k-element set has kᵏ endomorphisms.'],
+        example: 'A 2-element set to a 3-element set has 3²=9 functions; a 3-element set has 3³=27 endomorphisms.',
+        tip: 'Each input independently chooses an output, hence a power rather than a product.',
+        mistake: 'Counting functions as m × n instead of nᵐ.',
+        visual: { kind: 'count', n: 5 },
+        glossary: [
+          { term: 'Category', def: 'A structure of objects and morphisms.' },
+          { term: 'Morphism', def: 'An arrow between objects; a function in the category of sets.' },
+          { term: 'Endomorphism', def: 'A morphism from an object to itself.' }
+        ]
+      }
+    }
+  };
+  Object.keys(GRAD_EXTRA_LESSONS).forEach(function (key) { L[key] = GRAD_EXTRA_LESSONS[key]; });
+
+  /* 為原有研究院三課補視覺化 */
+  var GRAD_VISUALS = {
+    'grad.analysis': { kind: 'numberline' },
+    'grad.algebra': { kind: 'polygon', n: 5 },
+    'grad.topology': { kind: 'count', n: 3 }
+  };
+  Object.keys(GRAD_VISUALS).forEach(function (key) {
+    if (!L[key]) return;
+    ['zh', 'en'].forEach(function (lang) {
+      if (L[key][lang] && !L[key][lang].visual) L[key][lang].visual = GRAD_VISUALS[key];
+    });
+  });
+
   export { L as Lessons };
 

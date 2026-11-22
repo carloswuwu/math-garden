@@ -1213,6 +1213,18 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
         return m.mode === 'discrete'
           ? { zh: ['離散拓撲：所有子集都是開集。', '共 2^' + m.n + ' = ' + p.answer + ' 個。'], en: ['Discrete topology: every subset is open.', '2^' + m.n + ' = ' + p.answer + ' open sets.'] }
           : { zh: ['含指定點 p 的子集有 2^(n−1) 個，再加空集。', '= 1 + 2^' + (m.n - 1) + ' = ' + p.answer + '。'], en: ['There are 2^(n−1) subsets containing p, plus the empty set.', '= 1 + 2^' + (m.n - 1) + ' = ' + p.answer + '.'] };
+      case 'gradmeasure':
+        return m.mode === 'interval'
+          ? { zh: ['區間 [a,b] 的勒貝格測度 = b − a。', '= ' + m.b + ' − ' + m.a + ' = ' + p.answer + '。'], en: ['Lebesgue measure of [a,b] = b − a.', '= ' + m.b + ' − ' + m.a + ' = ' + p.answer + '.'] }
+          : { zh: ['計數測度 = 元素個數。', '= ' + m.n + '。'], en: ['Counting measure = number of elements.', '= ' + m.n + '.'] };
+      case 'gradgeometry':
+        return m.mode === 'curvature'
+          ? { zh: ['圓的曲率 κ = 1/r。', 'κ = 1/' + m.r + ' = ' + renderValue(p.answer) + '。'], en: ['Circle curvature κ = 1/r.', 'κ = 1/' + m.r + ' = ' + renderValue(p.answer) + '.'] }
+          : { zh: ['球面高斯曲率 K = 1/r²。', 'K = 1/' + (m.r * m.r) + ' = ' + renderValue(p.answer) + '。'], en: ['Sphere Gaussian curvature K = 1/r².', 'K = 1/' + (m.r * m.r) + ' = ' + renderValue(p.answer) + '.'] };
+      case 'gradcategory':
+        return m.mode === 'functions'
+          ? { zh: ['每個輸入有 ' + m.n + ' 個選擇，共 ' + m.m + ' 個輸入。', '= ' + m.n + '^' + m.m + ' = ' + p.answer + '。'], en: ['Each of ' + m.m + ' inputs has ' + m.n + ' choices.', '= ' + m.n + '^' + m.m + ' = ' + p.answer + '.'] }
+          : { zh: ['每個元素可映射到 ' + m.k + ' 個元素之一。', '= ' + m.k + '^' + m.k + ' = ' + p.answer + '。'], en: ['Each element maps to one of ' + m.k + ' elements.', '= ' + m.k + '^' + m.k + ' = ' + p.answer + '.'] };
       default:
         return null;
     }

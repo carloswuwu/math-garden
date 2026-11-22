@@ -554,6 +554,15 @@ var __MathCoreBundle = (() => {
       }
       return count;
     },
+    gradmeasure: function(m) {
+      return m.mode === "interval" ? m.b - m.a : m.n;
+    },
+    gradgeometry: function(m) {
+      return m.mode === "curvature" ? { n: 1, d: m.r } : { n: 1, d: m.r * m.r };
+    },
+    gradcategory: function(m) {
+      return m.mode === "functions" ? Math.pow(m.n, m.m) : Math.pow(m.k, m.k);
+    },
     gradtopology: function(m) {
       return m.mode === "discrete" ? Math.pow(2, m.n) : 1 + Math.pow(2, m.n - 1);
     },
@@ -4404,6 +4413,74 @@ var __MathCoreBundle = (() => {
       hint: { zh: mode === "discrete" ? "離散拓撲中每個子集都是開集，共 2ⁿ 個。" : "含 p 的子集有 2ⁿ⁻¹ 個，再加空集。", en: mode === "discrete" ? "Every subset is open in the discrete topology, giving 2ⁿ open sets." : "There are 2ⁿ⁻¹ subsets containing p, plus the empty set." }
     };
   }
+  function genGradmeasure(rng, o) {
+    var mode = pick(rng, ["interval", "counting"]);
+    if (mode === "interval") {
+      var a = randInt(rng, 1, 8), b = randInt(rng, a + 1, 12);
+      return {
+        type: "gradmeasure",
+        prompt: { zh: "在實數線上，區間 $[" + a + ", " + b + "]$ 的勒貝格測度是多少？", en: "On the real line, what is the Lebesgue measure of $[" + a + ", " + b + "]$?" },
+        visual: { kind: "numberline" },
+        answer: b - a,
+        math: { op: "gradmeasure", mode, a, b },
+        hint: { zh: "區間 [a, b] 的長度 = b − a。", en: "The length of [a, b] is b − a." }
+      };
+    }
+    var n = randInt(rng, 1, 9);
+    return {
+      type: "gradmeasure",
+      prompt: { zh: "在計數測度下，一個有 " + n + " 個元素的集合的測度是多少？", en: "Under the counting measure, what is the measure of a set with " + n + " elements?" },
+      visual: { kind: "count", n },
+      answer: n,
+      math: { op: "gradmeasure", mode, n },
+      hint: { zh: "計數測度就是集合元素的個數。", en: "The counting measure is the number of elements." }
+    };
+  }
+  function genGradgeometry(rng, o) {
+    var mode = pick(rng, ["curvature", "gaussian"]);
+    var r = randInt(rng, 2, 8);
+    if (mode === "curvature") {
+      return {
+        type: "gradgeometry",
+        prompt: { zh: "半徑 " + r + " 的圓，其曲率是多少？（以分數表示）", en: "What is the curvature of a circle of radius " + r + "? (as a fraction)" },
+        visual: { kind: "circle", r },
+        answer: { n: 1, d: r },
+        math: { op: "gradgeometry", mode, r },
+        hint: { zh: "圓的曲率 κ = 1 / r。", en: "Curvature of a circle κ = 1 / r." }
+      };
+    }
+    return {
+      type: "gradgeometry",
+      prompt: { zh: "半徑 " + r + " 的球面，其高斯曲率是多少？（以分數表示）", en: "What is the Gaussian curvature of a sphere of radius " + r + "? (as a fraction)" },
+      visual: { kind: "sphere" },
+      answer: { n: 1, d: r * r },
+      math: { op: "gradgeometry", mode, r },
+      hint: { zh: "球面的高斯曲率 K = 1 / r²。", en: "Gaussian curvature of a sphere K = 1 / r²." }
+    };
+  }
+  function genGradcategory(rng, o) {
+    var mode = pick(rng, ["functions", "endomorphisms"]);
+    if (mode === "functions") {
+      var m = randInt(rng, 1, 4), n = randInt(rng, 1, 4);
+      return {
+        type: "gradcategory",
+        prompt: { zh: "由 " + m + " 元素集合到 " + n + " 元素集合，共有多少個函數？", en: "How many functions are there from a set with " + m + " elements to a set with " + n + " elements?" },
+        visual: { kind: "count", n: m + n },
+        answer: Math.pow(n, m),
+        math: { op: "gradcategory", mode, m, n },
+        hint: { zh: "每個輸入可選 n 個輸出，共 nᵐ 個函數。", en: "Each input has n choices, giving nᵐ functions." }
+      };
+    }
+    var k = randInt(rng, 2, 5);
+    return {
+      type: "gradcategory",
+      prompt: { zh: "一個 " + k + " 元素集合上共有多少個自同態（由集合到自身的函數）？", en: "How many endomorphisms (functions from the set to itself) are there on a " + k + "-element set?" },
+      visual: { kind: "count", n: k },
+      answer: Math.pow(k, k),
+      math: { op: "gradcategory", mode, k },
+      hint: { zh: "每個元素可映射到 k 個元素之一，共 kᵏ 個。", en: "Each element maps to one of k elements, giving kᵏ endomorphisms." }
+    };
+  }
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -4527,7 +4604,10 @@ var __MathCoreBundle = (() => {
     decimalmixed: genDecimalmixed,
     gradanalysis: genGradanalysis,
     gradalgebra: genGradalgebra,
-    gradtopology: genGradtopology
+    gradtopology: genGradtopology,
+    gradmeasure: genGradmeasure,
+    gradgeometry: genGradgeometry,
+    gradcategory: genGradcategory
   };
 
   // src/core/format.js
@@ -5769,6 +5849,12 @@ var __MathCoreBundle = (() => {
         return { zh: ["循環群 Cₙ 的生成元數目 = φ(n)。", "φ(" + m.n + ") = " + p.answer + "。"], en: ["The number of generators of Cₙ is φ(n).", "φ(" + m.n + ") = " + p.answer + "."] };
       case "gradtopology":
         return m.mode === "discrete" ? { zh: ["離散拓撲：所有子集都是開集。", "共 2^" + m.n + " = " + p.answer + " 個。"], en: ["Discrete topology: every subset is open.", "2^" + m.n + " = " + p.answer + " open sets."] } : { zh: ["含指定點 p 的子集有 2^(n−1) 個，再加空集。", "= 1 + 2^" + (m.n - 1) + " = " + p.answer + "。"], en: ["There are 2^(n−1) subsets containing p, plus the empty set.", "= 1 + 2^" + (m.n - 1) + " = " + p.answer + "."] };
+      case "gradmeasure":
+        return m.mode === "interval" ? { zh: ["區間 [a,b] 的勒貝格測度 = b − a。", "= " + m.b + " − " + m.a + " = " + p.answer + "。"], en: ["Lebesgue measure of [a,b] = b − a.", "= " + m.b + " − " + m.a + " = " + p.answer + "."] } : { zh: ["計數測度 = 元素個數。", "= " + m.n + "。"], en: ["Counting measure = number of elements.", "= " + m.n + "."] };
+      case "gradgeometry":
+        return m.mode === "curvature" ? { zh: ["圓的曲率 κ = 1/r。", "κ = 1/" + m.r + " = " + renderValue(p.answer) + "。"], en: ["Circle curvature κ = 1/r.", "κ = 1/" + m.r + " = " + renderValue(p.answer) + "."] } : { zh: ["球面高斯曲率 K = 1/r²。", "K = 1/" + m.r * m.r + " = " + renderValue(p.answer) + "。"], en: ["Sphere Gaussian curvature K = 1/r².", "K = 1/" + m.r * m.r + " = " + renderValue(p.answer) + "."] };
+      case "gradcategory":
+        return m.mode === "functions" ? { zh: ["每個輸入有 " + m.n + " 個選擇，共 " + m.m + " 個輸入。", "= " + m.n + "^" + m.m + " = " + p.answer + "。"], en: ["Each of " + m.m + " inputs has " + m.n + " choices.", "= " + m.n + "^" + m.m + " = " + p.answer + "."] } : { zh: ["每個元素可映射到 " + m.k + " 個元素之一。", "= " + m.k + "^" + m.k + " = " + p.answer + "。"], en: ["Each element maps to one of " + m.k + " elements.", "= " + m.k + "^" + m.k + " = " + p.answer + "."] };
       default:
         return null;
     }
@@ -5826,7 +5912,7 @@ var __MathCoreBundle = (() => {
   }
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
-    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory", "gradanalysis", "gradalgebra", "gradtopology"].indexOf(p.type) !== -1) {
+    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory", "gradanalysis", "gradalgebra", "gradtopology", "gradmeasure", "gradgeometry", "gradcategory"].indexOf(p.type) !== -1) {
       return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
     }
     if (p.type === "quadsolve") return 120;

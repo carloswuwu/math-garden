@@ -3689,6 +3689,80 @@ import { fmtDecimal, fmtNum } from './display.js';
     };
   }
 
+
+  /* ---------------- 研究院加深：測度論、微分幾何、範疇論入門 ---------------- */
+
+  function genGradmeasure(rng, o) {
+    var mode = pick(rng, ['interval', 'counting']);
+    if (mode === 'interval') {
+      var a = randInt(rng, 1, 8), b = randInt(rng, a + 1, 12);
+      return {
+        type: 'gradmeasure',
+        prompt: { zh: '在實數線上，區間 $[' + a + ', ' + b + ']$ 的勒貝格測度是多少？', en: 'On the real line, what is the Lebesgue measure of $[' + a + ', ' + b + ']$?' },
+        visual: { kind: 'numberline' },
+        answer: b - a,
+        math: { op: 'gradmeasure', mode: mode, a: a, b: b },
+        hint: { zh: '區間 [a, b] 的長度 = b − a。', en: 'The length of [a, b] is b − a.' }
+      };
+    }
+    var n = randInt(rng, 1, 9);
+    return {
+      type: 'gradmeasure',
+      prompt: { zh: '在計數測度下，一個有 ' + n + ' 個元素的集合的測度是多少？', en: 'Under the counting measure, what is the measure of a set with ' + n + ' elements?' },
+      visual: { kind: 'count', n: n },
+      answer: n,
+      math: { op: 'gradmeasure', mode: mode, n: n },
+      hint: { zh: '計數測度就是集合元素的個數。', en: 'The counting measure is the number of elements.' }
+    };
+  }
+
+  function genGradgeometry(rng, o) {
+    var mode = pick(rng, ['curvature', 'gaussian']);
+    var r = randInt(rng, 2, 8);
+    if (mode === 'curvature') {
+      return {
+        type: 'gradgeometry',
+        prompt: { zh: '半徑 ' + r + ' 的圓，其曲率是多少？（以分數表示）', en: 'What is the curvature of a circle of radius ' + r + '? (as a fraction)' },
+        visual: { kind: 'circle', r: r },
+        answer: { n: 1, d: r },
+        math: { op: 'gradgeometry', mode: mode, r: r },
+        hint: { zh: '圓的曲率 κ = 1 / r。', en: 'Curvature of a circle κ = 1 / r.' }
+      };
+    }
+    return {
+      type: 'gradgeometry',
+      prompt: { zh: '半徑 ' + r + ' 的球面，其高斯曲率是多少？（以分數表示）', en: 'What is the Gaussian curvature of a sphere of radius ' + r + '? (as a fraction)' },
+      visual: { kind: 'sphere' },
+      answer: { n: 1, d: r * r },
+      math: { op: 'gradgeometry', mode: mode, r: r },
+      hint: { zh: '球面的高斯曲率 K = 1 / r²。', en: 'Gaussian curvature of a sphere K = 1 / r².' }
+    };
+  }
+
+  function genGradcategory(rng, o) {
+    var mode = pick(rng, ['functions', 'endomorphisms']);
+    if (mode === 'functions') {
+      var m = randInt(rng, 1, 4), n = randInt(rng, 1, 4);
+      return {
+        type: 'gradcategory',
+        prompt: { zh: '由 ' + m + ' 元素集合到 ' + n + ' 元素集合，共有多少個函數？', en: 'How many functions are there from a set with ' + m + ' elements to a set with ' + n + ' elements?' },
+        visual: { kind: 'count', n: m + n },
+        answer: Math.pow(n, m),
+        math: { op: 'gradcategory', mode: mode, m: m, n: n },
+        hint: { zh: '每個輸入可選 n 個輸出，共 nᵐ 個函數。', en: 'Each input has n choices, giving nᵐ functions.' }
+      };
+    }
+    var k = randInt(rng, 2, 5);
+    return {
+      type: 'gradcategory',
+      prompt: { zh: '一個 ' + k + ' 元素集合上共有多少個自同態（由集合到自身的函數）？', en: 'How many endomorphisms (functions from the set to itself) are there on a ' + k + '-element set?' },
+      visual: { kind: 'count', n: k },
+      answer: Math.pow(k, k),
+      math: { op: 'gradcategory', mode: mode, k: k },
+      hint: { zh: '每個元素可映射到 k 個元素之一，共 kᵏ 個。', en: 'Each element maps to one of k elements, giving kᵏ endomorphisms.' }
+    };
+  }
+
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -3812,7 +3886,10 @@ import { fmtDecimal, fmtNum } from './display.js';
     decimalmixed: genDecimalmixed,
     gradanalysis: genGradanalysis,
     gradalgebra: genGradalgebra,
-    gradtopology: genGradtopology
+    gradtopology: genGradtopology,
+    gradmeasure: genGradmeasure,
+    gradgeometry: genGradgeometry,
+    gradcategory: genGradcategory
   };
 
 export { GENERATORS, DIR_LABEL, CENTRE_LABEL };

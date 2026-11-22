@@ -776,6 +776,24 @@ async function main() {
   wG5.__mathApp.navigate({ screen: 'lesson', skillId: 'col.calculus2' });
   check(ctxG5.d.querySelectorAll('#screen-lesson .lesson-glossary dt').length >= 2, '大學微積分（二）有詞彙表');
 
+
+  /* 39. 家長「一鍵解鎖全部」：所有階段與研究院技能都要真正解鎖 */
+  const ctxUnlock = boot();
+  const wUnlock = ctxUnlock.w;
+  const dUnlock = ctxUnlock.d;
+  wUnlock.__mathApp.navigate({ screen: 'parent' });
+  dUnlock.getElementById('parentUnlock').click();
+  dUnlock.getElementById('unlockOk').click();
+  const pUnlock = wUnlock.__mathApp.getProgress();
+  const realStages = wUnlock.Curriculum.stages.filter((st) => st.id !== 'challenge');
+  check(realStages.every((st) => pUnlock.stageExams[st.id] && pUnlock.stageExams[st.id].passed), '一鍵解鎖後所有階段考試標記通過');
+  const unlockedSkills = Object.keys(wUnlock.Curriculum.skills).filter((id) => !wUnlock.Curriculum.skills[id].scaffold);
+  check(unlockedSkills.every((id) => pUnlock.skills[id] && pUnlock.skills[id].quizStars >= 2), '一鍵解鎖後所有技能已掌握');
+  wUnlock.__mathApp.navigate({ screen: 'stage', stageId: 'grad' });
+  check(dUnlock.querySelectorAll('#screen-stage .skill-card').length === 6, '一鍵解鎖後可進入研究院 6 個技能');
+  wUnlock.__mathApp.navigate({ screen: 'lesson', skillId: 'grad.measure' });
+  check(dUnlock.querySelector('#screen-lesson h1').textContent.indexOf('測度') !== -1, '一鍵解鎖後可開啟研究院測度論課');
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }

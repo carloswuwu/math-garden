@@ -4,12 +4,13 @@ import { state, progress, setProgress, saveProgress } from './state.js';
 import { t } from './i18n.js';
 import { esc } from './format.js';
 import { $ } from './dom.js';
-import { focusEl, isVisible, modalFocusables, restoreFocus, setBackgroundInert, trapModalTab } from './a11y.js';
+import { focusEl, isVisible, focusScreen, modalFocusables, restoreFocus, setBackgroundInert, trapModalTab } from './a11y.js';
 import { modalState } from './modal-state.js';
 import { updateState } from './sw-state.js';
 import { toast, applyTheme, applyLang } from './chrome.js';
 import { clearSession } from './session.js';
 import { renderParent } from './screens.js';
+import { realStageList } from './selectors.js';
 import { app } from './context.js';
 
   function showModal(innerHTML, opener) {

@@ -764,6 +764,39 @@
       levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
     },
+    "grad.measure": {
+      id: "grad.measure",
+      stage: "grad",
+      order: 4,
+      zh: { name: "測度論", goal: "認識勒貝格測度與計數測度。" },
+      en: { name: "Measure Theory", goal: "Understand Lebesgue measure and counting measure." },
+      lesson: "grad.measure",
+      types: ["gradmeasure"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    "grad.geometry": {
+      id: "grad.geometry",
+      stage: "grad",
+      order: 5,
+      zh: { name: "微分幾何", goal: "會求圓的曲率與球面的高斯曲率。" },
+      en: { name: "Differential Geometry", goal: "Find circle curvature and sphere Gaussian curvature." },
+      lesson: "grad.geometry",
+      types: ["gradgeometry"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    "grad.category": {
+      id: "grad.category",
+      stage: "grad",
+      order: 6,
+      zh: { name: "範疇論入門", goal: "用態射/函數的角度數函數與自同態。" },
+      en: { name: "Category Theory Intro", goal: "Count functions and endomorphisms through the morphism viewpoint." },
+      lesson: "grad.category",
+      types: ["gradcategory"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
     /* ===================== 中學與大學增補（二） ===================== */
     "ms.s2.identity": {
       id: "ms.s2.identity",
@@ -1761,7 +1794,10 @@
       topics: [
         { id: "grad.analysis.t", zh: "實分析", en: "Real Analysis", skills: ["grad.analysis"] },
         { id: "grad.algebra.t", zh: "抽象代數", en: "Abstract Algebra", skills: ["grad.algebra"] },
-        { id: "grad.topology.t", zh: "拓撲學", en: "Topology", skills: ["grad.topology"] }
+        { id: "grad.topology.t", zh: "拓撲學", en: "Topology", skills: ["grad.topology"] },
+        { id: "grad.analysis2.t", zh: "測度論", en: "Measure Theory", skills: ["grad.measure"] },
+        { id: "grad.geometry.t", zh: "微分幾何", en: "Differential Geometry", skills: ["grad.geometry"] },
+        { id: "grad.category.t", zh: "範疇論", en: "Category Theory", skills: ["grad.category"] }
       ]
     },
     {

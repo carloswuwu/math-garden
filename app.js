@@ -185,7 +185,7 @@
     }
     return sum;
   }
-  function realStageList2() {
+  function realStageList() {
     return Curriculum2.stages.filter(function(st) {
       if (st.id === "challenge") return false;
       return stageSkills(st).some(function(s) {
@@ -203,7 +203,7 @@
   }
   function stageUnlocked(stageId) {
     if (stageId === "challenge") return true;
-    var real = realStageList2();
+    var real = realStageList();
     for (var i = 0; i < real.length; i++) {
       if (real[i].id === stageId) return i === 0 || stageComplete(real[i - 1]);
     }
@@ -730,6 +730,12 @@
     if (isVisible(el)) return focusEl(el);
     return false;
   }
+  function focusScreen() {
+    var screen = $("screen-" + state.screen);
+    if (!screen) return false;
+    var node = screen.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    return focusEl(node);
+  }
   function isTypingTarget(el) {
     if (!el) return false;
     var tag = (el.tagName || "").toUpperCase();
@@ -800,7 +806,7 @@
 
   // src/ui/screens.js
   function renderHome2() {
-    var realStages = realStageList2();
+    var realStages = realStageList();
     var unlockedCount = 0;
     var session = app.sessionSummary();
     var html = '<h1 class="page-title">' + t("home.title") + '</h1><p class="page-sub">' + t("home.subtitle") + "</p>";
