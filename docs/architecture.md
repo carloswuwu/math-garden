@@ -62,9 +62,17 @@ index.html ── classic root wrappers (generated) ─────────�
 | `src/ui/globals.js` | Bridge to `window.MathCore`/`I18N`/`Curriculum`/... for the classic build | ESM imports |
 | `src/ui/format.js` | `esc`, `renderMath` (KaTeX with graceful fallback) | ESM imports |
 | `src/ui/router.js` | Pure route helpers: `parseHash`, `serializeRoute`, `sameRoute` | ESM imports |
+| `src/ui/state.js` | constants, mutable `state`, live `progress`, localStorage load/save, session keys | ESM imports |
+| `src/ui/i18n.js` / `selectors.js` | UI translation/labels; curriculum/progress selectors (unlock, mastery, stats) | ESM imports |
+| `src/ui/dom.js` / `a11y.js` / `visual.js` | `$`/screens; focus/inert/tab-trap; SVG visuals + alt text | ESM imports |
+| `src/ui/screens.js` | Home/stage/lesson/parent/formulas/outline/settings renderers | ESM imports |
+| `src/ui/assessment.js` | Practice/quiz/exam rendering, grading, results, composition UI | ESM imports |
+| `src/ui/session.js` / `nav.js` / `nav-state.js` | sessionStorage resume; routing/show/navigate/hash events/error boundary | ESM imports |
+| `src/ui/chrome.js` / `dialog.js` / `sw.js` / `keyboard.js` | theme/lang/audio/toast/topbar; modals; update chip/registration; keyboard | ESM imports |
+| `src/ui/context.js` / `modal-state.js` / `sw-state.js` | cross-module `app` action injection; modal and SW update state | ESM imports |
 | `app.js` | **Generated classic IIFE** of `src/ui/index.js` (side effects set `window.__mathApp`) | `window.__mathApp` (test/debug API) |
 | `tools/build.js` / `tools/sw-template.js` | Deterministic bundle, dist assembly, SW generation | build script |
-| `tests/*.test.js` | Six suites: engine, UI (jsdom), generators, cross-layer contract, a11y (axe), performance budgets | `npm test` |
+| `tests/*.test.js` | Six node suites (engine, UI jsdom on dist IIFE, generators, contract, a11y axe, perf) + `npm run lighthouse` real-Chrome gate | `npm test` |
 
 ## 3. Data flow
 
@@ -129,11 +137,12 @@ Hash routes are pure strings; `parseHash`/`serializeRoute`/`resolveRoute` valida
 | Suite | Environment | Protects |
 | --- | --- | --- |
 | `core.test.js` | node | engine invariants, grading, progress, composition/diversity, schema fuzz |
-| `ui.test.js` | jsdom | routing/history, resume, keyboard, typed/MC flows, challenge, quit-run fix, KaTeX, bug regressions |
+| `ui.test.js` | jsdom (dist IIFE) | routing/history, resume, keyboard, typed/MC flows, challenge, quit-run fix, KaTeX, bug regressions |
 | `generators.test.js` | node | per-type contracts, pools, explain coverage, typed-input invariants |
-| `contract.test.js` | node + vm | MATH_SPEC by typeIndex, assets/i18n, solver coverage, formulas, exam uniqueness, dist/SW consistency, formatting |
-| `a11y.test.js` | jsdom + axe-core | headings/labels/focus/inert/lang/visual alt, axe subset on 13 screens |
-| `perf.test.js` | node + jsdom | engine p95, route render p95, bundle gzip, precache ≤ 1.2 MB |
+| `contract.test.js` | node + vm | MATH_SPEC by typeIndex, assets/i18n, solver coverage, formulas, exam uniqueness, dist/SW consistency, formatting, ESM source/wrapper sync |
+| `a11y.test.js` | jsdom (dist IIFE) + axe-core | headings/labels/focus/inert/lang/visual alt, axe subset on 13 screens |
+| `perf.test.js` | node + jsdom (dist IIFE) | engine p95, route render p95, bundle gzip, precache ≤ 1.2 MB |
+| `npm run lighthouse` | real headless Chrome | full Lighthouse accessibility gate ≥ 0.95 (local 1.000; CI step) |
 
 ## 9. Performance budgets
 
@@ -146,8 +155,9 @@ Measured on the current build (local, warm JIT); budgets in parentheses are the 
 | `composeExam(20)` p95 | ~0.4 ms | < 400 ms |
 | jsdom boot p95 | ~64 ms | < 5000 ms |
 | jsdom route render p95 | ~500 ms | < 2000 ms |
-| bundle gzip | 128.6 KB | ≤ 140 KB |
+| bundle gzip | 129.6 KB | ≤ 140 KB |
 | SW precache payload | 0.99 MB | ≤ 1.2 MB |
+| Lighthouse accessibility | 1.000 | ≥ 0.95 |
 
 Budgets are deliberately 3–8× local measurements to absorb CI variance. They guard against structural regressions (accidental O(n²), content bloat), not micro-benchmarks.
 
@@ -157,19 +167,19 @@ Budgets are deliberately 3–8× local measurements to absorb CI variance. They 
 - Every interactive control has an accessible name; typed-answer fields are labelled and described.
 - Modal dialog traps focus, marks background `inert` + `aria-hidden`; Esc closes; 44 px icon targets.
 - Generated question visuals include localized `role="img"` text alternatives (`visualAlt`).
-- axe-core subset runs over 13 screen states in CI; real-browser Lighthouse/axe remains a manual Phase 5 item.
+- axe-core subset runs over 13 screen states in CI; a real headless-Chrome Lighthouse accessibility gate (`npm run lighthouse`, ≥0.95, local **1.000**) runs in CI.
 
-## 11. Phase 5 modularization target
+## 11. Phase 5 — complete
 
-Current source is order-coupled classic scripts; Phase 5 converts to ESM **while keeping the public API and the file:// classic build**:
+The source is no longer order-coupled classic scripts. Phase 5 converted everything to ESM **while keeping the public API and the file:// classic build**:
 
 1. **Foundation** (done): architecture map, ADRs, performance budgets in CI.
-2. **Content modules** (done): `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` now live in `src/data/*.js` as ESM; build step 0 generates the classic root wrappers with the unchanged `window.*` API; CI verifies wrappers are in sync.
-3. **Engine modules** (done): the engine is fully split behind the unchanged `window.MathCore`: `rng`, `values`, `facts`, `display`, `format`, `signatures`, `choices`, `generators`, `math-spec`, `explain`, `progress`, `problem`, `compose`; `src/core/index.js` (≈374 lines) only assembles the API, keeps `checkAnswer`/`nextProblem` and exports `MathCore`. `math-core.js` remains a generated UMD wrapper.
-4. **UI modules** (in progress): `src/ui/index.js` is now the ESM UI source; `globals` (window bridge), `format` (`esc`/`renderMath`) and `router` (pure hash parsing) are extracted. Build step 0 generates a classic `app.js` IIFE that still sets `window.__mathApp`. Next: split the remaining screens/state/dialog/visual/a11y/SW code out of `src/ui/index.js`.
-5. **Tooling/tests**: tests load the built IIFE (contract/UI/a11y/perf) instead of eval'ing root wrappers; keep file:// by committing the classic bundle as today.
+2. **Content modules** (done): `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` live in `src/data/*.js`; build step 0 generates the classic root wrappers with the unchanged `window.*` API; CI verifies wrappers are in sync.
+3. **Engine modules** (done): the engine is fully split behind the unchanged `window.MathCore`: `rng`, `values`, `facts`, `display`, `format`, `signatures`, `choices`, `generators`, `math-spec`, `explain`, `progress`, `problem`, `compose`; `src/core/index.js` (~374 lines) only assembles the API, keeps `checkAnswer`/`nextProblem` and exports `MathCore`. `math-core.js` remains a generated UMD wrapper.
+4. **UI modules** (done): `src/ui/` contains `index` (init + `window.__mathApp` hooks, ~175 lines), `globals`, `format`, `router`, `state`, `i18n`, `selectors`, `visual`, `dom`, `a11y`, `context`, `screens`, `assessment`, `session`, `nav-state`, `modal-state`, `nav`, `chrome`, `dialog`, `sw-state`, `sw`, `keyboard`. Cross-module actions use the `app` context object to avoid cycles. Build step 0 generates the classic `app.js` IIFE.
+5. **Tooling/tests** (done): `ui`, `a11y` and `perf` suites boot the built `dist/app.<hash>.js` IIFE; contract still validates source modules/contracts. `npm run lighthouse` runs a real-Chrome Lighthouse accessibility gate (local score **1.000**) and CI has a Lighthouse step.
 
-Guardrails for every slice: one module/commit, all six suites green, `dist/` rebuilt and committed, public APIs unchanged, no change to stored progress/session schemas.
+Guardrails preserved throughout: one module/commit, all six suites green, `dist/` + wrappers rebuilt and committed, public APIs unchanged, stored progress/session schemas unchanged. Remaining non-Phase-5 polish: one-time Pages source switch to GitHub Actions, post-roadmap content P1 items, optional real-device cold-offline check.
 
 ## 12. Decision records
 

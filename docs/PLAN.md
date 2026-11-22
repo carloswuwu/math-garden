@@ -7,13 +7,13 @@
 | Item | Value |
 |---|---|
 | Repo | `C:\Users\Carlos\Documents\deepseek-harness\math` |
-| Branch / HEAD | `main` @ `aee0078` (Phases 1–4, challenge tier 2, typed answers, quit-run fix, fairness fixes, KaTeX formatting and full lesson deepening landed; docs commit on top) |
+| Branch / HEAD | `main` @ `a725585` (Phases 1–5 complete: routing/resume, contract tests, build/SW, assessment depth, a11y, challenge arena + tier 2, typed answers, fairness, lesson depth/KaTeX, Phase 5 modularization/perf/docs; docs commit on top) |
 | Live | https://carloswuwu.github.io/math-garden/ — legacy branch deploy (repo root) is live; `.github/workflows/pages.yml` publishes `dist/` once Settings → Pages → Source is switched to “GitHub Actions” (one-time manual step) |
-| CI | `.github/workflows/tests.yml` — build, stale-`dist` check, then five node suites on every push/PR |
+| CI | `.github/workflows/tests.yml` — build, stale-`dist`/wrapper check, six node suites, then a real-Chrome Lighthouse accessibility gate |
 | Content | **15 stages** (14 grades + 🏆 Challenge), **117 skills**, **108 lessons — all deepened with bilingual steps + common mistakes**, **147 type entries**, **105 generator types**; `word` has 20 modes, challenge arena has **20 olympiad-style types across 6 topics with 3 difficulty tiers**; Pre-K → university |
-| Code size | `math-core.js` 5,423 lines · `app.js` 2,508 · `curriculum.js` 1,157 · `lessons.js` 1,401 · `style.css` 794 · `formulas.js` 91 · `i18n.js` 287 |
-| Build | `tools/build.js` (190) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.110424b5e3bd.js` **407.4 KB raw / 129.4 KB gzip** (advisory 140 KB), generated `dist/sw.js`; content ESM in `src/data/`, engine ESM in `src/core/`, UI ESM starting in `src/ui/`, generated classic/UMD wrappers; `dist/` + wrappers committed and CI fails on drift |
-| Tests | core **575,437** assertions · ui **263** · generators **168,511** · contract **15,709** · a11y **205** · perf **26** checks (six suites ≈35 s locally incl. axe/perf) |
+| Code size | ESM sources: `src/core/` 14 modules (~4.5k lines), `src/ui/` 22 modules (~2.5k lines), `src/data/` 5 modules; generated wrappers `math-core.js` (~4.2k) and `app.js` (~2.5k); `style.css` 794 · `formulas.js` 91 |
+| Build | `tools/build.js` (190) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.c17ec6c2d471.js` **408.5 KB raw / 129.6 KB gzip** (advisory 140 KB), generated `dist/sw.js`; content ESM in `src/data/`, engine ESM in `src/core/`, UI ESM in `src/ui/`, generated classic/UMD wrappers; `dist/` + wrappers committed and CI fails on drift |
+| Tests | core **575,437** assertions · ui **263** · generators **168,511** · contract **15,745** · a11y **205** · perf **26** checks (+ Lighthouse a11y **1.000**); UI/a11y/perf boot the built `dist/app.<hash>.js` IIFE |
 | A11y | one h1 per screen + `aria-labelledby`, focus-to-heading + live-region announcements, accessible names on all controls (incl. labelled typed-answer fields), modal background `inert`/`aria-hidden`, generated `role="img"` text alternatives for question visuals, 44 px icon targets, ARIA strings in `i18n.js`, axe-core 4.10.2 jsdom subset (0 violations on 13 screens) |
 | Persistence | progress schema **v2** (`mathpath.progress`), legacy v1 key migrated, sanitized import |
 | In-flight session | `sessionStorage['mathpath.session.v1']` (24 h TTL, practice/quiz/exam only, never in progress) |
@@ -152,6 +152,12 @@
 
 64. **The UI is now ESM-sourced.** `app.js` moved to `src/ui/index.js` (imports the window bridge `src/ui/globals.js`, `src/ui/format.js` for `esc`/`renderMath`, and `src/ui/router.js` for pure hash helpers). Build step 0 bundles it into the classic `app.js` IIFE that still initializes and exposes `window.__mathApp`, so `index.html`/`file://`/legacy deploy and all jsdom suites are unchanged. CI stale check now covers `app.js`; contract checks the four UI ESM sources plus the generated header/`__mathApp` hook; `.gitattributes` pins it to LF. Six suites green (contract 15,699 → **15,709**), bundle 407.4 KB raw / **129.4 KB gzip**, hash `110424b5e3bd`.
 65. **Next:** extract UI state/screens/dialog/visual/a11y/SW modules from `src/ui/index.js`, then move jsdom/contract tests to the built IIFE and finish Phase 5 with a real-browser Lighthouse/axe pass.
+
+### Phase 5 complete: full UI split, tests on the built IIFE, Lighthouse gate
+
+66. **Stage E finished.** The UI is fully modular in `src/ui/`: `index` (init + `window.__mathApp` hooks, ~175 lines), `globals`, `format`, `router`, `state`, `i18n`, `selectors`, `visual`, `dom`, `a11y`, `context`, `screens`, `assessment`, `session`, `nav-state`, `modal-state`, `nav`, `chrome`, `dialog`, `sw-state`, `sw`, `keyboard`. Cross-module actions are injected on an `app` context object to avoid cycles; build step 0 generates the classic `app.js` IIFE so `index.html`/`file://`/legacy deploy are unchanged. Contract checks all 22 UI ESM modules + generated header/`__mathApp` hook; CI stale check covers `app.js`.
+67. **Tests now exercise the shipped artifact.** `tests/ui.test.js`, `tests/a11y.test.js` and `tests/perf.test.js` boot the built `dist/app.<hash>.js` single IIFE (falling back to root wrappers only when dist is absent); contract still validates the source modules/contracts. Six suites green: core 575,437 · ui 263 · generators 168,511 · contract **15,745** · a11y 205 · perf 26 checks. Bundle `app.c17ec6c2d471.js` 408.5 KB raw / **129.6 KB gzip**.
+68. **Real-browser accessibility gate.** Added `tools/lighthouse-check.js` + `npm run lighthouse`: serves `dist/`, runs Lighthouse accessibility on real headless Chrome, and fails below 0.95. Local score **1.000**; CI has a Lighthouse step. Also updated the GitHub repo description. Phase 5 is complete; remaining non-roadmap polish is the one-time Pages source switch to GitHub Actions, post-roadmap content P1 items, and an optional real-device cold-offline check.
 
 ## 2. Architecture map
 
@@ -321,20 +327,19 @@ Decisions / deviations:
 
 **Acceptance met:** every screen has exactly one h1, every control is named, no duplicate ids or axe violations, focus/announcement on navigation, dialog background inert/restored, language switch keeps ARIA/`lang` in sync, diagrams have text alternatives, 44 px icon targets.
 
-### Phase 5 — Modularization, performance, docs
-- ✅ **Stage E foundation (landed):** `docs/architecture.md` + 8 ADRs, CI-enforced performance budgets (`tests/perf.test.js`, sixth suite), architecture/ADR links in README; Lighthouse remains a manual real-browser check.
-- ✅ **Stage C content modules (landed):** `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` now live as ESM in `src/data/*.js`; build step 0 generates the classic root wrappers with the unchanged `window.*` API, CI verifies both dist and wrappers are in sync, and `.gitattributes` keeps generated/source text LF.
-- ✅ **Stage D engine split (done):** the engine is fully modular behind the unchanged `window.MathCore`: `rng`, `values`, `facts`, `display`, `format`, `signatures`, `choices`, `generators`, `math-spec`, `explain`, `progress`, `problem`, `compose`; `src/core/index.js` (~374 lines) only assembles `checkAnswer`/`nextProblem`/exports. `math-core.js` is a generated UMD wrapper (browser + Node), CI checks it like the other wrappers.
-- 🚧 **Stage E UI split (started):** `app.js` is now a generated classic IIFE of the ESM source `src/ui/index.js` (`window.__mathApp` unchanged). Extracted so far: `src/ui/globals.js` (window bridge), `src/ui/format.js` (`esc`/`renderMath`), `src/ui/router.js` (pure hash parse/serialize/compare). CI checks the generated `app.js` like the other wrappers. Next: extract state, screens, dialog, visual, a11y and SW modules from `src/ui/index.js`, then move tests to the built IIFE.
-- Remaining Phase 5 polish: Lighthouse a11y ≥ 0.95 on deploy; update GitHub repo description (done via API); Windows tooling consolidation (no project ACL script currently).
-- Perf budgets (measured): `generateProblem` p95 ~0.05 ms (<30), `generateSet(20)` p95 ~11 ms (<200), `composeExam(20)` p95 ~0.4 ms (<400), jsdom boot ~65 ms (<5 s), route render p95 ~500 ms (<2 s), bundle 129.4 KB gzip (≤140), precache 0.99 MB (≤1.2).
+### Phase 5 — Modularization, performance, docs — ✅ DONE
+- ✅ **Stage C content modules:** `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` live as ESM in `src/data/*.js`; build step 0 generates classic root wrappers; CI verifies wrappers are in sync.
+- ✅ **Stage D engine split:** the engine is fully modular in `src/core/`: `rng`, `values`, `facts`, `display`, `format`, `signatures`, `choices`, `generators`, `math-spec`, `explain`, `progress`, `problem`, `compose`; `src/core/index.js` (~374 lines) only assembles `MathCore`; generated UMD `math-core.js` (browser + Node).
+- ✅ **Stage E UI split:** `src/ui/` now holds `index` (init/hooks), `globals`, `format`, `router`, `state`, `i18n`, `selectors`, `visual`, `dom`, `a11y`, `context`, `screens`, `assessment`, `session`, `nav-state`, `modal-state`, `nav`, `chrome`, `dialog`, `sw-state`, `sw`, `keyboard`; `src/ui/index.js` is ~175 lines and build step 0 generates the classic `app.js` IIFE; `window.__mathApp` unchanged.
+- ✅ **Performance/docs:** architecture map + 8 ADRs; CI performance budgets; UI/a11y/perf suites boot the built IIFE; **Lighthouse accessibility 1.000** via `npm run lighthouse` (real Chrome) and a CI Lighthouse step; repo description updated.
+- Remaining non-Phase-5 polish: one-time Pages source switch to Actions (publishes dist), post-roadmap content P1 list, optional real-device offline check.
 
 ### 30 / 60 / 90-day shape
 | Window | Ship |
 |---|---|
 | 0–30 d | **Phase 1 routing & resume (landed)**; **Phase 2 contract tests (landed)**; **Phase 3 A–B build/SW/update chip (landed)**; **Phase 3.5 assessment depth & word problems (landed)**; **Phase 4 accessibility remainder (landed)**; **🏆 challenge arena + tier 2 (landed)**; **typed-answer anti-guessing mode (landed)**; **assessment fairness fixes (landed)**; **lesson depth + KaTeX formatting (landed)** |
 | 31–60 d | extend typed entry (curated challenge tiers, selected grade-5/6 assessments, optional two-part answers); expand the challenge arena (more olympiad archetypes, curated competition sets); audit P1 content follow-ups (single-level ladders, remaining word archetypes, tiny pools, exam width, per-mode typeAcc); deepen lesson delivery (visual worked examples, bilingual glossary, diagrams); switch Pages source to Actions and verify dist deploy + cold offline; real-browser axe/Lighthouse pass |
-| 61–90 d | Phase 5 Stages C–E modular split, perf/Lighthouse gates, formula depth fixes, docs/ADRs |
+| 61–90 d | **Phase 5 complete:** ESM content/engine/UI split, generated wrappers, perf budgets, architecture docs/ADRs, tests on built IIFE, real-Chrome Lighthouse gate 1.000. Post-roadmap: Pages Actions switch + content P1 items |
 
 ## 5. Agent playbook (proven in this repo)
 
@@ -365,6 +370,7 @@ node tests/generators.test.js
 node tests/contract.test.js
 node tests/a11y.test.js
 node tests/perf.test.js
+npm run lighthouse                    # real Chrome, a11y ≥ 0.95
 git status --short                    # expect only intended files
 git add -A; git commit -m "…"
 git push origin main                  # needs credential store; run outside sandbox if needed
@@ -374,7 +380,7 @@ Then: wait for the `tests` workflow (GitHub Actions) to go green; if Pages sourc
 
 ## 7. Bootstrap prompt for the new session
 
-> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. Phases 1–4, the 🏆 challenge arena + tier 2, typed-answer anti-guessing, the quit-run fix, assessment fairness, full lesson deepening/KaTeX formatting, the Phase 5 docs+performance foundation, Stage C (ESM content modules in `src/data/`) and the **first Stage D slice** (engine ESM in `src/core/{index,rng,values}.js`, generated UMD `math-core.js`) are landed — do not redo them. Continue **Stage E UI split**: extract state/screens/dialog/visual/a11y/SW modules from `src/ui/index.js` (which is now ESM and builds the classic `app.js` wrapper), keeping `window.__mathApp` and the `file://` classic build unchanged; then move tests to the built IIFE and finish with a real-browser Lighthouse/axe pass (a11y ≥ 0.95). Keep all six suites green, rebuild `dist/` and generated wrappers, commit by scope, and note CI fails if `dist/` or any generated wrapper (including `app.js`) is stale. The one-time Pages source switch to “GitHub Actions” is still pending to actually publish `dist/`.
+> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. **Phases 1–5 are complete** — routing/resume, contract tests, build/SW/update chip, assessment depth, a11y, challenge arena + tier 2, typed answers, fairness fixes, lesson deepening/KaTeX, and Phase 5 (ESM content/engine/UI split, generated classic/UMD wrappers, performance budgets, architecture docs/ADRs, tests on the built IIFE, real-Chrome Lighthouse a11y 1.000). Do not redo them. Remaining work is post-roadmap and optional: (a) one-time GitHub Settings → Pages → Source = “GitHub Actions” to publish `dist/`; (b) content P1/P2 from the mathematician audit (single-level ladders, remaining word archetypes, tiny pools, exam width, per-mode `typeAcc`); (c) optional real-device cold-offline check and further lesson delivery polish (visual worked examples/glossary). Keep all six suites + `npm run lighthouse` green, rebuild `dist/` and generated wrappers whenever any `src/` or `style.css` changes, commit by scope, push and confirm CI. Note UI/a11y/perf suites now boot the built `dist/app.<hash>.js` IIFE, so always `npm run build` before running tests locally.
 
 ## 8. Key references
 

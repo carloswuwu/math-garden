@@ -69,7 +69,7 @@
 | `docs/PLAN.md` | 專案交接、架構現況、路線圖與 backlog（權威文件） |
 | `docs/architecture.md` | 現行架構地圖：執行拓樸、模組、路由／狀態、建置、測試、效能預算、無障礙、Phase 5 目標 |
 | `docs/adr/` | 架構決策記錄（ADR-0001 至 0008） |
-| `src/` | **ESM 來源**：`data/`（i18n、curriculum、outline、formulas、lessons）、`core/`（完整引擎）與 `ui/`（介面：index、globals、format、router）；root 同名 classic/UMD 檔由 `npm run build` 生成，請勿手改 |
+| `src/` | **ESM 來源**：`data/`（i18n、curriculum、outline、formulas、lessons）、`core/`（完整引擎 14 個模組）與 `ui/`（22 個介面模組：index/globals/format/router/state/i18n/selectors/visual/dom/a11y/context/screens/assessment/session/nav*/chrome/dialog/sw*/keyboard）；root 同名 classic/UMD 檔由 `npm run build` 生成，請勿手改 |
 | `index.html` | 頁面結構 |
 | `style.css` | 界面樣式 |
 | `app.js` | 界面交互、導航、進度、雙語切換 |
@@ -97,8 +97,9 @@ npm run build        # 輸出 dist/app.<hash>.js、dist/index.html、dist/sw.js
 ```
 
 - 建置是**決定性**的（文字檔先統一 LF、esbuild 版本納入 hash）：同一份 repo 在任何平台都產生相同的 `dist/`，CI 會用 `git status --porcelain -- dist` 檢查是否忘記提交建置結果。
-- 改完 `math-core.js` / `app.js` / `style.css` 等源碼後，記得 `npm run build` 並把 `dist/` 一併提交。
+- 改完 `src/data/`、`src/core/`、`src/ui/` 或 `style.css` 後，記得 `npm run build` 並把 `dist/` 與生成的 classic/UMD 檔一併提交。
 - Service Worker 的 precache 清單與 cache 版本由建置產出，不再手動維護。
+- 真實瀏覽器無障礙 gate：`npm run lighthouse`（需 Chrome/Edge，a11y ≥ 0.95；本機目前 1.000）。
 
 ### 測試
 
