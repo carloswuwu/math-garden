@@ -19,21 +19,25 @@
     var s = String(text);
     if (MathCore && typeof MathCore.formatMathText === "function") s = MathCore.formatMathText(s);
     if (s.indexOf("$") === -1) return esc(s);
-    var parts = s.split(/\$([^$]*)\$/);
+    var parts = s.split(/(\$\$[\s\S]+?\$\$|\$[^$]+\$)/);
     var out = "";
     for (var i = 0; i < parts.length; i++) {
-      if (i % 2 === 1) {
+      var part = parts[i];
+      var isDisplay = part.length > 4 && part.slice(0, 2) === "$$" && part.slice(-2) === "$$";
+      var isInline = part.length > 2 && part.charAt(0) === "$" && part.charAt(part.length - 1) === "$" && !isDisplay;
+      if (isDisplay || isInline) {
+        var tex = isDisplay ? part.slice(2, -2) : part.slice(1, -1);
         if (window.katex) {
           try {
-            out += window.katex.renderToString(parts[i], { throwOnError: false });
+            out += window.katex.renderToString(tex, { throwOnError: false, displayMode: isDisplay });
           } catch (e) {
-            out += esc(parts[i]);
+            out += esc(tex);
           }
         } else {
-          out += esc(parts[i]);
+          out += esc(tex);
         }
       } else {
-        out += esc(parts[i]);
+        out += esc(part);
       }
     }
     return out;
@@ -323,6 +327,8 @@
         return tpl("barchart");
       case "linegraph":
         return tpl("linegraph");
+      case "matrix":
+        return tpl("matrix", { a: v.a, b: v.b, c: v.c, d: v.d });
       case "percentgrid":
         return tpl("percentgrid", { pct: v.pct });
       case "twotri":
@@ -455,6 +461,9 @@
         break;
       case "linegraph":
         html = linegraphSVG(visual.values, visual.labels);
+        break;
+      case "matrix":
+        html = matrixHTML(visual);
         break;
       case "percentgrid":
         html = percentgridSVG(visual.pct);
@@ -620,6 +629,10 @@
     }
     s += "</svg>";
     return s;
+  }
+  function matrixHTML(v) {
+    var tex = "\\begin{bmatrix}" + v.a + " & " + v.b + " \\\\ " + v.c + " & " + v.d + "\\end{bmatrix}";
+    return '<div class="matrix-visual">' + renderMath("$$" + tex + "$$") + "</div>";
   }
   function linegraphSVG(values, labels) {
     var vals = values && values.length ? values : [2, 4, 3, 6];

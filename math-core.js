@@ -2802,8 +2802,8 @@ var __MathCoreBundle = (() => {
       return {
         type: "matrix",
         prompt: {
-          zh: "求矩陣 $\\begin{pmatrix}" + a + " & " + b + " \\\\ " + c + " & " + d + "\\end{pmatrix}$ 的行列式。",
-          en: "Find the determinant of $\\begin{pmatrix}" + a + " & " + b + " \\\\ " + c + " & " + d + "\\end{pmatrix}$."
+          zh: "求矩陣 $\\displaystyle\\begin{bmatrix}" + a + " & " + b + " \\\\ " + c + " & " + d + "\\end{bmatrix}$ 的行列式。",
+          en: "Find the determinant of $\\displaystyle\\begin{bmatrix}" + a + " & " + b + " \\\\ " + c + " & " + d + "\\end{bmatrix}$."
         },
         visual: null,
         answer: a * d - b * c,
@@ -2817,8 +2817,8 @@ var __MathCoreBundle = (() => {
     return {
       type: "matrix",
       prompt: {
-        zh: "設 $A = \\begin{pmatrix}" + A[0][0] + " & " + A[0][1] + " \\\\ " + A[1][0] + " & " + A[1][1] + "\\end{pmatrix}$，$B = \\begin{pmatrix}" + B[0][0] + " & " + B[0][1] + " \\\\ " + B[1][0] + " & " + B[1][1] + "\\end{pmatrix}$，求 $AB$ 的左上角元素。",
-        en: "Let $A = \\begin{pmatrix}" + A[0][0] + " & " + A[0][1] + " \\\\ " + A[1][0] + " & " + A[1][1] + "\\end{pmatrix}$ and $B = \\begin{pmatrix}" + B[0][0] + " & " + B[0][1] + " \\\\ " + B[1][0] + " & " + B[1][1] + "\\end{pmatrix}$. Find the top-left entry of $AB$."
+        zh: "設 $A = \\displaystyle\\begin{bmatrix}" + A[0][0] + " & " + A[0][1] + " \\\\ " + A[1][0] + " & " + A[1][1] + "\\end{bmatrix}$，$B = \\displaystyle\\begin{bmatrix}" + B[0][0] + " & " + B[0][1] + " \\\\ " + B[1][0] + " & " + B[1][1] + "\\end{bmatrix}$，求 $AB$ 的左上角元素。",
+        en: "Let $A = \\displaystyle\\begin{bmatrix}" + A[0][0] + " & " + A[0][1] + " \\\\ " + A[1][0] + " & " + A[1][1] + "\\end{bmatrix}$ and $B = \\displaystyle\\begin{bmatrix}" + B[0][0] + " & " + B[0][1] + " \\\\ " + B[1][0] + " & " + B[1][1] + "\\end{bmatrix}$. Find the top-left entry of $AB$."
       },
       visual: null,
       answer: entry,
@@ -4032,7 +4032,7 @@ var __MathCoreBundle = (() => {
     if (mode === "det") {
       return {
         type: "linalg2",
-        prompt: { zh: "求矩陣 $\\begin{pmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{pmatrix}$ 的行列式。", en: "Find the determinant of $\\begin{pmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{pmatrix}$." },
+        prompt: { zh: "求矩陣 $\\displaystyle\\begin{bmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{bmatrix}$ 的行列式。", en: "Find the determinant of $\\displaystyle\\begin{bmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{bmatrix}$." },
         visual: null,
         answer: a * d - b * c,
         math: { op: "linalg2", mode, a, b, c, d },
@@ -4042,7 +4042,7 @@ var __MathCoreBundle = (() => {
     var e = randInt(rng, 1, 6), f = randInt(rng, 1, 6), g = randInt(rng, 1, 6), h = randInt(rng, 1, 6);
     return {
       type: "linalg2",
-      prompt: { zh: "求 $\\begin{pmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{pmatrix}\\begin{pmatrix} " + e + " & " + f + " \\\\ " + g + " & " + h + " \\end{pmatrix}$ 的左上角元素。", en: "Find the top-left entry of $\\begin{pmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{pmatrix}\\begin{pmatrix} " + e + " & " + f + " \\\\ " + g + " & " + h + " \\end{pmatrix}$." },
+      prompt: { zh: "求 $\\displaystyle\\begin{bmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{bmatrix}\\displaystyle\\begin{bmatrix} " + e + " & " + f + " \\\\ " + g + " & " + h + " \\end{bmatrix}$ 的左上角元素。", en: "Find the top-left entry of $\\displaystyle\\begin{bmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{bmatrix}\\displaystyle\\begin{bmatrix} " + e + " & " + f + " \\\\ " + g + " & " + h + " \\end{bmatrix}$." },
       visual: null,
       answer: a * e + b * g,
       math: { op: "linalg2", mode, a, b, c, d, e, f, g, h },

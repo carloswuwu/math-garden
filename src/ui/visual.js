@@ -1,7 +1,7 @@
 /* 題目視覺（ESM）：SVG 圖示、文字替代與 renderVisual。 */
 import { MathCore } from './globals.js';
 import { t } from './i18n.js';
-import { esc } from './format.js';
+import { esc, renderMath } from './format.js';
 
 function dotsHTML(n, color) {
     var cls = 'dot';
@@ -67,6 +67,7 @@ function visualAlt(visual, math) {
       case 'numberline': return tpl('numberline');
       case 'barchart': return tpl('barchart');
       case 'linegraph': return tpl('linegraph');
+      case 'matrix': return tpl('matrix', { a: v.a, b: v.b, c: v.c, d: v.d });
       case 'percentgrid': return tpl('percentgrid', { pct: v.pct });
       case 'twotri': return tpl('twotri');
       case 'centre': return tpl('centre');
@@ -200,6 +201,9 @@ function renderVisual(container, visual, math) {
         break;
       case 'linegraph':
         html = linegraphSVG(visual.values, visual.labels);
+        break;
+      case 'matrix':
+        html = matrixHTML(visual);
         break;
       case 'percentgrid':
         html = percentgridSVG(visual.pct);
@@ -486,6 +490,11 @@ function numberlineSVG() {
     }
     s += '</svg>';
     return s;
+  }
+
+function matrixHTML(v) {
+    var tex = '\\begin{bmatrix}' + v.a + ' & ' + v.b + ' \\\\ ' + v.c + ' & ' + v.d + '\\end{bmatrix}';
+    return '<div class="matrix-visual">' + renderMath('$$' + tex + '$$') + '</div>';
   }
 
 function linegraphSVG(values, labels) {

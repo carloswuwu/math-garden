@@ -794,6 +794,15 @@ async function main() {
   wUnlock.__mathApp.navigate({ screen: 'lesson', skillId: 'grad.measure' });
   check(dUnlock.querySelector('#screen-lesson h1').textContent.indexOf('測度') !== -1, '一鍵解鎖後可開啟研究院測度論課');
 
+  /* 40. 矩陣以 KaTeX display math 排版（課程視覺化 + 題目） */
+  wUnlock.eval(fs.readFileSync(path.join(ROOT, 'vendor/katex/katex.min.js'), 'utf8'));
+  wUnlock.__mathApp.navigate({ screen: 'lesson', skillId: 'col.linalg2' });
+  check(!!dUnlock.querySelector('#lessonVisual .matrix-visual .katex'), '線代課以 KaTeX 顯示矩陣視覺化');
+  check(!!dUnlock.querySelector('#lessonVisual .katex-display'), '矩陣視覺化使用 display math');
+  wUnlock.__mathApp.navigate({ screen: 'practice', skillId: 'col.linalg2' });
+  check(!!dUnlock.querySelector('#screen-practice .prompt-text .katex'), '矩陣題目以 KaTeX 排版');
+
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }

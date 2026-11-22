@@ -2142,6 +2142,24 @@
       if (L[key][lang] && !L[key][lang].visual) L[key][lang].visual = GRAD_VISUALS[key];
     });
   });
+  if (L["col.linalg"]) {
+    L["col.linalg"].zh.intro = "二階行列式 $\\left|A\\right| = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix} = ad - bc$；矩陣乘積 $(AB)_{11} = a_{11}b_{11} + a_{12}b_{21}$。";
+    L["col.linalg"].en.intro = "The 2×2 determinant is $\\left|A\\right| = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix} = ad - bc$; the product entry is $(AB)_{11} = a_{11}b_{11} + a_{12}b_{21}$.";
+    L["col.linalg"].zh.example = "$A = \\begin{bmatrix} 2 & 1 \\\\ 0 & 3 \\end{bmatrix}$，$\\det A = 2\\times3 - 1\\times0 = 6$。";
+    L["col.linalg"].en.example = "$A = \\begin{bmatrix} 2 & 1 \\\\ 0 & 3 \\end{bmatrix}$, so $\\det A = 2\\times3 - 1\\times0 = 6$.";
+    L["col.linalg"].zh.steps[0] = "二階行列式 $\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix} = ad - bc$。";
+    L["col.linalg"].en.steps[0] = "For a 2×2 matrix, $\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix} = ad - bc$.";
+    L["col.linalg"].zh.visual = { kind: "matrix", a: 2, b: 1, c: 0, d: 3 };
+    L["col.linalg"].en.visual = { kind: "matrix", a: 2, b: 1, c: 0, d: 3 };
+  }
+  if (L["col.linalg2"]) {
+    L["col.linalg2"].zh.example = "$A = \\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}$，$\\det A = 1\\times4 - 2\\times3 = -2$。";
+    L["col.linalg2"].en.example = "$A = \\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}$, so $\\det A = 1\\times4 - 2\\times3 = -2$.";
+    L["col.linalg2"].zh.steps[1] = "矩陣乘法：$(AB)_{ij} = \\sum_k a_{ik} b_{kj}$，行乘列再相加。";
+    L["col.linalg2"].en.steps[1] = "Matrix product: $(AB)_{ij} = \\sum_k a_{ik} b_{kj}$, row times column.";
+    L["col.linalg2"].zh.visual = { kind: "matrix", a: 1, b: 2, c: 3, d: 4 };
+    L["col.linalg2"].en.visual = { kind: "matrix", a: 1, b: 2, c: 3, d: 4 };
+  }
 
   // data-entry.js
   (typeof window !== "undefined" ? window : globalThis).Lessons = L;

@@ -12,18 +12,22 @@ import { MathCore } from './globals.js';
     /* 純文字 caret 式子（4^3、x^(n−1)…）先包成 $...$，交由 KaTeX 排版 */
     if (MathCore && typeof MathCore.formatMathText === 'function') s = MathCore.formatMathText(s);
     if (s.indexOf('$') === -1) return esc(s);
-    var parts = s.split(/\$([^$]*)\$/);
+    var parts = s.split(/(\$\$[\s\S]+?\$\$|\$[^$]+\$)/);
     var out = '';
     for (var i = 0; i < parts.length; i++) {
-      if (i % 2 === 1) {
+      var part = parts[i];
+      var isDisplay = part.length > 4 && part.slice(0, 2) === '$$' && part.slice(-2) === '$$';
+      var isInline = part.length > 2 && part.charAt(0) === '$' && part.charAt(part.length - 1) === '$' && !isDisplay;
+      if (isDisplay || isInline) {
+        var tex = isDisplay ? part.slice(2, -2) : part.slice(1, -1);
         if (window.katex) {
-          try { out += window.katex.renderToString(parts[i], { throwOnError: false }); }
-          catch (e) { out += esc(parts[i]); }
+          try { out += window.katex.renderToString(tex, { throwOnError: false, displayMode: isDisplay }); }
+          catch (e) { out += esc(tex); }
         } else {
-          out += esc(parts[i]);
+          out += esc(tex);
         }
       } else {
-        out += esc(parts[i]);
+        out += esc(part);
       }
     }
     return out;
