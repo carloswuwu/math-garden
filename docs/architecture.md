@@ -9,13 +9,18 @@ This document is the current-state map; decision records live in [`docs/adr/`](a
 ## 1. Runtime topology
 
 ```
-index.html ── classic <script>s ──────────────────────────────┐
+src/data/*.js ── ESM source of truth (content) ──────────────┐
+  i18n / curriculum / curriculum-outline / formulas / lessons
+                                                             │
+                              tools/build.js step 0 (esbuild)
+                                                             ▼
+index.html ── classic root wrappers (generated) ──────────────┐
   ├─ vendor/katex/katex.min.js        (math typesetting)      │
   ├─ math-core.js      engine                                   │
-  ├─ i18n.js           UI strings                               │
-  ├─ curriculum.js     stages/skills/types/levels               │
-  ├─ curriculum-outline.js / formulas.js                        │
-  ├─ lessons.js        teaching content                         │
+  ├─ i18n.js           UI strings        (generated wrapper)    │
+  ├─ curriculum.js     content           (generated wrapper)    │
+  ├─ curriculum-outline.js / formulas.js (generated wrappers)   │
+  ├─ lessons.js        teaching content (generated wrapper)     │
   └─ app.js            router + screens + state                 │
                                                                ▼
                                               tools/build.js (esbuild)
@@ -27,20 +32,20 @@ index.html ── classic <script>s ──────────────�
                                                     GitHub Pages / file://
 ```
 
-- **Source of truth** is the seven classic-script files at the repo root; they communicate through explicit `window.*` globals and **script order matters** (see §4).
-- **Deployable artifact** is `dist/`, committed to the repo. `npm run build` is deterministic: sources are LF-normalised, the esbuild version participates in the hash, and CI fails if committed `dist/` differs from a fresh build.
+- **Source of truth** is now mixed: the five content modules live in `src/data/*.js` as **ESM**; `tools/build.js` step 0 bundles each into a generated classic wrapper at the repo root (`i18n.js`, `curriculum.js`, `curriculum-outline.js`, `formulas.js`, `lessons.js`) that assigns the same `window.*` global. `math-core.js` and `app.js` are still classic scripts and communicate through explicit `window.*` globals, so **script order still matters** (see §4).
+- **Deployable artifact** is `dist/`, committed to the repo. `npm run build` is deterministic: generated wrappers are LF-normalised, the esbuild version participates in the hash, and CI fails if committed `dist/` **or generated wrappers** differ from a fresh build.
 - **No bundler in dev**: opening root `index.html` from `file://` executes the classic scripts directly; opening `dist/index.html` runs the production IIFE. `play-math.bat` prefers `dist/`.
 
 ## 2. Source inventory
 
 | File | Responsibility | Public surface |
 | --- | --- | --- |
+| `src/data/i18n.js` | UI strings for `zh`/`en`, ARIA labels, visual alt templates (ESM source) | `I18N` export → generated `i18n.js` global |
+| `src/data/curriculum.js` | 15 stages (pre-K→S6 + 🏆 Challenge), 117 skills, type lists, difficulty levels, word-op tables, unlock metadata (ESM source) | `Curriculum` export → generated `curriculum.js` global |
+| `src/data/curriculum-outline.js` | Parent-facing syllabus outline (ESM source) | `CurriculumOutline` export → generated `curriculum-outline.js` |
+| `src/data/formulas.js` | Formula reference items tagged with skills (ESM source) | `Formulas` export → generated `formulas.js` |
+| `src/data/lessons.js` | 108 bilingual lessons (ESM source) | `Lessons` export → generated `lessons.js` |
 | `math-core.js` | RNG, value/fraction helpers, `GENERATORS`, `MATH_SPEC` oracle, `SOLVERS`, `generateProblem/Set`, `nextProblem`, `composeSet/composeExam`, `checkAnswer`, `explain`, `applyResult`, `applyQuizResult`, `sanitizeProgress`, `formatMathText` | `window.MathCore` |
-| `curriculum.js` | 15 stages (pre-K→S6 + 🏆 Challenge), 117 skills, type lists, difficulty levels, word-op tables, unlock metadata | `window.Curriculum` |
-| `curriculum-outline.js` | Parent-facing syllabus outline | `window.CurriculumOutline` |
-| `lessons.js` | 108 bilingual lessons (intro, steps, example, tip, mistake, optional visual) | `window.Lessons` |
-| `formulas.js` | Formula reference items tagged with skills | `window.Formulas` |
-| `i18n.js` | UI strings for `zh`/`en`, ARIA labels, visual alt templates | `window.I18N` |
 | `app.js` | Router, screens, state, progress, session, dialogs, SW update chip, language, a11y | `window.__mathApp` (test/debug API) |
 | `tools/build.js` / `tools/sw-template.js` | Deterministic bundle, dist assembly, SW generation | build script |
 | `tests/*.test.js` | Six suites: engine, UI (jsdom), generators, cross-layer contract, a11y (axe), performance budgets | `npm test` |
@@ -71,7 +76,7 @@ index.html ── classic <script>s ──────────────�
 katex → math-core → i18n → curriculum → curriculum-outline → formulas → lessons → app
 ```
 
-`app.js` reads globals at call time (not load time), so most cross-references are late-bound, but data modules must exist before app handlers run. This is the main target of Phase 5 modularization.
+The five content modules are now **generated classic wrappers** (ESM source lives in `src/data/`), but they still assign `window.*` globals at load time; `math-core.js` and `app.js` remain classic scripts. `app.js` reads globals at call time (not load time), so most cross-references are late-bound, but data modules must exist before app handlers run. Remaining Phase 5 modularization target: engine (`core/`) and UI (`ui/`) modules.
 
 ## 5. Routing and state machine
 
@@ -97,10 +102,11 @@ Hash routes are pure strings; `parseHash`/`serializeRoute`/`resolveRoute` valida
 
 ## 7. Build and deploy
 
-1. `node tools/build.js` reads sources in fixed order, normalises line endings, bundles with esbuild (IIFE), hashes content → `dist/app.<hash>.js`, copies HTML/CSS/icons/vendors, writes hashed SW cache name and precache list.
-2. `dist/` is committed; `.github/workflows/tests.yml` rebuilds and **fails on drift**, then runs six suites.
-3. `.github/workflows/pages.yml` deploys `dist/` **only when the Pages source is GitHub Actions**; until the one-time settings switch the live site is the legacy root deploy.
-4. SW: install precaches, activate waits for user confirmation (`#updateChip`), navigation is network-first with 3 s timeout + cache fallback; generated SW never auto-`skipWaiting`.
+1. **Step 0 — content modules:** `tools/build.js` bundles each `src/data/*.js` ESM module into a generated classic wrapper at the repo root (same `window.*` global as before).
+2. `node tools/build.js` reads the classic sources in fixed order, normalises line endings, bundles with esbuild (IIFE), hashes content → `dist/app.<hash>.js`, copies HTML/CSS/icons/vendors, writes hashed SW cache name and precache list.
+3. `dist/` and the generated wrappers are committed; `.github/workflows/tests.yml` rebuilds and **fails on drift** in either, then runs six suites.
+4. `.github/workflows/pages.yml` deploys `dist/` **only when the Pages source is GitHub Actions**; until the one-time settings switch the live site is the legacy root deploy.
+5. SW: install precaches, activate waits for user confirmation (`#updateChip`), navigation is network-first with 3 s timeout + cache fallback; generated SW never auto-`skipWaiting`.
 
 ## 8. Testing strategy
 
@@ -142,7 +148,7 @@ Budgets are deliberately 3–8× local measurements to absorb CI variance. They 
 Current source is order-coupled classic scripts; Phase 5 converts to ESM **while keeping the public API and the file:// classic build**:
 
 1. **Foundation** (done): architecture map, ADRs, performance budgets in CI.
-2. **Content modules**: `curriculum`, `curriculum-outline`, `formulas`, `lessons`, `i18n` → ESM exports; build produces the same IIFE public globals; tests import or evaluate the built bundle.
+2. **Content modules** (done): `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` now live in `src/data/*.js` as ESM; build step 0 generates the classic root wrappers with the unchanged `window.*` API; CI verifies wrappers are in sync.
 3. **Engine modules**: split `math-core.js` into `core/rng`, `core/values`, `core/generators/*`, `core/math-spec`, `core/explain`, `core/compose`, `core/progress`; a thin `core/index` keeps `window.MathCore`.
 4. **UI modules**: split `app.js` into `ui/router`, `ui/state`, `ui/screens/*`, `ui/dialog`, `ui/visual`, `ui/a11y`, `ui/sw`; `app/index` keeps `window.__mathApp`.
 5. **Tooling/tests**: tests load the built IIFE (contract/UI/a11y/perf) instead of seven `vm` evals; keep file:// by committing the classic bundle as today.
