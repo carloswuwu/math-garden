@@ -865,9 +865,10 @@
       a = randInt(rng, 2, 9); c = randInt(rng, 2, 12); answer = a * c;
       s = 'x ÷ ' + a + ' = ' + c;
     }
+    var texEq = s.replace(/−/g, '-');
     return {
       type: 'equation',
-      prompt: { zh: '求 x：' + s, en: 'Solve for x: ' + s },
+      prompt: { zh: '解方程 $' + texEq + '$，求 $x$。', en: 'Solve $' + texEq + '$ for $x$.' },
       visual: null,
       answer: answer,
       math: { op: 'equation', form: form, a: a, c: c },
@@ -1099,10 +1100,10 @@
     var b = randInt(rng, 1, 20);
     var plus = rng() < 0.5;
     var c = plus ? a * x + b : a * x - b;
-    var s = a + 'x ' + (plus ? '+' : '−') + ' ' + b + ' = ' + c;
+    var s = a + 'x ' + (plus ? '+' : '-') + ' ' + b + ' = ' + c;
     return {
       type: 'linear',
-      prompt: { zh: '求 x：' + s, en: 'Solve for x: ' + s },
+      prompt: { zh: '解方程 $' + s + '$，求 $x$。', en: 'Solve $' + s + '$ for $x$.' },
       visual: null,
       answer: x,
       math: { op: 'linear', a: a, b: b, c: c, x: x, form: plus ? '+' : '−' },
@@ -1148,8 +1149,8 @@
     return {
       type: 'simul',
       prompt: {
-        zh: '已知 ' + a + 'x + ' + b + 'y = ' + s + '，' + c + 'x + ' + d + 'y = ' + t + '，求 x。',
-        en: 'Given ' + a + 'x + ' + b + 'y = ' + s + ' and ' + c + 'x + ' + d + 'y = ' + t + ', find x.'
+        zh: '已知 $' + a + 'x + ' + b + 'y = ' + s + '$，$' + c + 'x + ' + d + 'y = ' + t + '$，求 $x$。',
+        en: 'Given $' + a + 'x + ' + b + 'y = ' + s + '$ and $' + c + 'x + ' + d + 'y = ' + t + '$, find $x$.'
       },
       visual: null,
       answer: x,
@@ -1394,7 +1395,7 @@
       visual: null,
       answer: a * Math.pow(r, n - 1),
       math: { op: 'gp', a: a, r: r, n: n },
-      hint: { zh: '第 n 項 = 首項 × 公比^(n−1)。', en: 'nth term = first × ratio^(n−1).' }
+      hint: { zh: '第 $n$ 項 $= a r^{n-1}$（首項 $a$、公比 $r$）。', en: 'nth term $= a r^{n-1}$ (first term $a$, ratio $r$).' }
     };
   }
 
@@ -1477,7 +1478,7 @@
     var askSum = rng() < 0.5;
     var bx = (sum > 0 ? '- ' + sum : '+ ' + (-sum));
     var cs = (prod > 0 ? '+ ' + prod : '- ' + (-prod));
-    var eq = 'x^2 ' + bx + 'x ' + cs + ' = 0';
+    var eq = 'x^{2} ' + bx + 'x ' + cs + ' = 0';
     return {
       type: 'quad',
       prompt: { zh: '設二次方程 $' + eq + '$ 的兩根為 α 和 β。求 $' + (askSum ? '\\alpha + \\beta' : '\\alpha\\beta') + '$。', en: 'The quadratic $' + eq + '$ has roots α and β. Find $' + (askSum ? '\\alpha + \\beta' : '\\alpha\\beta') + '$.' },
@@ -1803,7 +1804,7 @@
       var dcs = (dc > 0 ? '+ ' + dc : '- ' + (-dc));
       return {
         type: 'quadsolve',
-        prompt: { zh: '求方程 $x^2 ' + dbx + 'x ' + dcs + ' = 0$ 的判別式。', en: 'Find the discriminant of $x^2 ' + dbx + 'x ' + dcs + ' = 0$.' },
+        prompt: { zh: '求方程 $x^{2} ' + dbx + 'x ' + dcs + ' = 0$ 的判別式。', en: 'Find the discriminant of $x^{2} ' + dbx + 'x ' + dcs + ' = 0$.' },
         visual: null,
         answer: Math.pow(dp - dq, 2),
         math: { op: 'quadsolve', mode: 'disc', p: dp, q: dq, b: db, c: dc },
@@ -1830,8 +1831,8 @@
       return {
         type: 'quadsolve',
         prompt: {
-          zh: '方程 $x^2 ' + nbx + 'x ' + ncs + ' = 0$ 有幾個實根？',
-          en: 'How many real roots does $x^2 ' + nbx + 'x ' + ncs + ' = 0$ have?'
+          zh: '方程 $x^{2} ' + nbx + 'x ' + ncs + ' = 0$ 有幾個實根？',
+          en: 'How many real roots does $x^{2} ' + nbx + 'x ' + ncs + ' = 0$ have?'
         },
         visual: null,
         answer: nans,
@@ -1847,7 +1848,7 @@
     var b = -(p + q), c = p * q;
     var bx = (b > 0 ? '+ ' + b : '- ' + (-b));
     var cs = (c > 0 ? '+ ' + c : '- ' + (-c));
-    var eq = 'x^2 ' + bx + 'x ' + cs + ' = 0';
+    var eq = 'x^{2} ' + bx + 'x ' + cs + ' = 0';
     return {
       type: 'quadsolve',
       prompt: { zh: '解方程 $' + eq + '$，較大的根是多少？', en: 'Solve $' + eq + '$. What is the larger root?' },
@@ -2032,7 +2033,7 @@
     if (askDeg) {
       return {
         type: 'polycoeff',
-        prompt: { zh: '多項式 ' + term + ' 的次數是多少？', en: 'What is the degree of the polynomial ' + term + '?' },
+        prompt: { zh: '多項式 $' + term + '$ 的次數是多少？', en: 'What is the degree of the polynomial $' + term + '$?' },
         visual: null,
         answer: deg,
         math: { op: 'polycoeff', mode: 'deg', c: coeff, d: deg },
@@ -2041,7 +2042,7 @@
     }
     return {
       type: 'polycoeff',
-      prompt: { zh: '多項式 ' + term + ' + 3 中，$x^' + deg + '$ 的係數是多少？', en: 'In the polynomial ' + term + ' + 3, what is the coefficient of $x^' + deg + '$?' },
+      prompt: { zh: '多項式 $' + term + ' + 3$ 中，$x^' + deg + '$ 的係數是多少？', en: 'In the polynomial $' + term + ' + 3$, what is the coefficient of $x^' + deg + '$?' },
       visual: null,
       answer: coeff,
       math: { op: 'polycoeff', mode: 'coeff', c: coeff, d: deg },
@@ -2819,8 +2820,8 @@
       var m = p.math, ans = renderValue(p.answer);
       if (m.mode === 'sum') {
         return {
-          zh: ['前 n 項和 = a(rⁿ − 1) ÷ (r − 1)。', '= ' + m.a + ' × (' + m.r + '^' + m.n + ' − 1) ÷ (' + m.r + ' − 1) = ' + ans + '。'],
-          en: ['Sum of n terms = a(rⁿ − 1) ÷ (r − 1).', '= ' + m.a + ' × (' + m.r + '^' + m.n + ' − 1) ÷ (' + m.r + ' − 1) = ' + ans + '.']
+          zh: ['前 $n$ 項和 $S_n = \\frac{a(r^{n}-1)}{r-1}$。', '= $' + m.a + ' \\times \\frac{' + m.r + '^{' + m.n + '}-1}{' + m.r + '-1} = ' + ans + '$。'],
+          en: ['Sum of $n$ terms $S_n = \\frac{a(r^{n}-1)}{r-1}$.', '= $' + m.a + ' \\times \\frac{' + m.r + '^{' + m.n + '}-1}{' + m.r + '-1} = ' + ans + '$。']
         };
       }
       if (m.mode === 'inf') {
@@ -3067,7 +3068,7 @@
   };
 
   /* 回傳 { zh: [步驟...], en: [步驟...] }；不支援的題型回傳 null */
-  function explain(p) {
+  function explainRaw(p) {
     if (!p || !p.math) return null;
     if (p.solution) return p.solution;
     var solver = SOLVERS[p.type];
@@ -3357,8 +3358,8 @@
         };
       case 'gp':
         return {
-          zh: ['第 n 項 = 首項 × 公比^(n−1)。', '= ' + m.a + ' × ' + m.r + '^(' + m.n + ' − 1) = ' + p.answer + '。'],
-          en: ['nth term = first × ratio^(n−1).', '= ' + m.a + ' × ' + m.r + '^(' + m.n + ' − 1) = ' + p.answer + '.']
+          zh: ['第 $n$ 項 $a_n = a r^{n-1}$。', '= $' + m.a + ' \\times ' + m.r + '^{' + (m.n - 1) + '} = ' + p.answer + '$。'],
+          en: ['nth term $a_n = a r^{n-1}$.', '= $' + m.a + ' \\times ' + m.r + '^{' + (m.n - 1) + '} = ' + p.answer + '$.'],
         };
       case 'prob':
         return {
@@ -3949,6 +3950,16 @@
         zh: '十位在左、個位在右；十位數字代表幾個十。',
         en: 'Tens digit on the left, ones on the right; the tens digit counts tens.'
       }
+    };
+  }
+
+  /* 對外 explain：把解題步驟中的純文字 caret 也轉成 KaTeX 式子 */
+  function explain(p) {
+    var ex = explainRaw(p);
+    if (!ex) return null;
+    return {
+      zh: ex.zh.map(formatMathText),
+      en: ex.en.map(formatMathText)
     };
   }
 
@@ -4893,6 +4904,22 @@
     return '{' + keys.map(function (k) { return JSON.stringify(k) + ':' + stableStringify(value[k]); }).join(',') + '}';
   }
 
+  /* ---------------- 顯示用的數學格式 ----------------
+   * 生成器的題幹/提示/解題步驟有時會用純文字 caret（4^3、x^(n−1)）。
+   * 這個工具把「$...$ 以外」的 caret 式子包成 $...$，交由 KaTeX 排版；
+   * 已用 $...$ 的部分保持不動（避免重複包裹）。 */
+  var CARET_TOKEN_RE = /(?:\([A-Za-z0-9.+\-−×÷/ ]+\)|[A-Za-z0-9.]+)\s*\^\s*(?:\{[A-Za-z0-9.+\-−]+\}|\([A-Za-z0-9.+\-−]+\)|[A-Za-z0-9.]+)/g;
+
+  function formatMathText(text) {
+    if (typeof text !== 'string' || text.indexOf('^') === -1) return text;
+    return text.split(/(\$[^$]*\$)/).map(function (part, idx) {
+      if (idx % 2 === 1) return part; // 已在 $...$ 內
+      return part.replace(CARET_TOKEN_RE, function (tok) {
+        return '$' + tok.replace(/−/g, '-') + '$';
+      });
+    }).join('');
+  }
+
   /* 題目的穩定標識（完整 math 內容，用於去重與「避開最近題」） */
   function mathSig(math) {
     return stableStringify(math);
@@ -5085,6 +5112,13 @@
     /* 計算得出的分數答案一律化簡；「看圖寫分數」保留圖示的等份數 */
     if (isFraction(p.answer) && p.type !== 'fraction') p.answer = reduceFraction(p.answer);
     p.difficultyStep = step;
+    /* 顯示格式：純文字 caret 式子轉成 $...$（KaTeX） */
+    if (p.prompt) {
+      p.prompt = { zh: formatMathText(p.prompt.zh), en: formatMathText(p.prompt.en) };
+    }
+    if (p.hint) {
+      p.hint = { zh: formatMathText(p.hint.zh), en: formatMathText(p.hint.en) };
+    }
     p.answerMax = o.max;
     p.answerMin = o.min;
     /* 題級別可設 input:true → 鍵入答案（不提供選項，避免用猜的）。
@@ -5355,6 +5389,7 @@
     GENERATOR_TYPES: GENERATOR_TYPES,
     MATH_SPEC: MATH_SPEC,
     answerFromMath: answerFromMath,
+    formatMathText: formatMathText,
     templateSig: templateSig,
     contextSig: contextSig,
     composeSet: composeSet,

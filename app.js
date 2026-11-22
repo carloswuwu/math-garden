@@ -78,6 +78,8 @@
   /* 文字中的 $...$ 會用 KaTeX 渲染成數學式；其餘照常轉義（無 KaTeX 時退回純文字） */
   function renderMath(text) {
     var s = String(text);
+    /* 純文字 caret 式子（4^3、x^(n−1)…）先包成 $...$，交由 KaTeX 排版 */
+    if (MathCore && typeof MathCore.formatMathText === 'function') s = MathCore.formatMathText(s);
     if (s.indexOf('$') === -1) return esc(s);
     var parts = s.split(/\$([^$]*)\$/);
     var out = '';
@@ -1395,9 +1397,16 @@
       if (lesson.visual) {
         html += '<div class="lesson-visual" id="lessonVisual"></div>';
       }
+      if (l.steps && l.steps.length) {
+        html += '<div class="lesson-label">' + t('lesson.steps') + '</div><ol class="lesson-steps">' +
+          l.steps.map(function (step) { return '<li>' + renderMath(step) + '</li>'; }).join('') + '</ol>';
+      }
       html += '<div class="lesson-label">' + t('lesson.example') + '</div><p class="lesson-text">' + renderMath(l.example) + '</p>' +
-        '<div class="lesson-label">' + t('lesson.tip') + '</div><p class="lesson-text">' + renderMath(l.tip) + '</p>' +
-        '</div>' +
+        '<div class="lesson-label">' + t('lesson.tip') + '</div><p class="lesson-text">' + renderMath(l.tip) + '</p>';
+      if (l.mistake) {
+        html += '<div class="lesson-label">' + t('lesson.mistake') + '</div><p class="lesson-text lesson-mistake">' + renderMath(l.mistake) + '</p>';
+      }
+      html += '</div>' +
         '<div class="lesson-card" style="margin-top:12px">' +
         '<button class="btn secondary big" id="lessonExample" type="button">📖 ' + t('lesson.showExample') + '</button>' +
         '<div id="exampleBox" hidden></div>' +

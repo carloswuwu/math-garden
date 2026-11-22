@@ -22,7 +22,7 @@
     },
 
     lesson: {
-      title: '小課堂', intro: '講解', example: '舉例', tip: '小技巧',
+      title: '小課堂', intro: '講解', steps: '解題步驟', example: '舉例', tip: '小技巧', mistake: '常見錯誤',
       showExample: '看一步步示範', nextExample: '換一題',
       start: '開始練習', skip: '直接去測驗', later: '先練習'
     },
@@ -161,7 +161,7 @@
     },
 
     lesson: {
-      title: 'Lesson', intro: 'Learn', example: 'Example', tip: 'Tip',
+      title: 'Lesson', intro: 'Learn', steps: 'Steps', example: 'Example', tip: 'Tip', mistake: 'Common mistake',
       showExample: 'Step-by-step example', nextExample: 'Another one',
       start: 'Start Practice', skip: 'Skip to Quiz', later: 'Practice first'
     },

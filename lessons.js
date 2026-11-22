@@ -281,8 +281,8 @@
       visual: null
     },
     'hs.s5.gp': {
-      zh: { title: '等比數列', intro: '每項乘以固定的「公比」$r$。第 n 項 = 首項 × r^(n−1)。', example: '首項 2、公比 3，第 4 項 = 2 × 3³ = 54。', tip: '先找首項和公比。' },
-      en: { title: 'Geometric Sequences', intro: 'Each term is multiplied by a fixed common ratio $r$. nth term = first × r^(n−1).', example: 'First 2, ratio 3: 4th term = 2 × 3³ = 54.', tip: 'Find the first term and the ratio.' },
+      zh: { title: '等比數列', intro: '每項乘以固定的「公比」$r$。第 $n$ 項 $= a r^{n-1}$（首項為 $a$）。', example: '首項 $2$、公比 $3$，第 $4$ 項 $= 2 \\times 3^{3} = 54$。', tip: '先找首項和公比。' },
+      en: { title: 'Geometric Sequences', intro: 'Each term is multiplied by a fixed common ratio $r$: the $n$th term is $a r^{n-1}$.', example: 'First term $2$, ratio $3$: the 4th term is $2 \\times 3^{3} = 54$.', tip: 'Find the first term and the ratio.' },
       visual: null
     },
     'hs.s5.prob': {
@@ -516,8 +516,8 @@
       visual: { kind: 'circleang' }
     },
     'hs.s6.binomial': {
-      zh: { title: '二項式定理', intro: '(x+1)^n 展開式中，x^r 的係數 = C(n,r) = n!/(r!(n−r)!)。', example: '(x+1)^5 中 x² 的係數 = C(5,2) = 10。', tip: '係數就是組合數 C(n,r)。' },
-      en: { title: 'Binomial Theorem', intro: 'In (x+1)^n, the coefficient of x^r is C(n,r) = n!/(r!(n−r)!).', example: 'In (x+1)^5, coefficient of x² = C(5,2) = 10.', tip: 'The coefficient is the combination C(n,r).' },
+      zh: { title: '二項式定理', intro: '$(x+1)^{n}$ 展開式中，$x^{r}$ 的係數 $= \\binom{n}{r} = \\frac{n!}{r!(n-r)!}$。', example: '$(x+1)^{5}$ 中 $x^{2}$ 的係數 $= \\binom{5}{2} = 10$。', tip: '係數就是組合數 $\\binom{n}{r}$。' },
+      en: { title: 'Binomial Theorem', intro: 'In $(x+1)^{n}$, the coefficient of $x^{r}$ is $\\binom{n}{r} = \\frac{n!}{r!(n-r)!}$.', example: 'In $(x+1)^{5}$, the coefficient of $x^{2}$ is $\\binom{5}{2} = 10$.', tip: 'The coefficient is the combination $\\binom{n}{r}$.' },
       visual: null
     },
     'hs.s6.derivative': {
@@ -572,13 +572,13 @@
       visual: null
     },
     'hs.s6.binomial2': {
-      zh: { title: '二項式定理（一般項）', intro: '(x + a)ⁿ 展開式中 xʳ 的係數 = C(n, r) × a^(n−r)。', example: '(x + 2)⁴ 中 x² 的係數 = C(4,2) × 2² = 24。', tip: '先取組合數，再補上 a 的次方。' },
-      en: { title: 'Binomial Theorem (general term)', intro: 'In (x + a)ⁿ, the coefficient of xʳ is C(n, r) × a^(n−r).', example: 'In (x + 2)⁴, the coefficient of x² is C(4,2) × 2² = 24.', tip: 'Take the combination first, then the power of a.' },
+      zh: { title: '二項式定理（一般項）', intro: '$(x + a)^{n}$ 展開式中 $x^{r}$ 的係數 $= \\binom{n}{r} a^{n-r}$。', example: '$(x + 2)^{4}$ 中 $x^{2}$ 的係數 $= \\binom{4}{2} \\times 2^{2} = 24$。', tip: '先取組合數，再補上 $a$ 的次方。' },
+      en: { title: 'Binomial Theorem (general term)', intro: 'In $(x + a)^{n}$, the coefficient of $x^{r}$ is $\\binom{n}{r} a^{n-r}$.', example: 'In $(x + 2)^{4}$, the coefficient of $x^{2}$ is $\\binom{4}{2} \\times 2^{2} = 24$.', tip: 'Take the combination first, then the power of $a$.' },
       visual: null
     },
     'col.calculus': {
-      zh: { title: '微積分', intro: 'd/dx(axⁿ) = a·n·x^(n−1)；∫₀ᵇ axⁿ dx = a·b^(n+1)/(n+1)。', example: 'f(x) = 3x²，f′(2) = 3 × 2 × 2 = 12。', tip: '先微分／積分，再代入數值。' },
-      en: { title: 'Calculus', intro: 'd/dx(axⁿ) = a·n·x^(n−1); ∫₀ᵇ axⁿ dx = a·b^(n+1)/(n+1).', example: 'For f(x) = 3x², f′(2) = 12.', tip: 'Differentiate or integrate first, then substitute.' },
+      zh: { title: '微積分', intro: '$\\frac{d}{dx}(ax^{n}) = a n x^{n-1}$；$\\int_{0}^{b} ax^{n}\\,dx = \\frac{a b^{n+1}}{n+1}$。', example: '$f(x) = 3x^{2}$，$f\'(2) = 3 \\times 2 \\times 2 = 12$。', tip: '先微分／積分，再代入數值。' },
+      en: { title: 'Calculus', intro: '$\\frac{d}{dx}(ax^{n}) = a n x^{n-1}$; $\\int_{0}^{b} ax^{n}\\,dx = \\frac{a b^{n+1}}{n+1}$.', example: 'For $f(x) = 3x^{2}$, $f\'(2) = 12$.', tip: 'Differentiate or integrate first, then substitute.' },
       visual: null
     },
     'col.linalg': {
@@ -592,8 +592,8 @@
       visual: null
     },
     'challenge.nt': {
-      zh: { title: '數論挑戰', intro: '餘數、因數倍數與同餘是競賽數論的三大法寶。大指數取餘數時，每乘一次就取餘數；同餘問題可以先列出其中一個條件的所有可能，再檢查另一個。', example: '例：2^5 ÷ 7 的餘數——2→4→1→2→4，所以餘 4。', tip: '不要死算大數，善用「取餘數」和「找出週期」。' },
-      en: { title: 'Number Theory Challenge', intro: 'Remainders, factors/multiples and congruences are the toolkit of olympiad number theory. Take the remainder after each multiplication for powers, and for simultaneous remainders list the numbers satisfying one condition then test the other.', example: 'Example: 2^5 ÷ 7 — remainders go 2→4→1→2→4, so the answer is 4.', tip: 'Avoid huge numbers: reduce modulo at every step and look for cycles.' },
+      zh: { title: '數論挑戰', intro: '餘數、因數倍數與同餘是競賽數論的三大法寶。大指數取餘數時，每乘一次就取餘數；同餘問題可以先列出其中一個條件的所有可能，再檢查另一個。', example: '例：$2^{5} \\div 7$ 的餘數——$2 \\to 4 \\to 1 \\to 2 \\to 4$，所以餘 $4$。', tip: '不要死算大數，善用「取餘數」和「找出週期」。' },
+      en: { title: 'Number Theory Challenge', intro: 'Remainders, factors/multiples and congruences are the toolkit of olympiad number theory. Take the remainder after each multiplication for powers, and for simultaneous remainders list the numbers satisfying one condition then test the other.', example: 'Example: $2^{5} \\div 7$ — remainders go $2 \\to 4 \\to 1 \\to 2 \\to 4$, so the answer is $4$.', tip: 'Avoid huge numbers: reduce modulo at every step and look for cycles.' },
       visual: null
     },
     'challenge.count': {
@@ -617,11 +617,357 @@
       visual: null
     },
     'challenge.prob': {
-      zh: { title: '概率遊戲', intro: '古典概率 = 有利結果數 ÷ 所有等可能結果數。兩粒骰子共 36 個結果；n 枚硬幣共 2^n 個。', example: '例：兩粒骰子和為 7 有 6 個結果，概率 = 6/36 = 1/6。', tip: '先把所有結果列成整齊的表格，再數有利結果。' },
-      en: { title: 'Probability Games', intro: 'Classical probability = favourable outcomes ÷ equally likely outcomes. Two dice have 36 outcomes; n coins have 2^n.', example: 'Example: sum 7 with two dice has 6 outcomes, so P = 6/36 = 1/6.', tip: 'Write all outcomes as a neat table first, then count the favourable ones.' },
+      zh: { title: '概率遊戲', intro: '古典概率 $= \\frac{\\text{有利結果數}}{\\text{所有等可能結果數}}$。兩粒骰子共 $36$ 個結果；$n$ 枚硬幣共 $2^{n}$ 個。', example: '例：兩粒骰子和為 $7$ 有 $6$ 個結果，概率 $= \\frac{6}{36} = \\frac{1}{6}$。', tip: '先把所有結果列成整齊的表格，再數有利結果。' },
+      en: { title: 'Probability Games', intro: 'Classical probability $= \\frac{\\text{favourable outcomes}}{\\text{equally likely outcomes}}$. Two dice have $36$ outcomes; $n$ coins have $2^{n}$.', example: 'Example: sum $7$ with two dice has $6$ outcomes, so $P = \\frac{6}{36} = \\frac{1}{6}$.', tip: 'Write all outcomes as a neat table first, then count the favourable ones.' },
       visual: null
     }
   };
+
+
+  /* ---------- 教學深化：較抽象的課堂加入解題步驟與常見錯誤 ----------
+   * 只覆寫指定欄位（intro 可選），其餘課堂內容保持原樣；
+   * 渲染器會顯示 steps / mistake（向後兼容，沒有這兩個欄位的課堂不受影響）。 */
+  var LESSON_DEEPEN = {
+    'generic.word': {
+      zh: {
+        intro: '應用題不是「看到數字就加減」：先理解情境，再把文字翻譯成算式。流程是：讀題 → 找已知與未知 → 選運算／列式 → 計算 → 檢查。',
+        steps: [
+          '讀題兩次：第一次理解故事，第二次圈出數字和關鍵詞（一共、還剩、每、平均、比……多）。',
+          '寫下「已知」和「要求」，用代號表示未知量；必要時畫線段圖或表格。',
+          '把文字翻譯成算式；多步題先問「先求什麼、再求什麼」。',
+          '計算後用估算或逆運算檢查，並確認單位一致。'
+        ],
+        mistake: '只抓數字就隨便加減，沒有先問「題目在問什麼」；或忽略單位不同（例如分鐘與小時）就直接相加。'
+      },
+      en: {
+        intro: 'A word problem is not “see numbers, add or subtract”: first understand the situation, then translate the words into an equation. Read → identify knowns and unknowns → choose operations and set up → calculate → check.',
+        steps: [
+          'Read twice: once for the story, once to circle the numbers and key words (total, left, each, average, more than...).',
+          'Write down the given information and what is asked; use a letter for the unknown and draw a bar model or table if needed.',
+          'Translate the words into an equation; for multi-step problems, decide what to find first.',
+          'Check with estimation or the inverse operation, and make sure the units match.'
+        ],
+        mistake: 'Grabbing the numbers and adding or subtracting at random instead of asking what the question means; or adding quantities with different units (minutes and hours) without converting.'
+      }
+    },
+    'g6.percent': {
+      zh: {
+        intro: '百分數是分母 100 的分數：$25\\% = \\frac{25}{100} = 0.25$。求「某數的百分之幾」用乘法；比較兩數用「部分 $\\div$ 全部 $\\times 100\\%$」。',
+        steps: [
+          '把百分數化成小數或分數（$25\\% = 0.25$）。',
+          '求某數的 $p\\%$：該數 $\\times \\frac{p}{100}$。',
+          '折扣：原價 $\\times (1-\\text{折扣率})$；加價／增長：原值 $\\times (1+\\text{增長率})$。',
+          '檢查：折扣後應比原價小，增長後應比原值大。'
+        ],
+        mistake: '把增長率和折扣率的基數搞錯；以為「先加 $20\\%$ 再減 $20\\%$」會回到原價。'
+      },
+      en: {
+        intro: 'A percentage is a fraction with denominator 100: $25\\% = \\frac{25}{100} = 0.25$. “Percent of a number” uses multiplication; comparing two numbers uses part $\\div$ whole $\\times 100\\%$.',
+        steps: [
+          'Change the percentage to a decimal or fraction ($25\\% = 0.25$).',
+          'To find $p\\%$ of a number: multiply by $\\frac{p}{100}$.',
+          'Discount: original $\\times (1-\\text{rate})$; increase: original $\\times (1+\\text{rate})$.',
+          'Check: a discount makes the price smaller; an increase makes it larger.'
+        ],
+        mistake: 'Using the wrong base for the percentage; assuming “add $20\\%$ then subtract $20\\%$” returns to the original value.'
+      }
+    },
+    'g6.ratio': {
+      zh: {
+        intro: '比 $a:b$ 表示 $a$ 份對 $b$ 份；解題關鍵是先求「一份代表多少」。',
+        steps: [
+          '把比看成份數：$a:b$ = $a$ 份 : $b$ 份。',
+          '求一份：總量 $\\div$ 總份數；或題目給的一邊 $\\div$ 它的份數。',
+          '按份數分配：所求 $=$ 一份 $\\times$ 所求份數。',
+          '驗算：各部分加起來等於總量。'
+        ],
+        mistake: '把比 $3:2$ 直接當成「3 和 2 個」；或把「甲比乙多幾份」和「甲是乙的幾倍」混淆。'
+      },
+      en: {
+        intro: 'The ratio $a:b$ means $a$ parts to $b$ parts; the key is to find what one part is worth.',
+        steps: [
+          'Treat the ratio as parts: $a:b$ = $a$ parts : $b$ parts.',
+          'Find one part: total $\\div$ total parts, or the given side $\\div$ its number of parts.',
+          'Share by parts: required = one part $\\times$ required number of parts.',
+          'Check: the parts must add up to the total.'
+        ],
+        mistake: 'Treating $3:2$ as the actual amounts 3 and 2; confusing “how many more parts A has” with “how many times A is of B”.'
+      }
+    },
+    'ms.s1.linear': {
+      zh: {
+        intro: '解一元一次方程的目標：把 $x$ 單獨留在等號一邊。原則是等式兩邊同時做同一件事。',
+        steps: [
+          '去括號、去分母（若有），把含 $x$ 的項集中一邊、常數集中另一邊。',
+          '移項要變號：加變減、減變加。',
+          '合併同類項，兩邊同除以 $x$ 的係數。',
+          '把答案代回原方程驗算。'
+        ],
+        mistake: '移項忘記變號；或兩邊除以係數時只除了一邊。'
+      },
+      en: {
+        intro: 'The goal when solving a linear equation is to get $x$ alone on one side. Whatever you do to one side, do to the other.',
+        steps: [
+          'Remove brackets and denominators; collect $x$ terms on one side and constants on the other.',
+          'When moving a term across the equals sign, flip its sign.',
+          'Combine like terms, then divide both sides by the coefficient of $x$.',
+          'Substitute the answer back into the original equation to check.'
+        ],
+        mistake: 'Forgetting to flip a sign when moving a term; dividing only one side by the coefficient.'
+      }
+    },
+    'ms.s1.exprsub': {
+      zh: {
+        intro: '代入求值：把字母換成給定的數，再按運算順序計算。',
+        steps: [
+          '把數字用括號代入，例如 $x=-3$ 時 $2x$ 寫成 $2(-3)$。',
+          '先算括號，再乘除，最後加減。',
+          '負數相乘：負負得正；減負數等於加正數。',
+          '寫出完整算式，逐步化簡。'
+        ],
+        mistake: '代入負數時不加括號，例如把 $2x$ 錯算成 $2-3$。'
+      },
+      en: {
+        intro: 'Substitution: replace each letter with the given number, then calculate in the correct order.',
+        steps: [
+          'Put the number in brackets, e.g. when $x=-3$, write $2x$ as $2(-3)$.',
+          'Brackets first, then multiplication/division, then addition/subtraction.',
+          'Negative times negative is positive; subtracting a negative is adding.',
+          'Write the full expression and simplify step by step.'
+        ],
+        mistake: 'Substituting a negative number without brackets, e.g. computing $2x$ as $2-3$.'
+      }
+    },
+    'ms.s2.pythagoras': {
+      zh: {
+        intro: '畢氏定理：直角三角形兩條直角邊的平方和等於斜邊平方，$a^{2}+b^{2}=c^{2}$（$c$ 為斜邊）。',
+        steps: [
+          '先確認是直角三角形，斜邊是直角對面最長的一邊。',
+          '寫出 $a^{2}+b^{2}=c^{2}$。',
+          '求斜邊：$c=\\sqrt{a^{2}+b^{2}}$；求直角邊：$a=\\sqrt{c^{2}-b^{2}}$。',
+          '檢查斜邊必須長於另外兩邊。'
+        ],
+        mistake: '把最長邊以外的邊當成斜邊；求直角邊時仍用加法，忘記開平方根。'
+      },
+      en: {
+        intro: 'Pythagoras: in a right triangle, the squares of the two legs add up to the square of the hypotenuse, $a^{2}+b^{2}=c^{2}$ ($c$ is the hypotenuse).',
+        steps: [
+          'Confirm it is a right triangle; the hypotenuse is the longest side opposite the right angle.',
+          'Write $a^{2}+b^{2}=c^{2}$.',
+          'Hypotenuse: $c=\\sqrt{a^{2}+b^{2}}$; leg: $a=\\sqrt{c^{2}-b^{2}}$.',
+          'Check that the hypotenuse is longer than each leg.'
+        ],
+        mistake: 'Treating a leg as the hypotenuse; using addition instead of subtraction (and forgetting the square root) when finding a leg.'
+      }
+    },
+    'ms.s2.simul': {
+      zh: {
+        intro: '聯立方程用消元法：把兩式乘以適當倍數，令某個未知數的係數相同或相反，再相加／相減消去它。',
+        steps: [
+          '把兩條方程整理成 $ax+by=c$ 的標準式。',
+          '選定要消去的未知數，把兩式乘以適當倍數。',
+          '相加或相減消去該未知數，解出剩下的一個。',
+          '代回任一條方程求另一個未知數，並代入兩式驗算。'
+        ],
+        mistake: '只把方程的一邊乘以倍數；或相減時符號處理錯。'
+      },
+      en: {
+        intro: 'Solve simultaneous equations by elimination: multiply the equations so that one variable has equal or opposite coefficients, then add or subtract to remove it.',
+        steps: [
+          'Write both equations in the form $ax+by=c$.',
+          'Choose a variable to eliminate and multiply each equation as needed.',
+          'Add or subtract to eliminate it, then solve the remaining equation.',
+          'Substitute back into either equation, then check both.'
+        ],
+        mistake: 'Multiplying only one side of an equation; mishandling signs when subtracting.'
+      }
+    },
+    'ms.s3.indices': {
+      zh: {
+        intro: '指數定律（同底數）：$a^{m}\\times a^{n}=a^{m+n}$、$a^{m}\\div a^{n}=a^{m-n}$、$(a^{m})^{n}=a^{mn}$、$(ab)^{n}=a^{n}b^{n}$。',
+        steps: [
+          '先確認底數相同；不同底數先化成同底。',
+          '乘法：指數相加；除法：指數相減。',
+          '括號乘方：指數相乘；積的乘方：每個因數各自乘方。',
+          '結果能化簡就化簡（例如 $2^{5}=32$）。'
+        ],
+        mistake: '把 $a^{m}\\times a^{n}$ 算成 $a^{mn}$；混淆負指數與零指數。'
+      },
+      en: {
+        intro: 'Laws of indices with the same base: $a^{m}\\times a^{n}=a^{m+n}$, $a^{m}\\div a^{n}=a^{m-n}$, $(a^{m})^{n}=a^{mn}$, $(ab)^{n}=a^{n}b^{n}$.',
+        steps: [
+          'Check the bases; if different, rewrite them with a common base first.',
+          'Multiplication: add exponents; division: subtract exponents.',
+          'Power of a power: multiply exponents; power of a product: apply the power to each factor.',
+          'Simplify the result where possible (e.g. $2^{5}=32$).'
+        ],
+        mistake: 'Writing $a^{m}\\times a^{n}$ as $a^{mn}$; confusing negative and zero exponents.'
+      }
+    },
+    'hs.s4.quadsolve': {
+      zh: {
+        intro: '二次方程 $ax^{2}+bx+c=0$：能因式分解就因式分解，否則用公式 $x=\\frac{-b\\pm\\sqrt{b^{2}-4ac}}{2a}$。',
+        steps: [
+          '整理成 $ax^{2}+bx+c=0$ 並確認 $a\\neq0$。',
+          '嘗試因式分解：找 $p,q$ 使 $p+q=-b$、$pq=c$（當 $a=1$）。',
+          '寫成 $(x-p)(x-q)=0$，根為 $p,q$。',
+          '若不能分解，先算判別式 $b^{2}-4ac$，再代入公式。'
+        ],
+        mistake: '因式分解時符號錯；或忘記檢查判別式而強行開根號。'
+      },
+      en: {
+        intro: 'Quadratic $ax^{2}+bx+c=0$: factorise if possible; otherwise use $x=\\frac{-b\\pm\\sqrt{b^{2}-4ac}}{2a}$.',
+        steps: [
+          'Rearrange into $ax^{2}+bx+c=0$ and confirm $a\\neq0$.',
+          'Try factorising: find $p,q$ with $p+q=-b$ and $pq=c$ (when $a=1$).',
+          'Write $(x-p)(x-q)=0$; the roots are $p$ and $q$.',
+          'If it does not factorise, evaluate $b^{2}-4ac$ and use the formula.'
+        ],
+        mistake: 'Making sign errors in the factors; taking square roots without checking the discriminant.'
+      }
+    },
+    'hs.s4.log': {
+      zh: {
+        intro: '對數是指數的逆運算：$\\log_b x=y \\iff b^{y}=x$（$b>0$、$b\\neq1$、$x>0$）。',
+        steps: [
+          '把對數式改寫成指數式：$\\log_b x=y \\iff b^{y}=x$。',
+          '同底相加：$\\log m+\\log n=\\log(mn)$；相減：$\\log m-\\log n=\\log\\frac{m}{n}$。',
+          '係數移入真數：$k\\log m=\\log(m^{k})$。',
+          '解方程後檢查真數 $>0$。'
+        ],
+        mistake: '把 $\\log(m+n)$ 當成 $\\log m+\\log n$；忽略真數必須大於 0。'
+      },
+      en: {
+        intro: 'A logarithm is the inverse of a power: $\\log_b x=y \\iff b^{y}=x$ ($b>0$, $b\\neq1$, $x>0$).',
+        steps: [
+          'Rewrite the log as an exponential: $\\log_b x=y \\iff b^{y}=x$.',
+          'Same base: $\\log m+\\log n=\\log(mn)$; $\\log m-\\log n=\\log\\frac{m}{n}$.',
+          'Move a coefficient into the argument: $k\\log m=\\log(m^{k})$.',
+          'After solving, check that every argument is $>0$.'
+        ],
+        mistake: 'Treating $\\log(m+n)$ as $\\log m+\\log n$; ignoring the domain $x>0$.'
+      }
+    },
+    'hs.s5.ap': {
+      zh: {
+        intro: '等差數列：後一項減前一項等於固定公差 $d$。第 $n$ 項 $a_n=a+(n-1)d$，前 $n$ 項和 $S_n=\\frac{n}{2}[2a+(n-1)d]$。',
+        steps: [
+          '由相鄰兩項求公差 $d$。',
+          '確認首項 $a$；第 $n$ 項用 $a+(n-1)d$。',
+          '求和可用公式，或配對首尾：$S_n=\\frac{n(a_1+a_n)}{2}$。',
+          '檢查所求是「某一項」還是「前 $n$ 項和」。'
+        ],
+        mistake: '項數算錯（第 $n$ 項只加了 $n-1$ 次公差）；把第 $n$ 項與前 $n$ 項和的公式混用。'
+      },
+      en: {
+        intro: 'Arithmetic sequence: consecutive terms differ by a fixed common difference $d$. nth term $a_n=a+(n-1)d$; sum $S_n=\\frac{n}{2}[2a+(n-1)d]$.',
+        steps: [
+          'Find $d$ from two neighbouring terms.',
+          'Identify the first term $a$; use $a+(n-1)d$ for the nth term.',
+          'Use the sum formula, or pair first and last: $S_n=\\frac{n(a_1+a_n)}{2}$.',
+          'Check whether the question asks for a term or a sum.'
+        ],
+        mistake: 'Getting the number of terms wrong (adding $d$ only $n-1$ times); mixing up the nth-term and sum formulas.'
+      }
+    },
+    'hs.s6.stats': {
+      zh: {
+        intro: '中位數：排序後取中間。單數個取正中間；雙數個取中間兩個的平均。',
+        steps: [
+          '先把數據由小到大排序，數清楚共有 $n$ 個。',
+          '$n$ 為單數：中位數是第 $\\frac{n+1}{2}$ 個。',
+          '$n$ 為雙數：中位數是第 $\\frac{n}{2}$ 與第 $\\frac{n}{2}+1$ 個的平均。',
+          '若同時問平均數：總和 $\\div n$；留意極端值對平均數影響較大。'
+        ],
+        mistake: '沒有排序就直接取中間；雙數個數據只取其中一個。'
+      },
+      en: {
+        intro: 'Median: sort the data and take the middle. For an odd count use the middle value; for an even count average the two middle values.',
+        steps: [
+          'Sort the data from smallest to largest and count $n$.',
+          'Odd $n$: the median is the $\\frac{n+1}{2}$-th value.',
+          'Even $n$: average the $\\frac{n}{2}$-th and $(\\frac{n}{2}+1)$-th values.',
+          'If asked for the mean too: total $\\div n$; outliers affect the mean more.'
+        ],
+        mistake: 'Taking a middle value without sorting; for an even count using only one of the two middle values.'
+      }
+    },
+    'hs.s6.derivative': {
+      zh: {
+        intro: '冪函數求導：若 $f(x)=ax^{n}$，則 $f\'(x)=anx^{n-1}$；常數的導數是 $0$。',
+        steps: [
+          '把指數 $n$ 乘到係數前面。',
+          '指數減 $1$ 成為新的指數。',
+          '常數項的導數是 $0$。',
+          '要求某一點的導數值時，把 $x$ 代入導函數。'
+        ],
+        mistake: '忘記常數項導數為 0；乘了係數卻忘記把次方減 1。'
+      },
+      en: {
+        intro: 'Differentiating powers: if $f(x)=ax^{n}$ then $f\'(x)=anx^{n-1}$; the derivative of a constant is $0$.',
+        steps: [
+          'Multiply the coefficient by the exponent $n$.',
+          'Reduce the exponent by $1$.',
+          'The derivative of a constant term is $0$.',
+          'For the derivative at a point, substitute the $x$-value into the derivative.'
+        ],
+        mistake: 'Forgetting that a constant differentiates to 0; multiplying by the exponent but forgetting to reduce the power.'
+      }
+    },
+    'col.calculus': {
+      zh: {
+        intro: '微分：$\\frac{d}{dx}(ax^{n})=anx^{n-1}$；定積分：$\\int_0^b ax^{n}\\,dx=\\frac{a b^{n+1}}{n+1}$（$n\\neq-1$）。',
+        steps: [
+          '微分：指數乘到前面，次方減 1；常數導數 0。',
+          '積分：次方加 1，再除以新次方。',
+          '定積分先求原函數，再代入上限減下限。',
+          '檢查次數與符號是否合理。'
+        ],
+        mistake: '積分忘記除以新次方；定積分忘記代入上下限。'
+      },
+      en: {
+        intro: 'Differentiation: $\\frac{d}{dx}(ax^{n})=anx^{n-1}$; definite integral: $\\int_0^b ax^{n}\\,dx=\\frac{a b^{n+1}}{n+1}$ ($n\\neq-1$).',
+        steps: [
+          'Differentiate: multiply by the exponent, then reduce the power by 1; constants give 0.',
+          'Integrate: add 1 to the power, then divide by the new power.',
+          'For a definite integral, find the antiderivative, then substitute upper minus lower.',
+          'Check the degree and sign of the answer.'
+        ],
+        mistake: 'Forgetting to divide by the new power when integrating; omitting the limits in a definite integral.'
+      }
+    },
+    'ms.s3.prob': {
+      zh: {
+        intro: '古典概率：$P=\\frac{\\text{有利結果數}}{\\text{所有等可能結果數}}$。概率一定在 $0$ 與 $1$ 之間。',
+        steps: [
+          '列出所有等可能的結果，數出總數。',
+          '數出符合條件的有利結果。',
+          '相除並約至最簡分數。',
+          '檢查 $0\\le P\\le1$；所有可能結果的概率和應為 $1$。'
+        ],
+        mistake: '把有利結果與總數倒轉；忘記約簡，或把互斥事件重複計算。'
+      },
+      en: {
+        intro: 'Classical probability: $P=\\frac{\\text{favourable outcomes}}{\\text{all equally likely outcomes}}$, always between $0$ and $1$.',
+        steps: [
+          'List all equally likely outcomes and count the total.',
+          'Count the favourable outcomes.',
+          'Divide and simplify the fraction.',
+          'Check $0\\le P\\le1$; the probabilities of all outcomes should sum to $1$.'
+        ],
+        mistake: 'Swapping favourable outcomes and total; forgetting to simplify, or double-counting mutually exclusive events.'
+      }
+    }
+  };
+
+  Object.keys(LESSON_DEEPEN).forEach(function (key) {
+    if (!L[key]) return;
+    ['zh', 'en'].forEach(function (lang) {
+      var d = LESSON_DEEPEN[key][lang];
+      if (!d) return;
+      Object.keys(d).forEach(function (field) { L[key][lang][field] = d[field]; });
+    });
+  });
 
   root.Lessons = L;
 })(typeof window !== 'undefined' ? window : globalThis);
