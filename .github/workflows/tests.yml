@@ -36,3 +36,5 @@ jobs:
         run: node tests/contract.test.js
       - name: Accessibility tests (jsdom + axe-core)
         run: node tests/a11y.test.js
+      - name: Performance budgets (engine p95, render, bundle/precache sizes)
+        run: node tests/perf.test.js
