@@ -727,6 +727,10 @@ h1, h2, h3, p { margin: 0; }
   border-radius: 6px;
   padding: 8px 12px;
 }
+.lesson-glossary { margin: 6px 0 12px; display: grid; gap: 6px; }
+.lesson-glossary > div { display: flex; gap: 8px; align-items: baseline; }
+.lesson-glossary dt { font-weight: 800; color: var(--ink); min-width: 5.5em; }
+.lesson-glossary dd { margin: 0; color: var(--ink-2); }
 
 /* ---------- 鍵入答案（挑戰區：不提供選項） ---------- */
 .answer-row { display: flex; gap: 10px; align-items: stretch; margin-bottom: 8px; }
