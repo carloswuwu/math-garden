@@ -53,7 +53,7 @@ const CJK = /[\u4e00-\u9fff]/;
   });
 
   /* Stage D：引擎 ESM 來源（rng/values/index）與生成的 UMD math-core wrapper */
-  ['rng', 'values', 'facts', 'math-spec', 'progress', 'index'].forEach((name) => {
+  ['rng', 'values', 'facts', 'display', 'generators', 'math-spec', 'progress', 'index'].forEach((name) => {
     const p = path.join(ROOT, 'src', 'core', name + '.js');
     check(fs.existsSync(p), '缺少 ESM 引擎模組 src/core/' + name + '.js');
     check(/export\s+(const|\{|function|\{)/.test(fs.readFileSync(p, 'utf8')), 'src/core/' + name + '.js 應是 ESM 匯出');

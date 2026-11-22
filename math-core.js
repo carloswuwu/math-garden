@@ -577,178 +577,29 @@ var __MathCoreBundle = (() => {
     return spec(m);
   }
 
-  // src/core/progress.js
-  function defaultSkillProgress() {
-    return {
-      attempts: 0,
-      correct: 0,
-      consecCorrect: 0,
-      consecWrong: 0,
-      difficultyStep: 0,
-      lastSeen: 0,
-      typeAcc: {},
-      stars: 0,
-      mastered: false,
-      quizStars: 0,
-      quizBest: 0,
-      lastProblems: []
-    };
+  // src/core/display.js
+  function fmtDecimal(tenths) {
+    var neg = tenths < 0;
+    var v = Math.abs(tenths);
+    return (neg ? "-" : "") + Math.floor(v / 10) + "." + v % 10;
   }
-  function newProgress() {
-    return { version: 2, lang: "zh", sound: true, theme: "light", stars: 0, streak: { lastDay: null, count: 0 }, badges: [], skills: {}, stageExams: {} };
+  function fmtNum(n) {
+    return n < 0 ? "(" + n + ")" : "" + n;
   }
-  function sanitizeProgress(input) {
-    var base = newProgress();
-    if (!input || typeof input !== "object" || Array.isArray(input)) return base;
-    var num = function(v, d) {
-      return typeof v === "number" && isFinite(v) ? v : d;
-    };
-    var int = function(v, d, min, max) {
-      var n = Math.floor(num(v, d));
-      if (n < min) n = min;
-      if (max != null && n > max) n = max;
-      return n;
-    };
-    var bool = function(v, d) {
-      return typeof v === "boolean" ? v : d;
-    };
-    base.lang = input.lang === "en" || input.lang === "zh" ? input.lang : "zh";
-    base.sound = bool(input.sound, true);
-    base.theme = input.theme === "dark" || input.theme === "light" || input.theme === "auto" ? input.theme : "light";
-    base.stars = int(input.stars, 0, 0, 1e6);
-    if (input.streak && typeof input.streak === "object") {
-      base.streak.lastDay = typeof input.streak.lastDay === "string" || input.streak.lastDay === null ? input.streak.lastDay : null;
-      base.streak.count = int(input.streak.count, 0, 0, 1e5);
-    }
-    if (Array.isArray(input.badges)) {
-      base.badges = input.badges.filter(function(b) {
-        return typeof b === "string";
-      }).slice(0, 100);
-    }
-    if (input.skills && typeof input.skills === "object" && !Array.isArray(input.skills)) {
-      Object.keys(input.skills).slice(0, 500).forEach(function(id) {
-        var s = input.skills[id];
-        if (!s || typeof s !== "object") return;
-        var sp = {
-          attempts: int(s.attempts, 0, 0, 1e6),
-          correct: int(s.correct, 0, 0, 1e6),
-          consecCorrect: int(s.consecCorrect, 0, 0, 100),
-          consecWrong: int(s.consecWrong, 0, 0, 100),
-          difficultyStep: int(s.difficultyStep, 0, 0, 20),
-          lastSeen: num(s.lastSeen, 0),
-          typeAcc: {},
-          stars: int(s.stars, 0, 0, 3),
-          mastered: bool(s.mastered, false),
-          quizStars: int(s.quizStars, 0, 0, 3),
-          quizBest: int(s.quizBest, 0, 0, 100),
-          lastProblems: Array.isArray(s.lastProblems) ? s.lastProblems.slice(-20) : []
-        };
-        if (s.typeAcc && typeof s.typeAcc === "object") {
-          Object.keys(s.typeAcc).slice(0, 60).forEach(function(t) {
-            var a = s.typeAcc[t];
-            if (a && typeof a === "object") sp.typeAcc[t] = { a: int(a.a, 0, 0, 1e6), c: int(a.c, 0, 0, 1e6) };
-          });
-        }
-        base.skills[id] = sp;
-      });
-    }
-    if (input.stageExams && typeof input.stageExams === "object" && !Array.isArray(input.stageExams)) {
-      Object.keys(input.stageExams).slice(0, 100).forEach(function(id) {
-        var e = input.stageExams[id];
-        if (!e || typeof e !== "object") return;
-        base.stageExams[id] = {
-          passed: bool(e.passed, false) || bool(e.perfect, false),
-          perfect: bool(e.perfect, false),
-          best: int(e.best, 0, 0, 100)
-        };
-      });
-    }
-    base.version = 2;
-    return base;
+  function explainEquationZh(m) {
+    if (m.form === "x+a=c") return "兩邊同時減 " + m.a + "：x = " + m.c + " − " + m.a + "。";
+    if (m.form === "x-a=c") return "兩邊同時加 " + m.a + "：x = " + m.c + " + " + m.a + "。";
+    if (m.form === "ax=c") return "兩邊同時除以 " + m.a + "：x = " + m.c + " ÷ " + m.a + "。";
+    return "兩邊同時乘 " + m.a + "：x = " + m.c + " × " + m.a + "。";
   }
-  function practiceStars(correct, practice) {
-    if (correct >= practice) return 3;
-    if (correct >= Math.ceil(practice * 0.66)) return 2;
-    if (correct >= Math.ceil(practice * 0.33)) return 1;
-    return 0;
-  }
-  function quizStars(percent, pass) {
-    var threshold = typeof pass === "number" && pass > 0 && pass <= 1 ? pass : 0.8;
-    if (percent >= Math.min(0.95, threshold + 0.15)) return 3;
-    if (percent >= threshold) return 2;
-    if (percent >= threshold * 0.75) return 1;
-    return 0;
-  }
-  function masteryStatus(progress, skill) {
-    var sp = progress.skills[skill.id] || defaultSkillProgress();
-    var practice = skill.mastery && skill.mastery.practice || 10;
-    var pStars = practiceStars(sp.correct, practice);
-    var qStars = sp.quizStars || 0;
-    var stars = Math.max(pStars, qStars);
-    var mastered = qStars >= 2;
-    return { practiceStars: pStars, quizStars: qStars, stars, mastered, practice };
-  }
-  function applyResult(progress, skill, problem, correct, opts) {
-    opts = opts || {};
-    if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
-    var sp = progress.skills[skill.id];
-    sp.attempts += 1;
-    sp.lastSeen = Date.now();
-    var acc = sp.typeAcc[problem.type] || { a: 0, c: 0 };
-    acc.a += 1;
-    var credit = opts.credit !== false;
-    if (correct && credit) {
-      acc.c += 1;
-      sp.correct += 1;
-      sp.consecCorrect += 1;
-      sp.consecWrong = 0;
-      if (sp.consecCorrect >= 3) {
-        sp.difficultyStep += 1;
-        sp.consecCorrect = 0;
-      }
-    } else if (correct) {
-      sp.consecCorrect = 0;
-    } else {
-      sp.consecWrong += 1;
-      sp.consecCorrect = 0;
-      if (sp.consecWrong >= 2) {
-        sp.difficultyStep = Math.max(0, sp.difficultyStep - 1);
-        sp.consecWrong = 0;
-      }
-    }
-    var levels = skill.levels || [{ min: skill.min, max: skill.max }];
-    sp.difficultyStep = Math.max(0, Math.min(sp.difficultyStep, levels.length - 1));
-    sp.typeAcc[problem.type] = acc;
-    sp.lastProblems.push({ type: problem.type, sig: problem.sig });
-    if (sp.lastProblems.length > 3) sp.lastProblems.shift();
-    var st = masteryStatus(progress, skill);
-    sp.stars = st.stars;
-    sp.mastered = st.mastered;
-    return progress;
-  }
-  function applyQuizResult(progress, skill, percent) {
-    if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
-    var sp = progress.skills[skill.id];
-    var pass = skill.mastery && skill.mastery.quizPass || 0.8;
-    var qs = quizStars(percent, pass);
-    sp.quizStars = Math.max(sp.quizStars || 0, qs);
-    sp.quizBest = Math.max(sp.quizBest || 0, Math.round(percent * 100));
-    var st = masteryStatus(progress, skill);
-    sp.stars = st.stars;
-    sp.mastered = st.mastered;
-    return progress;
-  }
-  function gradeQuiz(results, pass) {
-    var correct = 0, total = results.length;
-    results.forEach(function(r) {
-      if (r.correct) correct++;
-    });
-    var percent = total ? correct / total : 0;
-    return { correct, total, percent, stars: quizStars(percent, pass) };
+  function explainEquationEn(m) {
+    if (m.form === "x+a=c") return "Subtract " + m.a + " from both sides: x = " + m.c + " − " + m.a + ".";
+    if (m.form === "x-a=c") return "Add " + m.a + " to both sides: x = " + m.c + " + " + m.a + ".";
+    if (m.form === "ax=c") return "Divide both sides by " + m.a + ": x = " + m.c + " ÷ " + m.a + ".";
+    return "Multiply both sides by " + m.a + ": x = " + m.c + " × " + m.a + ".";
   }
 
-  // src/core/index.js
-  var GENERATOR_TYPES;
+  // src/core/generators.js
   function eqPrompt(a, op, b) {
     var s = a + " " + op + " " + b + " = ?";
     return { zh: s, en: s };
@@ -1339,11 +1190,6 @@ var __MathCoreBundle = (() => {
     }
     throw new Error("未知 word 模式: " + op);
   }
-  function fmtDecimal(tenths) {
-    var neg = tenths < 0;
-    var v = Math.abs(tenths);
-    return (neg ? "-" : "") + Math.floor(v / 10) + "." + v % 10;
-  }
   function decimalChoices(rng, rTenths) {
     var out = [fmtDecimal(rTenths)];
     var seen = {};
@@ -1673,9 +1519,6 @@ var __MathCoreBundle = (() => {
       math: { op: "fractionof", n, d, whole, k },
       hint: { zh: "先除以 " + d + "，再乘以 " + n + "。", en: "Divide by " + d + ", then multiply by " + n + "." }
     };
-  }
-  function fmtNum(n) {
-    return n < 0 ? "(" + n + ")" : "" + n;
   }
   var RIGHT_TRIPLES = [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17], [7, 24, 25], [9, 12, 15], [12, 16, 20], [20, 21, 29]];
   function genDirected(rng, o) {
@@ -2157,18 +2000,6 @@ var __MathCoreBundle = (() => {
       math: { op: "stats", mode: n % 2 === 1 ? "odd" : "even", nums: display, sorted },
       hint: n % 2 === 1 ? { zh: "先把數字由小到大排列，再取中間那個。", en: "Sort the numbers, then take the middle one." } : { zh: "先把數字排序；共 6 個，取中間兩個的平均。", en: "Sort the numbers; with 6 values, average the two middle ones." }
     };
-  }
-  function explainEquationZh(m) {
-    if (m.form === "x+a=c") return "兩邊同時減 " + m.a + "：x = " + m.c + " − " + m.a + "。";
-    if (m.form === "x-a=c") return "兩邊同時加 " + m.a + "：x = " + m.c + " + " + m.a + "。";
-    if (m.form === "ax=c") return "兩邊同時除以 " + m.a + "：x = " + m.c + " ÷ " + m.a + "。";
-    return "兩邊同時乘 " + m.a + "：x = " + m.c + " × " + m.a + "。";
-  }
-  function explainEquationEn(m) {
-    if (m.form === "x+a=c") return "Subtract " + m.a + " from both sides: x = " + m.c + " − " + m.a + ".";
-    if (m.form === "x-a=c") return "Add " + m.a + " to both sides: x = " + m.c + " + " + m.a + ".";
-    if (m.form === "ax=c") return "Divide both sides by " + m.a + ": x = " + m.c + " ÷ " + m.a + ".";
-    return "Multiply both sides by " + m.a + ": x = " + m.c + " × " + m.a + ".";
   }
   function fpt(p) {
     return "(" + p[0] + ", " + p[1] + ")";
@@ -3358,6 +3189,719 @@ var __MathCoreBundle = (() => {
       hint: { zh: "d/dx(ax^n) = a·n·x^(n−1)：係數是 a·n，次數是 n−1。", en: "d/dx(ax^n) = a·n·x^(n−1): the coefficient is a·n and the degree is n−1." }
     };
   }
+  function genPlacevalue(rng, o) {
+    var max = Math.min(99, o.max != null ? o.max : 99);
+    var min = Math.max(10, o.min != null ? o.min : 10);
+    var n = randInt(rng, min, Math.max(min, max));
+    var tens = Math.floor(n / 10);
+    var ones = n % 10;
+    var mode = pick(rng, ["tens", "ones", "value", "compose"]);
+    var prompt, answer;
+    if (mode === "tens") {
+      prompt = { zh: n + " 的十位數字是多少？", en: "What is the tens digit of " + n + "?" };
+      answer = tens;
+    } else if (mode === "ones") {
+      prompt = { zh: n + " 的個位數字是多少？", en: "What is the ones digit of " + n + "?" };
+      answer = ones;
+    } else if (mode === "value") {
+      prompt = { zh: "在 " + n + " 中，十位數字代表多少？", en: "In " + n + ", what value does the tens digit represent?" };
+      answer = tens * 10;
+    } else {
+      prompt = { zh: tens + " 個十和 " + ones + " 個一合起來是多少？", en: "What number is " + tens + " tens and " + ones + " ones?" };
+      answer = n;
+    }
+    var choices = [answer];
+    if (mode === "tens" || mode === "ones") {
+      shuffle(rng, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).forEach(function(d) {
+        if (choices.length < 4 && d !== answer) choices.push(d);
+      });
+    } else if (mode === "value") {
+      shuffle(rng, [10, 20, 30, 40, 50, 60, 70, 80, 90]).forEach(function(v) {
+        if (choices.length < 4 && v !== answer) choices.push(v);
+      });
+    } else {
+      shuffle(rng, [n - 1, n + 1, n - 2, n + 2, n - 3, n + 3, n + 10]).forEach(function(v) {
+        if (choices.length < 4 && v >= 10 && v <= 99) choices.push(v);
+      });
+    }
+    return {
+      type: "placevalue",
+      prompt,
+      visual: null,
+      answer,
+      choices: shuffle(rng, choices),
+      math: { op: "placevalue", mode, n, tens, ones },
+      hint: {
+        zh: "十位在左、個位在右；十位數字代表幾個十。",
+        en: "Tens digit on the left, ones on the right; the tens digit counts tens."
+      }
+    };
+  }
+  function genModpow(rng, o) {
+    var a = randInt(rng, 2, o.maxBase || 9);
+    var b = randInt(rng, 2, o.maxExp || 5);
+    var m = randInt(rng, 5, o.maxMod || 13);
+    var r = 1;
+    for (var i = 0; i < b; i++) r = r * a % m;
+    return {
+      type: "modpow",
+      prompt: { zh: "求 " + a + "^" + b + " 除以 " + m + " 的餘數。", en: "What is the remainder when " + a + "^" + b + " is divided by " + m + "?" },
+      visual: null,
+      answer: r,
+      math: { op: "modpow", a, b, m },
+      hint: { zh: "每乘一次就取餘數，數字便不會太大。", en: "Take the remainder after each multiplication so the numbers stay small." }
+    };
+  }
+  function genGcdlcm(rng, o) {
+    var a = randInt(rng, 6, o.maxNum || 36);
+    var b = randInt(rng, 6, o.maxNum || 36);
+    if (a === b) b += 2;
+    var mode = pick(rng, ["gcd", "lcm"]);
+    var g = gcdInt(a, b);
+    var answer = mode === "gcd" ? g : a / g * b;
+    return {
+      type: "gcdlcm",
+      prompt: mode === "gcd" ? { zh: a + " 和 " + b + " 的最大公因數（HCF）是多少？", en: "What is the highest common factor (HCF) of " + a + " and " + b + "?" } : { zh: a + " 和 " + b + " 的最小公倍數（LCM）是多少？", en: "What is the lowest common multiple (LCM) of " + a + " and " + b + "?" },
+      visual: null,
+      answer,
+      math: { op: "gcdlcm", a, b, mode },
+      hint: { zh: mode === "gcd" ? "列出兩數的公因數，取最大。" : "LCM = a × b ÷ HCF。", en: mode === "gcd" ? "List the common factors and take the largest." : "LCM = a × b ÷ HCF." }
+    };
+  }
+  function genRemainderSystem(rng, o) {
+    var a = randInt(rng, 3, 7);
+    var b = randInt(rng, 5, 9);
+    while (gcdInt(a, b) !== 1 || b === a) b = randInt(rng, 5, 9);
+    var r1 = randInt(rng, 0, a - 1);
+    var r2 = randInt(rng, 0, b - 1);
+    var n = 0;
+    for (var x = 1; x <= 1e3; x++) {
+      if (x % a === r1 && x % b === r2) {
+        n = x;
+        break;
+      }
+    }
+    if (!n) {
+      r1 = 1;
+      r2 = 1;
+      n = 1;
+      while (!(n % a === 1 && n % b === 1)) n++;
+    }
+    return {
+      type: "remainderSystem",
+      prompt: {
+        zh: "一個正整數除以 " + a + " 餘 " + r1 + "，除以 " + b + " 餘 " + r2 + "。最小的正整數是多少？",
+        en: "A positive integer leaves remainder " + r1 + " when divided by " + a + ", and remainder " + r2 + " when divided by " + b + ". What is the smallest such integer?"
+      },
+      visual: null,
+      answer: n,
+      math: { op: "remainderSystem", a, b, r1, r2 },
+      hint: { zh: "由大數的倍數加上餘數開始逐個檢查。", en: "List multiples of the larger number plus its remainder, then check the other condition." }
+    };
+  }
+  function genPathcount(rng, o) {
+    var m = randInt(rng, 3, o.maxSteps || 6);
+    var n = randInt(rng, 3, o.maxSteps || 6);
+    var answer = factInt(m + n) / (factInt(m) * factInt(n));
+    return {
+      type: "pathcount",
+      prompt: {
+        zh: "在 " + m + " × " + n + " 的方格紙上，由左下角走到右上角，每次只可向右或向上走一格，共有多少條不同路徑？",
+        en: "On an " + m + " by " + n + " grid, how many different shortest paths are there from the bottom-left corner to the top-right corner, moving only right or up one square at a time?"
+      },
+      visual: null,
+      answer,
+      math: { op: "pathcount", m, n },
+      hint: { zh: "共要走 " + (m + n) + " 步，選其中 " + m + " 步向右：C(" + (m + n) + "," + m + ")。", en: "There are " + (m + n) + " steps in total; choose " + m + " of them to go right: C(" + (m + n) + "," + m + ")." }
+    };
+  }
+  function genHandshake(rng, o) {
+    var n = randInt(rng, 5, o.maxPeople || 30);
+    return {
+      type: "handshake",
+      prompt: {
+        zh: n + " 個人聚會，每兩個人互相握手一次，一共握手多少次？",
+        en: "At a party, every pair of the " + n + " people shakes hands exactly once. How many handshakes are there in total?"
+      },
+      visual: null,
+      answer: n * (n - 1) / 2,
+      math: { op: "handshake", n },
+      hint: { zh: "每人和其他 " + (n - 1) + " 人握手；每次握手被數了兩次。", en: "Each person shakes " + (n - 1) + " hands, and each handshake is counted twice." }
+    };
+  }
+  var ARRANGE_WORDS = ["LEVEL", "BANANA", "APPLE", "MATHS", "SUCCESS", "BALLOON", "KANGAROO"];
+  function genArrange(rng, o) {
+    var word = pick(rng, ARRANGE_WORDS);
+    var counts = {};
+    for (var i = 0; i < word.length; i++) counts[word[i]] = (counts[word[i]] || 0) + 1;
+    var denom = 1;
+    Object.keys(counts).forEach(function(ch) {
+      denom *= factInt(counts[ch]);
+    });
+    var answer = factInt(word.length) / denom;
+    return {
+      type: "arrange",
+      prompt: {
+        zh: "把單詞 " + word + " 的所有字母重新排列，共有多少種不同的排列？",
+        en: "How many different arrangements can be made using all the letters of the word " + word + "?"
+      },
+      visual: null,
+      answer,
+      math: { op: "arrange", word },
+      hint: { zh: "全排列 " + word.length + "!，再除以重複字母的排列數。", en: "Start with " + word.length + "! and divide by the arrangements of the repeated letters." }
+    };
+  }
+  function genInclusion(rng, o) {
+    var n = randInt(rng, 30, o.maxNum || 200);
+    var a = randInt(rng, 2, 7);
+    var b = randInt(rng, 3, 9);
+    while (b === a) b = randInt(rng, 3, 9);
+    var l = a / gcdInt(a, b) * b;
+    var answer = Math.floor(n / a) + Math.floor(n / b) - Math.floor(n / l);
+    return {
+      type: "inclusion",
+      prompt: {
+        zh: "在 1 到 " + n + " 之中，是 " + a + " 的倍數或是 " + b + " 的倍數的整數共有多少個？",
+        en: "How many integers from 1 to " + n + " are multiples of " + a + " or " + b + "?"
+      },
+      visual: null,
+      answer,
+      math: { op: "inclusion", n, a, b },
+      hint: { zh: "兩類相加後，要減去同時是兩者倍數（即 lcm 的倍數）的重複部分。", en: "Add the two counts, then subtract the multiples of the LCM that were counted twice." }
+    };
+  }
+  function genClockangle(rng, o) {
+    var h = randInt(rng, 1, 12);
+    var m = pick(rng, [0, 10, 20, 30, 40, 50]);
+    var diff = Math.abs(30 * h - 5.5 * m);
+    var answer = Math.min(diff, 360 - diff);
+    return {
+      type: "clockangle",
+      prompt: {
+        zh: "時鐘顯示 " + h + ":" + (m < 10 ? "0" + m : m) + "，時針與分針的較小夾角是多少度？",
+        en: "A clock shows " + h + ":" + (m < 10 ? "0" + m : m) + ". What is the smaller angle between the hour hand and the minute hand, in degrees?"
+      },
+      visual: null,
+      answer,
+      math: { op: "clockangle", h, m },
+      hint: { zh: "時針 = 30h + 0.5m 度；分針 = 6m 度；取兩者之差的較小角。", en: "Hour hand = 30h + 0.5m degrees; minute hand = 6m degrees; take the smaller angle between them." }
+    };
+  }
+  function genTrapezoid(rng, o) {
+    var a = randInt(rng, 4, o.maxSide || 12);
+    var b = randInt(rng, 4, o.maxSide || 12);
+    if (a === b) b += 2;
+    var h = randInt(rng, 3, o.maxHeight || 10);
+    if ((a + b) * h % 2 !== 0) h += 1;
+    return {
+      type: "trapezoid",
+      prompt: {
+        zh: "梯形的上底是 " + a + " cm，下底是 " + b + " cm，高是 " + h + " cm，面積是多少 cm²？",
+        en: "A trapezium has parallel sides " + a + " cm and " + b + " cm and height " + h + " cm. What is its area in cm²?"
+      },
+      visual: null,
+      answer: (a + b) * h / 2,
+      math: { op: "trapezoid", a, b, h },
+      hint: { zh: "梯形面積 = (上底 + 下底) × 高 ÷ 2。", en: "Area of a trapezium = (sum of parallel sides) × height ÷ 2." }
+    };
+  }
+  function genSeqnext(rng, o) {
+    var mode = pick(rng, ["triangle", "fib", "mixed", "square"]);
+    var terms = [];
+    var answer, math;
+    if (mode === "triangle") {
+      var n = randInt(rng, 5, 8);
+      for (var i = 1; i <= n; i++) terms.push(i * (i + 1) / 2);
+      answer = (n + 1) * (n + 2) / 2;
+      math = { op: "seqnext", mode, n };
+    } else if (mode === "fib") {
+      var f1 = randInt(rng, 1, 5), f2 = randInt(rng, 2, 7);
+      terms = [f1, f2];
+      while (terms.length < 5) terms.push(terms[terms.length - 1] + terms[terms.length - 2]);
+      answer = terms[4] + terms[3];
+      math = { op: "seqnext", mode, terms: terms.slice() };
+    } else if (mode === "mixed") {
+      var start = randInt(rng, 1, 4), add = randInt(rng, 1, 3);
+      terms = [start];
+      while (terms.length < 5) terms.push(terms[terms.length - 1] * 2 + add);
+      answer = terms[4] * 2 + add;
+      math = { op: "seqnext", mode, terms: terms.slice(), add };
+    } else {
+      var sq = randInt(rng, 4, 8);
+      for (var j = 1; j <= sq; j++) terms.push(j * j + 1);
+      answer = (sq + 1) * (sq + 1) + 1;
+      math = { op: "seqnext", mode, n: sq };
+    }
+    return {
+      type: "seqnext",
+      prompt: {
+        zh: "觀察數列：" + terms.join("、") + "，下一個數是多少？",
+        en: "Study the sequence: " + terms.join(", ") + ". What is the next number?"
+      },
+      visual: null,
+      answer,
+      math,
+      hint: { zh: "先找出相鄰兩數的差或倍數關係。", en: "Look for a pattern in the differences or ratios between terms." }
+    };
+  }
+  function genPigeon(rng, o) {
+    var colors = randInt(rng, 3, o.maxColors || 5);
+    var k = randInt(rng, 2, o.maxSame || 4);
+    return {
+      type: "pigeon",
+      prompt: {
+        zh: "袋中有 " + colors + " 種顏色的襪子（每種數量足夠）。最少要取出多少隻，才能保證其中有 " + k + " 隻同色？",
+        en: "A bag contains socks of " + colors + " colours (enough of each). What is the smallest number of socks you must take to be certain that " + k + " of them have the same colour?"
+      },
+      visual: null,
+      answer: colors * (k - 1) + 1,
+      math: { op: "pigeon", colors, k },
+      hint: { zh: "最壞情況：每種顏色都先取 " + (k - 1) + " 隻，再取一隻。", en: "Worst case: take " + (k - 1) + " of each colour first, then one more." }
+    };
+  }
+  var WORKRATE_PAIRS = [[6, 12], [12, 6], [10, 15], [15, 10], [20, 5], [5, 20], [8, 24], [24, 8], [12, 4], [4, 12]];
+  function genWorkrate(rng, o) {
+    var pair = pick(rng, WORKRATE_PAIRS);
+    var a = pair[0], b = pair[1];
+    return {
+      type: "workrate",
+      prompt: {
+        zh: "甲獨自完成一項工作要 " + a + " 天，乙獨自完成要 " + b + " 天。兩人合作，多少天可以完成？",
+        en: "Ann can finish a job alone in " + a + " days and Ben can finish it alone in " + b + " days. How many days will they take working together?"
+      },
+      visual: null,
+      answer: a * b / (a + b),
+      math: { op: "workrate", a, b },
+      hint: { zh: "合作一天完成 1/a + 1/b，時間 = 1 ÷ (1/a + 1/b)。", en: "Together they do 1/a + 1/b per day, so time = 1 ÷ (1/a + 1/b)." }
+    };
+  }
+  function genMixture(rng, o) {
+    var x, y, p1, p2, answer;
+    var guard = 0;
+    do {
+      x = randInt(rng, 5, 40);
+      y = randInt(rng, 5, 40);
+      p1 = pick(rng, [10, 20, 30, 40, 50]);
+      p2 = pick(rng, [10, 20, 30, 40, 50]);
+      answer = (x * p1 + y * p2) / (x + y);
+      guard++;
+    } while (!Number.isInteger(answer) && guard < 300);
+    if (!Number.isInteger(answer)) {
+      x = 20;
+      y = 20;
+      p1 = 20;
+      p2 = 40;
+      answer = 30;
+    }
+    return {
+      type: "mixture",
+      prompt: {
+        zh: "把 " + x + " 升 " + p1 + "% 的糖水與 " + y + " 升 " + p2 + "% 的糖水混合，混合後的濃度是多少%？",
+        en: x + " litres of " + p1 + "% sugar solution are mixed with " + y + " litres of " + p2 + "% sugar solution. What is the concentration of the mixture, in %?"
+      },
+      visual: null,
+      answer,
+      math: { op: "mixture", x, p1, y, p2 },
+      hint: { zh: "先算兩杯各自的糖量，再除以總體積。", en: "Find the sugar in each part first, then divide by the total volume." }
+    };
+  }
+  function genDiceprob(rng, o) {
+    var s = randInt(rng, 2, 12);
+    var ways = 6 - Math.abs(s - 7);
+    return {
+      type: "diceprob",
+      prompt: {
+        zh: "擲兩粒公平骰子，點數和是 " + s + " 的概率是多少？",
+        en: "Two fair dice are rolled. What is the probability that the sum is " + s + "?"
+      },
+      visual: null,
+      answer: { n: ways, d: 36 },
+      math: { op: "diceprob", s },
+      hint: { zh: "列出和為 " + s + " 的組合數，再除以 36。", en: "Count the outcomes with sum " + s + " and divide by 36." }
+    };
+  }
+  function genCoinprob(rng, o) {
+    var n = randInt(rng, 3, 6);
+    var k = randInt(rng, 1, n - 1);
+    return {
+      type: "coinprob",
+      prompt: {
+        zh: "擲 " + n + " 枚公平硬幣，剛好有 " + k + " 個正面的概率是多少？",
+        en: "A fair coin is tossed " + n + " times. What is the probability of getting exactly " + k + " heads?"
+      },
+      visual: null,
+      answer: { n: factInt(n) / (factInt(k) * factInt(n - k)), d: Math.pow(2, n) },
+      math: { op: "coinprob", n, k },
+      hint: { zh: "成功組合數 C(" + n + "," + k + ") 除以 2^" + n + "。", en: "Divide the number of successful combinations C(" + n + "," + k + ") by 2^" + n + "." }
+    };
+  }
+  function genLastdigit(rng, o) {
+    var a = randInt(rng, 2, o.maxBase || 9);
+    var b = randInt(rng, 2, o.maxExp || 6);
+    var r = 1;
+    for (var i = 0; i < b; i++) r = r * a % 10;
+    return {
+      type: "lastdigit",
+      prompt: { zh: a + "^" + b + " 的個位數字是多少？", en: "What is the units digit of " + a + "^" + b + "?" },
+      visual: null,
+      answer: r,
+      math: { op: "lastdigit", a, b },
+      hint: { zh: "每次只保留個位相乘，觀察個位的循環。", en: "Keep only the units digit when multiplying and look for a cycle." }
+    };
+  }
+  function genGridrect(rng, o) {
+    var m = randInt(rng, 2, o.maxDim || 8);
+    var n = randInt(rng, 2, o.maxDim || 8);
+    var rcount = m * (m + 1) / 2 * (n * (n + 1) / 2);
+    return {
+      type: "gridrect",
+      prompt: {
+        zh: "在 " + m + " × " + n + " 的方格紙上，可以數出多少個長方形（包括正方形）？",
+        en: "How many rectangles (including squares) can be found in an " + m + " by " + n + " grid?"
+      },
+      visual: null,
+      answer: rcount,
+      math: { op: "gridrect", m, n },
+      hint: { zh: "先選兩條橫線、再選兩條直線：C(" + (m + 1) + ",2) × C(" + (n + 1) + ",2)。", en: "Choose two horizontal lines and two vertical lines: C(" + (m + 1) + ",2) × C(" + (n + 1) + ",2)." }
+    };
+  }
+  function genPolygonsum(rng, o) {
+    var n = pick(rng, [5, 6, 8, 9, 10, 12]);
+    var mode = pick(rng, ["sum", "each"]);
+    var answer = mode === "sum" ? (n - 2) * 180 : (n - 2) * 180 / n;
+    return {
+      type: "polygonsum",
+      prompt: mode === "sum" ? { zh: n + " 邊形的內角和是多少度？", en: "What is the sum of the interior angles of an " + n + "-sided polygon?" } : { zh: "正 " + n + " 邊形的每一個內角是多少度？", en: "What is each interior angle of a regular " + n + "-sided polygon?" },
+      visual: null,
+      answer,
+      math: { op: "polygonsum", n, mode },
+      hint: { zh: "內角和 = (n − 2) × 180°。", en: "Sum of interior angles = (n − 2) × 180°." }
+    };
+  }
+  var TRAIN_PAIRS = [[60, 40], [50, 30], [45, 35], [70, 50], [80, 55], [90, 60], [75, 45], [80, 60]];
+  function genTrain(rng, o) {
+    var pair = pick(rng, TRAIN_PAIRS);
+    var s1 = pair[0], s2 = pair[1];
+    var mode = pick(rng, ["towards", "chase"]);
+    var relative = mode === "towards" ? s1 + s2 : s1 - s2;
+    var t = randInt(rng, 2, 6);
+    var d = relative * t;
+    return {
+      type: "train",
+      prompt: mode === "towards" ? {
+        zh: "兩地相距 " + d + " km，A 車以 " + s1 + " km/h、B 車以 " + s2 + " km/h 同時相向而行，多少小時後相遇？",
+        en: "Two towns are " + d + " km apart. Car A travels at " + s1 + " km/h and car B at " + s2 + " km/h towards each other. In how many hours do they meet?"
+      } : {
+        zh: "A 車以 " + s1 + " km/h 追前方 " + d + " km 的 B 車（" + s2 + " km/h），多少小時後追上？",
+        en: "Car A travels at " + s1 + " km/h chasing car B, which is " + d + " km ahead travelling at " + s2 + " km/h. In how many hours does A catch B?"
+      },
+      visual: null,
+      answer: t,
+      math: { op: "train", mode, d, s1, s2 },
+      hint: {
+        zh: mode === "towards" ? "相向而行：相對速率 = s1 + s2。" : "追及問題：相對速率 = s1 − s2。",
+        en: mode === "towards" ? "Towards: relative speed = s1 + s2." : "Chasing: relative speed = s1 − s2."
+      }
+    };
+  }
+  function genDicecompare(rng, o) {
+    var k = randInt(rng, 4, 10);
+    var ways = 0;
+    for (var i = 1; i <= 6; i++) {
+      for (var j = 1; j <= 6; j++) if (i + j > k) ways++;
+    }
+    return {
+      type: "dicecompare",
+      prompt: {
+        zh: "擲兩粒公平骰子，點數和大於 " + k + " 的概率是多少？",
+        en: "Two fair dice are rolled. What is the probability that the sum is greater than " + k + "?"
+      },
+      visual: null,
+      answer: { n: ways, d: 36 },
+      math: { op: "dicecompare", k },
+      hint: { zh: "數出點數和大於 " + k + " 的組合數，再除以 36。", en: "Count the outcomes with sum greater than " + k + ", then divide by 36." }
+    };
+  }
+  var GENERATORS = {
+    count: genCount,
+    compare: genCompare,
+    comparegroup: genCompareGroup,
+    placevalue: genPlacevalue,
+    identity: genIdentity,
+    circleprop: genCircleprop,
+    dispersion: genDispersion,
+    prism: genPrism,
+    matrix: genMatrix,
+    calculus: genCalculus,
+    expectation: genExpectation,
+    addition: genAddition,
+    subtraction: genSubtraction,
+    numberbonds: genNumberBonds,
+    missing: genMissing,
+    multiplication: genMultiplication,
+    division: genDivision,
+    fraction: genFraction,
+    word: genWord,
+    multidigit: genMultiDigit,
+    fractionadd: genFractionAdd,
+    decimal: genDecimal,
+    decimalmul: genDecimalMul,
+    average: genAverage,
+    equation: genEquation,
+    percent: genPercent,
+    ratio: genRatio,
+    area: genArea,
+    fractionof: genFractionOf,
+    directed: genDirected,
+    exprsub: genExprSub,
+    linear: genLinear,
+    pythagoras: genPythagoras,
+    simul: genSimul,
+    indices: genIndices,
+    inequality: genInequality,
+    log: genLog,
+    fx: genFx,
+    trig: genTrig,
+    ap: genAp,
+    gp: genGp,
+    prob: genProb,
+    quad: genQuad,
+    stats: genStats,
+    triangle: genTriangle,
+    circle: genCircle,
+    volume: genVolume,
+    coord: genCoord,
+    perimeter: genPerimeter,
+    polygon: genPolygon,
+    angle: genAngle,
+    money: genMoney,
+    fact: genFact,
+    quadsolve: genQuadsolve,
+    line: genLine,
+    variation: genVariation,
+    oddeven: genOddEven,
+    shape: genShape,
+    symmetry: genSymmetry,
+    liketerms: genLiketerms,
+    polycoeff: genPolycoeff,
+    arclen: genArclen,
+    mode: genMode,
+    asum: genAsum,
+    invvar: genInvvar,
+    comb: genComb,
+    range: genRange,
+    circleeq: genCircleeq,
+    parallel: genParallel,
+    sqrt: genSqrt,
+    congruent: genCongruent,
+    similar: genSimilar,
+    quadshape: genQuadshape,
+    cylinder: genCylinder,
+    sinterest: genSinterest,
+    expand: genExpand,
+    pichart: genPichart,
+    approx: genApprox,
+    direction: genDirection,
+    time24: genTime24,
+    cone: genCone,
+    centre: genCentre,
+    circleangle: genCircleangle,
+    binomial: genBinomial,
+    derivative: genDerivative,
+    modpow: genModpow,
+    gcdlcm: genGcdlcm,
+    remainderSystem: genRemainderSystem,
+    pathcount: genPathcount,
+    handshake: genHandshake,
+    arrange: genArrange,
+    inclusion: genInclusion,
+    clockangle: genClockangle,
+    trapezoid: genTrapezoid,
+    seqnext: genSeqnext,
+    pigeon: genPigeon,
+    workrate: genWorkrate,
+    mixture: genMixture,
+    diceprob: genDiceprob,
+    coinprob: genCoinprob,
+    lastdigit: genLastdigit,
+    gridrect: genGridrect,
+    polygonsum: genPolygonsum,
+    train: genTrain,
+    dicecompare: genDicecompare
+  };
+
+  // src/core/progress.js
+  function defaultSkillProgress() {
+    return {
+      attempts: 0,
+      correct: 0,
+      consecCorrect: 0,
+      consecWrong: 0,
+      difficultyStep: 0,
+      lastSeen: 0,
+      typeAcc: {},
+      stars: 0,
+      mastered: false,
+      quizStars: 0,
+      quizBest: 0,
+      lastProblems: []
+    };
+  }
+  function newProgress() {
+    return { version: 2, lang: "zh", sound: true, theme: "light", stars: 0, streak: { lastDay: null, count: 0 }, badges: [], skills: {}, stageExams: {} };
+  }
+  function sanitizeProgress(input) {
+    var base = newProgress();
+    if (!input || typeof input !== "object" || Array.isArray(input)) return base;
+    var num = function(v, d) {
+      return typeof v === "number" && isFinite(v) ? v : d;
+    };
+    var int = function(v, d, min, max) {
+      var n = Math.floor(num(v, d));
+      if (n < min) n = min;
+      if (max != null && n > max) n = max;
+      return n;
+    };
+    var bool = function(v, d) {
+      return typeof v === "boolean" ? v : d;
+    };
+    base.lang = input.lang === "en" || input.lang === "zh" ? input.lang : "zh";
+    base.sound = bool(input.sound, true);
+    base.theme = input.theme === "dark" || input.theme === "light" || input.theme === "auto" ? input.theme : "light";
+    base.stars = int(input.stars, 0, 0, 1e6);
+    if (input.streak && typeof input.streak === "object") {
+      base.streak.lastDay = typeof input.streak.lastDay === "string" || input.streak.lastDay === null ? input.streak.lastDay : null;
+      base.streak.count = int(input.streak.count, 0, 0, 1e5);
+    }
+    if (Array.isArray(input.badges)) {
+      base.badges = input.badges.filter(function(b) {
+        return typeof b === "string";
+      }).slice(0, 100);
+    }
+    if (input.skills && typeof input.skills === "object" && !Array.isArray(input.skills)) {
+      Object.keys(input.skills).slice(0, 500).forEach(function(id) {
+        var s = input.skills[id];
+        if (!s || typeof s !== "object") return;
+        var sp = {
+          attempts: int(s.attempts, 0, 0, 1e6),
+          correct: int(s.correct, 0, 0, 1e6),
+          consecCorrect: int(s.consecCorrect, 0, 0, 100),
+          consecWrong: int(s.consecWrong, 0, 0, 100),
+          difficultyStep: int(s.difficultyStep, 0, 0, 20),
+          lastSeen: num(s.lastSeen, 0),
+          typeAcc: {},
+          stars: int(s.stars, 0, 0, 3),
+          mastered: bool(s.mastered, false),
+          quizStars: int(s.quizStars, 0, 0, 3),
+          quizBest: int(s.quizBest, 0, 0, 100),
+          lastProblems: Array.isArray(s.lastProblems) ? s.lastProblems.slice(-20) : []
+        };
+        if (s.typeAcc && typeof s.typeAcc === "object") {
+          Object.keys(s.typeAcc).slice(0, 60).forEach(function(t) {
+            var a = s.typeAcc[t];
+            if (a && typeof a === "object") sp.typeAcc[t] = { a: int(a.a, 0, 0, 1e6), c: int(a.c, 0, 0, 1e6) };
+          });
+        }
+        base.skills[id] = sp;
+      });
+    }
+    if (input.stageExams && typeof input.stageExams === "object" && !Array.isArray(input.stageExams)) {
+      Object.keys(input.stageExams).slice(0, 100).forEach(function(id) {
+        var e = input.stageExams[id];
+        if (!e || typeof e !== "object") return;
+        base.stageExams[id] = {
+          passed: bool(e.passed, false) || bool(e.perfect, false),
+          perfect: bool(e.perfect, false),
+          best: int(e.best, 0, 0, 100)
+        };
+      });
+    }
+    base.version = 2;
+    return base;
+  }
+  function practiceStars(correct, practice) {
+    if (correct >= practice) return 3;
+    if (correct >= Math.ceil(practice * 0.66)) return 2;
+    if (correct >= Math.ceil(practice * 0.33)) return 1;
+    return 0;
+  }
+  function quizStars(percent, pass) {
+    var threshold = typeof pass === "number" && pass > 0 && pass <= 1 ? pass : 0.8;
+    if (percent >= Math.min(0.95, threshold + 0.15)) return 3;
+    if (percent >= threshold) return 2;
+    if (percent >= threshold * 0.75) return 1;
+    return 0;
+  }
+  function masteryStatus(progress, skill) {
+    var sp = progress.skills[skill.id] || defaultSkillProgress();
+    var practice = skill.mastery && skill.mastery.practice || 10;
+    var pStars = practiceStars(sp.correct, practice);
+    var qStars = sp.quizStars || 0;
+    var stars = Math.max(pStars, qStars);
+    var mastered = qStars >= 2;
+    return { practiceStars: pStars, quizStars: qStars, stars, mastered, practice };
+  }
+  function applyResult(progress, skill, problem, correct, opts) {
+    opts = opts || {};
+    if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
+    var sp = progress.skills[skill.id];
+    sp.attempts += 1;
+    sp.lastSeen = Date.now();
+    var acc = sp.typeAcc[problem.type] || { a: 0, c: 0 };
+    acc.a += 1;
+    var credit = opts.credit !== false;
+    if (correct && credit) {
+      acc.c += 1;
+      sp.correct += 1;
+      sp.consecCorrect += 1;
+      sp.consecWrong = 0;
+      if (sp.consecCorrect >= 3) {
+        sp.difficultyStep += 1;
+        sp.consecCorrect = 0;
+      }
+    } else if (correct) {
+      sp.consecCorrect = 0;
+    } else {
+      sp.consecWrong += 1;
+      sp.consecCorrect = 0;
+      if (sp.consecWrong >= 2) {
+        sp.difficultyStep = Math.max(0, sp.difficultyStep - 1);
+        sp.consecWrong = 0;
+      }
+    }
+    var levels = skill.levels || [{ min: skill.min, max: skill.max }];
+    sp.difficultyStep = Math.max(0, Math.min(sp.difficultyStep, levels.length - 1));
+    sp.typeAcc[problem.type] = acc;
+    sp.lastProblems.push({ type: problem.type, sig: problem.sig });
+    if (sp.lastProblems.length > 3) sp.lastProblems.shift();
+    var st = masteryStatus(progress, skill);
+    sp.stars = st.stars;
+    sp.mastered = st.mastered;
+    return progress;
+  }
+  function applyQuizResult(progress, skill, percent) {
+    if (!progress.skills[skill.id]) progress.skills[skill.id] = defaultSkillProgress();
+    var sp = progress.skills[skill.id];
+    var pass = skill.mastery && skill.mastery.quizPass || 0.8;
+    var qs = quizStars(percent, pass);
+    sp.quizStars = Math.max(sp.quizStars || 0, qs);
+    sp.quizBest = Math.max(sp.quizBest || 0, Math.round(percent * 100));
+    var st = masteryStatus(progress, skill);
+    sp.stars = st.stars;
+    sp.mastered = st.mastered;
+    return progress;
+  }
+  function gradeQuiz(results, pass) {
+    var correct = 0, total = results.length;
+    results.forEach(function(r) {
+      if (r.correct) correct++;
+    });
+    var percent = total ? correct / total : 0;
+    return { correct, total, percent, stars: quizStars(percent, pass) };
+  }
+
+  // src/core/index.js
+  var GENERATOR_TYPES;
   var SOLVERS = {
     gp: function(p) {
       var m = p.math, ans = renderValue(p.answer);
@@ -4473,54 +5017,6 @@ var __MathCoreBundle = (() => {
         return null;
     }
   }
-  function genPlacevalue(rng, o) {
-    var max = Math.min(99, o.max != null ? o.max : 99);
-    var min = Math.max(10, o.min != null ? o.min : 10);
-    var n = randInt(rng, min, Math.max(min, max));
-    var tens = Math.floor(n / 10);
-    var ones = n % 10;
-    var mode = pick(rng, ["tens", "ones", "value", "compose"]);
-    var prompt, answer;
-    if (mode === "tens") {
-      prompt = { zh: n + " 的十位數字是多少？", en: "What is the tens digit of " + n + "?" };
-      answer = tens;
-    } else if (mode === "ones") {
-      prompt = { zh: n + " 的個位數字是多少？", en: "What is the ones digit of " + n + "?" };
-      answer = ones;
-    } else if (mode === "value") {
-      prompt = { zh: "在 " + n + " 中，十位數字代表多少？", en: "In " + n + ", what value does the tens digit represent?" };
-      answer = tens * 10;
-    } else {
-      prompt = { zh: tens + " 個十和 " + ones + " 個一合起來是多少？", en: "What number is " + tens + " tens and " + ones + " ones?" };
-      answer = n;
-    }
-    var choices = [answer];
-    if (mode === "tens" || mode === "ones") {
-      shuffle(rng, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).forEach(function(d) {
-        if (choices.length < 4 && d !== answer) choices.push(d);
-      });
-    } else if (mode === "value") {
-      shuffle(rng, [10, 20, 30, 40, 50, 60, 70, 80, 90]).forEach(function(v) {
-        if (choices.length < 4 && v !== answer) choices.push(v);
-      });
-    } else {
-      shuffle(rng, [n - 1, n + 1, n - 2, n + 2, n - 3, n + 3, n + 10]).forEach(function(v) {
-        if (choices.length < 4 && v >= 10 && v <= 99) choices.push(v);
-      });
-    }
-    return {
-      type: "placevalue",
-      prompt,
-      visual: null,
-      answer,
-      choices: shuffle(rng, choices),
-      math: { op: "placevalue", mode, n, tens, ones },
-      hint: {
-        zh: "十位在左、個位在右；十位數字代表幾個十。",
-        en: "Tens digit on the left, ones on the right; the tens digit counts tens."
-      }
-    };
-  }
   function explain(p) {
     var ex = explainRaw(p);
     if (!ex) return null;
@@ -4529,498 +5025,6 @@ var __MathCoreBundle = (() => {
       en: ex.en.map(formatMathText)
     };
   }
-  function genModpow(rng, o) {
-    var a = randInt(rng, 2, o.maxBase || 9);
-    var b = randInt(rng, 2, o.maxExp || 5);
-    var m = randInt(rng, 5, o.maxMod || 13);
-    var r = 1;
-    for (var i = 0; i < b; i++) r = r * a % m;
-    return {
-      type: "modpow",
-      prompt: { zh: "求 " + a + "^" + b + " 除以 " + m + " 的餘數。", en: "What is the remainder when " + a + "^" + b + " is divided by " + m + "?" },
-      visual: null,
-      answer: r,
-      math: { op: "modpow", a, b, m },
-      hint: { zh: "每乘一次就取餘數，數字便不會太大。", en: "Take the remainder after each multiplication so the numbers stay small." }
-    };
-  }
-  function genGcdlcm(rng, o) {
-    var a = randInt(rng, 6, o.maxNum || 36);
-    var b = randInt(rng, 6, o.maxNum || 36);
-    if (a === b) b += 2;
-    var mode = pick(rng, ["gcd", "lcm"]);
-    var g = gcdInt(a, b);
-    var answer = mode === "gcd" ? g : a / g * b;
-    return {
-      type: "gcdlcm",
-      prompt: mode === "gcd" ? { zh: a + " 和 " + b + " 的最大公因數（HCF）是多少？", en: "What is the highest common factor (HCF) of " + a + " and " + b + "?" } : { zh: a + " 和 " + b + " 的最小公倍數（LCM）是多少？", en: "What is the lowest common multiple (LCM) of " + a + " and " + b + "?" },
-      visual: null,
-      answer,
-      math: { op: "gcdlcm", a, b, mode },
-      hint: { zh: mode === "gcd" ? "列出兩數的公因數，取最大。" : "LCM = a × b ÷ HCF。", en: mode === "gcd" ? "List the common factors and take the largest." : "LCM = a × b ÷ HCF." }
-    };
-  }
-  function genRemainderSystem(rng, o) {
-    var a = randInt(rng, 3, 7);
-    var b = randInt(rng, 5, 9);
-    while (gcdInt(a, b) !== 1 || b === a) b = randInt(rng, 5, 9);
-    var r1 = randInt(rng, 0, a - 1);
-    var r2 = randInt(rng, 0, b - 1);
-    var n = 0;
-    for (var x = 1; x <= 1e3; x++) {
-      if (x % a === r1 && x % b === r2) {
-        n = x;
-        break;
-      }
-    }
-    if (!n) {
-      r1 = 1;
-      r2 = 1;
-      n = 1;
-      while (!(n % a === 1 && n % b === 1)) n++;
-    }
-    return {
-      type: "remainderSystem",
-      prompt: {
-        zh: "一個正整數除以 " + a + " 餘 " + r1 + "，除以 " + b + " 餘 " + r2 + "。最小的正整數是多少？",
-        en: "A positive integer leaves remainder " + r1 + " when divided by " + a + ", and remainder " + r2 + " when divided by " + b + ". What is the smallest such integer?"
-      },
-      visual: null,
-      answer: n,
-      math: { op: "remainderSystem", a, b, r1, r2 },
-      hint: { zh: "由大數的倍數加上餘數開始逐個檢查。", en: "List multiples of the larger number plus its remainder, then check the other condition." }
-    };
-  }
-  function genPathcount(rng, o) {
-    var m = randInt(rng, 3, o.maxSteps || 6);
-    var n = randInt(rng, 3, o.maxSteps || 6);
-    var answer = factInt(m + n) / (factInt(m) * factInt(n));
-    return {
-      type: "pathcount",
-      prompt: {
-        zh: "在 " + m + " × " + n + " 的方格紙上，由左下角走到右上角，每次只可向右或向上走一格，共有多少條不同路徑？",
-        en: "On an " + m + " by " + n + " grid, how many different shortest paths are there from the bottom-left corner to the top-right corner, moving only right or up one square at a time?"
-      },
-      visual: null,
-      answer,
-      math: { op: "pathcount", m, n },
-      hint: { zh: "共要走 " + (m + n) + " 步，選其中 " + m + " 步向右：C(" + (m + n) + "," + m + ")。", en: "There are " + (m + n) + " steps in total; choose " + m + " of them to go right: C(" + (m + n) + "," + m + ")." }
-    };
-  }
-  function genHandshake(rng, o) {
-    var n = randInt(rng, 5, o.maxPeople || 30);
-    return {
-      type: "handshake",
-      prompt: {
-        zh: n + " 個人聚會，每兩個人互相握手一次，一共握手多少次？",
-        en: "At a party, every pair of the " + n + " people shakes hands exactly once. How many handshakes are there in total?"
-      },
-      visual: null,
-      answer: n * (n - 1) / 2,
-      math: { op: "handshake", n },
-      hint: { zh: "每人和其他 " + (n - 1) + " 人握手；每次握手被數了兩次。", en: "Each person shakes " + (n - 1) + " hands, and each handshake is counted twice." }
-    };
-  }
-  var ARRANGE_WORDS = ["LEVEL", "BANANA", "APPLE", "MATHS", "SUCCESS", "BALLOON", "KANGAROO"];
-  function genArrange(rng, o) {
-    var word = pick(rng, ARRANGE_WORDS);
-    var counts = {};
-    for (var i = 0; i < word.length; i++) counts[word[i]] = (counts[word[i]] || 0) + 1;
-    var denom = 1;
-    Object.keys(counts).forEach(function(ch) {
-      denom *= factInt(counts[ch]);
-    });
-    var answer = factInt(word.length) / denom;
-    return {
-      type: "arrange",
-      prompt: {
-        zh: "把單詞 " + word + " 的所有字母重新排列，共有多少種不同的排列？",
-        en: "How many different arrangements can be made using all the letters of the word " + word + "?"
-      },
-      visual: null,
-      answer,
-      math: { op: "arrange", word },
-      hint: { zh: "全排列 " + word.length + "!，再除以重複字母的排列數。", en: "Start with " + word.length + "! and divide by the arrangements of the repeated letters." }
-    };
-  }
-  function genInclusion(rng, o) {
-    var n = randInt(rng, 30, o.maxNum || 200);
-    var a = randInt(rng, 2, 7);
-    var b = randInt(rng, 3, 9);
-    while (b === a) b = randInt(rng, 3, 9);
-    var l = a / gcdInt(a, b) * b;
-    var answer = Math.floor(n / a) + Math.floor(n / b) - Math.floor(n / l);
-    return {
-      type: "inclusion",
-      prompt: {
-        zh: "在 1 到 " + n + " 之中，是 " + a + " 的倍數或是 " + b + " 的倍數的整數共有多少個？",
-        en: "How many integers from 1 to " + n + " are multiples of " + a + " or " + b + "?"
-      },
-      visual: null,
-      answer,
-      math: { op: "inclusion", n, a, b },
-      hint: { zh: "兩類相加後，要減去同時是兩者倍數（即 lcm 的倍數）的重複部分。", en: "Add the two counts, then subtract the multiples of the LCM that were counted twice." }
-    };
-  }
-  function genClockangle(rng, o) {
-    var h = randInt(rng, 1, 12);
-    var m = pick(rng, [0, 10, 20, 30, 40, 50]);
-    var diff = Math.abs(30 * h - 5.5 * m);
-    var answer = Math.min(diff, 360 - diff);
-    return {
-      type: "clockangle",
-      prompt: {
-        zh: "時鐘顯示 " + h + ":" + (m < 10 ? "0" + m : m) + "，時針與分針的較小夾角是多少度？",
-        en: "A clock shows " + h + ":" + (m < 10 ? "0" + m : m) + ". What is the smaller angle between the hour hand and the minute hand, in degrees?"
-      },
-      visual: null,
-      answer,
-      math: { op: "clockangle", h, m },
-      hint: { zh: "時針 = 30h + 0.5m 度；分針 = 6m 度；取兩者之差的較小角。", en: "Hour hand = 30h + 0.5m degrees; minute hand = 6m degrees; take the smaller angle between them." }
-    };
-  }
-  function genTrapezoid(rng, o) {
-    var a = randInt(rng, 4, o.maxSide || 12);
-    var b = randInt(rng, 4, o.maxSide || 12);
-    if (a === b) b += 2;
-    var h = randInt(rng, 3, o.maxHeight || 10);
-    if ((a + b) * h % 2 !== 0) h += 1;
-    return {
-      type: "trapezoid",
-      prompt: {
-        zh: "梯形的上底是 " + a + " cm，下底是 " + b + " cm，高是 " + h + " cm，面積是多少 cm²？",
-        en: "A trapezium has parallel sides " + a + " cm and " + b + " cm and height " + h + " cm. What is its area in cm²?"
-      },
-      visual: null,
-      answer: (a + b) * h / 2,
-      math: { op: "trapezoid", a, b, h },
-      hint: { zh: "梯形面積 = (上底 + 下底) × 高 ÷ 2。", en: "Area of a trapezium = (sum of parallel sides) × height ÷ 2." }
-    };
-  }
-  function genSeqnext(rng, o) {
-    var mode = pick(rng, ["triangle", "fib", "mixed", "square"]);
-    var terms = [];
-    var answer, math;
-    if (mode === "triangle") {
-      var n = randInt(rng, 5, 8);
-      for (var i = 1; i <= n; i++) terms.push(i * (i + 1) / 2);
-      answer = (n + 1) * (n + 2) / 2;
-      math = { op: "seqnext", mode, n };
-    } else if (mode === "fib") {
-      var f1 = randInt(rng, 1, 5), f2 = randInt(rng, 2, 7);
-      terms = [f1, f2];
-      while (terms.length < 5) terms.push(terms[terms.length - 1] + terms[terms.length - 2]);
-      answer = terms[4] + terms[3];
-      math = { op: "seqnext", mode, terms: terms.slice() };
-    } else if (mode === "mixed") {
-      var start = randInt(rng, 1, 4), add = randInt(rng, 1, 3);
-      terms = [start];
-      while (terms.length < 5) terms.push(terms[terms.length - 1] * 2 + add);
-      answer = terms[4] * 2 + add;
-      math = { op: "seqnext", mode, terms: terms.slice(), add };
-    } else {
-      var sq = randInt(rng, 4, 8);
-      for (var j = 1; j <= sq; j++) terms.push(j * j + 1);
-      answer = (sq + 1) * (sq + 1) + 1;
-      math = { op: "seqnext", mode, n: sq };
-    }
-    return {
-      type: "seqnext",
-      prompt: {
-        zh: "觀察數列：" + terms.join("、") + "，下一個數是多少？",
-        en: "Study the sequence: " + terms.join(", ") + ". What is the next number?"
-      },
-      visual: null,
-      answer,
-      math,
-      hint: { zh: "先找出相鄰兩數的差或倍數關係。", en: "Look for a pattern in the differences or ratios between terms." }
-    };
-  }
-  function genPigeon(rng, o) {
-    var colors = randInt(rng, 3, o.maxColors || 5);
-    var k = randInt(rng, 2, o.maxSame || 4);
-    return {
-      type: "pigeon",
-      prompt: {
-        zh: "袋中有 " + colors + " 種顏色的襪子（每種數量足夠）。最少要取出多少隻，才能保證其中有 " + k + " 隻同色？",
-        en: "A bag contains socks of " + colors + " colours (enough of each). What is the smallest number of socks you must take to be certain that " + k + " of them have the same colour?"
-      },
-      visual: null,
-      answer: colors * (k - 1) + 1,
-      math: { op: "pigeon", colors, k },
-      hint: { zh: "最壞情況：每種顏色都先取 " + (k - 1) + " 隻，再取一隻。", en: "Worst case: take " + (k - 1) + " of each colour first, then one more." }
-    };
-  }
-  var WORKRATE_PAIRS = [[6, 12], [12, 6], [10, 15], [15, 10], [20, 5], [5, 20], [8, 24], [24, 8], [12, 4], [4, 12]];
-  function genWorkrate(rng, o) {
-    var pair = pick(rng, WORKRATE_PAIRS);
-    var a = pair[0], b = pair[1];
-    return {
-      type: "workrate",
-      prompt: {
-        zh: "甲獨自完成一項工作要 " + a + " 天，乙獨自完成要 " + b + " 天。兩人合作，多少天可以完成？",
-        en: "Ann can finish a job alone in " + a + " days and Ben can finish it alone in " + b + " days. How many days will they take working together?"
-      },
-      visual: null,
-      answer: a * b / (a + b),
-      math: { op: "workrate", a, b },
-      hint: { zh: "合作一天完成 1/a + 1/b，時間 = 1 ÷ (1/a + 1/b)。", en: "Together they do 1/a + 1/b per day, so time = 1 ÷ (1/a + 1/b)." }
-    };
-  }
-  function genMixture(rng, o) {
-    var x, y, p1, p2, answer;
-    var guard = 0;
-    do {
-      x = randInt(rng, 5, 40);
-      y = randInt(rng, 5, 40);
-      p1 = pick(rng, [10, 20, 30, 40, 50]);
-      p2 = pick(rng, [10, 20, 30, 40, 50]);
-      answer = (x * p1 + y * p2) / (x + y);
-      guard++;
-    } while (!Number.isInteger(answer) && guard < 300);
-    if (!Number.isInteger(answer)) {
-      x = 20;
-      y = 20;
-      p1 = 20;
-      p2 = 40;
-      answer = 30;
-    }
-    return {
-      type: "mixture",
-      prompt: {
-        zh: "把 " + x + " 升 " + p1 + "% 的糖水與 " + y + " 升 " + p2 + "% 的糖水混合，混合後的濃度是多少%？",
-        en: x + " litres of " + p1 + "% sugar solution are mixed with " + y + " litres of " + p2 + "% sugar solution. What is the concentration of the mixture, in %?"
-      },
-      visual: null,
-      answer,
-      math: { op: "mixture", x, p1, y, p2 },
-      hint: { zh: "先算兩杯各自的糖量，再除以總體積。", en: "Find the sugar in each part first, then divide by the total volume." }
-    };
-  }
-  function genDiceprob(rng, o) {
-    var s = randInt(rng, 2, 12);
-    var ways = 6 - Math.abs(s - 7);
-    return {
-      type: "diceprob",
-      prompt: {
-        zh: "擲兩粒公平骰子，點數和是 " + s + " 的概率是多少？",
-        en: "Two fair dice are rolled. What is the probability that the sum is " + s + "?"
-      },
-      visual: null,
-      answer: { n: ways, d: 36 },
-      math: { op: "diceprob", s },
-      hint: { zh: "列出和為 " + s + " 的組合數，再除以 36。", en: "Count the outcomes with sum " + s + " and divide by 36." }
-    };
-  }
-  function genCoinprob(rng, o) {
-    var n = randInt(rng, 3, 6);
-    var k = randInt(rng, 1, n - 1);
-    return {
-      type: "coinprob",
-      prompt: {
-        zh: "擲 " + n + " 枚公平硬幣，剛好有 " + k + " 個正面的概率是多少？",
-        en: "A fair coin is tossed " + n + " times. What is the probability of getting exactly " + k + " heads?"
-      },
-      visual: null,
-      answer: { n: factInt(n) / (factInt(k) * factInt(n - k)), d: Math.pow(2, n) },
-      math: { op: "coinprob", n, k },
-      hint: { zh: "成功組合數 C(" + n + "," + k + ") 除以 2^" + n + "。", en: "Divide the number of successful combinations C(" + n + "," + k + ") by 2^" + n + "." }
-    };
-  }
-  function genLastdigit(rng, o) {
-    var a = randInt(rng, 2, o.maxBase || 9);
-    var b = randInt(rng, 2, o.maxExp || 6);
-    var r = 1;
-    for (var i = 0; i < b; i++) r = r * a % 10;
-    return {
-      type: "lastdigit",
-      prompt: { zh: a + "^" + b + " 的個位數字是多少？", en: "What is the units digit of " + a + "^" + b + "?" },
-      visual: null,
-      answer: r,
-      math: { op: "lastdigit", a, b },
-      hint: { zh: "每次只保留個位相乘，觀察個位的循環。", en: "Keep only the units digit when multiplying and look for a cycle." }
-    };
-  }
-  function genGridrect(rng, o) {
-    var m = randInt(rng, 2, o.maxDim || 8);
-    var n = randInt(rng, 2, o.maxDim || 8);
-    var rcount = m * (m + 1) / 2 * (n * (n + 1) / 2);
-    return {
-      type: "gridrect",
-      prompt: {
-        zh: "在 " + m + " × " + n + " 的方格紙上，可以數出多少個長方形（包括正方形）？",
-        en: "How many rectangles (including squares) can be found in an " + m + " by " + n + " grid?"
-      },
-      visual: null,
-      answer: rcount,
-      math: { op: "gridrect", m, n },
-      hint: { zh: "先選兩條橫線、再選兩條直線：C(" + (m + 1) + ",2) × C(" + (n + 1) + ",2)。", en: "Choose two horizontal lines and two vertical lines: C(" + (m + 1) + ",2) × C(" + (n + 1) + ",2)." }
-    };
-  }
-  function genPolygonsum(rng, o) {
-    var n = pick(rng, [5, 6, 8, 9, 10, 12]);
-    var mode = pick(rng, ["sum", "each"]);
-    var answer = mode === "sum" ? (n - 2) * 180 : (n - 2) * 180 / n;
-    return {
-      type: "polygonsum",
-      prompt: mode === "sum" ? { zh: n + " 邊形的內角和是多少度？", en: "What is the sum of the interior angles of an " + n + "-sided polygon?" } : { zh: "正 " + n + " 邊形的每一個內角是多少度？", en: "What is each interior angle of a regular " + n + "-sided polygon?" },
-      visual: null,
-      answer,
-      math: { op: "polygonsum", n, mode },
-      hint: { zh: "內角和 = (n − 2) × 180°。", en: "Sum of interior angles = (n − 2) × 180°." }
-    };
-  }
-  var TRAIN_PAIRS = [[60, 40], [50, 30], [45, 35], [70, 50], [80, 55], [90, 60], [75, 45], [80, 60]];
-  function genTrain(rng, o) {
-    var pair = pick(rng, TRAIN_PAIRS);
-    var s1 = pair[0], s2 = pair[1];
-    var mode = pick(rng, ["towards", "chase"]);
-    var relative = mode === "towards" ? s1 + s2 : s1 - s2;
-    var t = randInt(rng, 2, 6);
-    var d = relative * t;
-    return {
-      type: "train",
-      prompt: mode === "towards" ? {
-        zh: "兩地相距 " + d + " km，A 車以 " + s1 + " km/h、B 車以 " + s2 + " km/h 同時相向而行，多少小時後相遇？",
-        en: "Two towns are " + d + " km apart. Car A travels at " + s1 + " km/h and car B at " + s2 + " km/h towards each other. In how many hours do they meet?"
-      } : {
-        zh: "A 車以 " + s1 + " km/h 追前方 " + d + " km 的 B 車（" + s2 + " km/h），多少小時後追上？",
-        en: "Car A travels at " + s1 + " km/h chasing car B, which is " + d + " km ahead travelling at " + s2 + " km/h. In how many hours does A catch B?"
-      },
-      visual: null,
-      answer: t,
-      math: { op: "train", mode, d, s1, s2 },
-      hint: {
-        zh: mode === "towards" ? "相向而行：相對速率 = s1 + s2。" : "追及問題：相對速率 = s1 − s2。",
-        en: mode === "towards" ? "Towards: relative speed = s1 + s2." : "Chasing: relative speed = s1 − s2."
-      }
-    };
-  }
-  function genDicecompare(rng, o) {
-    var k = randInt(rng, 4, 10);
-    var ways = 0;
-    for (var i = 1; i <= 6; i++) {
-      for (var j = 1; j <= 6; j++) if (i + j > k) ways++;
-    }
-    return {
-      type: "dicecompare",
-      prompt: {
-        zh: "擲兩粒公平骰子，點數和大於 " + k + " 的概率是多少？",
-        en: "Two fair dice are rolled. What is the probability that the sum is greater than " + k + "?"
-      },
-      visual: null,
-      answer: { n: ways, d: 36 },
-      math: { op: "dicecompare", k },
-      hint: { zh: "數出點數和大於 " + k + " 的組合數，再除以 36。", en: "Count the outcomes with sum greater than " + k + ", then divide by 36." }
-    };
-  }
-  var GENERATORS = {
-    count: genCount,
-    compare: genCompare,
-    comparegroup: genCompareGroup,
-    placevalue: genPlacevalue,
-    identity: genIdentity,
-    circleprop: genCircleprop,
-    dispersion: genDispersion,
-    prism: genPrism,
-    matrix: genMatrix,
-    calculus: genCalculus,
-    expectation: genExpectation,
-    addition: genAddition,
-    subtraction: genSubtraction,
-    numberbonds: genNumberBonds,
-    missing: genMissing,
-    multiplication: genMultiplication,
-    division: genDivision,
-    fraction: genFraction,
-    word: genWord,
-    multidigit: genMultiDigit,
-    fractionadd: genFractionAdd,
-    decimal: genDecimal,
-    decimalmul: genDecimalMul,
-    average: genAverage,
-    equation: genEquation,
-    percent: genPercent,
-    ratio: genRatio,
-    area: genArea,
-    fractionof: genFractionOf,
-    directed: genDirected,
-    exprsub: genExprSub,
-    linear: genLinear,
-    pythagoras: genPythagoras,
-    simul: genSimul,
-    indices: genIndices,
-    inequality: genInequality,
-    log: genLog,
-    fx: genFx,
-    trig: genTrig,
-    ap: genAp,
-    gp: genGp,
-    prob: genProb,
-    quad: genQuad,
-    stats: genStats,
-    triangle: genTriangle,
-    circle: genCircle,
-    volume: genVolume,
-    coord: genCoord,
-    perimeter: genPerimeter,
-    polygon: genPolygon,
-    angle: genAngle,
-    money: genMoney,
-    fact: genFact,
-    quadsolve: genQuadsolve,
-    line: genLine,
-    variation: genVariation,
-    oddeven: genOddEven,
-    shape: genShape,
-    symmetry: genSymmetry,
-    liketerms: genLiketerms,
-    polycoeff: genPolycoeff,
-    arclen: genArclen,
-    mode: genMode,
-    asum: genAsum,
-    invvar: genInvvar,
-    comb: genComb,
-    range: genRange,
-    circleeq: genCircleeq,
-    parallel: genParallel,
-    sqrt: genSqrt,
-    congruent: genCongruent,
-    similar: genSimilar,
-    quadshape: genQuadshape,
-    cylinder: genCylinder,
-    sinterest: genSinterest,
-    expand: genExpand,
-    pichart: genPichart,
-    approx: genApprox,
-    direction: genDirection,
-    time24: genTime24,
-    cone: genCone,
-    centre: genCentre,
-    circleangle: genCircleangle,
-    binomial: genBinomial,
-    derivative: genDerivative,
-    modpow: genModpow,
-    gcdlcm: genGcdlcm,
-    remainderSystem: genRemainderSystem,
-    pathcount: genPathcount,
-    handshake: genHandshake,
-    arrange: genArrange,
-    inclusion: genInclusion,
-    clockangle: genClockangle,
-    trapezoid: genTrapezoid,
-    seqnext: genSeqnext,
-    pigeon: genPigeon,
-    workrate: genWorkrate,
-    mixture: genMixture,
-    diceprob: genDiceprob,
-    coinprob: genCoinprob,
-    lastdigit: genLastdigit,
-    gridrect: genGridrect,
-    polygonsum: genPolygonsum,
-    train: genTrain,
-    dicecompare: genDicecompare
-  };
   GENERATOR_TYPES = Object.keys(GENERATORS);
   function fractionDistractor(rng, ans) {
     var d = randInt(rng, 2, Math.max(ans.d + 2, 4));
