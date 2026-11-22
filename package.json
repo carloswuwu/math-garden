@@ -2,6 +2,7 @@
   "name": "math-garden",
   "version": "1.0.0",
   "private": true,
+  "license": "MIT",
   "description": "Math Garden — bilingual offline-first math PWA. Build with esbuild; tests live in tests/.",
   "scripts": {
     "build": "node tools/build.js",

@@ -139,3 +139,9 @@ node tests/a11y.test.js
 - 應用名「數學樂園 · Math Garden」為暫定名，可隨時在 `i18n.js`、`manifest.webmanifest` 和 `index.html` 的 `<title>` 中修改。
 - 語音朗讀暫未內置（v1 為文字講解）；如需語音，可後續接入瀏覽器 TTS。
 - 直接雙擊的本地文件模式不支持 Service Worker（無需聯網本身可運行）；離線安裝需通過 HTTPS 或 localhost 部署。
+
+## 授權
+
+本專案以 **MIT License** 授權，詳見 [LICENSE](LICENSE)。
+
+第三方資源依其原授權：KaTeX 為 MIT；`vendor/katex/fonts/` 內的 KaTeX 字型為 SIL Open Font License 1.1。
