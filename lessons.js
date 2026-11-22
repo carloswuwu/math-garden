@@ -1861,6 +1861,86 @@
   Object.keys(EXTRA_LESSONS2).forEach(function(key) {
     L[key] = EXTRA_LESSONS2[key];
   });
+  var EXTRA_LESSONS3 = {
+    "g5.fraccompare": {
+      zh: {
+        title: "分數比較與擴分約分",
+        intro: "比較異分母分數要先通分；擴分是分子分母同乘一個數，約分是同除一個數。",
+        steps: ["比較：通分後看分子，分子越大分數越大。", "擴分：分子分母同乘 k，數值不變。", "約分：分子分母同除最大公因數。"],
+        example: "3/4 與 5/7：通分 21/28 與 20/28，所以 3/4 較大；8/12 約分為 2/3。",
+        tip: "分子相同時，分母越小，分數越大。",
+        mistake: "只比較分母大小，或約分時只除分子。",
+        visual: { kind: "fraction", n: 3, d: 4 },
+        glossary: [
+          { term: "擴分", def: "分子分母同乘一個數，分數值不變。" },
+          { term: "約分", def: "分子分母同除公因數。" },
+          { term: "通分", def: "把異分母分數改為同分母。" }
+        ]
+      },
+      en: {
+        title: "Comparing, Expanding & Simplifying Fractions",
+        intro: "Compare unlike fractions by finding a common denominator; expanding multiplies top and bottom by the same number, simplifying divides them.",
+        steps: ["Compare: use a common denominator; the larger numerator wins.", "Expand: multiply numerator and denominator by k.", "Simplify: divide by the greatest common factor."],
+        example: "3/4 and 5/7 become 21/28 and 20/28, so 3/4 is larger; 8/12 simplifies to 2/3.",
+        tip: "With equal numerators, the smaller denominator gives the larger fraction.",
+        mistake: "Comparing denominators only, or dividing just the numerator when simplifying.",
+        visual: { kind: "fraction", n: 3, d: 4 },
+        glossary: [
+          { term: "Expand", def: "Multiply numerator and denominator by the same number." },
+          { term: "Simplify", def: "Divide numerator and denominator by a common factor." },
+          { term: "Common denominator", def: "A shared denominator for unlike fractions." }
+        ]
+      }
+    },
+    "g5.decimalmixed": {
+      zh: {
+        title: "小數四則混合",
+        intro: "小數加減要對齊小數點；乘除可以先當整數算，最後再點小數點。",
+        steps: ["先看清是加、減、乘還是除。", "加減：小數點對齊，逐位計算。", "乘除：先當整數算，再按小數位數點回小數點。"],
+        example: "2.5 + 1.8 = 4.3；2.5 × 3 = 7.5；7.2 ÷ 3 = 2.4。",
+        tip: "計完後用估算檢查答案是否合理。",
+        mistake: "加減時小數點沒有對齊，或乘除後忘記點小數點。",
+        visual: { kind: "numberline" },
+        glossary: [
+          { term: "小數點", def: "分隔整數部分和小數部分。" },
+          { term: "四則運算", def: "加、減、乘、除。" },
+          { term: "估算", def: "用近似值檢查答案。" }
+        ]
+      },
+      en: {
+        title: "Mixed Decimal Operations",
+        intro: "Line up decimal points when adding or subtracting; for multiplication and division, calculate as whole numbers first.",
+        steps: ["Identify whether to add, subtract, multiply or divide.", "Add/subtract: align decimal points and work column by column.", "Multiply/divide: calculate as whole numbers, then place the decimal point."],
+        example: "2.5 + 1.8 = 4.3; 2.5 × 3 = 7.5; 7.2 ÷ 3 = 2.4.",
+        tip: "Use estimation to check whether the answer is reasonable.",
+        mistake: "Misaligning decimal points, or forgetting the decimal point after multiplying/dividing.",
+        visual: { kind: "numberline" },
+        glossary: [
+          { term: "Decimal point", def: "Separates the whole-number and fractional parts." },
+          { term: "Four operations", def: "Addition, subtraction, multiplication and division." },
+          { term: "Estimate", def: "Use rounded values to check an answer." }
+        ]
+      }
+    }
+  };
+  Object.keys(EXTRA_LESSONS3).forEach(function(key) {
+    L[key] = EXTRA_LESSONS3[key];
+  });
+  var LESSON_VISUALS = {
+    "g4.fractionadd": { fraction: { n: 3, d: 4 } },
+    "g4.decimal": { numberline: true },
+    "g5.average": { barchart: true },
+    "g6.equation": { numberline: true },
+    "ms.s1.linear": { numberline: true }
+  };
+  Object.keys(LESSON_VISUALS).forEach(function(key) {
+    if (!L[key]) return;
+    var v = LESSON_VISUALS[key];
+    var visual = v.fraction ? { kind: "fraction", n: v.fraction.n, d: v.fraction.d } : v.barchart ? { kind: "barchart", values: [4, 6, 8, 5], labels: ["A", "B", "C", "D"] } : { kind: "numberline" };
+    ["zh", "en"].forEach(function(lang) {
+      if (L[key][lang] && !L[key][lang].visual) L[key][lang].visual = visual;
+    });
+  });
 
   // data-entry.js
   (typeof window !== "undefined" ? window : globalThis).Lessons = L;

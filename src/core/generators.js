@@ -3508,6 +3508,85 @@ import { fmtDecimal, fmtNum } from './display.js';
     };
   }
 
+
+  /* ---------------- 小五補充（三）：分數比較/擴分約分、小數四則混合 ---------------- */
+
+  function genFraccompare(rng, o) {
+    var mode = pick(rng, ['simplify', 'expand', 'compare']);
+    if (mode === 'simplify') {
+      var sn = randInt(rng, 1, 6);
+      var sd = randInt(rng, sn + 1, 9);
+      var sk = randInt(rng, 2, 5);
+      var rawN = sn * sk, rawD = sd * sk;
+      var reduced = reduceFraction({ n: rawN, d: rawD });
+      return {
+        type: 'fraccompare',
+        prompt: { zh: '把 ' + rawN + '/' + rawD + ' 約至最簡。', en: 'Simplify ' + rawN + '/' + rawD + ' to lowest terms.' },
+        visual: { kind: 'fraction', n: reduced.n, d: reduced.d },
+        answer: reduced,
+        math: { op: 'fraccompare', mode: mode, n: rawN, d: rawD },
+        hint: { zh: '分子分母同除以最大公因數。', en: 'Divide numerator and denominator by their greatest common factor.' }
+      };
+    }
+    if (mode === 'expand') {
+      var en = randInt(rng, 1, 5), ed = randInt(rng, en + 1, 9), ek = randInt(rng, 2, 5);
+      return {
+        type: 'fraccompare',
+        prompt: { zh: en + '/' + ed + ' = ?/' + (ed * ek) + '，求分子。', en: en + '/' + ed + ' = ?/' + (ed * ek) + '. Find the missing numerator.' },
+        visual: { kind: 'fraction', n: en, d: ed },
+        answer: en * ek,
+        math: { op: 'fraccompare', mode: mode, n: en, d: ed, k: ek },
+        hint: { zh: '分母乘了 ' + ek + '，分子也要乘 ' + ek + '。', en: 'The denominator was multiplied by ' + ek + ', so multiply the numerator by ' + ek + ' too.' }
+      };
+    }
+    var n1, d1, n2, d2;
+    do {
+      n1 = randInt(rng, 1, 5); d1 = randInt(rng, n1 + 1, 9);
+      n2 = randInt(rng, 1, 5); d2 = randInt(rng, n2 + 1, 9);
+    } while (Math.abs(n1 / d1 - n2 / d2) < 1e-9 || d1 === d2);
+    var larger = (n1 / d1 > n2 / d2) ? { n: n1, d: d1 } : { n: n2, d: d2 };
+    var other = (n1 / d1 > n2 / d2) ? { n: n2, d: d2 } : { n: n1, d: d1 };
+    var compareChoices = [larger, other];
+    var guardC = 0;
+    while (compareChoices.length < 4 && guardC++ < 200) {
+      var cand = { n: randInt(rng, 1, 9), d: randInt(rng, 2, 9) };
+      var dup = compareChoices.some(function (c) { return valuesEqual(c, cand); });
+      if (!dup) compareChoices.push(cand);
+    }
+    return {
+      type: 'fraccompare',
+      prompt: { zh: '比較 ' + n1 + '/' + d1 + ' 和 ' + n2 + '/' + d2 + '，哪個較大？', en: 'Which is larger: ' + n1 + '/' + d1 + ' or ' + n2 + '/' + d2 + '?' },
+      visual: null,
+      answer: larger,
+      math: { op: 'fraccompare', mode: mode, n1: n1, d1: d1, n2: n2, d2: d2 },
+      choices: compareChoices,
+      hint: { zh: '通分後比較分子；分子相同時，分母越小分數越大。', en: 'Make common denominators and compare numerators; with equal numerators, the smaller denominator gives the larger fraction.' }
+    };
+  }
+
+  function genDecimalmixed(rng, o) {
+    var mode = pick(rng, ['add', 'sub', 'mul', 'div']);
+    var a = randInt(rng, 11, 99);
+    var b = randInt(rng, 11, 89);
+    var r;
+    if (mode === 'add') r = a + b;
+    else if (mode === 'sub') { if (b > a) { var tmp = a; a = b; b = tmp; } r = a - b; }
+    else if (mode === 'mul') { b = randInt(rng, 2, 9); r = a * b; }
+    else { b = randInt(rng, 2, 9); a = b * randInt(rng, 11, 99); r = a / b; }
+    var sym = mode === 'add' ? '+' : mode === 'sub' ? '−' : mode === 'mul' ? '×' : '÷';
+    var rhs = mode === 'mul' || mode === 'div' ? String(b) : fmtDecimal(b);
+    var lhs = fmtDecimal(a);
+    return {
+      type: 'decimalmixed',
+      prompt: { zh: lhs + ' ' + sym + ' ' + rhs + ' = ?', en: lhs + ' ' + sym + ' ' + rhs + ' = ?' },
+      visual: { kind: 'numberline' },
+      answer: fmtDecimal(r),
+      choices: decimalChoices(rng, r),
+      math: { op: 'decimalmixed', mode: mode, a: a, b: b, r: r },
+      hint: { zh: '先判斷運算次序；小數點要對齊（加減）或先當整數算（乘除）。', en: 'Decide the operation first; line up decimal points (add/sub) or calculate as whole numbers (×/÷).' }
+    };
+  }
+
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -3626,7 +3705,9 @@ import { fmtDecimal, fmtNum } from './display.js';
     chartread: genChartread,
     circleparts: genCircleparts,
     ode: genOde,
-    numtheory: genNumtheory
+    numtheory: genNumtheory,
+    fraccompare: genFraccompare,
+    decimalmixed: genDecimalmixed
   };
 
 export { GENERATORS, DIR_LABEL, CENTRE_LABEL };

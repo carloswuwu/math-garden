@@ -404,6 +404,28 @@
       levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
     },
+    "g5.fraccompare": {
+      id: "g5.fraccompare",
+      stage: "g5",
+      order: 14,
+      zh: { name: "分數比較與擴分約分", goal: "會比較異分母分數，並做擴分與約分。" },
+      en: { name: "Comparing, Expanding & Simplifying Fractions", goal: "Compare unlike fractions and expand or simplify fractions." },
+      lesson: "g5.fraccompare",
+      types: ["fraccompare"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    "g5.decimalmixed": {
+      id: "g5.decimalmixed",
+      stage: "g5",
+      order: 15,
+      zh: { name: "小數四則混合", goal: "會做小數加、減、乘、除及混合運算。" },
+      en: { name: "Mixed Decimal Operations", goal: "Add, subtract, multiply and divide decimals." },
+      lesson: "g5.decimalmixed",
+      types: ["decimalmixed"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
     "g5.circle": {
       id: "g5.circle",
       stage: "g5",
@@ -1552,7 +1574,7 @@
       color: "#5856D6",
       emoji: "⛰️",
       topics: [
-        { id: "g5.num", zh: "數與運算", en: "Numbers & Operations", skills: ["g5.decimalmul", "g5.fractionof", "g5.fractiondiff", "g5.fractionmul", "g5.estimation"] },
+        { id: "g5.num", zh: "數與運算", en: "Numbers & Operations", skills: ["g5.decimalmul", "g5.fractionof", "g5.fractiondiff", "g5.fractionmul", "g5.estimation", "g5.fraccompare", "g5.decimalmixed"] },
         { id: "g5.measure", zh: "度量", en: "Measurement", skills: ["g5.area2", "g5.volume1"] },
         { id: "g5.data", zh: "數據處理", en: "Data Handling", skills: ["g5.average", "g5.chart"] },
         { id: "g5.shape", zh: "圖形與空間", en: "Shape & Space", skills: ["g5.rotation", "g5.circle"] },

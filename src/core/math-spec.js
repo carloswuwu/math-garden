@@ -240,6 +240,12 @@ var MATH_SPEC = {
     return m.mode === 'defint' ? m.a * Math.pow(m.b, m.n + 1) / (m.n + 1) : m.a * m.n * Math.pow(m.x, m.n - 1);
   },
   linalg2: function (m) { return m.mode === 'det' ? m.a * m.d - m.b * m.c : m.a * m.e + m.b * m.g; },
+  fraccompare: function (m) {
+    if (m.mode === 'simplify') return { n: m.n, d: m.d };
+    if (m.mode === 'expand') return m.n * m.k;
+    return m.n1 * m.d2 > m.n2 * m.d1 ? { n: m.n1, d: m.d1 } : { n: m.n2, d: m.d2 };
+  },
+  decimalmixed: function (m) { return (m.r / 10).toFixed(1); },
   rounding: function (m) {
     if (m.mode === 'round') return Math.round(m.n / m.unit) * m.unit;
     return Math.round(m.a / m.unit) * m.unit + Math.round(m.b / m.unit) * m.unit;

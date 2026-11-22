@@ -524,6 +524,14 @@ var __MathCoreBundle = (() => {
     linalg2: function(m) {
       return m.mode === "det" ? m.a * m.d - m.b * m.c : m.a * m.e + m.b * m.g;
     },
+    fraccompare: function(m) {
+      if (m.mode === "simplify") return { n: m.n, d: m.d };
+      if (m.mode === "expand") return m.n * m.k;
+      return m.n1 * m.d2 > m.n2 * m.d1 ? { n: m.n1, d: m.d1 } : { n: m.n2, d: m.d2 };
+    },
+    decimalmixed: function(m) {
+      return (m.r / 10).toFixed(1);
+    },
     rounding: function(m) {
       if (m.mode === "round") return Math.round(m.n / m.unit) * m.unit;
       return Math.round(m.a / m.unit) * m.unit + Math.round(m.b / m.unit) * m.unit;
@@ -4173,6 +4181,96 @@ var __MathCoreBundle = (() => {
       hint: { zh: "逐個試 x = 1, 2, …，直到 " + a + "x 除以 " + m + " 餘 1。", en: "Try x = 1, 2, … until " + a + "x leaves remainder 1 modulo " + m + "." }
     };
   }
+  function genFraccompare(rng, o) {
+    var mode = pick(rng, ["simplify", "expand", "compare"]);
+    if (mode === "simplify") {
+      var sn = randInt(rng, 1, 6);
+      var sd = randInt(rng, sn + 1, 9);
+      var sk = randInt(rng, 2, 5);
+      var rawN = sn * sk, rawD = sd * sk;
+      var reduced = reduceFraction({ n: rawN, d: rawD });
+      return {
+        type: "fraccompare",
+        prompt: { zh: "把 " + rawN + "/" + rawD + " 約至最簡。", en: "Simplify " + rawN + "/" + rawD + " to lowest terms." },
+        visual: { kind: "fraction", n: reduced.n, d: reduced.d },
+        answer: reduced,
+        math: { op: "fraccompare", mode, n: rawN, d: rawD },
+        hint: { zh: "分子分母同除以最大公因數。", en: "Divide numerator and denominator by their greatest common factor." }
+      };
+    }
+    if (mode === "expand") {
+      var en = randInt(rng, 1, 5), ed = randInt(rng, en + 1, 9), ek = randInt(rng, 2, 5);
+      return {
+        type: "fraccompare",
+        prompt: { zh: en + "/" + ed + " = ?/" + ed * ek + "，求分子。", en: en + "/" + ed + " = ?/" + ed * ek + ". Find the missing numerator." },
+        visual: { kind: "fraction", n: en, d: ed },
+        answer: en * ek,
+        math: { op: "fraccompare", mode, n: en, d: ed, k: ek },
+        hint: { zh: "分母乘了 " + ek + "，分子也要乘 " + ek + "。", en: "The denominator was multiplied by " + ek + ", so multiply the numerator by " + ek + " too." }
+      };
+    }
+    var n1, d1, n2, d2;
+    do {
+      n1 = randInt(rng, 1, 5);
+      d1 = randInt(rng, n1 + 1, 9);
+      n2 = randInt(rng, 1, 5);
+      d2 = randInt(rng, n2 + 1, 9);
+    } while (Math.abs(n1 / d1 - n2 / d2) < 1e-9 || d1 === d2);
+    var larger = n1 / d1 > n2 / d2 ? { n: n1, d: d1 } : { n: n2, d: d2 };
+    var other = n1 / d1 > n2 / d2 ? { n: n2, d: d2 } : { n: n1, d: d1 };
+    var compareChoices = [larger, other];
+    var guardC = 0;
+    while (compareChoices.length < 4 && guardC++ < 200) {
+      var cand = { n: randInt(rng, 1, 9), d: randInt(rng, 2, 9) };
+      var dup = compareChoices.some(function(c) {
+        return valuesEqual(c, cand);
+      });
+      if (!dup) compareChoices.push(cand);
+    }
+    return {
+      type: "fraccompare",
+      prompt: { zh: "比較 " + n1 + "/" + d1 + " 和 " + n2 + "/" + d2 + "，哪個較大？", en: "Which is larger: " + n1 + "/" + d1 + " or " + n2 + "/" + d2 + "?" },
+      visual: null,
+      answer: larger,
+      math: { op: "fraccompare", mode, n1, d1, n2, d2 },
+      choices: compareChoices,
+      hint: { zh: "通分後比較分子；分子相同時，分母越小分數越大。", en: "Make common denominators and compare numerators; with equal numerators, the smaller denominator gives the larger fraction." }
+    };
+  }
+  function genDecimalmixed(rng, o) {
+    var mode = pick(rng, ["add", "sub", "mul", "div"]);
+    var a = randInt(rng, 11, 99);
+    var b = randInt(rng, 11, 89);
+    var r;
+    if (mode === "add") r = a + b;
+    else if (mode === "sub") {
+      if (b > a) {
+        var tmp = a;
+        a = b;
+        b = tmp;
+      }
+      r = a - b;
+    } else if (mode === "mul") {
+      b = randInt(rng, 2, 9);
+      r = a * b;
+    } else {
+      b = randInt(rng, 2, 9);
+      a = b * randInt(rng, 11, 99);
+      r = a / b;
+    }
+    var sym = mode === "add" ? "+" : mode === "sub" ? "−" : mode === "mul" ? "×" : "÷";
+    var rhs = mode === "mul" || mode === "div" ? String(b) : fmtDecimal(b);
+    var lhs = fmtDecimal(a);
+    return {
+      type: "decimalmixed",
+      prompt: { zh: lhs + " " + sym + " " + rhs + " = ?", en: lhs + " " + sym + " " + rhs + " = ?" },
+      visual: { kind: "numberline" },
+      answer: fmtDecimal(r),
+      choices: decimalChoices(rng, r),
+      math: { op: "decimalmixed", mode, a, b, r },
+      hint: { zh: "先判斷運算次序；小數點要對齊（加減）或先當整數算（乘除）。", en: "Decide the operation first; line up decimal points (add/sub) or calculate as whole numbers (×/÷)." }
+    };
+  }
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -4291,7 +4389,9 @@ var __MathCoreBundle = (() => {
     chartread: genChartread,
     circleparts: genCircleparts,
     ode: genOde,
-    numtheory: genNumtheory
+    numtheory: genNumtheory,
+    fraccompare: genFraccompare,
+    decimalmixed: genDecimalmixed
   };
 
   // src/core/format.js
@@ -5517,6 +5617,13 @@ var __MathCoreBundle = (() => {
       case "numtheory":
         if (m.mode === "phi") return { zh: ["數一數 1 至 " + m.n + " 中與 " + m.n + " 互質的數。", "φ(" + m.n + ") = " + p.answer + "。"], en: ["Count integers 1.." + m.n + " coprime to " + m.n + ".", "φ(" + m.n + ") = " + p.answer + "."] };
         return { zh: ["找最小的 x 使 " + m.a + "x 除以 " + m.m + " 餘 1。", "x = " + p.answer + "。"], en: ["Find the smallest x with " + m.a + "x ≡ 1 (mod " + m.m + ").", "x = " + p.answer + "."] };
+      case "fraccompare":
+        if (m.mode === "simplify") return { zh: ["找分子分母的最大公因數。", m.n + "/" + m.d + " 約至 " + renderValue(p.answer) + "。"], en: ["Find the gcd of numerator and denominator.", m.n + "/" + m.d + " simplifies to " + renderValue(p.answer) + "."] };
+        if (m.mode === "expand") return { zh: ["分母 " + m.d + " 擴成 " + m.d * m.k + "，乘了 " + m.k + "。", "分子也要乘 " + m.k + "：" + m.n + " × " + m.k + " = " + p.answer + "。"], en: ["The denominator " + m.d + " becomes " + m.d * m.k + ", multiplied by " + m.k + ".", "Multiply the numerator by " + m.k + ": " + m.n + " × " + m.k + " = " + p.answer + "."] };
+        return { zh: ["通分後比較：" + m.n1 + "/" + m.d1 + " 與 " + m.n2 + "/" + m.d2 + "。", "較大的是 " + renderValue(p.answer) + "。"], en: ["Use a common denominator to compare " + m.n1 + "/" + m.d1 + " and " + m.n2 + "/" + m.d2 + ".", "The larger fraction is " + renderValue(p.answer) + "."] };
+      case "decimalmixed":
+        if (m.mode === "add" || m.mode === "sub") return { zh: ["小數點對齊，再逐位計算。", "= " + fmtDecimal(m.r) + "。"], en: ["Line up the decimal points and calculate column by column.", "= " + fmtDecimal(m.r) + "."] };
+        return { zh: ["先當整數計算，再點回小數點。", "= " + fmtDecimal(m.r) + "。"], en: ["Calculate as whole numbers, then place the decimal point.", "= " + fmtDecimal(m.r) + "."] };
       default:
         return null;
     }

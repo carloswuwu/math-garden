@@ -1195,6 +1195,13 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
       case 'numtheory':
         if (m.mode === 'phi') return { zh: ['數一數 1 至 ' + m.n + ' 中與 ' + m.n + ' 互質的數。', 'φ(' + m.n + ') = ' + p.answer + '。'], en: ['Count integers 1..' + m.n + ' coprime to ' + m.n + '.', 'φ(' + m.n + ') = ' + p.answer + '.'] };
         return { zh: ['找最小的 x 使 ' + m.a + 'x 除以 ' + m.m + ' 餘 1。', 'x = ' + p.answer + '。'], en: ['Find the smallest x with ' + m.a + 'x ≡ 1 (mod ' + m.m + ').', 'x = ' + p.answer + '.'] };
+      case 'fraccompare':
+        if (m.mode === 'simplify') return { zh: ['找分子分母的最大公因數。', m.n + '/' + m.d + ' 約至 ' + renderValue(p.answer) + '。'], en: ['Find the gcd of numerator and denominator.', m.n + '/' + m.d + ' simplifies to ' + renderValue(p.answer) + '.'] };
+        if (m.mode === 'expand') return { zh: ['分母 ' + m.d + ' 擴成 ' + (m.d * m.k) + '，乘了 ' + m.k + '。', '分子也要乘 ' + m.k + '：' + m.n + ' × ' + m.k + ' = ' + p.answer + '。'], en: ['The denominator ' + m.d + ' becomes ' + (m.d * m.k) + ', multiplied by ' + m.k + '.', 'Multiply the numerator by ' + m.k + ': ' + m.n + ' × ' + m.k + ' = ' + p.answer + '.'] };
+        return { zh: ['通分後比較：' + m.n1 + '/' + m.d1 + ' 與 ' + m.n2 + '/' + m.d2 + '。', '較大的是 ' + renderValue(p.answer) + '。'], en: ['Use a common denominator to compare ' + m.n1 + '/' + m.d1 + ' and ' + m.n2 + '/' + m.d2 + '.', 'The larger fraction is ' + renderValue(p.answer) + '.'] };
+      case 'decimalmixed':
+        if (m.mode === 'add' || m.mode === 'sub') return { zh: ['小數點對齊，再逐位計算。', '= ' + fmtDecimal(m.r) + '。'], en: ['Line up the decimal points and calculate column by column.', '= ' + fmtDecimal(m.r) + '.'] };
+        return { zh: ['先當整數計算，再點回小數點。', '= ' + fmtDecimal(m.r) + '。'], en: ['Calculate as whole numbers, then place the decimal point.', '= ' + fmtDecimal(m.r) + '.'] };
       default:
         return null;
     }
