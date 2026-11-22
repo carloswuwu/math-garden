@@ -1250,6 +1250,18 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
         if (m.mode === 'sin') return { zh: ['$\sin\theta=\sin ' + m.base + '^\circ$ 的兩解為 $' + m.base + '^\circ$ 與 $' + (180 - m.base) + '^\circ$。', '和 = 180°。'], en: ['$\sin\theta=\sin ' + m.base + '^\circ$ has solutions $' + m.base + '^\circ$ and $' + (180 - m.base) + '^\circ$.', 'Sum = 180°.'] };
         if (m.mode === 'cos') return { zh: ['$\cos\theta=\cos ' + m.base + '^\circ$ 的兩解和為 360°。'], en: ['$\cos\theta=\cos ' + m.base + '^\circ$ has solutions summing to 360°.'] };
         return { zh: ['$\tan\theta=\tan ' + m.base + '^\circ$ 的兩解相差 180°。', '和 = 180° + 2×' + m.base + '° = ' + p.answer + '°。'], en: ['$\tan\theta=\tan ' + m.base + '^\circ$ has solutions differing by 180°.', 'Sum = 180° + 2×' + m.base + '° = ' + p.answer + '°.'] };
+      case 'invtrig':
+        if (m.mode === 'compose') return { zh: ['畫直角三角形：設角 θ 的三角比，再用畢氏定理求另一邊。', '答案是 ' + renderValue(p.answer) + '。'], en: ['Draw the right triangle from the given ratio and use Pythagoras.', 'The answer is ' + renderValue(p.answer) + '.'] };
+        return { zh: ['反三角函數求「哪個角」的三角比等於給定值。', '主值答案是 ' + p.answer + '°。'], en: ['Inverse trig asks which angle gives the ratio.', 'The principal value is ' + p.answer + '°.'] };
+      case 'trigdouble':
+        if (m.mode === 'sin2') return { zh: ['$\sin 2\theta = 2\sin\theta\cos\theta$。', '= 2×' + m.a + '/' + m.c + '×' + m.b + '/' + m.c + ' = ' + renderValue(p.answer) + '。'], en: ['$\sin 2\theta = 2\sin\theta\cos\theta$.', '= 2×' + m.a + '/' + m.c + '×' + m.b + '/' + m.c + ' = ' + renderValue(p.answer) + '.'] };
+        if (m.mode === 'cos2') return { zh: ['$\cos 2\theta = \cos^2\theta - \sin^2\theta$。', '= ' + renderValue(p.answer) + '。'], en: ['$\cos 2\theta = \cos^2\theta - \sin^2\theta$.', '= ' + renderValue(p.answer) + '.'] };
+        return { zh: ['$\tan 2\theta = \dfrac{2\tan\theta}{1-\tan^2\theta}$。', '= ' + renderValue(p.answer) + '。'], en: ['$\tan 2\theta = \dfrac{2\tan\theta}{1-\tan^2\theta}$.', '= ' + renderValue(p.answer) + '.'] };
+      case 'trigcalc':
+        if (m.mode === 'dsin') return { zh: ['$(\sin x)\' = \cos x$。', 'cos ' + m.deg + '° = ' + p.answer + '。'], en: ['$(\sin x)\' = \cos x$.', 'cos ' + m.deg + '° = ' + p.answer + '.'] };
+        if (m.mode === 'dcos') return { zh: ['$(\cos x)\' = -\sin x$。', '-sin ' + m.deg + '° = ' + p.answer + '。'], en: ['$(\cos x)\' = -\sin x$.', '-sin ' + m.deg + '° = ' + p.answer + '.'] };
+        if (m.mode === 'dchain') return { zh: ['鏈式法則：$(\sin(kx))\' = k\cos(kx)$。', '在 x=0：k = ' + p.answer + '。'], en: ['Chain rule: $(\sin(kx))\' = k\cos(kx)$.', 'At x=0: k = ' + p.answer + '.'] };
+        return { zh: ['用微積分基本定理計算定積分。', '= ' + p.answer + '。'], en: ['Use the fundamental theorem of calculus.', '= ' + p.answer + '.'] };
       default:
         return null;
     }

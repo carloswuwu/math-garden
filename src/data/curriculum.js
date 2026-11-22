@@ -666,6 +666,12 @@ var skills = {
       en: { name: 'Statistics II', goal: 'Find variance and standard deviation of a small data set.' },
       lesson: 'col.stats2', types: ['stats2'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
     },
+    'col.trigcalc': {
+      id: 'col.trigcalc', stage: 'college', order: 9,
+      zh: { name: '三角微積分', goal: '會求 sin/cos 的導數值與定積分。' },
+      en: { name: 'Trigonometric Calculus', goal: 'Differentiate and integrate sin/cos at key points.' },
+      lesson: 'col.trigcalc', types: ['trigcalc'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
     'col.ode': {
       id: 'col.ode', stage: 'college', order: 7,
       zh: { name: '微分方程（歐拉法）', goal: '會用歐拉法估計一階微分方程的數值解。' },
@@ -1160,6 +1166,18 @@ var skills = {
       lesson: 'hs.s6.derivative', types: ['derivative'], levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
     },
+    'hs.s6.invtrig': {
+      id: 'hs.s6.invtrig', stage: 'hs3', order: 10,
+      zh: { name: '反三角函數', goal: '會求 arcsin、arccos、arctan 及三角複合。' },
+      en: { name: 'Inverse Trigonometric Functions', goal: 'Evaluate arcsin, arccos, arctan and compositions.' },
+      lesson: 'hs.s6.invtrig', types: ['invtrig'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'hs.s6.trigdouble': {
+      id: 'hs.s6.trigdouble', stage: 'hs3', order: 11,
+      zh: { name: '二倍角應用', goal: '會用二倍角公式求 sin 2θ、cos 2θ、tan 2θ。' },
+      en: { name: 'Double-angle Applications', goal: 'Use double-angle formulae for sin 2θ, cos 2θ and tan 2θ.' },
+      lesson: 'hs.s6.trigdouble', types: ['trigdouble'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
     'challenge.nt': {
       id: 'challenge.nt', stage: 'challenge', order: 1,
       zh: { name: '數論挑戰', goal: '用餘數、因數倍數與同餘解決競賽數論題。' },
@@ -1343,11 +1361,12 @@ var skills = {
         { id: 'hs3.stats', zh: '統計', en: 'Statistics', skills: ['hs.s6.stats'] },
         { id: 'hs3.word', zh: '解決問題', en: 'Word Problems', skills: ['hs.s6.word'] },
         { id: 'hs3.data', zh: '數據處理（續）', en: 'Data Handling (cont.)', skills: ['hs.s6.comb', 'hs.s6.range', 'hs.s6.prob2'] },
-        { id: 'hs3.alg2', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s6.binomial', 'hs.s6.binomial2', 'hs.s6.derivative'] }
+        { id: 'hs3.alg2', zh: '代數（續）', en: 'Algebra (cont.)', skills: ['hs.s6.binomial', 'hs.s6.binomial2', 'hs.s6.derivative'] },
+        { id: 'hs3.trig', zh: '三角學（三）', en: 'Trigonometry III', skills: ['hs.s6.invtrig', 'hs.s6.trigdouble'] }
       ] },
     { id: 'college', zh: '大學', en: 'University', desc: { zh: '微積分、線性代數、概率統計', en: 'Calculus, linear algebra, statistics' }, color: '#8E8E93', emoji: '🎯',
       topics: [
-        { id: 'col.calc', zh: '微積分', en: 'Calculus', skills: ['col.calculus', 'col.calculus2', 'col.ode'] },
+        { id: 'col.calc', zh: '微積分', en: 'Calculus', skills: ['col.calculus', 'col.calculus2', 'col.ode', 'col.trigcalc'] },
         { id: 'col.lin', zh: '線性代數', en: 'Linear Algebra', skills: ['col.linalg', 'col.linalg2'] },
         { id: 'col.prob', zh: '概率統計', en: 'Statistics', skills: ['col.prob', 'col.stats2'] },
         { id: 'col.nt', zh: '數論', en: 'Number Theory', skills: ['col.nt'] }

@@ -3980,6 +3980,146 @@ import { fmtDecimal, fmtNum } from './display.js';
     };
   }
 
+
+  /* ---------------- 三角學（三）：反三角、二倍角應用、三角微積分 ---------------- */
+
+  function genInvtrig(rng, o) {
+    var mode = pick(rng, ['arcsin', 'arccos', 'arctan', 'compose']);
+    if (mode === 'compose') {
+      var t = pick(rng, TRIG_TRIPLES);
+      var a = t[0], b = t[1], c = t[2];
+      var which = pick(rng, ['sin', 'cos', 'tan']);
+      if (which === 'sin') {
+        return {
+          type: 'invtrig',
+          prompt: { zh: '求 $\\sin\\left(\\cos^{-1}\\frac{' + b + '}{' + c + '}\\right)$。', en: 'Find $\\sin\\left(\\cos^{-1}\\frac{' + b + '}{' + c + '}\\right)$.' },
+          visual: { kind: 'righttri' },
+          answer: reduceFraction({ n: a, d: c }),
+          math: { op: 'invtrig', mode: mode, which: which, a: a, b: b, c: c },
+          hint: { zh: '設 $\\theta=\\cos^{-1}(b/c)$，則 $\\cos\\theta=b/c$，用直角三角形求 sin。', en: 'Let $\\theta=\\cos^{-1}(b/c)$; then $\\cos\\theta=b/c$, and the right triangle gives sin.' }
+        };
+      }
+      if (which === 'cos') {
+        return {
+          type: 'invtrig',
+          prompt: { zh: '求 $\\cos\\left(\\sin^{-1}\\frac{' + a + '}{' + c + '}\\right)$。', en: 'Find $\\cos\\left(\\sin^{-1}\\frac{' + a + '}{' + c + '}\\right)$.' },
+          visual: { kind: 'righttri' },
+          answer: reduceFraction({ n: b, d: c }),
+          math: { op: 'invtrig', mode: mode, which: which, a: a, b: b, c: c },
+          hint: { zh: '設 $\\theta=\\sin^{-1}(a/c)$，用直角三角形求 cos。', en: 'Let $\\theta=\\sin^{-1}(a/c)$; use a right triangle for cos.' }
+        };
+      }
+      return {
+        type: 'invtrig',
+        prompt: { zh: '求 $\\tan\\left(\\sin^{-1}\\frac{' + a + '}{' + c + '}\\right)$。', en: 'Find $\\tan\\left(\\sin^{-1}\\frac{' + a + '}{' + c + '}\\right)$.' },
+        visual: { kind: 'righttri' },
+        answer: reduceFraction({ n: a, d: b }),
+        math: { op: 'invtrig', mode: mode, which: which, a: a, b: b, c: c },
+        hint: { zh: '由 $\\sin\\theta=a/c$ 畫三角形，$\\tan\\theta=a/b$。', en: 'From $\\sin\\theta=a/c$, draw the triangle: $\\tan\\theta=a/b$.' }
+      };
+    }
+    var angles = {
+      arcsin: [{ val: '\\frac{1}{2}', deg: 30 }, { val: '\\frac{\\sqrt{2}}{2}', deg: 45 }, { val: '\\frac{\\sqrt{3}}{2}', deg: 60 }, { val: '1', deg: 90 }],
+      arccos: [{ val: '\\frac{\\sqrt{3}}{2}', deg: 30 }, { val: '\\frac{\\sqrt{2}}{2}', deg: 45 }, { val: '\\frac{1}{2}', deg: 60 }, { val: '0', deg: 90 }],
+      arctan: [{ val: '\\frac{\\sqrt{3}}{3}', deg: 30 }, { val: '1', deg: 45 }, { val: '\\sqrt{3}', deg: 60 }]
+    };
+    var chosen = pick(rng, angles[mode]);
+    var name = mode === 'arcsin' ? '\\sin^{-1}' : mode === 'arccos' ? '\\cos^{-1}' : '\\tan^{-1}';
+    return {
+      type: 'invtrig',
+      prompt: { zh: '求 $' + name + '\\left(' + chosen.val + '\\right)$（以度為單位，取主值）。', en: 'Find $' + name + '\\left(' + chosen.val + '\\right)$ in degrees (principal value).' },
+      visual: { kind: 'unitcircle' },
+      answer: chosen.deg,
+      math: { op: 'invtrig', mode: mode, deg: chosen.deg },
+      hint: { zh: '反三角函數是三角函數的逆運算；主值範圍分別是 [-90°,90°]、[0°,180°]、(-90°,90°)。', en: 'Inverse trig functions undo sin/cos/tan; principal ranges are [-90°,90°], [0°,180°], (-90°,90°).' }
+    };
+  }
+
+  function genTrigdouble(rng, o) {
+    var t = pick(rng, TRIG_TRIPLES);
+    var a = t[0], b = t[1], c = t[2];
+    if (a > b) { var tmp = a; a = b; b = tmp; }
+    var mode = pick(rng, ['sin2', 'cos2', 'tan2']);
+    if (mode === 'sin2') {
+      return {
+        type: 'trigdouble',
+        prompt: { zh: '已知 $\\sin\\theta = \\frac{' + a + '}{' + c + '}$、$\\cos\\theta = \\frac{' + b + '}{' + c + '}$，求 $\\sin 2\\theta$。', en: 'Given $\\sin\\theta = \\frac{' + a + '}{' + c + '}$ and $\\cos\\theta = \\frac{' + b + '}{' + c + '}$, find $\\sin 2\\theta$.' },
+        visual: null,
+        answer: reduceFraction({ n: 2 * a * b, d: c * c }),
+        math: { op: 'trigdouble', mode: mode, a: a, b: b, c: c },
+        hint: { zh: '$\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$。', en: '$\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$.' }
+      };
+    }
+    if (mode === 'cos2') {
+      return {
+        type: 'trigdouble',
+        prompt: { zh: '已知 $\\sin\\theta = \\frac{' + a + '}{' + c + '}$、$\\cos\\theta = \\frac{' + b + '}{' + c + '}$，求 $\\cos 2\\theta$。', en: 'Given $\\sin\\theta = \\frac{' + a + '}{' + c + '}$ and $\\cos\\theta = \\frac{' + b + '}{' + c + '}$, find $\\cos 2\\theta$.' },
+        visual: null,
+        answer: reduceFraction({ n: b * b - a * a, d: c * c }),
+        math: { op: 'trigdouble', mode: mode, a: a, b: b, c: c },
+        hint: { zh: '$\\cos 2\\theta = \\cos^2\\theta - \\sin^2\\theta$。', en: '$\\cos 2\\theta = \\cos^2\\theta - \\sin^2\\theta$.' }
+      };
+    }
+    return {
+      type: 'trigdouble',
+      prompt: { zh: '已知 $\\sin\\theta = \\frac{' + a + '}{' + c + '}$、$\\cos\\theta = \\frac{' + b + '}{' + c + '}$，求 $\\tan 2\\theta$。', en: 'Given $\\sin\\theta = \\frac{' + a + '}{' + c + '}$ and $\\cos\\theta = \\frac{' + b + '}{' + c + '}$, find $\\tan 2\\theta$.' },
+      visual: null,
+      answer: reduceFraction({ n: 2 * a * b, d: b * b - a * a }),
+      math: { op: 'trigdouble', mode: mode, a: a, b: b, c: c },
+      hint: { zh: '$\\tan 2\\theta = \\dfrac{2\\tan\\theta}{1-\\tan^2\\theta}$。', en: '$\\tan 2\\theta = \\dfrac{2\\tan\\theta}{1-\\tan^2\\theta}$.' }
+    };
+  }
+
+  function genTrigcalc(rng, o) {
+    var mode = pick(rng, ['dsin', 'dcos', 'dchain', 'integral']);
+    if (mode === 'dsin') {
+      var x1 = pick(rng, [0, 90, 180]);
+      var d1 = x1 === 0 ? 1 : x1 === 90 ? 0 : -1;
+      return {
+        type: 'trigcalc',
+        prompt: { zh: '求 $\\dfrac{d}{dx}\\sin x$ 在 $x=' + x1 + '^\\circ$ 的值。', en: 'Find the value of $\\dfrac{d}{dx}\\sin x$ at $x=' + x1 + '^\\circ$.' },
+        visual: { kind: 'sinewave' },
+        answer: d1,
+        math: { op: 'trigcalc', mode: mode, deg: x1 },
+        hint: { zh: '$\\dfrac{d}{dx}\\sin x = \\cos x$。', en: '$\\dfrac{d}{dx}\\sin x = \\cos x$.' }
+      };
+    }
+    if (mode === 'dcos') {
+      var x2 = pick(rng, [0, 90, 180]);
+      var d2 = x2 === 0 ? 0 : x2 === 90 ? -1 : 0;
+      return {
+        type: 'trigcalc',
+        prompt: { zh: '求 $\\dfrac{d}{dx}\\cos x$ 在 $x=' + x2 + '^\\circ$ 的值。', en: 'Find the value of $\\dfrac{d}{dx}\\cos x$ at $x=' + x2 + '^\\circ$.' },
+        visual: { kind: 'sinewave' },
+        answer: d2,
+        math: { op: 'trigcalc', mode: mode, deg: x2 },
+        hint: { zh: '$\\dfrac{d}{dx}\\cos x = -\\sin x$。', en: '$\\dfrac{d}{dx}\\cos x = -\\sin x$.' }
+      };
+    }
+    if (mode === 'dchain') {
+      var k = randInt(rng, 2, 6);
+      return {
+        type: 'trigcalc',
+        prompt: { zh: '求 $\\dfrac{d}{dx}\\sin(' + k + 'x)$ 在 $x=0$ 的值。', en: 'Find the value of $\\dfrac{d}{dx}\\sin(' + k + 'x)$ at $x=0$.' },
+        visual: { kind: 'sinewave' },
+        answer: k,
+        math: { op: 'trigcalc', mode: mode, k: k },
+        hint: { zh: '鏈式法則：$\\dfrac{d}{dx}\\sin(kx)=k\\cos(kx)$。', en: 'Chain rule: $\\dfrac{d}{dx}\\sin(kx)=k\\cos(kx)$.' }
+      };
+    }
+    var kind = pick(rng, ['sin', 'cos']);
+    var answer = kind === 'sin' ? 2 : 1;
+    var upper = kind === 'sin' ? '\\pi' : '\\frac{\\pi}{2}';
+    return {
+      type: 'trigcalc',
+      prompt: { zh: '計算 $\\displaystyle\\int_0^{' + upper + '} ' + (kind === 'sin' ? '\\sin x' : '\\cos x') + '\\,dx$。', en: 'Evaluate $\\displaystyle\\int_0^{' + upper + '} ' + (kind === 'sin' ? '\\sin x' : '\\cos x') + '\\,dx$.' },
+      visual: { kind: 'sinewave' },
+      answer: answer,
+      math: { op: 'trigcalc', mode: mode, kind: kind },
+      hint: { zh: '用微積分基本定理：$\\int \\sin x\\,dx=-\\cos x$，$\\int \\cos x\\,dx=\\sin x$。', en: 'Fundamental theorem: $\\int \\sin x\\,dx=-\\cos x$, $\\int \\cos x\\,dx=\\sin x$.' }
+    };
+  }
+
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -4112,7 +4252,10 @@ import { fmtDecimal, fmtNum } from './display.js';
     triggraph: genTriggraph,
     compound: genCompound,
     radian: genRadian,
-    trigeq: genTrigeq
+    trigeq: genTrigeq,
+    invtrig: genInvtrig,
+    trigdouble: genTrigdouble,
+    trigcalc: genTrigcalc
   };
 
 export { GENERATORS, DIR_LABEL, CENTRE_LABEL };

@@ -77,7 +77,10 @@ var F = {
           { zh: '複角公式', en: 'Compound-angle formulae', latex: '\\sin(A\\pm B)=\\sin A\\cos B\\pm\\cos A\\sin B,\\quad \\cos(A\\pm B)=\\cos A\\cos B\\mp\\sin A\\sin B', skills: ['hs.s5.compound'] },
           { zh: '正切複角公式', en: 'Tangent compound angle', latex: '\\tan(A+B)=\\dfrac{\\tan A+\\tan B}{1-\\tan A\\tan B}', skills: ['hs.s5.compound'] },
           { zh: '弧度與弧長', en: 'Radians and arc length', latex: '180^\\circ=\\pi,\\quad s=r\\theta,\\quad A=\\dfrac{1}{2}r^2\\theta', skills: ['hs.s5.radian'] },
-          { zh: '三角方程的一般解', en: 'General solutions', latex: '\\sin\\theta=\\sin\\alpha \\Rightarrow \\theta=n\\pi+(-1)^n\\alpha', skills: ['hs.s5.trigeq'] }
+          { zh: '三角方程的一般解', en: 'General solutions', latex: '\\sin\\theta=\\sin\\alpha \\Rightarrow \\theta=n\\pi+(-1)^n\\alpha', skills: ['hs.s5.trigeq'] },
+          { zh: '反三角函數主值', en: 'Inverse trig principal values', latex: '\\sin^{-1}x\\in[-90^\\circ,90^\\circ],\\ \\cos^{-1}x\\in[0^\\circ,180^\\circ],\\ \\tan^{-1}x\\in(-90^\\circ,90^\\circ)', skills: ['hs.s6.invtrig'] },
+          { zh: '三角函數的導數', en: 'Derivatives of sin and cos', latex: '\\dfrac{d}{dx}\\sin x=\\cos x,\\quad \\dfrac{d}{dx}\\cos x=-\\sin x', skills: ['col.trigcalc'] },
+          { zh: '三角函數的積分', en: 'Integrals of sin and cos', latex: '\\int\\sin x\\,dx=-\\cos x+C,\\quad \\int\\cos x\\,dx=\\sin x+C', skills: ['col.trigcalc'] }
         ]
       },
       {

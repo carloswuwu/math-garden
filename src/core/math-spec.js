@@ -61,6 +61,25 @@ var MATH_SPEC = {
   },
   log: function (m) { return m.mode === 'law' ? Math.round(Math.log(m.m * m.n) / Math.log(m.base)) : m.n; },
   fx: function (m) { return m.a * m.x * m.x + m.b * m.x + m.c; },
+  invtrig: function (m) {
+    if (m.mode === 'compose') {
+      if (m.which === 'sin') return { n: m.a, d: m.c };
+      if (m.which === 'cos') return { n: m.b, d: m.c };
+      return { n: m.a, d: m.b };
+    }
+    return m.deg;
+  },
+  trigdouble: function (m) {
+    if (m.mode === 'sin2') return { n: 2 * m.a * m.b, d: m.c * m.c };
+    if (m.mode === 'cos2') return { n: m.b * m.b - m.a * m.a, d: m.c * m.c };
+    return { n: 2 * m.a * m.b, d: m.b * m.b - m.a * m.a };
+  },
+  trigcalc: function (m) {
+    if (m.mode === 'dsin') return m.deg === 0 ? 1 : m.deg === 90 ? 0 : -1;
+    if (m.mode === 'dcos') return m.deg === 0 ? 0 : m.deg === 90 ? -1 : 0;
+    if (m.mode === 'dchain') return m.k;
+    return m.kind === 'sin' ? 2 : 1;
+  },
   compound: function (m) {
     if (m.mode === 'sinSum') return { n: m.a * m.e + m.b * m.d, d: m.c * m.f };
     if (m.mode === 'sinDiff') return { n: m.a * m.e - m.b * m.d, d: m.c * m.f };

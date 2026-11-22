@@ -2445,5 +2445,96 @@ var L = {
   };
   Object.keys(TRIG2_LESSONS).forEach(function (key) { L[key] = TRIG2_LESSONS[key]; });
 
+
+  var TRIG3_LESSONS = {
+    'hs.s6.invtrig': {
+      zh: {
+        title: '反三角函數',
+        intro: '反三角函數由三角比值反求角度：$\sin^{-1}$、$\cos^{-1}$、$\tan^{-1}$。',
+        steps: ['$\sin^{-1}$ 的主值範圍是 $[-90^\circ,90^\circ]$。', '$\cos^{-1}$ 的主值範圍是 $[0^\circ,180^\circ]$。', '$\tan^{-1}$ 的主值範圍是 $(-90^\circ,90^\circ)$。'],
+        example: '$\sin^{-1}(1/2)=30^\circ$，$\cos^{-1}(1/2)=60^\circ$，$\tan^{-1}(1)=45^\circ$。',
+        tip: '先問「哪個特殊角」的三角比等於給定值。',
+        mistake: '把 $\sin^{-1}x$ 當成 $1/\sin x$；兩者完全不同。',
+        visual: { kind: 'unitcircle' },
+        glossary: [
+          { term: '反三角函數', def: '由三角比值反求角度。' },
+          { term: '主值', def: '反三角函數規定的唯一角度範圍。' }
+        ]
+      },
+      en: {
+        title: 'Inverse Trigonometric Functions',
+        intro: 'Inverse trig functions recover an angle from a ratio: $\sin^{-1}$, $\cos^{-1}$, $\tan^{-1}$.',
+        steps: ['$\sin^{-1}$ has principal range $[-90^\circ,90^\circ]$.', '$\cos^{-1}$ has principal range $[0^\circ,180^\circ]$.', '$\tan^{-1}$ has principal range $(-90^\circ,90^\circ)$.'],
+        example: '$\sin^{-1}(1/2)=30^\circ$, $\cos^{-1}(1/2)=60^\circ$, $\tan^{-1}(1)=45^\circ$.',
+        tip: 'Ask which special angle has the given ratio.',
+        mistake: 'Treating $\sin^{-1}x$ as $1/\sin x$; they are completely different.',
+        visual: { kind: 'unitcircle' },
+        glossary: [
+          { term: 'Inverse trig', def: 'Recover an angle from a trig ratio.' },
+          { term: 'Principal value', def: 'The specified unique angle range.' }
+        ]
+      }
+    },
+    'hs.s6.trigdouble': {
+      zh: {
+        title: '二倍角應用',
+        intro: '由單角的正弦、餘弦值，用二倍角公式求 $2\theta$ 的三角值。',
+        steps: ['$\sin 2\theta = 2\sin\theta\cos\theta$。', '$\cos 2\theta = \cos^2\theta - \sin^2\theta$。', '$\tan 2\theta = \dfrac{2\tan\theta}{1-\tan^2\theta}$。'],
+        example: '$\sin\theta=3/5,\cos\theta=4/5$，則 $\sin2\theta=24/25$，$\cos2\theta=7/25$。',
+        tip: '先寫出 sin、cos 再代入，不要直接代角度。',
+        mistake: '把 $\sin2\theta$ 當成 $2\sin\theta$。',
+        visual: { kind: 'righttri' },
+        glossary: [
+          { term: '二倍角公式', def: '用單角三角值表示兩倍角。' },
+          { term: '恆等式', def: '對所有角度都成立的等式。' }
+        ]
+      },
+      en: {
+        title: 'Double-angle Applications',
+        intro: 'Use single-angle sine and cosine values with double-angle formulae to find values at $2\theta$.',
+        steps: ['$\sin 2\theta = 2\sin\theta\cos\theta$.', '$\cos 2\theta = \cos^2\theta - \sin^2\theta$.', '$\tan 2\theta = \dfrac{2\tan\theta}{1-\tan^2\theta}$.'],
+        example: 'If $\sin\theta=3/5$ and $\cos\theta=4/5$, then $\sin2\theta=24/25$ and $\cos2\theta=7/25$.',
+        tip: 'Write sin and cos first, then substitute; do not substitute the angle directly.',
+        mistake: 'Writing $\sin2\theta=2\sin\theta$.',
+        visual: { kind: 'righttri' },
+        glossary: [
+          { term: 'Double-angle formula', def: 'Expresses a twice-angle value using single-angle values.' },
+          { term: 'Identity', def: 'An equation true for all angles.' }
+        ]
+      }
+    },
+    'col.trigcalc': {
+      zh: {
+        title: '三角微積分',
+        intro: 'sin 和 cos 的導數與積分是微積分的基本公式。',
+        steps: ['$\dfrac{d}{dx}\sin x = \cos x$。', '$\dfrac{d}{dx}\cos x = -\sin x$。', '$\int\sin x\,dx=-\cos x+C$，$\int\cos x\,dx=\sin x+C$。'],
+        example: '$\int_0^{\pi}\sin x\,dx = [-\cos x]_0^{\pi}=2$；$\int_0^{\pi/2}\cos x\,dx=1$。',
+        tip: '定積分先求反導數，再代入上下限。',
+        mistake: 'cos 的導數忘記負號，或定積分忘記代入下限。',
+        visual: { kind: 'sinewave' },
+        glossary: [
+          { term: '導數', def: '瞬時變化率。' },
+          { term: '定積分', def: '曲線與 x 軸之間的有向面積。' },
+          { term: '反導數', def: '求導後得到原函數的函數。' }
+        ]
+      },
+      en: {
+        title: 'Trigonometric Calculus',
+        intro: 'The derivatives and integrals of sin and cos are core calculus formulae.',
+        steps: ['$\dfrac{d}{dx}\sin x = \cos x$.', '$\dfrac{d}{dx}\cos x = -\sin x$.', '$\int\sin x\,dx=-\cos x+C$ and $\int\cos x\,dx=\sin x+C$.'],
+        example: '$\int_0^{\pi}\sin x\,dx = [-\cos x]_0^{\pi}=2$; $\int_0^{\pi/2}\cos x\,dx=1$.',
+        tip: 'Find the antiderivative, then substitute the limits.',
+        mistake: 'Forgetting the minus sign in the derivative of cos, or omitting the lower limit.',
+        visual: { kind: 'sinewave' },
+        glossary: [
+          { term: 'Derivative', def: 'Instantaneous rate of change.' },
+          { term: 'Definite integral', def: 'Signed area between a curve and the x-axis.' },
+          { term: 'Antiderivative', def: 'A function whose derivative is the original function.' }
+        ]
+      }
+    }
+  };
+  Object.keys(TRIG3_LESSONS).forEach(function (key) { L[key] = TRIG3_LESSONS[key]; });
+
   export { L as Lessons };
 

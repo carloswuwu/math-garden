@@ -42,7 +42,7 @@ import { isFraction, reduceFraction, renderValue, valueKey, valuesEqual } from '
   /* 每個類型合理的干擾項數值上界 */
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
-    if (['modpow', 'gcdlcm', 'remainderSystem', 'pathcount', 'handshake', 'arrange', 'inclusion', 'clockangle', 'trapezoid', 'seqnext', 'pigeon', 'workrate', 'mixture', 'lastdigit', 'gridrect', 'polygonsum', 'train', 'area2', 'volume1', 'rotation', 'calculus2', 'linalg2', 'stats2', 'rounding', 'chartread', 'circleparts', 'ode', 'numtheory', 'gradanalysis', 'gradalgebra', 'gradtopology', 'gradmeasure', 'gradgeometry', 'gradcategory', 'trigident', 'sinerule', 'triggraph', 'compound', 'radian', 'trigeq'].indexOf(p.type) !== -1) {
+    if (['modpow', 'gcdlcm', 'remainderSystem', 'pathcount', 'handshake', 'arrange', 'inclusion', 'clockangle', 'trapezoid', 'seqnext', 'pigeon', 'workrate', 'mixture', 'lastdigit', 'gridrect', 'polygonsum', 'train', 'area2', 'volume1', 'rotation', 'calculus2', 'linalg2', 'stats2', 'rounding', 'chartread', 'circleparts', 'ode', 'numtheory', 'gradanalysis', 'gradalgebra', 'gradtopology', 'gradmeasure', 'gradgeometry', 'gradcategory', 'trigident', 'sinerule', 'triggraph', 'compound', 'radian', 'trigeq', 'invtrig', 'trigdouble', 'trigcalc'].indexOf(p.type) !== -1) {
       return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
     }
     if (p.type === 'quadsolve') return 120;
