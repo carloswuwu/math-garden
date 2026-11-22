@@ -10,10 +10,10 @@
 | Branch / HEAD | `main` @ `db4ab98` (Phases 1–5 complete + post-roadmap batch: Pages Actions switch, P1 content tranche, offline check/glossary; docs commit on top) |
 | Live | https://carloswuwu.github.io/math-garden/ — **Pages source is now “GitHub Actions”**; `pages.yml` deploys the built `dist/` on every main push |
 | CI | `.github/workflows/tests.yml` — build, stale-`dist`/wrapper check, six node suites, real-Chrome Lighthouse a11y gate, cold-offline check |
-| Content | **15 stages**, **145 skills**, **136 lessons — all deepened, 37 with glossaries**, **132 generator types**; `word` has **24 modes**; challenge arena **20 olympiad-style types across 6 topics with 3 difficulty tiers**; **小五 15 skills** (異分母分數、分數乘除、分數比較/擴分約分、小數四則混合、面積二、體積一、旋轉對稱、近似值/估算、統計圖、代數符號、圓的認識) and **大學 8 skills** (微積分二、線代二、統計二、微分方程、數論); Pre-K → graduate school |
+| Content | **15 stages**, **148 skills**, **139 lessons — all deepened, 40 with glossaries**, **135 generator types**; `word` has **24 modes**; challenge arena **20 olympiad-style types across 6 topics with 3 difficulty tiers**; **小五 15 skills** (異分母分數、分數乘除、分數比較/擴分約分、小數四則混合、面積二、體積一、旋轉對稱、近似值/估算、統計圖、代數符號、圓的認識) and **大學 8 skills** (微積分二、線代二、統計二、微分方程、數論); Pre-K → graduate school |
 | Code size | ESM sources: `src/core/` 14 modules (~4.5k lines), `src/ui/` 22 modules (~2.5k lines), `src/data/` 5 modules; generated wrappers `math-core.js` (~4.2k) and `app.js` (~2.5k); `style.css` 794 · `formulas.js` 91 |
-| Build | `tools/build.js` (190) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.4f1200a734a1.js` **526.9 KB raw / 166.3 KB gzip** (advisory 170 KB), generated `dist/sw.js`; content ESM in `src/data/`, engine ESM in `src/core/`, UI ESM in `src/ui/`, generated classic/UMD wrappers; `dist/` + wrappers committed and CI fails on drift |
-| Tests | core **575,439** assertions · ui **283** · generators **190,722** · contract **18,430** · a11y **207** · perf **26** checks (+ Lighthouse a11y **1.000** + cold-offline check); UI/a11y/perf boot the built IIFE |
+| Build | `tools/build.js` (190) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.ce7a35e17108.js` **540.1 KB raw / 169.4 KB gzip** (advisory 170 KB), generated `dist/sw.js`; content ESM in `src/data/`, engine ESM in `src/core/`, UI ESM in `src/ui/`, generated classic/UMD wrappers; `dist/` + wrappers committed and CI fails on drift |
+| Tests | core **575,439** assertions · ui **283** · generators **193,159** · contract **18,707** · a11y **207** · perf **26** checks (+ Lighthouse a11y **1.000** + cold-offline check); UI/a11y/perf boot the built IIFE |
 | A11y | one h1 per screen + `aria-labelledby`, focus-to-heading + live-region announcements, accessible names on all controls (incl. labelled typed-answer fields), modal background `inert`/`aria-hidden`, generated `role="img"` text alternatives for question visuals, 44 px icon targets, ARIA strings in `i18n.js`, axe-core 4.10.2 jsdom subset (0 violations on 13 screens) |
 | Persistence | progress schema **v2** (`mathpath.progress`), legacy v1 key migrated, sanitized import |
 | In-flight session | `sessionStorage['mathpath.session.v1']` (24 h TTL, practice/quiz/exam only, never in progress) |
@@ -183,6 +183,8 @@
 81. **三角公式補齊：** 原本只有三角比與一條合併的正弦／餘弦定理，現新增 `hs.s4.identities`（平方關係、商數關係、二倍角）與 `hs.s5.sinerule`（正弦定理、餘弦定理、SAS 面積）、`hs.s5.triggraph`（振幅／週期）三個技能；公式表三角學一節由 2 條擴至 8 條，新增正弦曲線 SVG 視覺化與三課雙語詞彙表。全站 **142 技能 / 133 課 / 34 個詞彙表課堂**，bundle 162.4 KB gzip，advisory/perf gate 166 KB。
 
 82. **三角學（二）進階：** 新增 `hs.s5.compound`（複角公式 sin/cos/tan）、`hs.s5.radian`（度↔弧度、弧長、單位圓特殊角）、`hs.s5.trigeq`（0°–360° 三角方程與解的對稱性）三個技能；公式表再加複角、正切複角、弧度／弧長／扇形面積、一般解，三角學累計 12 條公式；新增單位圓 SVG 視覺化與三課雙語詞彙表。全站 **145 技能 / 136 課 / 37 個詞彙表課堂**，bundle 166.3 KB gzip，advisory/perf gate 170 KB。
+
+83. **三角學（三）再加深：** 新增 `hs.s6.invtrig`（反三角函數主值與三角複合）、`hs.s6.trigdouble`（二倍角應用）、`col.trigcalc`（sin/cos 導數與定積分），公式表再加反三角主值、三角導數、三角積分，三角學累計 **15 條**；新增單位圓／正弦波視覺化與三課詞彙表。全站 **148 技能 / 139 課 / 40 個詞彙表課堂**，bundle 169.4 KB gzip（≤170 KB）。
 
 ## 2. Architecture map
 
@@ -405,7 +407,7 @@ Then: wait for the `tests` workflow (GitHub Actions) to go green; if Pages sourc
 
 ## 7. Bootstrap prompt for the new session
 
-> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. **Phases 1–5 are complete**, and the post-roadmap batches are landed: Pages source switched to GitHub Actions, per-mode typeAcc/tiny-pool/word-archetype content, cold-offline check, lesson glossaries, **小五 expanded 4→15 skills**, **大學 expanded 3→8 skills**, a **研究院 🎓 stage with 6 skills**, and **trigonometry deepened with identities, sine/cosine rules, graphs, compound angles, radians/unit circle and trig equations**. Do not redo these. Remaining optional work: more lesson visuals/glossary coverage, mathematician-audit P2, real-device spot check. Keep all six suites + `npm run lighthouse` + `npm run offline-check` green, rebuild `dist/` and generated wrappers whenever any `src/` or `style.css` changes, commit by scope, push and confirm CI **and** the Pages Actions deployment publishes the new hash.
+> Read `docs/PLAN.md` in `C:\Users\Carlos\Documents\deepseek-harness\math` first; it is the authoritative handoff. **Phases 1–5 are complete**, and the post-roadmap batches are landed: Pages source switched to GitHub Actions, per-mode typeAcc/tiny-pool/word-archetype content, cold-offline check, lesson glossaries, **小五 expanded 4→15 skills**, **大學 expanded 3→8 skills**, a **研究院 🎓 stage with 6 skills**, and **trigonometry deepened through identities, sine/cosine rules, graphs, compound angles, radians/unit circle, trig equations, inverse trig, double-angle applications and trig calculus**. Do not redo these. Remaining optional work: sum-to-product identities, more lesson visuals/glossary coverage, mathematician-audit P2, real-device spot check. Keep all six suites + `npm run lighthouse` + `npm run offline-check` green, rebuild `dist/` and generated wrappers whenever any `src/` or `style.css` changes, commit by scope, push and confirm CI **and** the Pages Actions deployment publishes the new hash.
 
 ## 8. Key references
 
