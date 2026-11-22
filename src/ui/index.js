@@ -6,85 +6,32 @@
 import { MathCore, I18N, Curriculum, CurriculumOutline, Formulas, Lessons } from './globals.js';
 import { esc, renderMath } from './format.js';
 import { parseHash, serializeRoute, sameRoute } from './router.js';
+import {
+  STORE_KEY, LEGACY_STORE_KEY, SESSION_KEY, SESSION_VERSION, SESSION_TTL, QUIZ_LENGTH, EXAM_LENGTH, EXAM_PASS, HOME_ROUTE,
+  state, progress, setProgress, loadProgress, saveProgress
+} from './state.js';
+import { t, L, nameOf, goalOf } from './i18n.js';
+import {
+  getSkill, getStage, stageSkills, skillProgress, masteryOf, totalStars, isPassed, realStageList, stageComplete, stageUnlocked, stageSkillStats
+} from './selectors.js';
+import { dotsHTML, swatchColor, fractionSVG, visualAlt, renderVisual } from './visual.js';
+import { $, screens } from './dom.js';
+import { focusEl, isVisible, restoreFocus, focusScreen, isTypingTarget, choiceButtons, modalFocusables, setBackgroundInert, trapModalTab } from './a11y.js';
+import { app } from './context.js';
+import {
+  renderHome, renderStage, renderSkillCard, bindStageCards, renderLesson, showWorkedExample,
+  renderParent, renderFormulas, renderOutline, renderSettings, themeSegBtn
+} from './screens.js';
 
 
-
-  var STORE_KEY = 'mathpath.progress';
-  var LEGACY_STORE_KEY = 'mathpath.progress.v1';
-  var SESSION_KEY = 'mathpath.session.v1'; // 未完成的練習/測驗/考試，只存在 sessionStorage
-  var SESSION_VERSION = 1;
-  var SESSION_TTL = 24 * 60 * 60 * 1000; // 24 小時後不再自動恢復
-  var QUIZ_LENGTH = 10;
-  var EXAM_LENGTH = 20;
-  var EXAM_PASS = 0.9; // 綜合考試達 90% 即可解鎖下一階段
-  var HOME_ROUTE = { screen: 'home' };
-
-  /* ---------------- 狀態 ---------------- */
-  var state = {
-    lang: 'zh',
-    sound: true,
-    theme: 'light',
-    screen: 'home',
-    stageId: null,
-    skillId: null,
-    examStage: null,
-    mode: 'practice', // 'practice' | 'quiz' | 'exam'
-    problems: [],
-    index: 0,
-    correct: 0,
-    results: [],
-    locked: false,
-    hintShown: false,
-    quizStart: 0,
-    attemptWrong: false,
-    /* 進行中題組：{ mode, key }；只在真正開始/恢復題組時設定，離開作答畫面即清除。
-     * 不能只用 state.mode/state.skillId 判斷，因為 renderLesson 會更新 skillId。 */
-    run: null
-  };
-
-  var progress = loadProgress();
-  state.lang = progress.lang || 'zh';
-  state.sound = progress.sound !== false;
-  state.theme = progress.theme || 'light';
 
   /* ---------------- DOM ---------------- */
-  var $ = function (id) { return document.getElementById(id); };
-  var screens = ['home', 'stage', 'lesson', 'practice', 'parent', 'settings', 'outline', 'formulas'];
 
   /* ---------------- 工具 ---------------- */
-  function t(path, tokens) {
-    var d = I18N[state.lang] || I18N.zh;
-    var v = d;
-    path.split('.').forEach(function (p) { v = v && v[p]; });
-    if (v == null) return path;
-    if (typeof v === 'string' && tokens) {
-      return v.replace(/\{(\w+)\}/g, function (_, k) { return tokens[k] != null ? tokens[k] : '{' + k + '}'; });
-    }
-    return v;
-  }
-  function L(obj) { return state.lang === 'zh' ? obj.zh : obj.en; }
-  function nameOf(skill) { return state.lang === 'zh' ? skill.zh.name : skill.en.name; }
-  function goalOf(skill) { return state.lang === 'zh' ? skill.zh.goal : skill.en.goal; }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
   /* 文字中的 $...$ 會用 KaTeX 渲染成數學式；其餘照常轉義（無 KaTeX 時退回純文字） */
 
-  function loadProgress() {
-    try {
-      var raw = localStorage.getItem(STORE_KEY);
-      var legacy = raw ? null : localStorage.getItem(LEGACY_STORE_KEY);
-      if (!raw && !legacy) return MathCore.newProgress();
-      var parsed = JSON.parse(raw || legacy);
-      var clean = MathCore.sanitizeProgress(parsed);
-      if (!raw && legacy) {
-        try { localStorage.setItem(STORE_KEY, JSON.stringify(clean)); } catch (e) { /* 忽略 */ }
-      }
-      return clean;
-    } catch (e) { return MathCore.newProgress(); }
-  }
-  function saveProgress() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(progress)); } catch (e) { /* 忽略 */ }
-  }
 
   /* ---------------- 未完成題組（sessionStorage，24 小時 TTL） ----------------
    * 只存未完成的練習/測驗/考試；完成即清除；不寫入 progress schema。 */
@@ -217,76 +164,6 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
     return { route: route, modeLabel: modeLabel, name: name, index: s.index, total: s.problems.length };
   }
 
-  function getSkill(id) { return Curriculum.skills[id]; }
-  function getStage(id) {
-    for (var i = 0; i < Curriculum.stages.length; i++) if (Curriculum.stages[i].id === id) return Curriculum.stages[i];
-    return null;
-  }
-  function stageSkills(stage) {
-    var out = [];
-    stage.topics.forEach(function (topic) {
-      topic.skills.forEach(function (id) {
-        var s = getSkill(id);
-        if (s) out.push(s);
-      });
-    });
-    return out;
-  }
-  function skillProgress(id) { return progress.skills[id] || MathCore.defaultSkillProgress(); }
-  function masteryOf(skill) { return MathCore.masteryStatus(progress, skill); }
-  function totalStars() {
-    var sum = 0;
-    for (var id in progress.skills) {
-      if (Curriculum.skills[id]) sum += progress.skills[id].stars || 0;
-    }
-    return sum;
-  }
-
-  /* 通過測驗（≧2 星）才算過關，用於逐步解鎖 */
-  function isPassed(skill) { return (skillProgress(skill.id).quizStars || 0) >= 2; }
-  function realStageList() {
-    /* 挑戰區是額外難題區，不屬於年級解鎖鏈；由首頁的挑戰卡直接進入。 */
-    return Curriculum.stages.filter(function (st) {
-      if (st.id === 'challenge') return false;
-      return stageSkills(st).some(function (s) { return !s.scaffold; });
-    });
-  }
-  function stageComplete(stage) {
-    var hasReal = stageSkills(stage).some(function (s) { return !s.scaffold; });
-    if (!hasReal) return false;
-    var ex = (progress.stageExams || {})[stage.id];
-    return !!(ex && (ex.passed || ex.perfect)); // 綜合考試達 90% 即完成此階段（舊存檔的 perfect 仍相容）
-  }
-  function stageUnlocked(stageId) {
-    if (stageId === 'challenge') return true; // 挑戰區永遠開放
-    var real = realStageList();
-    for (var i = 0; i < real.length; i++) {
-      if (real[i].id === stageId) return i === 0 || stageComplete(real[i - 1]);
-    }
-    return false; // 腳手架階段暫不解鎖
-  }
-
-  /* 計算一個階段內「已解鎖 / 已通過 / 總數」的技能數（與解鎖邏輯一致） */
-  function stageSkillStats(stage) {
-    var total = 0, unlocked = 0, passed = 0;
-    var prevMastered = true;
-    var idx = 0;
-    stage.topics.forEach(function (topic) {
-      topic.skills.forEach(function (id) {
-        var skill = getSkill(id);
-        if (!skill) return;
-        if (skill.scaffold) { idx++; return; }
-        var locked = !prevMastered && idx > 0;
-        var ms = masteryOf(skill);
-        prevMastered = ms.mastered;
-        total++;
-        if (!locked) unlocked++;
-        if (ms.mastered) passed++;
-        idx++;
-      });
-    });
-    return { total: total, unlocked: unlocked, passed: passed };
-  }
 
   function applyTheme() {
     document.documentElement.setAttribute('data-theme', state.theme || 'light');
@@ -362,550 +239,6 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
 
   /* ---------------- 視覺渲染 ---------------- */
 
-  function dotsHTML(n, color) {
-    var cls = 'dot';
-    if (color === 'green') cls = 'dot green';
-    else if (color === 'gray') cls = 'dot gray';
-    var html = '';
-    for (var i = 0; i < n; i++) html += '<i class="' + cls + '"></i>';
-    return html;
-  }
-
-  function swatchColor(key) {
-    return key === 'green' ? '#34C759' : '#FF9500';
-  }
-
-  function fractionSVG(n, d) {
-    var size = 168, r = 72, cx = size / 2, cy = size / 2;
-    var angle = (2 * Math.PI) / d;
-    var start = -Math.PI / 2;
-    var s = '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '" xmlns="http://www.w3.org/2000/svg">';
-    for (var i = 0; i < d; i++) {
-      var a0 = start + i * angle, a1 = a0 + angle;
-      var x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
-      var x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
-      var large = angle > Math.PI ? 1 : 0;
-      var fill = i < n ? '#FF9500' : '#E5E5EA';
-      s += '<path d="M' + cx + ',' + cy + ' L' + x0.toFixed(2) + ',' + y0.toFixed(2) +
-        ' A' + r + ',' + r + ' 0 ' + large + ' 1 ' + x1.toFixed(2) + ',' + y1.toFixed(2) + ' Z" fill="' + fill + '" stroke="#FFFFFF" stroke-width="2"/>';
-    }
-    s += '</svg>';
-    return s;
-  }
-
-  /* 圖示的文字替代：屏幕閱讀器會讀出圖中表達的內容；未能描述的圖示標為裝飾性 */
-  function visualAlt(visual, math) {
-    var v = visual || {};
-    var tpl = function (key, tokens) { return t('a11y.visual.' + key, tokens || {}); };
-    switch (v.kind) {
-      case 'count': return tpl('count', { n: v.n });
-      case 'compare': return tpl('compare', { a: v.a, b: v.b });
-      case 'counters': return tpl('counters', { a: v.a, b: v.b, op: (math && math.op) || '+' });
-      case 'grid': return tpl('grid', { a: v.a, b: v.b });
-      case 'fraction': return tpl('fraction', { n: v.n, d: v.d });
-      case 'triangle': return tpl('triangle', { b: v.b, h: v.h });
-      case 'circle': return tpl('circle', { r: v.r });
-      case 'cuboid': return tpl('cuboid', { l: v.l, w: v.w, h: v.h });
-      case 'plane': return tpl('plane');
-      case 'rect': return tpl('rect', { l: v.l, w: v.w });
-      case 'compass': return tpl('compass');
-      case 'cone': return tpl('cone');
-      case 'sphere': return tpl('sphere');
-      case 'pie': return tpl('pie', { pct: v.pct });
-      case 'cylinder': return tpl('cylinder');
-      case 'symmetry': return tpl('symmetry');
-      case 'righttri': return tpl('righttri');
-      case 'polygon': return tpl('polygon', { n: v.n });
-      case 'parallel': return tpl('parallel');
-      case 'angletype': return tpl('angletype') + ' · ' + tpl('angle_' + v.kind);
-      case 'quadri': return tpl('quadri');
-      case 'circleang': return tpl('circleang');
-      case 'clock': return tpl('clock');
-      case 'numberline': return tpl('numberline');
-      case 'barchart': return tpl('barchart');
-      case 'percentgrid': return tpl('percentgrid', { pct: v.pct });
-      case 'twotri': return tpl('twotri');
-      case 'centre': return tpl('centre');
-      case 'oddeven': return tpl('oddeven');
-      case 'shape': return tpl('shape') + ' · ' + tpl('shape_' + v.shape);
-      default: return tpl('generic');
-    }
-  }
-
-  function renderVisual(container, visual, math) {
-    container.innerHTML = '';
-    if (!visual) {
-      container.style.display = 'none';
-      container.removeAttribute('role');
-      container.removeAttribute('aria-label');
-      container.removeAttribute('aria-hidden');
-      return;
-    }
-    container.style.display = 'flex';
-    container.setAttribute('role', 'img');
-    container.setAttribute('aria-label', visualAlt(visual, math));
-    container.removeAttribute('aria-hidden');
-    var html = '';
-    var op = math ? math.op : null;
-    switch (visual.kind) {
-      case 'count':
-        html = '<div class="dots">' + dotsHTML(visual.n, 'orange') + '</div>';
-        break;
-      case 'compare': {
-        var ca = visual.colorA || 'green';
-        var cb = visual.colorB || 'orange';
-        var colorMode = !!visual.colorA;
-        var dotsOk = visual.a <= 20 && visual.b <= 20;
-        var left, right;
-        if (colorMode || dotsOk) {
-          left = '<div class="dot-group"><div class="dots">' + dotsHTML(visual.a, ca) + '</div>' + (colorMode ? '' : '<span class="dot-label">' + visual.a + '</span>') + '</div>';
-          right = '<div class="dot-group"><div class="dots">' + dotsHTML(visual.b, cb) + '</div>' + (colorMode ? '' : '<span class="dot-label">' + visual.b + '</span>') + '</div>';
-        } else {
-          left = '<div class="dot-group"><span class="big-num" style="color:' + swatchColor(ca) + '">' + visual.a + '</span></div>';
-          right = '<div class="dot-group"><span class="big-num" style="color:' + swatchColor(cb) + '">' + visual.b + '</span></div>';
-        }
-        html = '<div class="compare-wrap">' + left + right + '</div>';
-        break;
-      }
-      case 'counters':
-        if (op === '−') {
-          html = '<div class="dot-group"><div class="dots">' +
-            dotsHTML(visual.a - visual.b, 'orange') + dotsHTML(visual.b, 'gray') +
-            '</div><span class="dot-label">' + visual.a + ' − ' + visual.b + '</span></div>';
-        } else {
-          html = '<div class="counters-wrap">' +
-            '<div class="dot-group"><div class="dots">' + dotsHTML(visual.a, 'green') + '</div><span class="dot-label">' + visual.a + '</span></div>' +
-            '<span class="op-symbol">' + (op === '×' ? '×' : '+') + '</span>' +
-            '<div class="dot-group"><div class="dots">' + dotsHTML(visual.b, 'orange') + '</div><span class="dot-label">' + visual.b + '</span></div>' +
-            '</div>';
-        }
-        break;
-      case 'grid':
-        var cells = '';
-        for (var i = 0; i < visual.a * visual.b; i++) cells += '<i class="grid-cell"></i>';
-        html = '<div class="grid-wrap" style="grid-template-columns:repeat(' + visual.b + ',1fr)">' + cells + '</div>';
-        break;
-      case 'fraction':
-        html = fractionSVG(visual.n, visual.d);
-        break;
-      case 'triangle':
-        html = triangleSVG(visual.b, visual.h);
-        break;
-      case 'circle':
-        html = circleSVG(visual.r);
-        break;
-      case 'cuboid':
-        html = cuboidSVG(visual.l, visual.w, visual.h);
-        break;
-      case 'plane':
-        html = planeSVG(visual.a, visual.b);
-        break;
-      case 'rect':
-        html = rectSVG(visual.l, visual.w);
-        break;
-      case 'compass':
-        html = compassSVG();
-        break;
-      case 'cone':
-        html = coneSVG();
-        break;
-      case 'sphere':
-        html = sphereSVG();
-        break;
-      case 'pie':
-        html = pieSVG(visual.pct);
-        break;
-      case 'cylinder':
-        html = cylinderSVG();
-        break;
-      case 'symmetry':
-        html = symmetrySVG();
-        break;
-      case 'righttri':
-        html = righttriSVG();
-        break;
-      case 'polygon':
-        html = polygonSVG(visual.n);
-        break;
-      case 'parallel':
-        html = parallelSVG();
-        break;
-      case 'angletype':
-        html = angletypeSVG(visual.kind);
-        break;
-      case 'quadri':
-        html = quadriSVG(visual.kind);
-        break;
-      case 'circleang':
-        html = circleangSVG();
-        break;
-      case 'clock':
-        html = clockSVG();
-        break;
-      case 'numberline':
-        html = numberlineSVG();
-        break;
-      case 'barchart':
-        html = barchartSVG();
-        break;
-      case 'percentgrid':
-        html = percentgridSVG(visual.pct);
-        break;
-      case 'twotri':
-        html = twotriSVG();
-        break;
-      case 'centre':
-        html = centreSVG();
-        break;
-      case 'oddeven':
-        html = oddevenSVG();
-        break;
-      case 'shape':
-        html = shapeSVG(visual.shape);
-        break;
-    }
-    container.innerHTML = html;
-  }
-
-  function triangleSVG(b, h) {
-    var W = 300, H = 210, pad = 42;
-    var s = Math.min((W - 2 * pad) / b, (H - 2 * pad) / h);
-    var bw = b * s, hh = h * s;
-    var x0 = pad, y0 = H - pad, x1 = x0 + bw;
-    var apexX = x0 + bw * 0.35, apexY = y0 - hh;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<polygon points="' + x0 + ',' + y0 + ' ' + x1 + ',' + y0 + ' ' + apexX + ',' + apexY + '" fill="#FFE0B2" stroke="#FF9500" stroke-width="2.5"/>' +
-      '<line x1="' + apexX + '" y1="' + apexY + '" x2="' + apexX + '" y2="' + y0 + '" stroke="#007AFF" stroke-width="2" stroke-dasharray="6 4"/>' +
-      '<text x="' + ((x0 + x1) / 2) + '" y="' + (y0 + 22) + '" text-anchor="middle" font-size="14" fill="#333">底 = ' + b + ' cm</text>' +
-      '<text x="' + (apexX + 8) + '" y="' + ((apexY + y0) / 2) + '" font-size="14" fill="#007AFF">高 = ' + h + ' cm</text>' +
-      '</svg>';
-  }
-
-  function circleSVG(r) {
-    var W = 220, H = 220, cx = 110, cy = 110, rad = 78;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + rad + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + rad) + '" y2="' + cy + '" stroke="#FF9500" stroke-width="2"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="3" fill="#333"/>' +
-      '<text x="' + (cx + rad / 2) + '" y="' + (cy - 8) + '" text-anchor="middle" font-size="14" fill="#333">r = ' + r + ' cm</text>' +
-      '</svg>';
-  }
-
-  function cuboidSVG(l, w, h) {
-    var W = 300, H = 230, pad = 40;
-    var s = Math.min((W - 2 * pad - 30) / (l + w), (H - 2 * pad - 20) / (w + h));
-    var fw = w * s, fh = h * s, d = l * s * 0.55;
-    var x0 = pad + d, y0 = H - pad;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<polygon points="' + x0 + ',' + y0 + ' ' + (x0 + fw) + ',' + y0 + ' ' + (x0 + fw) + ',' + (y0 - fh) + ' ' + x0 + ',' + (y0 - fh) + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2"/>' +
-      '<polygon points="' + x0 + ',' + (y0 - fh) + ' ' + (x0 + d) + ',' + (y0 - fh - d) + ' ' + (x0 + fw + d) + ',' + (y0 - fh - d) + ' ' + (x0 + fw) + ',' + (y0 - fh) + '" fill="#BBDEFB" stroke="#007AFF" stroke-width="2"/>' +
-      '<polygon points="' + (x0 + fw) + ',' + y0 + ' ' + (x0 + fw + d) + ',' + (y0 - d) + ' ' + (x0 + fw + d) + ',' + (y0 - fh - d) + ' ' + (x0 + fw) + ',' + (y0 - fh) + '" fill="#90CAF9" stroke="#007AFF" stroke-width="2"/>' +
-      '<text x="' + (x0 + fw / 2) + '" y="' + (y0 + 20) + '" text-anchor="middle" font-size="13" fill="#333">闊 ' + w + ' cm</text>' +
-      '<text x="' + (x0 - 6) + '" y="' + (y0 - fh / 2) + '" text-anchor="end" font-size="13" fill="#333">高 ' + h + ' cm</text>' +
-      '<text x="' + (x0 + fw + d / 2) + '" y="' + (y0 - fh - d - 4) + '" text-anchor="middle" font-size="13" fill="#333">長 ' + l + ' cm</text>' +
-      '</svg>';
-  }
-
-  function planeSVG(a, b) {
-    var maxX = Math.max(a[0], b[0], 5) + 2;
-    var maxY = Math.max(a[1], b[1], 5) + 2;
-    var W = 280, H = 240, pad = 34;
-    var sx = (W - 2 * pad) / maxX, sy = (H - 2 * pad) / maxY;
-    function px(x) { return pad + x * sx; }
-    function py(y) { return H - pad - y * sy; }
-    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
-    s += '<line x1="' + pad + '" y1="' + (H - pad) + '" x2="' + (W - pad) + '" y2="' + (H - pad) + '" stroke="#999" stroke-width="1.5"/>';
-    s += '<line x1="' + pad + '" y1="' + pad + '" x2="' + pad + '" y2="' + (H - pad) + '" stroke="#999" stroke-width="1.5"/>';
-    s += '<text x="' + (W - pad - 4) + '" y="' + (H - pad - 6) + '" font-size="12" fill="#666">x</text>';
-    s += '<text x="' + (pad + 4) + '" y="' + (pad + 12) + '" font-size="12" fill="#666">y</text>';
-    s += '<line x1="' + px(a[0]) + '" y1="' + py(a[1]) + '" x2="' + px(b[0]) + '" y2="' + py(b[1]) + '" stroke="#007AFF" stroke-width="2"/>';
-    s += '<circle cx="' + px(a[0]) + '" cy="' + py(a[1]) + '" r="4" fill="#FF3B30"/>';
-    s += '<text x="' + (px(a[0]) + 6) + '" y="' + (py(a[1]) + 16) + '" font-size="13" fill="#FF3B30">A(' + a[0] + ',' + a[1] + ')</text>';
-    s += '<circle cx="' + px(b[0]) + '" cy="' + py(b[1]) + '" r="4" fill="#34C759"/>';
-    s += '<text x="' + (px(b[0]) + 6) + '" y="' + (py(b[1]) - 8) + '" font-size="13" fill="#34C759">B(' + b[0] + ',' + b[1] + ')</text>';
-    s += '</svg>';
-    return s;
-  }
-
-  function rectSVG(l, w) {
-    var W = 280, H = 190, pad = 44;
-    var s = Math.min((W - 2 * pad) / l, (H - 2 * pad) / w);
-    var bw = l * s, hh = w * s;
-    var x0 = (W - bw) / 2, y0 = (H - hh) / 2;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect x="' + x0 + '" y="' + y0 + '" width="' + bw + '" height="' + hh + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<text x="' + (W / 2) + '" y="' + (y0 + hh + 20) + '" text-anchor="middle" font-size="14" fill="#333">長 ' + l + ' cm</text>' +
-      '<text x="' + (x0 - 8) + '" y="' + (y0 + hh / 2) + '" text-anchor="end" font-size="14" fill="#333">闊 ' + w + ' cm</text>' +
-      '</svg>';
-  }
-
-  function compassSVG() {
-    var W = 220, H = 220, cx = 110, cy = 110, R = 86;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2"/>' +
-      '<polygon points="' + cx + ',' + (cy - R) + ' ' + (cx - 10) + ',' + (cy - 34) + ' ' + (cx + 10) + ',' + (cy - 34) + '" fill="#FF3B30"/>' +
-      '<polygon points="' + cx + ',' + (cy + R) + ' ' + (cx - 10) + ',' + (cy + 34) + ' ' + (cx + 10) + ',' + (cy + 34) + '" fill="#C7C7CC"/>' +
-      '<polygon points="' + (cx - R) + ',' + cy + ' ' + (cx - 34) + ',' + (cy - 10) + ' ' + (cx - 34) + ',' + (cy + 10) + '" fill="#C7C7CC"/>' +
-      '<polygon points="' + (cx + R) + ',' + cy + ' ' + (cx + 34) + ',' + (cy - 10) + ' ' + (cx + 34) + ',' + (cy + 10) + '" fill="#C7C7CC"/>' +
-      '<text x="' + cx + '" y="' + (cy - R - 6) + '" text-anchor="middle" font-size="16" font-weight="bold" fill="#FF3B30">北 N</text>' +
-      '<text x="' + cx + '" y="' + (cy + R + 20) + '" text-anchor="middle" font-size="14" fill="#666">南 S</text>' +
-      '<text x="' + (cx - R - 10) + '" y="' + (cy + 5) + '" text-anchor="end" font-size="14" fill="#666">西 W</text>' +
-      '<text x="' + (cx + R + 10) + '" y="' + (cy + 5) + '" font-size="14" fill="#666">東 E</text>' +
-      '</svg>';
-  }
-
-  function coneSVG() {
-    var W = 240, H = 220, cx = 120, topY = 28, baseY = 176;
-    var apexX = cx, apexY = topY, bl = cx - 56, br = cx + 56;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<line x1="' + apexX + '" y1="' + apexY + '" x2="' + bl + '" y2="' + baseY + '" stroke="#FF9500" stroke-width="2.5"/>' +
-      '<line x1="' + apexX + '" y1="' + apexY + '" x2="' + br + '" y2="' + baseY + '" stroke="#FF9500" stroke-width="2.5"/>' +
-      '<ellipse cx="' + cx + '" cy="' + baseY + '" rx="56" ry="15" fill="#FFE0B2" stroke="#FF9500" stroke-width="2.5"/>' +
-      '<line x1="' + apexX + '" y1="' + apexY + '" x2="' + cx + '" y2="' + baseY + '" stroke="#007AFF" stroke-width="2" stroke-dasharray="6 4"/>' +
-      '<text x="' + (apexX + 8) + '" y="' + ((apexY + baseY) / 2) + '" font-size="13" fill="#007AFF">高 h</text>' +
-      '<text x="' + cx + '" y="' + (baseY + 32) + '" text-anchor="middle" font-size="13" fill="#333">半徑 r</text>' +
-      '</svg>';
-  }
-
-  function sphereSVG() {
-    var W = 200, H = 200, cx = 100, cy = 95, R = 70;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<ellipse cx="' + cx + '" cy="' + cy + '" rx="' + R + '" ry="' + Math.round(R * 0.35) + '" fill="none" stroke="#007AFF" stroke-width="1.5"/>' +
-      '<text x="' + cx + '" y="' + (cy - R - 8) + '" text-anchor="middle" font-size="13" fill="#333">半徑 r</text>' +
-      '</svg>';
-  }
-
-  function pieSVG(pct) {
-    var W = 200, H = 200, cx = 100, cy = 100, R = 80;
-    var angle = pct / 100 * 360;
-    var x1 = cx, y1 = cy - R;
-    var rad = angle * Math.PI / 180;
-    var x2 = cx + R * Math.sin(rad);
-    var y2 = cy - R * Math.cos(rad);
-    var large = angle > 180 ? 1 : 0;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<path d="M ' + cx + ',' + cy + ' L ' + x1 + ',' + y1 + ' A ' + R + ',' + R + ' 0 ' + large + ' 1 ' + x2.toFixed(2) + ',' + y2.toFixed(2) + ' Z" fill="#FFB300" stroke="#007AFF" stroke-width="2"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="#007AFF" stroke-width="2"/>' +
-      '<text x="' + cx + '" y="' + (cy + R + 20) + '" text-anchor="middle" font-size="15" font-weight="bold" fill="#333">' + pct + '%</text>' +
-      '</svg>';
-  }
-
-  function cylinderSVG() {
-    var W = 200, H = 240, cx = 100, topY = 52, bottomY = 190, rx = 46, ry = 15;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<ellipse cx="' + cx + '" cy="' + bottomY + '" rx="' + rx + '" ry="' + ry + '" fill="#BBDEFB" stroke="#007AFF" stroke-width="2"/>' +
-      '<rect x="' + (cx - rx) + '" y="' + topY + '" width="' + (2 * rx) + '" height="' + (bottomY - topY) + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2"/>' +
-      '<ellipse cx="' + cx + '" cy="' + topY + '" rx="' + rx + '" ry="' + ry + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2"/>' +
-      '<text x="' + (cx - rx - 8) + '" y="' + ((topY + bottomY) / 2) + '" text-anchor="end" font-size="13" fill="#333">高 h</text>' +
-      '<text x="' + (cx + rx + 8) + '" y="' + (topY + 4) + '" font-size="13" fill="#333">r</text>' +
-      '</svg>';
-  }
-
-  function symmetrySVG() {
-    var W = 220, H = 220, cx = 110, cy = 110, s = 72;
-    var x0 = cx - s, y0 = cy - s, x1 = cx + s, y1 = cy + s;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect x="' + x0 + '" y="' + y0 + '" width="' + (2 * s) + '" height="' + (2 * s) + '" fill="#FFF9C4" stroke="#FFB300" stroke-width="2.5"/>' +
-      '<line x1="' + cx + '" y1="' + y0 + '" x2="' + cx + '" y2="' + y1 + '" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="6 4"/>' +
-      '<line x1="' + x0 + '" y1="' + cy + '" x2="' + x1 + '" y2="' + cy + '" stroke="#007AFF" stroke-width="1.5" stroke-dasharray="6 4"/>' +
-      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x1 + '" y2="' + y1 + '" stroke="#FF3B30" stroke-width="1.5" stroke-dasharray="6 4"/>' +
-      '<line x1="' + x1 + '" y1="' + y0 + '" x2="' + x0 + '" y2="' + y1 + '" stroke="#FF3B30" stroke-width="1.5" stroke-dasharray="6 4"/>' +
-      '</svg>';
-  }
-
-  function righttriSVG() {
-    var W = 260, H = 210, x0 = 40, y0 = 182, x1 = 230, y1 = 182, x2 = 40, y2 = 52;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<polygon points="' + x0 + ',' + y0 + ' ' + x1 + ',' + y1 + ' ' + x2 + ',' + y2 + '" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<path d="M ' + (x0 + 20) + ',' + y0 + ' L ' + (x0 + 20) + ',' + (y0 - 20) + ' L ' + x0 + ',' + (y0 - 20) + '" fill="none" stroke="#FF9500" stroke-width="2"/>' +
-      '<text x="' + ((x0 + x1) / 2) + '" y="' + (y0 + 20) + '" text-anchor="middle" font-size="14" fill="#333">a</text>' +
-      '<text x="' + (x0 - 14) + '" y="' + ((y0 + y2) / 2) + '" text-anchor="end" font-size="14" fill="#333">b</text>' +
-      '<text x="' + ((x1 + x2) / 2 + 12) + '" y="' + ((y0 + y2) / 2 - 8) + '" font-size="14" fill="#FF3B30">c</text>' +
-      '</svg>';
-  }
-
-  function polygonSVG(n) {
-    var W = 220, H = 210, cx = 110, cy = 100, R = 82;
-    var pts = [];
-    for (var i = 0; i < n; i++) {
-      var ang = -Math.PI / 2 + i * 2 * Math.PI / n;
-      pts.push((cx + R * Math.cos(ang)).toFixed(1) + ',' + (cy + R * Math.sin(ang)).toFixed(1));
-    }
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<polygon points="' + pts.join(' ') + '" fill="#FFE0B2" stroke="#FF9500" stroke-width="2.5"/>' +
-      '<text x="' + cx + '" y="' + (cy + 6) + '" text-anchor="middle" font-size="14" fill="#333">' + n + ' 邊形</text>' +
-      '</svg>';
-  }
-
-  function parallelSVG() {
-    var W = 260, H = 200, x0 = 40, x1 = 220;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<line x1="' + x0 + '" y1="55" x2="' + x1 + '" y2="55" stroke="#007AFF" stroke-width="3"/>' +
-      '<line x1="' + x0 + '" y1="150" x2="' + x1 + '" y2="150" stroke="#007AFF" stroke-width="3"/>' +
-      '<line x1="60" y1="25" x2="210" y2="180" stroke="#FF3B30" stroke-width="2.5"/>' +
-      '<text x="' + (x1 - 8) + '" y="46" text-anchor="end" font-size="13" fill="#007AFF">L1</text>' +
-      '<text x="' + (x1 - 8) + '" y="172" text-anchor="end" font-size="13" fill="#007AFF">L2</text>' +
-      '<text x="205" y="185" font-size="13" fill="#FF3B30">截線</text>' +
-      '</svg>';
-  }
-
-  function angletypeSVG(kind) {
-    var W = 220, H = 180, x0 = 60, y0 = 140;
-    var a2 = kind === 'acute' ? 30 : kind === 'right' ? 90 : 120;
-    var rad = a2 * Math.PI / 180;
-    var x1 = x0 + 130, y1 = y0;
-    var x2 = x0 + 130 * Math.cos(rad), y2 = y0 - 130 * Math.sin(rad);
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x1 + '" y2="' + y1 + '" stroke="#007AFF" stroke-width="3"/>' +
-      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#007AFF" stroke-width="3"/>' +
-      '<path d="M ' + (x0 + 28) + ',' + y0 + ' A 28,28 0 0 ' + (a2 > 90 ? 1 : 0) + ' ' + (x0 + 28 * Math.cos(rad)).toFixed(1) + ',' + (y0 - 28 * Math.sin(rad)).toFixed(1) + '" fill="none" stroke="#FF9500" stroke-width="2"/>' +
-      '<text x="' + x0 + '" y="' + (y0 + 20) + '" text-anchor="middle" font-size="14" fill="#333">' + a2 + '°</text>' +
-      '</svg>';
-  }
-
-  function quadriSVG(kind) {
-    var W = 240, H = 180;
-    if (kind === 'trap') {
-      return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-        '<polygon points="70,40 180,40 210,140 40,140" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-        '<text x="120" y="165" text-anchor="middle" font-size="13" fill="#333">梯形</text></svg>';
-    }
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<polygon points="60,40 200,40 160,140 20,140" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<text x="110" y="165" text-anchor="middle" font-size="13" fill="#333">平行四邊形</text></svg>';
-  }
-
-  function circleangSVG() {
-    var W = 220, H = 220, cx = 110, cy = 110, R = 80;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + R) + '" y2="' + cy + '" stroke="#FF3B30" stroke-width="2"/>' +
-      '<line x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="' + (cy - R) + '" stroke="#FF3B30" stroke-width="2"/>' +
-      '<path d="M ' + (cx + 24) + ',' + cy + ' A 24,24 0 0 0 ' + cx + ',' + (cy - 24) + '" fill="none" stroke="#FF9500" stroke-width="2"/>' +
-      '<text x="' + (cx + 34) + '" y="' + (cy - 18) + '" font-size="13" fill="#333">圓心角</text>' +
-      '<text x="' + (cx + R) + '" y="' + (cy - R + 14) + '" font-size="13" fill="#FF3B30">圓周角</text>' +
-      '</svg>';
-  }
-
-  function clockSVG() {
-    var W = 200, H = 200, cx = 100, cy = 100, R = 78;
-    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="#fff" stroke="#007AFF" stroke-width="3"/>';
-    for (var i = 0; i < 12; i++) {
-      var a = i * 30 * Math.PI / 180;
-      s += '<line x1="' + (cx + (R - 10) * Math.sin(a)).toFixed(1) + '" y1="' + (cy - (R - 10) * Math.cos(a)).toFixed(1) + '" x2="' + (cx + (R - 16) * Math.sin(a)).toFixed(1) + '" y2="' + (cy - (R - 16) * Math.cos(a)).toFixed(1) + '" stroke="#666" stroke-width="2"/>';
-    }
-    s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + cx + '" y2="' + (cy - R + 30) + '" stroke="#333" stroke-width="3"/>';
-    s += '<line x1="' + cx + '" y1="' + cy + '" x2="' + (cx + R - 34) + '" y2="' + cy + '" stroke="#333" stroke-width="3"/>';
-    s += '<text x="' + cx + '" y="' + (cy - R - 6) + '" text-anchor="middle" font-size="13" fill="#333">12</text>' +
-      '<text x="' + (cx + R - 8) + '" y="' + (cy + 5) + '" text-anchor="middle" font-size="12" fill="#333">3</text>' +
-      '<text x="' + cx + '" y="' + (cy + R + 18) + '" text-anchor="middle" font-size="12" fill="#333">6</text>' +
-      '<text x="' + (cx - R + 8) + '" y="' + (cy + 5) + '" text-anchor="middle" font-size="12" fill="#333">9</text>';
-    s += '</svg>';
-    return s;
-  }
-
-  function numberlineSVG() {
-    var W = 280, H = 90, y = 45, x0 = 20, x1 = 260;
-    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<line x1="' + x0 + '" y1="' + y + '" x2="' + x1 + '" y2="' + y + '" stroke="#333" stroke-width="2"/>' +
-      '<polygon points="' + (x1 + 6) + ',' + y + ' ' + (x1 - 2) + ',' + (y - 5) + ' ' + (x1 - 2) + ',' + (y + 5) + '" fill="#333"/>';
-    for (var v = -5; v <= 5; v++) {
-      var px = 140 + v * 22;
-      s += '<line x1="' + px + '" y1="' + (y - 5) + '" x2="' + px + '" y2="' + (y + 5) + '" stroke="#333" stroke-width="1.5"/>' +
-        '<text x="' + px + '" y="' + (y + 22) + '" text-anchor="middle" font-size="11" fill="#333">' + v + '</text>';
-    }
-    s += '</svg>';
-    return s;
-  }
-
-  function barchartSVG() {
-    var W = 220, H = 170, x0 = 40, y0 = 140;
-    var vals = [3, 5, 2, 6, 4];
-    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + (W - 15) + '" y2="' + y0 + '" stroke="#333" stroke-width="2"/>' +
-      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x0 + '" y2="' + 15 + '" stroke="#333" stroke-width="2"/>';
-    for (var i = 0; i < vals.length; i++) {
-      var bw = 24, bh = vals[i] * 18;
-      var bx = x0 + 8 + i * 34;
-      s += '<rect x="' + bx + '" y="' + (y0 - bh) + '" width="' + bw + '" height="' + bh + '" fill="' + (i % 2 ? '#FF9500' : '#007AFF') + '"/>';
-    }
-    s += '</svg>';
-    return s;
-  }
-
-  function percentgridSVG(pct) {
-    var W = 220, H = 220, x0 = 30, y0 = 30, cell = 16, gap = 1;
-    var filled = Math.round(pct); // pct 即已塗格數（0–100）
-    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
-    for (var i = 0; i < 100; i++) {
-      var r = Math.floor(i / 10), c = i % 10;
-      var fill = i < filled ? '#FF9500' : '#E3F2FD';
-      s += '<rect x="' + (x0 + c * (cell + gap)) + '" y="' + (y0 + r * (cell + gap)) + '" width="' + cell + '" height="' + cell + '" fill="' + fill + '" stroke="#007AFF" stroke-width="0.5"/>';
-    }
-    s += '<text x="' + (x0 + 5 * (cell + gap)) + '" y="' + (y0 + 10 * (cell + gap) + 18) + '" text-anchor="middle" font-size="14" fill="#333">' + pct + '%</text>';
-    s += '</svg>';
-    return s;
-  }
-
-  function twotriSVG() {
-    var W = 240, H = 190;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<polygon points="30,160 90,160 60,90" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<polygon points="150,160 230,160 190,70" fill="#FFE0B2" stroke="#FF9500" stroke-width="2.5"/>' +
-      '<text x="60" y="180" text-anchor="middle" font-size="12" fill="#333">△1</text>' +
-      '<text x="190" y="180" text-anchor="middle" font-size="12" fill="#333">△2</text>' +
-      '</svg>';
-  }
-
-  function centreSVG() {
-    var W = 220, H = 200, cx = 110;
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<polygon points="110,30 200,170 20,170" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<line x1="110" y1="30" x2="110" y2="170" stroke="#FF9500" stroke-width="1.5" stroke-dasharray="5 4"/>' +
-      '<line x1="200" y1="170" x2="65" y2="100" stroke="#34C759" stroke-width="1.5" stroke-dasharray="5 4"/>' +
-      '<line x1="20" y1="170" x2="155" y2="100" stroke="#FF3B30" stroke-width="1.5" stroke-dasharray="5 4"/>' +
-      '<circle cx="110" cy="123" r="4" fill="#FF3B30"/>' +
-      '<text x="110" y="143" text-anchor="middle" font-size="12" fill="#FF3B30">心</text>' +
-      '</svg>';
-  }
-
-  function oddevenSVG() {
-    var W = 240, H = 140;
-    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">';
-    for (var r = 0; r < 2; r++) {
-      for (var c = 0; c < 5; c++) {
-        s += '<circle cx="' + (40 + c * 40) + '" cy="' + (40 + r * 40) + '" r="12" fill="' + ((r * 5 + c) % 2 ? '#FF9500' : '#007AFF') + '"/>';
-      }
-    }
-    s += '</svg>';
-    return s;
-  }
-
-  function shapeSVG(kind) {
-    var W = 220, H = 180;
-    if (kind === 'cube') {
-      return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-        '<polygon points="80,40 180,40 180,140 80,140" fill="#E3F2FD" stroke="#007AFF" stroke-width="2"/>' +
-        '<polygon points="80,40 120,20 220,20 180,40" fill="#BBDEFB" stroke="#007AFF" stroke-width="2"/>' +
-        '<polygon points="180,40 220,20 220,120 180,140" fill="#90CAF9" stroke="#007AFF" stroke-width="2"/>' +
-        '<text x="150" y="165" text-anchor="middle" font-size="13" fill="#333">正方體</text></svg>';
-    }
-    if (kind === 'square') {
-      return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-        '<rect x="50" y="30" width="120" height="120" fill="#FFE0B2" stroke="#FF9500" stroke-width="2.5"/>' +
-        '<text x="110" y="170" text-anchor="middle" font-size="13" fill="#333">正方形</text></svg>';
-    }
-    if (kind === 'triangle') {
-      return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-        '<polygon points="110,30 190,150 30,150" fill="#FFE0B2" stroke="#FF9500" stroke-width="2.5"/>' +
-        '<text x="110" y="172" text-anchor="middle" font-size="13" fill="#333">三角形</text></svg>';
-    }
-    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect x="60" y="40" width="100" height="80" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/>' +
-      '<text x="110" y="145" text-anchor="middle" font-size="13" fill="#333">長方形</text></svg>';
-  }
 
   /* ---------------- 路由（純函數）與導航 ---------------- */
 
@@ -1176,232 +509,6 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
   function back() {
     var parent = parentOf(currentRoute());
     navigate(parent || HOME_ROUTE);
-  }
-
-  /* ---------------- 首頁 ---------------- */
-
-  function renderHome() {
-    var realStages = realStageList();
-    var unlockedCount = 0;
-    var session = sessionSummary();
-    var html = '<h1 class="page-title">' + t('home.title') + '</h1>' +
-      '<p class="page-sub">' + t('home.subtitle') + '</p>';
-    if (session) {
-      html += '<button class="continue-card" id="homeContinue" type="button">' +
-        '<span class="continue-emoji" aria-hidden="true">▶️</span>' +
-        '<span class="continue-body">' +
-        '<span class="continue-title">' + t('home.continue') + ' · ' + session.modeLabel + '</span>' +
-        '<span class="continue-sub">' + esc(session.name) + ' · ' + t('practice.question', { i: session.index + 1, n: session.total }) + '</span>' +
-        '</span></button>';
-    }
-    var challengeStage = getStage('challenge');
-    if (challengeStage) {
-      var chTotal = 0, chPassed = 0;
-      stageSkills(challengeStage).forEach(function (sk) { chTotal++; if (masteryOf(sk).mastered) chPassed++; });
-      html += '<button class="challenge-card" id="homeChallengeBtn" type="button">' +
-        '<span class="challenge-emoji" aria-hidden="true">' + challengeStage.emoji + '</span>' +
-        '<span class="challenge-body">' +
-        '<span class="challenge-title">' + t('challenge.title') + '</span>' +
-        '<span class="challenge-sub">' + t('challenge.desc') + '</span>' +
-        '<span class="challenge-count">' + t('challenge.progress', { m: chPassed, t: chTotal }) + '</span>' +
-        '</span>' +
-        '<span class="challenge-arrow" aria-hidden="true">→</span></button>';
-    }
-    html += '<div class="stage-grid">';
-    realStages.forEach(function (stage) {
-      if (!stageUnlocked(stage.id)) return; // 未解鎖的階段不顯示
-      unlockedCount++;
-      var stats = stageSkillStats(stage);
-      html += '<button class="stage-card" type="button" data-stage="' + stage.id + '">' +
-        '<span class="emoji">' + stage.emoji + '</span>' +
-        '<span class="name">' + L(stage) + '</span>' +
-        '<span class="desc">' + L(stage.desc) + '</span>' +
-        '<span class="stage-count">' + t('home.stageCount', { u: stats.unlocked, t: stats.total }) + '</span>' +
-        '</button>';
-    });
-    html += '</div>' +
-      '<p class="page-sub" style="margin-top:14px;font-size:13px">' + t('home.unlocked', { u: unlockedCount, t: realStages.length }) + '</p>' +
-      '<p class="page-sub" style="font-size:13px;margin-bottom:14px">' + t('home.nextHint') + '</p>' +
-      '<button class="btn secondary big" id="homeFormulasBtn" type="button" style="margin-bottom:10px">📐 ' + t('formulas.title') + '</button>' +
-      '<button class="btn secondary big" id="homeOutlineBtn" type="button" style="margin-bottom:10px">📚 ' + t('outline.title') + '</button>' +
-      '<button class="btn secondary big" id="homeParentBtn" type="button">👨‍👩‍👦 ' + t('home.parent') + '</button>';
-
-    $('screen-home').innerHTML = html;
-
-    $('screen-home').querySelectorAll('.stage-card').forEach(function (el) {
-      el.addEventListener('click', function () { navigate({ screen: 'stage', stageId: el.getAttribute('data-stage') }); });
-    });
-    $('homeFormulasBtn').addEventListener('click', function () { navigate({ screen: 'formulas' }); });
-    $('homeOutlineBtn').addEventListener('click', function () { navigate({ screen: 'outline' }); });
-    $('homeParentBtn').addEventListener('click', function () { navigate({ screen: 'parent' }); });
-    var continueBtn = $('homeContinue');
-    if (continueBtn) continueBtn.addEventListener('click', resumeSession);
-    var challengeBtn = $('homeChallengeBtn');
-    if (challengeBtn) challengeBtn.addEventListener('click', function () { navigate({ screen: 'stage', stageId: 'challenge' }); });
-    show('home');
-  }
-
-  /* ---------------- 階段 / 技能列表 ---------------- */
-
-  function renderStage(stageId) {
-    state.stageId = stageId;
-    var stage = getStage(stageId);
-    var stats = stageSkillStats(stage);
-    if (stageId === 'challenge') {
-      var chTotal = 0, chPassed = 0;
-      stageSkills(stage).forEach(function (sk) { chTotal++; if (masteryOf(sk).mastered) chPassed++; });
-      stats = { total: chTotal, unlocked: chTotal, passed: chPassed };
-    }
-
-    var hasReal = stageSkills(stage).some(function (s) { return !s.scaffold && s.types && s.types.length; });
-    var html = '<h1 class="page-title">' + stage.emoji + ' ' + L(stage) + '</h1>' +
-      '<p class="page-sub">' + L(stage.desc) + ' · ' + t('stage.unlockedCount', { u: stats.unlocked, t: stats.total }) + '</p>' +
-      (hasReal ? '<button class="btn primary big" id="stageExamBtn" type="button" style="width:100%;margin-bottom:6px">📝 ' + t('exam.title') + '</button><p class="page-sub" style="font-size:12px;margin-bottom:14px">' + t('home.nextHint') + '</p>' : '');
-
-    var prevMastered = true;
-    var idx = 0;
-    stage.topics.forEach(function (topic) {
-      html += '<div class="topic-block"><div class="topic-title">' + L(topic) + '</div>';
-      topic.skills.forEach(function (id) {
-        var skill = getSkill(id);
-        var locked = !prevMastered && idx > 0;
-        if (stageId === 'challenge') locked = false; // 挑戰技能不順序鎖定
-        var ms = masteryOf(skill);
-        prevMastered = ms.mastered || skill.scaffold;
-        html += renderSkillCard(skill, ms, locked);
-        idx++;
-      });
-      html += '</div>';
-    });
-
-    $('screen-stage').innerHTML = html;
-    var examBtn = $('stageExamBtn');
-    if (examBtn) examBtn.addEventListener('click', function () { navigate({ screen: 'exam', stageId: stageId }); });
-    bindStageCards();
-    show('stage');
-  }
-
-  function renderSkillCard(skill, ms, locked) {
-    var order = skill.order;
-    var passed = ms.mastered; // 通過測驗
-    var starsHtml = '';
-    if (passed) starsHtml = '<span class="stars">✓ ' + '★'.repeat(Math.max(1, ms.quizStars)) + '</span>';
-    else if (ms.stars > 0) starsHtml = '<span class="stars">' + '★'.repeat(ms.stars) + '</span>';
-
-    if (skill.scaffold) {
-      return '<div class="skill-card locked"><div class="badge">🔒</div>' +
-        '<div class="info"><div class="name">' + nameOf(skill) + '</div>' +
-        '<div class="goal">' + t('skill.comingText') + '</div></div>' +
-        '<span class="stars" style="color:var(--text-2)">' + t('skill.coming') + '</span></div>';
-    }
-
-    var lockedCls = locked ? ' locked' : '';
-    var goLabel = passed ? t('skill.review') : t('skill.learn');
-
-    return '<div class="skill-card' + lockedCls + '" data-skill="' + skill.id + '" data-locked="' + (locked ? '1' : '0') + '">' +
-      '<div class="badge">' + order + '</div>' +
-      '<div class="info"><div class="name">' + nameOf(skill) + '</div>' +
-      '<div class="goal">' + goalOf(skill) + '</div></div>' +
-      (locked ? '<span class="stars" style="color:var(--text-2)">🔒</span>' : starsHtml) +
-      (locked ? '' : '<button class="go" type="button" data-action="go">' + goLabel + '</button>') +
-      '</div>';
-  }
-
-  function bindStageCards() {
-    $('screen-stage').querySelectorAll('.skill-card').forEach(function (el) {
-      var locked = el.getAttribute('data-locked') === '1';
-      var id = el.getAttribute('data-skill');
-      if (!id) return;
-      el.addEventListener('click', function (ev) {
-        if (ev.target.getAttribute('data-action') === 'go') return;
-        if (locked) { toast(t('skill.unlockHint')); return; }
-        navigate({ screen: 'lesson', skillId: id });
-      });
-      var goBtn = el.querySelector('[data-action="go"]');
-      if (goBtn) {
-        goBtn.addEventListener('click', function (ev) {
-          ev.stopPropagation();
-          if (locked) { toast(t('skill.unlockHint')); return; }
-          navigate({ screen: 'lesson', skillId: id });
-        });
-      }
-    });
-  }
-
-  /* ---------------- 小課堂 ---------------- */
-
-  function renderLesson(skillId) {
-    state.skillId = skillId;
-    var skill = getSkill(skillId);
-    var info = skill[state.lang === 'zh' ? 'zh' : 'en'];
-    var lesson = Lessons[skill.lesson];
-
-    var html = '<h1 class="page-title">' + esc(info.name) + '</h1>' +
-      '<p class="page-sub">' + t('stage.goal') + '：' + esc(info.goal) + '</p>';
-
-    if (lesson) {
-      var l = state.lang === 'zh' ? lesson.zh : lesson.en;
-      html += '<div class="lesson-card"><h2>' + t('lesson.title') + '</h2>' +
-        '<div class="lesson-label">' + t('lesson.intro') + '</div><p class="lesson-text">' + renderMath(l.intro) + '</p>';
-      if (lesson.visual) {
-        html += '<div class="lesson-visual" id="lessonVisual"></div>';
-      }
-      if (l.steps && l.steps.length) {
-        html += '<div class="lesson-label">' + t('lesson.steps') + '</div><ol class="lesson-steps">' +
-          l.steps.map(function (step) { return '<li>' + renderMath(step) + '</li>'; }).join('') + '</ol>';
-      }
-      html += '<div class="lesson-label">' + t('lesson.example') + '</div><p class="lesson-text">' + renderMath(l.example) + '</p>' +
-        '<div class="lesson-label">' + t('lesson.tip') + '</div><p class="lesson-text">' + renderMath(l.tip) + '</p>';
-      if (l.mistake) {
-        html += '<div class="lesson-label">' + t('lesson.mistake') + '</div><p class="lesson-text lesson-mistake">' + renderMath(l.mistake) + '</p>';
-      }
-      html += '</div>' +
-        '<div class="lesson-card" style="margin-top:12px">' +
-        '<button class="btn secondary big" id="lessonExample" type="button">📖 ' + t('lesson.showExample') + '</button>' +
-        '<div id="exampleBox" hidden></div>' +
-        '</div>';
-    } else {
-      html += '<div class="lesson-card"><p class="lesson-text">' + t('skill.comingText') + '</p></div>';
-    }
-
-    html += '<div class="lesson-actions">' +
-      '<button class="btn" id="lessonPractice" type="button">' + t('lesson.start') + '</button>' +
-      '<button class="btn secondary" id="lessonQuiz" type="button">' + t('lesson.skip') + '</button>' +
-      '</div>';
-
-    $('screen-lesson').innerHTML = html;
-
-    if (lesson && lesson.visual) {
-      renderVisual($('lessonVisual'), lesson.visual, null);
-    }
-    if (lesson) {
-      $('lessonExample').addEventListener('click', function () { showWorkedExample(skillId); });
-    }
-    $('lessonPractice').addEventListener('click', function () { navigate({ screen: 'practice', skillId: skillId }); });
-    $('lessonQuiz').addEventListener('click', function () { navigate({ screen: 'quiz', skillId: skillId }); });
-    show('lesson');
-  }
-
-  /* 一步步示範：生成一道該技能的題，列出解題步驟 */
-  function showWorkedExample(skillId) {
-    var skill = getSkill(skillId);
-    var box = $('exampleBox');
-    if (!box) return;
-    var p = MathCore.generateProblem(skill, { seed: (Date.now() & 0xffffffff) });
-    var ex = null;
-    try { ex = MathCore.explain(p); } catch (e) { ex = null; }
-    box.hidden = false;
-    if (!ex) {
-      box.innerHTML = '<div class="lesson-label">' + t('lesson.example') + '</div>' +
-        '<p class="prompt-small">' + renderMath(L(p.prompt)) + '</p>';
-      return;
-    }
-    var steps = state.lang === 'zh' ? ex.zh : ex.en;
-    var list = '<ol class="steps-list">' + steps.map(function (s) { return '<li>' + renderMath(s) + '</li>'; }).join('') + '</ol>';
-    box.innerHTML = '<div class="lesson-label">' + t('lesson.showExample') + '</div>' +
-      '<p class="prompt-small">' + renderMath(L(p.prompt)) + '</p>' + list +
-      '<button class="btn secondary" id="exampleNext" type="button" style="margin-top:10px">🔄 ' + t('lesson.nextExample') + '</button>';
-    $('exampleNext').addEventListener('click', function () { showWorkedExample(skillId); });
   }
 
   /* ---------------- 練習 / 測驗 ---------------- */
@@ -1706,53 +813,13 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
 
   /* ---------------- 鍵盤操作（數字選答 / 方向鍵 / Esc / Tab 陷阱） ---------------- */
 
-  function focusEl(el) {
-    if (!el || typeof el.focus !== 'function') return false;
-    try { el.focus(); } catch (e) { return false; }
-    return document.activeElement === el;
-  }
 
   /* 元素是否仍可見（父層 hidden / display:none 時不應搶焦點） */
-  function isVisible(el) {
-    if (!el || !document.contains(el)) return false;
-    var node = el;
-    while (node && node.nodeType === 1) {
-      if (node.hidden === true) return false;
-      if (typeof window.getComputedStyle === 'function') {
-        try {
-          var st = window.getComputedStyle(node);
-          if (st && st.display === 'none') return false;
-        } catch (e) { /* 忽略 */ }
-      }
-      node = node.parentNode;
-    }
-    return true;
-  }
 
-  function restoreFocus(el) {
-    if (isVisible(el)) return focusEl(el);
-    return false;
-  }
 
   /* 重新渲染後把焦點放回當前屏幕的第一個可聚焦元素，避免焦點掉到 body */
-  function focusScreen() {
-    var screen = $('screen-' + state.screen);
-    if (!screen) return false;
-    var node = screen.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-    return focusEl(node);
-  }
 
-  function isTypingTarget(el) {
-    if (!el) return false;
-    var tag = (el.tagName || '').toUpperCase();
-    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable === true;
-  }
 
-  function choiceButtons() {
-    var box = $('choices');
-    if (!box) return [];
-    return Array.prototype.slice.call(box.querySelectorAll('.choice'));
-  }
 
   function handlePracticeKeys(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -1955,88 +1022,13 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
     if (examAnnouncer) examAnnouncer.textContent = t('exam.result');
   }
 
-  /* ---------------- 家長中心 ---------------- */
-
-  function renderParent() {
-    var masteredCount = 0, totalCount = 0, sumStars = totalStars();
-    Object.keys(Curriculum.skills).forEach(function (id) {
-      var s = Curriculum.skills[id];
-      if (s.scaffold) return;
-      totalCount++;
-      if (masteryOf(s).mastered) masteredCount++;
-    });
-
-    var html = '<h1 class="page-title">' + t('parent.title') + '</h1>' +
-      '<div class="panel"><h2>' + t('parent.overview') + '</h2>' +
-      '<div class="stat-row">' +
-      '<div class="stat"><div class="v">' + sumStars + '</div><div class="k">' + t('parent.totalStars') + '</div></div>' +
-      '<div class="stat"><div class="v">' + (progress.streak.count || 0) + '</div><div class="k">' + t('parent.streak') + '</div></div>' +
-      '<div class="stat"><div class="v">' + masteredCount + '/' + totalCount + '</div><div class="k">' + t('parent.masteredSkills') + '</div></div>' +
-      '</div></div>';
-
-    html += '<div class="panel"><h2>' + t('parent.skills') + '</h2>';
-    var hasAny = false;
-    Curriculum.stages.forEach(function (stage) {
-      stageSkills(stage).forEach(function (skill) {
-        if (skill.scaffold) return;
-        var sp = skillProgress(skill.id);
-        if (!sp.attempts) return;
-        hasAny = true;
-        var ms = masteryOf(skill);
-        var pct = Math.min(100, Math.round((sp.correct / ((skill.mastery && skill.mastery.practice) || 10)) * 100));
-        html += '<div class="row-item"><span class="nm">' + nameOf(skill) + '</span>' +
-          '<span class="bar"><i style="width:' + pct + '%"></i></span>' +
-          '<span class="pc">' + (ms.mastered ? '★★★' : pct + '%') + '</span></div>';
-      });
-    });
-    if (!hasAny) html += '<p class="page-sub">' + t('parent.empty') + '</p>';
-    html += '</div>';
-
-    html += '<div class="panel"><h2>' + t('settings.title') + '</h2>' +
-      '<button class="btn secondary big" id="parentUnlock" type="button" style="margin-bottom:10px">🔓 ' + t('parent.unlockAll') + '</button>' +
-      '<button class="btn secondary big" id="parentExport" type="button" style="margin-bottom:10px">📤 ' + t('parent.export') + '</button>' +
-      '<button class="btn secondary big" id="parentImport" type="button" style="margin-bottom:10px">📥 ' + t('parent.import') + '</button>' +
-      '<button class="btn danger-btn" id="parentReset" type="button">🗑 ' + t('parent.reset') + '</button></div>';
-
-    $('screen-parent').innerHTML = html;
-    $('parentUnlock').addEventListener('click', confirmUnlockAll);
-    $('parentExport').addEventListener('click', exportProgress);
-    $('parentImport').addEventListener('click', importProgress);
-    $('parentReset').addEventListener('click', confirmReset);
-    show('parent');
-  }
-
   /* ---------------- 對話框（角色 / 焦點管理 / Tab 陷阱 / Esc 關閉） ---------------- */
 
   var modalState = { open: false, opener: null };
 
-  function modalFocusables() {
-    var modal = $('modal');
-    if (!modal) return [];
-    var nodes = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    return Array.prototype.filter.call(nodes, function (el) {
-      if (el.disabled) return false;
-      if (el.hasAttribute('hidden')) return false;
-      if (el.getAttribute('aria-hidden') === 'true') return false;
-      return true;
-    });
-  }
 
   /* 對話框開啟時把背景（主內容／頂欄／更新 chip／skip link）設為 inert + aria-hidden，
    * 關閉時還原；焦點只在對話框內循環。 */
-  function setBackgroundInert(on) {
-    ['main', 'topbar', 'updateChip', 'skipLink'].forEach(function (id) {
-      var el = $(id);
-      if (!el) return;
-      if (on) {
-        el.setAttribute('inert', '');
-        el.setAttribute('aria-hidden', 'true');
-      } else {
-        el.removeAttribute('inert');
-        el.removeAttribute('aria-hidden');
-      }
-    });
-  }
 
   function showModal(innerHTML, opener) {
     var modal = $('modal');
@@ -2073,30 +1065,6 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
     return opener;
   }
 
-  function trapModalTab(e) {
-    var modal = $('modal');
-    var items = modalFocusables();
-    if (!items.length) {
-      e.preventDefault();
-      focusEl(modal);
-      return;
-    }
-    var first = items[0];
-    var last = items[items.length - 1];
-    var idx = items.indexOf(document.activeElement);
-    if (idx === -1) {
-      e.preventDefault();
-      focusEl(e.shiftKey ? last : first);
-      return;
-    }
-    if (!e.shiftKey && idx === items.length - 1) {
-      e.preventDefault();
-      focusEl(first);
-    } else if (e.shiftKey && idx === 0) {
-      e.preventDefault();
-      focusEl(last);
-    }
-  }
 
   function confirmUnlockAll(ev) {
     showModal('<div class="modal">' +
@@ -2164,7 +1132,7 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
           if (text.length > 1000000) throw new Error(t('parent.importedTooLarge'));
           var parsed = JSON.parse(text);
           if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error(t('parent.importBadFormat'));
-          progress = MathCore.sanitizeProgress(parsed);
+          setProgress(MathCore.sanitizeProgress(parsed));
           saveProgress();
           clearSession(); // 匯入的進度可能改變解鎖狀態，舊題組不再恢復
           state.lang = progress.lang || state.lang;
@@ -2193,7 +1161,7 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
       '</div></div>', ev && ev.currentTarget);
     $('resetCancel').addEventListener('click', function () { closeModal(); });
     $('resetOk').addEventListener('click', function () {
-      progress = MathCore.newProgress();
+      setProgress(MathCore.newProgress());
       progress.lang = state.lang;
       progress.sound = state.sound;
       progress.theme = state.theme;
@@ -2203,123 +1171,6 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
       renderHome();
       if (!restoreFocus(opener)) focusScreen();
     });
-  }
-
-  /* ---------------- 公式一覽（參考） ---------------- */
-
-  function renderFormulas() {
-    var F = Formulas;
-    if (!F) { $('screen-formulas').innerHTML = '<p class="page-sub">—</p>'; show('formulas'); return; }
-    var lang = state.lang === 'zh' ? 'zh' : 'en';
-    var html = '<h1 class="page-title">📐 ' + t('formulas.title') + '</h1>' +
-      '<p class="page-sub">' + esc(F.intro[lang]) + '</p>';
-    F.sections.forEach(function (sec) {
-      html += '<div class="outline-stage"><h2>' + esc(sec[lang]) + '</h2>';
-      sec.items.forEach(function (it) {
-        html += '<div class="formula-row">' +
-          '<div class="formula-name">' + esc(it[lang]) + '</div>' +
-          '<div class="formula-latex">' + renderMath('$' + it.latex + '$') + '</div>' +
-          '</div>';
-      });
-      html += '</div>';
-    });
-    $('screen-formulas').innerHTML = html;
-    show('formulas');
-  }
-
-  /* ---------------- 課程大綱（參考） ---------------- */
-
-  function renderOutline() {
-    var o = CurriculumOutline;
-    if (!o) { $('screen-outline').innerHTML = '<p class="page-sub">—</p>'; show('outline'); return; }
-    var lang = state.lang === 'zh' ? 'zh' : 'en';
-    var KS_APP = { ks1: ['prek', 'g1', 'g2', 'g3'], ks2: ['g4', 'g5', 'g6'], js: ['ms1', 'ms2', 'ms3'], ss: ['hs1', 'hs2', 'hs3'] };
-    var html = '<h1 class="page-title">📚 ' + t('outline.title') + '</h1>' +
-      '<p class="page-sub">' + esc(o.intro[lang]) + '</p>' +
-      '<p class="page-sub" style="font-size:13px">' + esc(o.note[lang]) + '</p>';
-    o.stages.forEach(function (stage) {
-      html += '<div class="outline-stage"><h2>' + esc(stage[lang]) + '</h2>';
-      var skillNames = [];
-      (KS_APP[stage.id] || []).forEach(function (sid) {
-        var st = getStage(sid);
-        if (!st) return;
-        stageSkills(st).forEach(function (sk) { if (!sk.scaffold) skillNames.push(nameOf(sk)); });
-      });
-      if (skillNames.length) {
-        html += '<div class="outline-covered">📌 ' + t('outline.covered') + '：' + skillNames.map(esc).join('、') + '</div>';
-      }
-      stage.strands.forEach(function (strand) {
-        html += '<div class="outline-strand"><div class="outline-strand-title">' + esc(strand[lang]) + '</div><ul class="outline-units">';
-        strand.units.forEach(function (u) { html += '<li>' + esc(u[lang]) + '</li>'; });
-        html += '</ul></div>';
-      });
-      html += '</div>';
-    });
-    $('screen-outline').innerHTML = html;
-    show('outline');
-  }
-
-  /* ---------------- 設置 ---------------- */
-
-  function renderSettings() {
-    var html = '<h1 class="page-title">' + t('settings.title') + '</h1>' +
-      '<div class="panel">' +
-      '<div class="settings-row"><span class="k">' + t('settings.language') + '</span>' +
-      '<button class="btn secondary" id="setLangBtn" type="button">' + t('langName') + ' ⇄</button></div>' +
-      '<div class="settings-row"><span class="k">' + t('settings.sound') + '</span>' +
-      '<div class="switch' + (state.sound ? ' on' : '') + '" id="soundSwitch" role="switch" tabindex="0" aria-label="' + esc(t('settings.sound')) + '" aria-checked="' + state.sound + '"></div></div>' +
-      '<div class="settings-row"><span class="k">' + t('settings.theme') + '</span>' +
-      '<div class="seg">' +
-        themeSegBtn('light', t('settings.themeLight')) +
-        themeSegBtn('dark', t('settings.themeDark')) +
-        themeSegBtn('auto', t('settings.themeAuto')) +
-      '</div></div>' +
-      '</div>' +
-      '<button class="btn secondary big" id="settingsRefresh" type="button" style="margin-bottom:10px">🔄 ' + t('settings.refreshApp') + '</button>' +
-      '<button class="btn secondary big" id="settingsParent" type="button">👨‍👩‍👦 ' + t('home.parent') + '</button>';
-
-    $('screen-settings').innerHTML = html;
-    $('setLangBtn').addEventListener('click', function () { toggleLang(); });
-    var toggleSound = function () {
-      state.sound = !state.sound;
-      progress.sound = state.sound;
-      saveProgress();
-      renderSettings();
-      updateTopbar();
-    };
-    $('soundSwitch').addEventListener('click', toggleSound);
-    $('soundSwitch').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-        e.preventDefault();
-        toggleSound();
-      }
-    });
-    $('screen-settings').querySelectorAll('.seg-btn').forEach(function (b) {
-      b.addEventListener('click', function () {
-        state.theme = b.getAttribute('data-theme');
-        progress.theme = state.theme;
-        saveProgress();
-        applyTheme();
-        renderSettings();
-      });
-    });
-    $('settingsRefresh').addEventListener('click', forceUpdate);
-    $('settingsParent').addEventListener('click', function () { navigate({ screen: 'parent' }); });
-    show('settings');
-  }
-
-  function themeSegBtn(value, label) {
-    return '<button class="seg-btn' + (state.theme === value ? ' on' : '') + '" data-theme="' + value + '" type="button">' + label + '</button>';
-  }
-
-  function toggleLang() {
-    state.lang = state.lang === 'zh' ? 'en' : 'zh';
-    progress.lang = state.lang;
-    saveProgress();
-    applyLang();
-    // 依目前 route 重新渲染（不在這裡另寫畫面分支）
-    renderRouteSafely(currentRoute());
-    updateTopbar();
   }
 
   /* ---------------- 啟動 ---------------- */
@@ -2398,6 +1249,16 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
 
   /* 啟動：解析 hash → 驗證 → 恢復未完成的題組 → 渲染。
    * 首次渲染用 replace，不把「開啟 app」本身寫成一條歷史。 */
+  function toggleLang() {
+    state.lang = state.lang === 'zh' ? 'en' : 'zh';
+    progress.lang = state.lang;
+    app.saveProgress();
+    app.applyLang();
+    // 依目前 route 重新渲染（不在這裡另寫畫面分支）
+    renderRouteSafely(currentRoute());
+    app.updateTopbar();
+  }
+
   function init() {
     bindTopbar();
     applyTheme();
@@ -2428,6 +1289,37 @@ import { parseHash, serializeRoute, sameRoute } from './router.js';
     }
     navigate(target || HOME_ROUTE, { replace: true });
   }
+
+
+  /* 跨模組注入（screens → index/nav/assessment） */
+  Object.assign(app, {
+    navigate: navigate,
+    show: show,
+    startPractice: startPractice,
+    startQuiz: startQuiz,
+    renderGradeExam: renderGradeExam,
+    resumeSession: resumeSession,
+    readSession: readSession,
+    confirmUnlockAll: confirmUnlockAll,
+    exportProgress: exportProgress,
+    importProgress: importProgress,
+    confirmReset: confirmReset,
+    applyTheme: applyTheme,
+    applyLang: applyLang,
+    updateTopbar: updateTopbar,
+    toast: toast,
+    saveProgress: saveProgress,
+    toggleLang: toggleLang,
+    bindTopbar: bindTopbar,
+    renderRouteSafely: renderRouteSafely,
+    currentRoute: currentRoute,
+    finishExam: finishExam,
+    renderQuestion: renderQuestion,
+    advanceQuiz: advanceQuiz,
+    finishQuiz: finishQuiz,
+    sessionSummary: sessionSummary,
+    forceUpdate: forceUpdate
+  });
 
   /* 腳本位於 <body> 末尾，DOM 已就緒，直接初始化 */
   init();

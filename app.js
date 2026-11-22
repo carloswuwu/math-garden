@@ -65,7 +65,7 @@
     return serializeRoute(a) === serializeRoute(b);
   }
 
-  // src/ui/index.js
+  // src/ui/state.js
   var STORE_KEY = "mathpath.progress";
   var LEGACY_STORE_KEY = "mathpath.progress.v1";
   var SESSION_KEY = "mathpath.session.v1";
@@ -101,36 +101,6 @@
   state.lang = progress.lang || "zh";
   state.sound = progress.sound !== false;
   state.theme = progress.theme || "light";
-  var $ = function(id) {
-    return document.getElementById(id);
-  };
-  var screens = ["home", "stage", "lesson", "practice", "parent", "settings", "outline", "formulas"];
-  function t(path, tokens) {
-    var d = I18N[state.lang] || I18N.zh;
-    var v = d;
-    path.split(".").forEach(function(p) {
-      v = v && v[p];
-    });
-    if (v == null) return path;
-    if (typeof v === "string" && tokens) {
-      return v.replace(/\{(\w+)\}/g, function(_, k) {
-        return tokens[k] != null ? tokens[k] : "{" + k + "}";
-      });
-    }
-    return v;
-  }
-  function L(obj) {
-    return state.lang === "zh" ? obj.zh : obj.en;
-  }
-  function nameOf(skill) {
-    return state.lang === "zh" ? skill.zh.name : skill.en.name;
-  }
-  function goalOf(skill) {
-    return state.lang === "zh" ? skill.zh.goal : skill.en.goal;
-  }
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
   function loadProgress() {
     try {
       var raw = localStorage.getItem(STORE_KEY);
@@ -155,133 +125,36 @@
     } catch (e) {
     }
   }
-  function clearSession() {
-    try {
-      sessionStorage.removeItem(SESSION_KEY);
-    } catch (e) {
-    }
+  function setProgress(p) {
+    progress = p;
   }
-  function validateSession(s) {
-    if (!s || typeof s !== "object" || Array.isArray(s) || s.v !== SESSION_VERSION) return false;
-    var now = Date.now();
-    if (typeof s.savedAt !== "number" || !isFinite(s.savedAt)) return false;
-    if (s.savedAt > now + 6e4 || now - s.savedAt > SESSION_TTL) return false;
-    if (typeof s.route !== "string") return false;
-    var parsed = parseHash(s.route);
-    if (!parsed || parsed.screen !== "practice" && parsed.screen !== "quiz" && parsed.screen !== "exam") return false;
-    if (s.mode !== parsed.screen) return false;
-    if (parsed.screen === "exam") {
-      if (s.stageId !== parsed.stageId) return false;
-    } else if (s.skillId !== parsed.skillId || s.stageId !== skillStageId(parsed.skillId)) {
-      return false;
+
+  // src/ui/i18n.js
+  function t(path, tokens) {
+    var d = I18N[state.lang] || I18N.zh;
+    var v = d;
+    path.split(".").forEach(function(p) {
+      v = v && v[p];
+    });
+    if (v == null) return path;
+    if (typeof v === "string" && tokens) {
+      return v.replace(/\{(\w+)\}/g, function(_, k) {
+        return tokens[k] != null ? tokens[k] : "{" + k + "}";
+      });
     }
-    if (!Array.isArray(s.problems) || !s.problems.length || s.problems.length > 200) return false;
-    if (typeof s.index !== "number" || Math.floor(s.index) !== s.index || s.index < 0 || s.index >= s.problems.length) return false;
-    if (!Array.isArray(s.results) || s.results.length > s.problems.length) return false;
-    var i;
-    for (i = 0; i < s.problems.length; i++) {
-      var p = s.problems[i];
-      if (!p || typeof p !== "object") return false;
-      if (p.answer === void 0 || p.answer === null) return false;
-      if (p.input) {
-        if (typeof p.input !== "string") return false;
-      } else if (!Array.isArray(p.choices)) {
-        return false;
-      }
-      if (!p.prompt || typeof p.prompt !== "object") return false;
-      var res = null;
-      try {
-        res = MathCore.checkAnswer(p, p.answer);
-      } catch (e) {
-        return false;
-      }
-      if (!res || !res.correct) return false;
-    }
-    var resolved = resolveRoute(parsed);
-    if (!resolved || !sameRoute(resolved, parsed)) return false;
-    return true;
+    return v;
   }
-  function readSession() {
-    try {
-      var raw = sessionStorage.getItem(SESSION_KEY);
-      if (!raw) return null;
-      var s = JSON.parse(raw);
-      return validateSession(s) ? s : null;
-    } catch (e) {
-      return null;
-    }
+  function L(obj) {
+    return state.lang === "zh" ? obj.zh : obj.en;
   }
-  function saveSession() {
-    if (state.screen !== "practice") return;
-    if (state.mode !== "practice" && state.mode !== "quiz" && state.mode !== "exam") return;
-    if (!state.problems.length || state.index >= state.problems.length) return;
-    try {
-      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
-        v: SESSION_VERSION,
-        route: serializeRoute(currentRoute()),
-        mode: state.mode,
-        stageId: state.mode === "exam" ? state.examStage : skillStageId(state.skillId),
-        skillId: state.mode === "exam" ? null : state.skillId,
-        problems: state.problems,
-        index: state.index,
-        correct: state.correct,
-        results: state.results,
-        quizStart: state.quizStart || Date.now(),
-        savedAt: Date.now()
-      }));
-    } catch (e) {
-    }
+  function nameOf(skill) {
+    return state.lang === "zh" ? skill.zh.name : skill.en.name;
   }
-  function restoreSession(s) {
-    var parsed = parseHash(s.route);
-    if (!parsed) return;
-    state.mode = parsed.screen;
-    state.skillId = parsed.screen === "exam" ? null : parsed.skillId;
-    state.examStage = parsed.screen === "exam" ? parsed.stageId : null;
-    state.stageId = parsed.screen === "exam" ? parsed.stageId : skillStageId(parsed.skillId);
-    state.problems = s.problems;
-    state.index = s.index;
-    state.correct = s.correct || 0;
-    state.results = Array.isArray(s.results) ? s.results : [];
-    state.quizStart = s.quizStart || Date.now();
-    state.locked = false;
-    state.hintShown = false;
-    state.attemptWrong = false;
-    state.run = { mode: parsed.screen, key: parsed.screen === "exam" ? parsed.stageId : parsed.skillId };
-    renderQuestion(state.problems[state.index]);
-    show("practice");
-    saveSession();
+  function goalOf(skill) {
+    return state.lang === "zh" ? skill.zh.goal : skill.en.goal;
   }
-  function resumeSession() {
-    var s = readSession();
-    var parsed = s ? parseHash(s.route) : null;
-    var route = parsed ? resolveRoute(parsed) : null;
-    if (!s || !route || !sameRoute(route, parsed)) {
-      clearSession();
-      renderHome();
-      return;
-    }
-    var hash = serializeRoute(route);
-    writeHash(hash, false);
-    nav.lastHash = hash;
-    restoreSession(s);
-  }
-  function sessionSummary() {
-    var s = readSession();
-    if (!s) return null;
-    var route = parseHash(s.route);
-    if (!route) return null;
-    var name = "";
-    if (route.screen === "exam") {
-      var stage = getStage(route.stageId);
-      name = stage ? L(stage) : "";
-    } else {
-      var skill = getSkill(route.skillId);
-      name = skill ? nameOf(skill) : "";
-    }
-    var modeLabel = route.screen === "quiz" ? t("quiz.title") : route.screen === "exam" ? t("exam.title") : t("practice.title");
-    return { route, modeLabel, name, index: s.index, total: s.problems.length };
-  }
+
+  // src/ui/selectors.js
   function getSkill(id) {
     return Curriculum.skills[id];
   }
@@ -359,78 +232,8 @@
     });
     return { total, unlocked, passed };
   }
-  function applyTheme() {
-    document.documentElement.setAttribute("data-theme", state.theme || "light");
-  }
-  function applyLang() {
-    var code = state.lang === "en" ? "en" : "zh-Hant-HK";
-    document.documentElement.setAttribute("lang", code);
-    var skip = $("skipLink");
-    if (skip) skip.textContent = t("a11y.skipLink");
-    [["backBtn", "a11y.back"], ["settingsBtn", "a11y.settings"], ["topbarStars", "a11y.stars"]].forEach(function(pair) {
-      var el = $(pair[0]);
-      if (el) el.setAttribute("aria-label", t(pair[1]));
-    });
-    var langBtn = $("langBtn");
-    if (langBtn) langBtn.setAttribute("aria-label", state.lang === "zh" ? t("a11y.languageZh") : t("a11y.languageEn"));
-  }
-  var audioCtx = null;
-  function playTone(ok) {
-    if (!state.sound) return;
-    try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      var o = audioCtx.createOscillator();
-      var g = audioCtx.createGain();
-      o.connect(g);
-      g.connect(audioCtx.destination);
-      o.type = "sine";
-      o.frequency.value = ok ? 880 : 220;
-      var now = audioCtx.currentTime;
-      g.gain.setValueAtTime(0.12, now);
-      g.gain.exponentialRampToValueAtTime(1e-3, now + (ok ? 0.35 : 0.22));
-      o.start(now);
-      o.stop(now + (ok ? 0.35 : 0.22));
-    } catch (e) {
-    }
-  }
-  function confetti() {
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var box = $("confetti");
-    var colors = ["#FF9500", "#34C759", "#007AFF", "#AF52DE", "#FF2D55", "#FFCC00"];
-    for (var i = 0; i < 22; i++) {
-      var el = document.createElement("div");
-      el.className = "confetti-piece";
-      el.style.left = Math.random() * 100 + "vw";
-      el.style.width = 6 + Math.random() * 6 + "px";
-      el.style.height = 9 + Math.random() * 10 + "px";
-      el.style.background = colors[Math.floor(Math.random() * colors.length)];
-      el.style.animationDuration = 1.5 + Math.random() * 1.5 + "s";
-      el.style.animationDelay = Math.random() * 0.25 + "s";
-      box.appendChild(el);
-      (function(node) {
-        setTimeout(function() {
-          node.remove();
-        }, 3300);
-      })(el);
-    }
-  }
-  function toast(msg) {
-    var el = $("toast");
-    el.textContent = msg;
-    el.hidden = false;
-    clearTimeout(el._timer);
-    el._timer = setTimeout(function() {
-      el.hidden = true;
-    }, 2200);
-  }
-  function touchStreak() {
-    var day = (/* @__PURE__ */ new Date()).toDateString();
-    if (progress.streak.lastDay === day) return;
-    var yesterday = new Date(Date.now() - 864e5).toDateString();
-    progress.streak.count = progress.streak.lastDay === yesterday ? progress.streak.count + 1 : 1;
-    progress.streak.lastDay = day;
-    saveProgress();
-  }
+
+  // src/ui/visual.js
   function dotsHTML(n, color) {
     var cls = "dot";
     if (color === "green") cls = "dot green";
@@ -854,6 +657,634 @@
     }
     return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg"><rect x="60" y="40" width="100" height="80" fill="#E3F2FD" stroke="#007AFF" stroke-width="2.5"/><text x="110" y="145" text-anchor="middle" font-size="13" fill="#333">長方形</text></svg>';
   }
+
+  // src/ui/dom.js
+  var $ = function(id) {
+    return document.getElementById(id);
+  };
+  var screens = ["home", "stage", "lesson", "practice", "parent", "settings", "outline", "formulas"];
+
+  // src/ui/a11y.js
+  function focusEl(el) {
+    if (!el || typeof el.focus !== "function") return false;
+    try {
+      el.focus();
+    } catch (e) {
+      return false;
+    }
+    return document.activeElement === el;
+  }
+  function isVisible(el) {
+    if (!el || !document.contains(el)) return false;
+    var node = el;
+    while (node && node.nodeType === 1) {
+      if (node.hidden === true) return false;
+      if (typeof window.getComputedStyle === "function") {
+        try {
+          var st = window.getComputedStyle(node);
+          if (st && st.display === "none") return false;
+        } catch (e) {
+        }
+      }
+      node = node.parentNode;
+    }
+    return true;
+  }
+  function restoreFocus(el) {
+    if (isVisible(el)) return focusEl(el);
+    return false;
+  }
+  function focusScreen() {
+    var screen = $("screen-" + state.screen);
+    if (!screen) return false;
+    var node = screen.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    return focusEl(node);
+  }
+  function isTypingTarget(el) {
+    if (!el) return false;
+    var tag = (el.tagName || "").toUpperCase();
+    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable === true;
+  }
+  function choiceButtons() {
+    var box = $("choices");
+    if (!box) return [];
+    return Array.prototype.slice.call(box.querySelectorAll(".choice"));
+  }
+  function modalFocusables() {
+    var modal = $("modal");
+    if (!modal) return [];
+    var nodes = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    return Array.prototype.filter.call(nodes, function(el) {
+      if (el.disabled) return false;
+      if (el.hasAttribute("hidden")) return false;
+      if (el.getAttribute("aria-hidden") === "true") return false;
+      return true;
+    });
+  }
+  function setBackgroundInert(on) {
+    ["main", "topbar", "updateChip", "skipLink"].forEach(function(id) {
+      var el = $(id);
+      if (!el) return;
+      if (on) {
+        el.setAttribute("inert", "");
+        el.setAttribute("aria-hidden", "true");
+      } else {
+        el.removeAttribute("inert");
+        el.removeAttribute("aria-hidden");
+      }
+    });
+  }
+  function trapModalTab(e) {
+    var modal = $("modal");
+    var items = modalFocusables();
+    if (!items.length) {
+      e.preventDefault();
+      focusEl(modal);
+      return;
+    }
+    var first = items[0];
+    var last = items[items.length - 1];
+    var idx = items.indexOf(document.activeElement);
+    if (idx === -1) {
+      e.preventDefault();
+      focusEl(e.shiftKey ? last : first);
+      return;
+    }
+    if (!e.shiftKey && idx === items.length - 1) {
+      e.preventDefault();
+      focusEl(first);
+    } else if (e.shiftKey && idx === 0) {
+      e.preventDefault();
+      focusEl(last);
+    }
+  }
+
+  // src/ui/context.js
+  var app = {};
+
+  // src/ui/screens.js
+  function renderHome() {
+    var realStages = realStageList();
+    var unlockedCount = 0;
+    var session = app.sessionSummary();
+    var html = '<h1 class="page-title">' + t("home.title") + '</h1><p class="page-sub">' + t("home.subtitle") + "</p>";
+    if (session) {
+      html += '<button class="continue-card" id="homeContinue" type="button"><span class="continue-emoji" aria-hidden="true">▶️</span><span class="continue-body"><span class="continue-title">' + t("home.continue") + " · " + session.modeLabel + '</span><span class="continue-sub">' + esc(session.name) + " · " + t("practice.question", { i: session.index + 1, n: session.total }) + "</span></span></button>";
+    }
+    var challengeStage = getStage("challenge");
+    if (challengeStage) {
+      var chTotal = 0, chPassed = 0;
+      stageSkills(challengeStage).forEach(function(sk) {
+        chTotal++;
+        if (masteryOf(sk).mastered) chPassed++;
+      });
+      html += '<button class="challenge-card" id="homeChallengeBtn" type="button"><span class="challenge-emoji" aria-hidden="true">' + challengeStage.emoji + '</span><span class="challenge-body"><span class="challenge-title">' + t("challenge.title") + '</span><span class="challenge-sub">' + t("challenge.desc") + '</span><span class="challenge-count">' + t("challenge.progress", { m: chPassed, t: chTotal }) + '</span></span><span class="challenge-arrow" aria-hidden="true">→</span></button>';
+    }
+    html += '<div class="stage-grid">';
+    realStages.forEach(function(stage) {
+      if (!stageUnlocked(stage.id)) return;
+      unlockedCount++;
+      var stats = stageSkillStats(stage);
+      html += '<button class="stage-card" type="button" data-stage="' + stage.id + '"><span class="emoji">' + stage.emoji + '</span><span class="name">' + L(stage) + '</span><span class="desc">' + L(stage.desc) + '</span><span class="stage-count">' + t("home.stageCount", { u: stats.unlocked, t: stats.total }) + "</span></button>";
+    });
+    html += '</div><p class="page-sub" style="margin-top:14px;font-size:13px">' + t("home.unlocked", { u: unlockedCount, t: realStages.length }) + '</p><p class="page-sub" style="font-size:13px;margin-bottom:14px">' + t("home.nextHint") + '</p><button class="btn secondary big" id="homeFormulasBtn" type="button" style="margin-bottom:10px">📐 ' + t("formulas.title") + '</button><button class="btn secondary big" id="homeOutlineBtn" type="button" style="margin-bottom:10px">📚 ' + t("outline.title") + '</button><button class="btn secondary big" id="homeParentBtn" type="button">👨‍👩‍👦 ' + t("home.parent") + "</button>";
+    $("screen-home").innerHTML = html;
+    $("screen-home").querySelectorAll(".stage-card").forEach(function(el) {
+      el.addEventListener("click", function() {
+        app.navigate({ screen: "stage", stageId: el.getAttribute("data-stage") });
+      });
+    });
+    $("homeFormulasBtn").addEventListener("click", function() {
+      app.navigate({ screen: "formulas" });
+    });
+    $("homeOutlineBtn").addEventListener("click", function() {
+      app.navigate({ screen: "outline" });
+    });
+    $("homeParentBtn").addEventListener("click", function() {
+      app.navigate({ screen: "parent" });
+    });
+    var continueBtn = $("homeContinue");
+    if (continueBtn) continueBtn.addEventListener("click", app.resumeSession);
+    var challengeBtn = $("homeChallengeBtn");
+    if (challengeBtn) challengeBtn.addEventListener("click", function() {
+      app.navigate({ screen: "stage", stageId: "challenge" });
+    });
+    app.show("home");
+  }
+  function renderStage(stageId) {
+    state.stageId = stageId;
+    var stage = getStage(stageId);
+    var stats = stageSkillStats(stage);
+    if (stageId === "challenge") {
+      var chTotal = 0, chPassed = 0;
+      stageSkills(stage).forEach(function(sk) {
+        chTotal++;
+        if (masteryOf(sk).mastered) chPassed++;
+      });
+      stats = { total: chTotal, unlocked: chTotal, passed: chPassed };
+    }
+    var hasReal = stageSkills(stage).some(function(s) {
+      return !s.scaffold && s.types && s.types.length;
+    });
+    var html = '<h1 class="page-title">' + stage.emoji + " " + L(stage) + '</h1><p class="page-sub">' + L(stage.desc) + " · " + t("stage.unlockedCount", { u: stats.unlocked, t: stats.total }) + "</p>" + (hasReal ? '<button class="btn primary big" id="stageExamBtn" type="button" style="width:100%;margin-bottom:6px">📝 ' + t("exam.title") + '</button><p class="page-sub" style="font-size:12px;margin-bottom:14px">' + t("home.nextHint") + "</p>" : "");
+    var prevMastered = true;
+    var idx = 0;
+    stage.topics.forEach(function(topic) {
+      html += '<div class="topic-block"><div class="topic-title">' + L(topic) + "</div>";
+      topic.skills.forEach(function(id) {
+        var skill = getSkill(id);
+        var locked = !prevMastered && idx > 0;
+        if (stageId === "challenge") locked = false;
+        var ms = masteryOf(skill);
+        prevMastered = ms.mastered || skill.scaffold;
+        html += renderSkillCard(skill, ms, locked);
+        idx++;
+      });
+      html += "</div>";
+    });
+    $("screen-stage").innerHTML = html;
+    var examBtn = $("stageExamBtn");
+    if (examBtn) examBtn.addEventListener("click", function() {
+      app.navigate({ screen: "exam", stageId });
+    });
+    bindStageCards();
+    app.show("stage");
+  }
+  function renderSkillCard(skill, ms, locked) {
+    var order = skill.order;
+    var passed = ms.mastered;
+    var starsHtml = "";
+    if (passed) starsHtml = '<span class="stars">✓ ' + "★".repeat(Math.max(1, ms.quizStars)) + "</span>";
+    else if (ms.stars > 0) starsHtml = '<span class="stars">' + "★".repeat(ms.stars) + "</span>";
+    if (skill.scaffold) {
+      return '<div class="skill-card locked"><div class="badge">🔒</div><div class="info"><div class="name">' + nameOf(skill) + '</div><div class="goal">' + t("skill.comingText") + '</div></div><span class="stars" style="color:var(--text-2)">' + t("skill.coming") + "</span></div>";
+    }
+    var lockedCls = locked ? " locked" : "";
+    var goLabel = passed ? t("skill.review") : t("skill.learn");
+    return '<div class="skill-card' + lockedCls + '" data-skill="' + skill.id + '" data-locked="' + (locked ? "1" : "0") + '"><div class="badge">' + order + '</div><div class="info"><div class="name">' + nameOf(skill) + '</div><div class="goal">' + goalOf(skill) + "</div></div>" + (locked ? '<span class="stars" style="color:var(--text-2)">🔒</span>' : starsHtml) + (locked ? "" : '<button class="go" type="button" data-action="go">' + goLabel + "</button>") + "</div>";
+  }
+  function bindStageCards() {
+    $("screen-stage").querySelectorAll(".skill-card").forEach(function(el) {
+      var locked = el.getAttribute("data-locked") === "1";
+      var id = el.getAttribute("data-skill");
+      if (!id) return;
+      el.addEventListener("click", function(ev) {
+        if (ev.target.getAttribute("data-action") === "go") return;
+        if (locked) {
+          app.toast(t("skill.unlockHint"));
+          return;
+        }
+        app.navigate({ screen: "lesson", skillId: id });
+      });
+      var goBtn = el.querySelector('[data-action="go"]');
+      if (goBtn) {
+        goBtn.addEventListener("click", function(ev) {
+          ev.stopPropagation();
+          if (locked) {
+            app.toast(t("skill.unlockHint"));
+            return;
+          }
+          app.navigate({ screen: "lesson", skillId: id });
+        });
+      }
+    });
+  }
+  function renderLesson(skillId) {
+    state.skillId = skillId;
+    var skill = getSkill(skillId);
+    var info = skill[state.lang === "zh" ? "zh" : "en"];
+    var lesson = Lessons[skill.lesson];
+    var html = '<h1 class="page-title">' + esc(info.name) + '</h1><p class="page-sub">' + t("stage.goal") + "：" + esc(info.goal) + "</p>";
+    if (lesson) {
+      var l = state.lang === "zh" ? lesson.zh : lesson.en;
+      html += '<div class="lesson-card"><h2>' + t("lesson.title") + '</h2><div class="lesson-label">' + t("lesson.intro") + '</div><p class="lesson-text">' + renderMath(l.intro) + "</p>";
+      if (lesson.visual) {
+        html += '<div class="lesson-visual" id="lessonVisual"></div>';
+      }
+      if (l.steps && l.steps.length) {
+        html += '<div class="lesson-label">' + t("lesson.steps") + '</div><ol class="lesson-steps">' + l.steps.map(function(step) {
+          return "<li>" + renderMath(step) + "</li>";
+        }).join("") + "</ol>";
+      }
+      html += '<div class="lesson-label">' + t("lesson.example") + '</div><p class="lesson-text">' + renderMath(l.example) + '</p><div class="lesson-label">' + t("lesson.tip") + '</div><p class="lesson-text">' + renderMath(l.tip) + "</p>";
+      if (l.mistake) {
+        html += '<div class="lesson-label">' + t("lesson.mistake") + '</div><p class="lesson-text lesson-mistake">' + renderMath(l.mistake) + "</p>";
+      }
+      html += '</div><div class="lesson-card" style="margin-top:12px"><button class="btn secondary big" id="lessonExample" type="button">📖 ' + t("lesson.showExample") + '</button><div id="exampleBox" hidden></div></div>';
+    } else {
+      html += '<div class="lesson-card"><p class="lesson-text">' + t("skill.comingText") + "</p></div>";
+    }
+    html += '<div class="lesson-actions"><button class="btn" id="lessonPractice" type="button">' + t("lesson.start") + '</button><button class="btn secondary" id="lessonQuiz" type="button">' + t("lesson.skip") + "</button></div>";
+    $("screen-lesson").innerHTML = html;
+    if (lesson && lesson.visual) {
+      renderVisual($("lessonVisual"), lesson.visual, null);
+    }
+    if (lesson) {
+      $("lessonExample").addEventListener("click", function() {
+        showWorkedExample(skillId);
+      });
+    }
+    $("lessonPractice").addEventListener("click", function() {
+      app.navigate({ screen: "practice", skillId });
+    });
+    $("lessonQuiz").addEventListener("click", function() {
+      app.navigate({ screen: "quiz", skillId });
+    });
+    app.show("lesson");
+  }
+  function showWorkedExample(skillId) {
+    var skill = getSkill(skillId);
+    var box = $("exampleBox");
+    if (!box) return;
+    var p = MathCore.generateProblem(skill, { seed: Date.now() & 4294967295 });
+    var ex = null;
+    try {
+      ex = MathCore.explain(p);
+    } catch (e) {
+      ex = null;
+    }
+    box.hidden = false;
+    if (!ex) {
+      box.innerHTML = '<div class="lesson-label">' + t("lesson.example") + '</div><p class="prompt-small">' + renderMath(L(p.prompt)) + "</p>";
+      return;
+    }
+    var steps = state.lang === "zh" ? ex.zh : ex.en;
+    var list = '<ol class="steps-list">' + steps.map(function(s) {
+      return "<li>" + renderMath(s) + "</li>";
+    }).join("") + "</ol>";
+    box.innerHTML = '<div class="lesson-label">' + t("lesson.showExample") + '</div><p class="prompt-small">' + renderMath(L(p.prompt)) + "</p>" + list + '<button class="btn secondary" id="exampleNext" type="button" style="margin-top:10px">🔄 ' + t("lesson.nextExample") + "</button>";
+    $("exampleNext").addEventListener("click", function() {
+      showWorkedExample(skillId);
+    });
+  }
+  function renderParent() {
+    var masteredCount = 0, totalCount = 0, sumStars = totalStars();
+    Object.keys(Curriculum.skills).forEach(function(id) {
+      var s = Curriculum.skills[id];
+      if (s.scaffold) return;
+      totalCount++;
+      if (masteryOf(s).mastered) masteredCount++;
+    });
+    var html = '<h1 class="page-title">' + t("parent.title") + '</h1><div class="panel"><h2>' + t("parent.overview") + '</h2><div class="stat-row"><div class="stat"><div class="v">' + sumStars + '</div><div class="k">' + t("parent.totalStars") + '</div></div><div class="stat"><div class="v">' + (progress.streak.count || 0) + '</div><div class="k">' + t("parent.streak") + '</div></div><div class="stat"><div class="v">' + masteredCount + "/" + totalCount + '</div><div class="k">' + t("parent.masteredSkills") + "</div></div></div></div>";
+    html += '<div class="panel"><h2>' + t("parent.skills") + "</h2>";
+    var hasAny = false;
+    Curriculum.stages.forEach(function(stage) {
+      stageSkills(stage).forEach(function(skill) {
+        if (skill.scaffold) return;
+        var sp = skillProgress(skill.id);
+        if (!sp.attempts) return;
+        hasAny = true;
+        var ms = masteryOf(skill);
+        var pct = Math.min(100, Math.round(sp.correct / (skill.mastery && skill.mastery.practice || 10) * 100));
+        html += '<div class="row-item"><span class="nm">' + nameOf(skill) + '</span><span class="bar"><i style="width:' + pct + '%"></i></span><span class="pc">' + (ms.mastered ? "★★★" : pct + "%") + "</span></div>";
+      });
+    });
+    if (!hasAny) html += '<p class="page-sub">' + t("parent.empty") + "</p>";
+    html += "</div>";
+    html += '<div class="panel"><h2>' + t("settings.title") + '</h2><button class="btn secondary big" id="parentUnlock" type="button" style="margin-bottom:10px">🔓 ' + t("parent.unlockAll") + '</button><button class="btn secondary big" id="parentExport" type="button" style="margin-bottom:10px">📤 ' + t("parent.export") + '</button><button class="btn secondary big" id="parentImport" type="button" style="margin-bottom:10px">📥 ' + t("parent.import") + '</button><button class="btn danger-btn" id="parentReset" type="button">🗑 ' + t("parent.reset") + "</button></div>";
+    $("screen-parent").innerHTML = html;
+    $("parentUnlock").addEventListener("click", app.confirmUnlockAll);
+    $("parentExport").addEventListener("click", app.exportProgress);
+    $("parentImport").addEventListener("click", app.importProgress);
+    $("parentReset").addEventListener("click", app.confirmReset);
+    app.show("parent");
+  }
+  function renderFormulas() {
+    var F = Formulas;
+    if (!F) {
+      $("screen-formulas").innerHTML = '<p class="page-sub">—</p>';
+      app.show("formulas");
+      return;
+    }
+    var lang = state.lang === "zh" ? "zh" : "en";
+    var html = '<h1 class="page-title">📐 ' + t("formulas.title") + '</h1><p class="page-sub">' + esc(F.intro[lang]) + "</p>";
+    F.sections.forEach(function(sec) {
+      html += '<div class="outline-stage"><h2>' + esc(sec[lang]) + "</h2>";
+      sec.items.forEach(function(it) {
+        html += '<div class="formula-row"><div class="formula-name">' + esc(it[lang]) + '</div><div class="formula-latex">' + renderMath("$" + it.latex + "$") + "</div></div>";
+      });
+      html += "</div>";
+    });
+    $("screen-formulas").innerHTML = html;
+    app.show("formulas");
+  }
+  function renderOutline() {
+    var o = CurriculumOutline;
+    if (!o) {
+      $("screen-outline").innerHTML = '<p class="page-sub">—</p>';
+      app.show("outline");
+      return;
+    }
+    var lang = state.lang === "zh" ? "zh" : "en";
+    var KS_APP = { ks1: ["prek", "g1", "g2", "g3"], ks2: ["g4", "g5", "g6"], js: ["ms1", "ms2", "ms3"], ss: ["hs1", "hs2", "hs3"] };
+    var html = '<h1 class="page-title">📚 ' + t("outline.title") + '</h1><p class="page-sub">' + esc(o.intro[lang]) + '</p><p class="page-sub" style="font-size:13px">' + esc(o.note[lang]) + "</p>";
+    o.stages.forEach(function(stage) {
+      html += '<div class="outline-stage"><h2>' + esc(stage[lang]) + "</h2>";
+      var skillNames = [];
+      (KS_APP[stage.id] || []).forEach(function(sid) {
+        var st = getStage(sid);
+        if (!st) return;
+        stageSkills(st).forEach(function(sk) {
+          if (!sk.scaffold) skillNames.push(nameOf(sk));
+        });
+      });
+      if (skillNames.length) {
+        html += '<div class="outline-covered">📌 ' + t("outline.covered") + "：" + skillNames.map(esc).join("、") + "</div>";
+      }
+      stage.strands.forEach(function(strand) {
+        html += '<div class="outline-strand"><div class="outline-strand-title">' + esc(strand[lang]) + '</div><ul class="outline-units">';
+        strand.units.forEach(function(u) {
+          html += "<li>" + esc(u[lang]) + "</li>";
+        });
+        html += "</ul></div>";
+      });
+      html += "</div>";
+    });
+    $("screen-outline").innerHTML = html;
+    app.show("outline");
+  }
+  function renderSettings() {
+    var html = '<h1 class="page-title">' + t("settings.title") + '</h1><div class="panel"><div class="settings-row"><span class="k">' + t("settings.language") + '</span><button class="btn secondary" id="setLangBtn" type="button">' + t("langName") + ' ⇄</button></div><div class="settings-row"><span class="k">' + t("settings.sound") + '</span><div class="switch' + (state.sound ? " on" : "") + '" id="soundSwitch" role="switch" tabindex="0" aria-label="' + esc(t("settings.sound")) + '" aria-checked="' + state.sound + '"></div></div><div class="settings-row"><span class="k">' + t("settings.theme") + '</span><div class="seg">' + themeSegBtn("light", t("settings.themeLight")) + themeSegBtn("dark", t("settings.themeDark")) + themeSegBtn("auto", t("settings.themeAuto")) + '</div></div></div><button class="btn secondary big" id="settingsRefresh" type="button" style="margin-bottom:10px">🔄 ' + t("settings.refreshApp") + '</button><button class="btn secondary big" id="settingsParent" type="button">👨‍👩‍👦 ' + t("home.parent") + "</button>";
+    $("screen-settings").innerHTML = html;
+    $("setLangBtn").addEventListener("click", function() {
+      app.toggleLang();
+    });
+    var toggleSound = function() {
+      state.sound = !state.sound;
+      progress.sound = state.sound;
+      app.saveProgress();
+      renderSettings();
+      app.updateTopbar();
+    };
+    $("soundSwitch").addEventListener("click", toggleSound);
+    $("soundSwitch").addEventListener("keydown", function(e) {
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+        e.preventDefault();
+        toggleSound();
+      }
+    });
+    $("screen-settings").querySelectorAll(".seg-btn").forEach(function(b) {
+      b.addEventListener("click", function() {
+        state.theme = b.getAttribute("data-theme");
+        progress.theme = state.theme;
+        app.saveProgress();
+        app.applyTheme();
+        renderSettings();
+      });
+    });
+    $("settingsRefresh").addEventListener("click", app.forceUpdate);
+    $("settingsParent").addEventListener("click", function() {
+      app.navigate({ screen: "parent" });
+    });
+    app.show("settings");
+  }
+  function themeSegBtn(value, label) {
+    return '<button class="seg-btn' + (state.theme === value ? " on" : "") + '" data-theme="' + value + '" type="button">' + label + "</button>";
+  }
+
+  // src/ui/index.js
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+  function clearSession() {
+    try {
+      sessionStorage.removeItem(SESSION_KEY);
+    } catch (e) {
+    }
+  }
+  function validateSession(s) {
+    if (!s || typeof s !== "object" || Array.isArray(s) || s.v !== SESSION_VERSION) return false;
+    var now = Date.now();
+    if (typeof s.savedAt !== "number" || !isFinite(s.savedAt)) return false;
+    if (s.savedAt > now + 6e4 || now - s.savedAt > SESSION_TTL) return false;
+    if (typeof s.route !== "string") return false;
+    var parsed = parseHash(s.route);
+    if (!parsed || parsed.screen !== "practice" && parsed.screen !== "quiz" && parsed.screen !== "exam") return false;
+    if (s.mode !== parsed.screen) return false;
+    if (parsed.screen === "exam") {
+      if (s.stageId !== parsed.stageId) return false;
+    } else if (s.skillId !== parsed.skillId || s.stageId !== skillStageId(parsed.skillId)) {
+      return false;
+    }
+    if (!Array.isArray(s.problems) || !s.problems.length || s.problems.length > 200) return false;
+    if (typeof s.index !== "number" || Math.floor(s.index) !== s.index || s.index < 0 || s.index >= s.problems.length) return false;
+    if (!Array.isArray(s.results) || s.results.length > s.problems.length) return false;
+    var i;
+    for (i = 0; i < s.problems.length; i++) {
+      var p = s.problems[i];
+      if (!p || typeof p !== "object") return false;
+      if (p.answer === void 0 || p.answer === null) return false;
+      if (p.input) {
+        if (typeof p.input !== "string") return false;
+      } else if (!Array.isArray(p.choices)) {
+        return false;
+      }
+      if (!p.prompt || typeof p.prompt !== "object") return false;
+      var res = null;
+      try {
+        res = MathCore.checkAnswer(p, p.answer);
+      } catch (e) {
+        return false;
+      }
+      if (!res || !res.correct) return false;
+    }
+    var resolved = resolveRoute(parsed);
+    if (!resolved || !sameRoute(resolved, parsed)) return false;
+    return true;
+  }
+  function readSession() {
+    try {
+      var raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      return validateSession(s) ? s : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function saveSession() {
+    if (state.screen !== "practice") return;
+    if (state.mode !== "practice" && state.mode !== "quiz" && state.mode !== "exam") return;
+    if (!state.problems.length || state.index >= state.problems.length) return;
+    try {
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        v: SESSION_VERSION,
+        route: serializeRoute(currentRoute()),
+        mode: state.mode,
+        stageId: state.mode === "exam" ? state.examStage : skillStageId(state.skillId),
+        skillId: state.mode === "exam" ? null : state.skillId,
+        problems: state.problems,
+        index: state.index,
+        correct: state.correct,
+        results: state.results,
+        quizStart: state.quizStart || Date.now(),
+        savedAt: Date.now()
+      }));
+    } catch (e) {
+    }
+  }
+  function restoreSession(s) {
+    var parsed = parseHash(s.route);
+    if (!parsed) return;
+    state.mode = parsed.screen;
+    state.skillId = parsed.screen === "exam" ? null : parsed.skillId;
+    state.examStage = parsed.screen === "exam" ? parsed.stageId : null;
+    state.stageId = parsed.screen === "exam" ? parsed.stageId : skillStageId(parsed.skillId);
+    state.problems = s.problems;
+    state.index = s.index;
+    state.correct = s.correct || 0;
+    state.results = Array.isArray(s.results) ? s.results : [];
+    state.quizStart = s.quizStart || Date.now();
+    state.locked = false;
+    state.hintShown = false;
+    state.attemptWrong = false;
+    state.run = { mode: parsed.screen, key: parsed.screen === "exam" ? parsed.stageId : parsed.skillId };
+    renderQuestion(state.problems[state.index]);
+    show("practice");
+    saveSession();
+  }
+  function resumeSession() {
+    var s = readSession();
+    var parsed = s ? parseHash(s.route) : null;
+    var route = parsed ? resolveRoute(parsed) : null;
+    if (!s || !route || !sameRoute(route, parsed)) {
+      clearSession();
+      renderHome();
+      return;
+    }
+    var hash = serializeRoute(route);
+    writeHash(hash, false);
+    nav.lastHash = hash;
+    restoreSession(s);
+  }
+  function sessionSummary() {
+    var s = readSession();
+    if (!s) return null;
+    var route = parseHash(s.route);
+    if (!route) return null;
+    var name = "";
+    if (route.screen === "exam") {
+      var stage = getStage(route.stageId);
+      name = stage ? L(stage) : "";
+    } else {
+      var skill = getSkill(route.skillId);
+      name = skill ? nameOf(skill) : "";
+    }
+    var modeLabel = route.screen === "quiz" ? t("quiz.title") : route.screen === "exam" ? t("exam.title") : t("practice.title");
+    return { route, modeLabel, name, index: s.index, total: s.problems.length };
+  }
+  function applyTheme() {
+    document.documentElement.setAttribute("data-theme", state.theme || "light");
+  }
+  function applyLang() {
+    var code = state.lang === "en" ? "en" : "zh-Hant-HK";
+    document.documentElement.setAttribute("lang", code);
+    var skip = $("skipLink");
+    if (skip) skip.textContent = t("a11y.skipLink");
+    [["backBtn", "a11y.back"], ["settingsBtn", "a11y.settings"], ["topbarStars", "a11y.stars"]].forEach(function(pair) {
+      var el = $(pair[0]);
+      if (el) el.setAttribute("aria-label", t(pair[1]));
+    });
+    var langBtn = $("langBtn");
+    if (langBtn) langBtn.setAttribute("aria-label", state.lang === "zh" ? t("a11y.languageZh") : t("a11y.languageEn"));
+  }
+  var audioCtx = null;
+  function playTone(ok) {
+    if (!state.sound) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.type = "sine";
+      o.frequency.value = ok ? 880 : 220;
+      var now = audioCtx.currentTime;
+      g.gain.setValueAtTime(0.12, now);
+      g.gain.exponentialRampToValueAtTime(1e-3, now + (ok ? 0.35 : 0.22));
+      o.start(now);
+      o.stop(now + (ok ? 0.35 : 0.22));
+    } catch (e) {
+    }
+  }
+  function confetti() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var box = $("confetti");
+    var colors = ["#FF9500", "#34C759", "#007AFF", "#AF52DE", "#FF2D55", "#FFCC00"];
+    for (var i = 0; i < 22; i++) {
+      var el = document.createElement("div");
+      el.className = "confetti-piece";
+      el.style.left = Math.random() * 100 + "vw";
+      el.style.width = 6 + Math.random() * 6 + "px";
+      el.style.height = 9 + Math.random() * 10 + "px";
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = 1.5 + Math.random() * 1.5 + "s";
+      el.style.animationDelay = Math.random() * 0.25 + "s";
+      box.appendChild(el);
+      (function(node) {
+        setTimeout(function() {
+          node.remove();
+        }, 3300);
+      })(el);
+    }
+  }
+  function toast(msg) {
+    var el = $("toast");
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(el._timer);
+    el._timer = setTimeout(function() {
+      el.hidden = true;
+    }, 2200);
+  }
+  function touchStreak() {
+    var day = (/* @__PURE__ */ new Date()).toDateString();
+    if (progress.streak.lastDay === day) return;
+    var yesterday = new Date(Date.now() - 864e5).toDateString();
+    progress.streak.count = progress.streak.lastDay === yesterday ? progress.streak.count + 1 : 1;
+    progress.streak.lastDay = day;
+    saveProgress();
+  }
   function currentRoute() {
     switch (state.screen) {
       case "stage":
@@ -1167,200 +1598,6 @@
     var parent = parentOf(currentRoute());
     navigate(parent || HOME_ROUTE);
   }
-  function renderHome() {
-    var realStages = realStageList();
-    var unlockedCount = 0;
-    var session = sessionSummary();
-    var html = '<h1 class="page-title">' + t("home.title") + '</h1><p class="page-sub">' + t("home.subtitle") + "</p>";
-    if (session) {
-      html += '<button class="continue-card" id="homeContinue" type="button"><span class="continue-emoji" aria-hidden="true">▶️</span><span class="continue-body"><span class="continue-title">' + t("home.continue") + " · " + session.modeLabel + '</span><span class="continue-sub">' + esc(session.name) + " · " + t("practice.question", { i: session.index + 1, n: session.total }) + "</span></span></button>";
-    }
-    var challengeStage = getStage("challenge");
-    if (challengeStage) {
-      var chTotal = 0, chPassed = 0;
-      stageSkills(challengeStage).forEach(function(sk) {
-        chTotal++;
-        if (masteryOf(sk).mastered) chPassed++;
-      });
-      html += '<button class="challenge-card" id="homeChallengeBtn" type="button"><span class="challenge-emoji" aria-hidden="true">' + challengeStage.emoji + '</span><span class="challenge-body"><span class="challenge-title">' + t("challenge.title") + '</span><span class="challenge-sub">' + t("challenge.desc") + '</span><span class="challenge-count">' + t("challenge.progress", { m: chPassed, t: chTotal }) + '</span></span><span class="challenge-arrow" aria-hidden="true">→</span></button>';
-    }
-    html += '<div class="stage-grid">';
-    realStages.forEach(function(stage) {
-      if (!stageUnlocked(stage.id)) return;
-      unlockedCount++;
-      var stats = stageSkillStats(stage);
-      html += '<button class="stage-card" type="button" data-stage="' + stage.id + '"><span class="emoji">' + stage.emoji + '</span><span class="name">' + L(stage) + '</span><span class="desc">' + L(stage.desc) + '</span><span class="stage-count">' + t("home.stageCount", { u: stats.unlocked, t: stats.total }) + "</span></button>";
-    });
-    html += '</div><p class="page-sub" style="margin-top:14px;font-size:13px">' + t("home.unlocked", { u: unlockedCount, t: realStages.length }) + '</p><p class="page-sub" style="font-size:13px;margin-bottom:14px">' + t("home.nextHint") + '</p><button class="btn secondary big" id="homeFormulasBtn" type="button" style="margin-bottom:10px">📐 ' + t("formulas.title") + '</button><button class="btn secondary big" id="homeOutlineBtn" type="button" style="margin-bottom:10px">📚 ' + t("outline.title") + '</button><button class="btn secondary big" id="homeParentBtn" type="button">👨‍👩‍👦 ' + t("home.parent") + "</button>";
-    $("screen-home").innerHTML = html;
-    $("screen-home").querySelectorAll(".stage-card").forEach(function(el) {
-      el.addEventListener("click", function() {
-        navigate({ screen: "stage", stageId: el.getAttribute("data-stage") });
-      });
-    });
-    $("homeFormulasBtn").addEventListener("click", function() {
-      navigate({ screen: "formulas" });
-    });
-    $("homeOutlineBtn").addEventListener("click", function() {
-      navigate({ screen: "outline" });
-    });
-    $("homeParentBtn").addEventListener("click", function() {
-      navigate({ screen: "parent" });
-    });
-    var continueBtn = $("homeContinue");
-    if (continueBtn) continueBtn.addEventListener("click", resumeSession);
-    var challengeBtn = $("homeChallengeBtn");
-    if (challengeBtn) challengeBtn.addEventListener("click", function() {
-      navigate({ screen: "stage", stageId: "challenge" });
-    });
-    show("home");
-  }
-  function renderStage(stageId) {
-    state.stageId = stageId;
-    var stage = getStage(stageId);
-    var stats = stageSkillStats(stage);
-    if (stageId === "challenge") {
-      var chTotal = 0, chPassed = 0;
-      stageSkills(stage).forEach(function(sk) {
-        chTotal++;
-        if (masteryOf(sk).mastered) chPassed++;
-      });
-      stats = { total: chTotal, unlocked: chTotal, passed: chPassed };
-    }
-    var hasReal = stageSkills(stage).some(function(s) {
-      return !s.scaffold && s.types && s.types.length;
-    });
-    var html = '<h1 class="page-title">' + stage.emoji + " " + L(stage) + '</h1><p class="page-sub">' + L(stage.desc) + " · " + t("stage.unlockedCount", { u: stats.unlocked, t: stats.total }) + "</p>" + (hasReal ? '<button class="btn primary big" id="stageExamBtn" type="button" style="width:100%;margin-bottom:6px">📝 ' + t("exam.title") + '</button><p class="page-sub" style="font-size:12px;margin-bottom:14px">' + t("home.nextHint") + "</p>" : "");
-    var prevMastered = true;
-    var idx = 0;
-    stage.topics.forEach(function(topic) {
-      html += '<div class="topic-block"><div class="topic-title">' + L(topic) + "</div>";
-      topic.skills.forEach(function(id) {
-        var skill = getSkill(id);
-        var locked = !prevMastered && idx > 0;
-        if (stageId === "challenge") locked = false;
-        var ms = masteryOf(skill);
-        prevMastered = ms.mastered || skill.scaffold;
-        html += renderSkillCard(skill, ms, locked);
-        idx++;
-      });
-      html += "</div>";
-    });
-    $("screen-stage").innerHTML = html;
-    var examBtn = $("stageExamBtn");
-    if (examBtn) examBtn.addEventListener("click", function() {
-      navigate({ screen: "exam", stageId });
-    });
-    bindStageCards();
-    show("stage");
-  }
-  function renderSkillCard(skill, ms, locked) {
-    var order = skill.order;
-    var passed = ms.mastered;
-    var starsHtml = "";
-    if (passed) starsHtml = '<span class="stars">✓ ' + "★".repeat(Math.max(1, ms.quizStars)) + "</span>";
-    else if (ms.stars > 0) starsHtml = '<span class="stars">' + "★".repeat(ms.stars) + "</span>";
-    if (skill.scaffold) {
-      return '<div class="skill-card locked"><div class="badge">🔒</div><div class="info"><div class="name">' + nameOf(skill) + '</div><div class="goal">' + t("skill.comingText") + '</div></div><span class="stars" style="color:var(--text-2)">' + t("skill.coming") + "</span></div>";
-    }
-    var lockedCls = locked ? " locked" : "";
-    var goLabel = passed ? t("skill.review") : t("skill.learn");
-    return '<div class="skill-card' + lockedCls + '" data-skill="' + skill.id + '" data-locked="' + (locked ? "1" : "0") + '"><div class="badge">' + order + '</div><div class="info"><div class="name">' + nameOf(skill) + '</div><div class="goal">' + goalOf(skill) + "</div></div>" + (locked ? '<span class="stars" style="color:var(--text-2)">🔒</span>' : starsHtml) + (locked ? "" : '<button class="go" type="button" data-action="go">' + goLabel + "</button>") + "</div>";
-  }
-  function bindStageCards() {
-    $("screen-stage").querySelectorAll(".skill-card").forEach(function(el) {
-      var locked = el.getAttribute("data-locked") === "1";
-      var id = el.getAttribute("data-skill");
-      if (!id) return;
-      el.addEventListener("click", function(ev) {
-        if (ev.target.getAttribute("data-action") === "go") return;
-        if (locked) {
-          toast(t("skill.unlockHint"));
-          return;
-        }
-        navigate({ screen: "lesson", skillId: id });
-      });
-      var goBtn = el.querySelector('[data-action="go"]');
-      if (goBtn) {
-        goBtn.addEventListener("click", function(ev) {
-          ev.stopPropagation();
-          if (locked) {
-            toast(t("skill.unlockHint"));
-            return;
-          }
-          navigate({ screen: "lesson", skillId: id });
-        });
-      }
-    });
-  }
-  function renderLesson(skillId) {
-    state.skillId = skillId;
-    var skill = getSkill(skillId);
-    var info = skill[state.lang === "zh" ? "zh" : "en"];
-    var lesson = Lessons[skill.lesson];
-    var html = '<h1 class="page-title">' + esc(info.name) + '</h1><p class="page-sub">' + t("stage.goal") + "：" + esc(info.goal) + "</p>";
-    if (lesson) {
-      var l = state.lang === "zh" ? lesson.zh : lesson.en;
-      html += '<div class="lesson-card"><h2>' + t("lesson.title") + '</h2><div class="lesson-label">' + t("lesson.intro") + '</div><p class="lesson-text">' + renderMath(l.intro) + "</p>";
-      if (lesson.visual) {
-        html += '<div class="lesson-visual" id="lessonVisual"></div>';
-      }
-      if (l.steps && l.steps.length) {
-        html += '<div class="lesson-label">' + t("lesson.steps") + '</div><ol class="lesson-steps">' + l.steps.map(function(step) {
-          return "<li>" + renderMath(step) + "</li>";
-        }).join("") + "</ol>";
-      }
-      html += '<div class="lesson-label">' + t("lesson.example") + '</div><p class="lesson-text">' + renderMath(l.example) + '</p><div class="lesson-label">' + t("lesson.tip") + '</div><p class="lesson-text">' + renderMath(l.tip) + "</p>";
-      if (l.mistake) {
-        html += '<div class="lesson-label">' + t("lesson.mistake") + '</div><p class="lesson-text lesson-mistake">' + renderMath(l.mistake) + "</p>";
-      }
-      html += '</div><div class="lesson-card" style="margin-top:12px"><button class="btn secondary big" id="lessonExample" type="button">📖 ' + t("lesson.showExample") + '</button><div id="exampleBox" hidden></div></div>';
-    } else {
-      html += '<div class="lesson-card"><p class="lesson-text">' + t("skill.comingText") + "</p></div>";
-    }
-    html += '<div class="lesson-actions"><button class="btn" id="lessonPractice" type="button">' + t("lesson.start") + '</button><button class="btn secondary" id="lessonQuiz" type="button">' + t("lesson.skip") + "</button></div>";
-    $("screen-lesson").innerHTML = html;
-    if (lesson && lesson.visual) {
-      renderVisual($("lessonVisual"), lesson.visual, null);
-    }
-    if (lesson) {
-      $("lessonExample").addEventListener("click", function() {
-        showWorkedExample(skillId);
-      });
-    }
-    $("lessonPractice").addEventListener("click", function() {
-      navigate({ screen: "practice", skillId });
-    });
-    $("lessonQuiz").addEventListener("click", function() {
-      navigate({ screen: "quiz", skillId });
-    });
-    show("lesson");
-  }
-  function showWorkedExample(skillId) {
-    var skill = getSkill(skillId);
-    var box = $("exampleBox");
-    if (!box) return;
-    var p = MathCore.generateProblem(skill, { seed: Date.now() & 4294967295 });
-    var ex = null;
-    try {
-      ex = MathCore.explain(p);
-    } catch (e) {
-      ex = null;
-    }
-    box.hidden = false;
-    if (!ex) {
-      box.innerHTML = '<div class="lesson-label">' + t("lesson.example") + '</div><p class="prompt-small">' + renderMath(L(p.prompt)) + "</p>";
-      return;
-    }
-    var steps = state.lang === "zh" ? ex.zh : ex.en;
-    var list = '<ol class="steps-list">' + steps.map(function(s) {
-      return "<li>" + renderMath(s) + "</li>";
-    }).join("") + "</ol>";
-    box.innerHTML = '<div class="lesson-label">' + t("lesson.showExample") + '</div><p class="prompt-small">' + renderMath(L(p.prompt)) + "</p>" + list + '<button class="btn secondary" id="exampleNext" type="button" style="margin-top:10px">🔄 ' + t("lesson.nextExample") + "</button>";
-    $("exampleNext").addEventListener("click", function() {
-      showWorkedExample(skillId);
-    });
-  }
   function progressBarHTML(pct, label) {
     var now = Math.max(0, Math.min(100, Math.round(pct || 0)));
     return '<div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + now + '"' + (label ? ' aria-label="' + esc(label) + '"' : "") + '><i style="width:' + now + '%"></i></div>';
@@ -1616,51 +1853,6 @@
     f.textContent = msg;
     f.className = "feedback " + cls;
   }
-  function focusEl(el) {
-    if (!el || typeof el.focus !== "function") return false;
-    try {
-      el.focus();
-    } catch (e) {
-      return false;
-    }
-    return document.activeElement === el;
-  }
-  function isVisible(el) {
-    if (!el || !document.contains(el)) return false;
-    var node = el;
-    while (node && node.nodeType === 1) {
-      if (node.hidden === true) return false;
-      if (typeof window.getComputedStyle === "function") {
-        try {
-          var st = window.getComputedStyle(node);
-          if (st && st.display === "none") return false;
-        } catch (e) {
-        }
-      }
-      node = node.parentNode;
-    }
-    return true;
-  }
-  function restoreFocus(el) {
-    if (isVisible(el)) return focusEl(el);
-    return false;
-  }
-  function focusScreen() {
-    var screen = $("screen-" + state.screen);
-    if (!screen) return false;
-    var node = screen.querySelector('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-    return focusEl(node);
-  }
-  function isTypingTarget(el) {
-    if (!el) return false;
-    var tag = (el.tagName || "").toUpperCase();
-    return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || el.isContentEditable === true;
-  }
-  function choiceButtons() {
-    var box = $("choices");
-    if (!box) return [];
-    return Array.prototype.slice.call(box.querySelectorAll(".choice"));
-  }
   function handlePracticeKeys(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (isTypingTarget(e.target)) return;
@@ -1835,63 +2027,7 @@
     var examAnnouncer = $("announcer");
     if (examAnnouncer) examAnnouncer.textContent = t("exam.result");
   }
-  function renderParent() {
-    var masteredCount = 0, totalCount = 0, sumStars = totalStars();
-    Object.keys(Curriculum.skills).forEach(function(id) {
-      var s = Curriculum.skills[id];
-      if (s.scaffold) return;
-      totalCount++;
-      if (masteryOf(s).mastered) masteredCount++;
-    });
-    var html = '<h1 class="page-title">' + t("parent.title") + '</h1><div class="panel"><h2>' + t("parent.overview") + '</h2><div class="stat-row"><div class="stat"><div class="v">' + sumStars + '</div><div class="k">' + t("parent.totalStars") + '</div></div><div class="stat"><div class="v">' + (progress.streak.count || 0) + '</div><div class="k">' + t("parent.streak") + '</div></div><div class="stat"><div class="v">' + masteredCount + "/" + totalCount + '</div><div class="k">' + t("parent.masteredSkills") + "</div></div></div></div>";
-    html += '<div class="panel"><h2>' + t("parent.skills") + "</h2>";
-    var hasAny = false;
-    Curriculum.stages.forEach(function(stage) {
-      stageSkills(stage).forEach(function(skill) {
-        if (skill.scaffold) return;
-        var sp = skillProgress(skill.id);
-        if (!sp.attempts) return;
-        hasAny = true;
-        var ms = masteryOf(skill);
-        var pct = Math.min(100, Math.round(sp.correct / (skill.mastery && skill.mastery.practice || 10) * 100));
-        html += '<div class="row-item"><span class="nm">' + nameOf(skill) + '</span><span class="bar"><i style="width:' + pct + '%"></i></span><span class="pc">' + (ms.mastered ? "★★★" : pct + "%") + "</span></div>";
-      });
-    });
-    if (!hasAny) html += '<p class="page-sub">' + t("parent.empty") + "</p>";
-    html += "</div>";
-    html += '<div class="panel"><h2>' + t("settings.title") + '</h2><button class="btn secondary big" id="parentUnlock" type="button" style="margin-bottom:10px">🔓 ' + t("parent.unlockAll") + '</button><button class="btn secondary big" id="parentExport" type="button" style="margin-bottom:10px">📤 ' + t("parent.export") + '</button><button class="btn secondary big" id="parentImport" type="button" style="margin-bottom:10px">📥 ' + t("parent.import") + '</button><button class="btn danger-btn" id="parentReset" type="button">🗑 ' + t("parent.reset") + "</button></div>";
-    $("screen-parent").innerHTML = html;
-    $("parentUnlock").addEventListener("click", confirmUnlockAll);
-    $("parentExport").addEventListener("click", exportProgress);
-    $("parentImport").addEventListener("click", importProgress);
-    $("parentReset").addEventListener("click", confirmReset);
-    show("parent");
-  }
   var modalState = { open: false, opener: null };
-  function modalFocusables() {
-    var modal = $("modal");
-    if (!modal) return [];
-    var nodes = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    return Array.prototype.filter.call(nodes, function(el) {
-      if (el.disabled) return false;
-      if (el.hasAttribute("hidden")) return false;
-      if (el.getAttribute("aria-hidden") === "true") return false;
-      return true;
-    });
-  }
-  function setBackgroundInert(on) {
-    ["main", "topbar", "updateChip", "skipLink"].forEach(function(id) {
-      var el = $(id);
-      if (!el) return;
-      if (on) {
-        el.setAttribute("inert", "");
-        el.setAttribute("aria-hidden", "true");
-      } else {
-        el.removeAttribute("inert");
-        el.removeAttribute("aria-hidden");
-      }
-    });
-  }
   function showModal(innerHTML, opener) {
     var modal = $("modal");
     if (!modal) return;
@@ -1923,30 +2059,6 @@
       if (!restoreFocus(opener)) focusScreen();
     }
     return opener;
-  }
-  function trapModalTab(e) {
-    var modal = $("modal");
-    var items = modalFocusables();
-    if (!items.length) {
-      e.preventDefault();
-      focusEl(modal);
-      return;
-    }
-    var first = items[0];
-    var last = items[items.length - 1];
-    var idx = items.indexOf(document.activeElement);
-    if (idx === -1) {
-      e.preventDefault();
-      focusEl(e.shiftKey ? last : first);
-      return;
-    }
-    if (!e.shiftKey && idx === items.length - 1) {
-      e.preventDefault();
-      focusEl(first);
-    } else if (e.shiftKey && idx === 0) {
-      e.preventDefault();
-      focusEl(last);
-    }
   }
   function confirmUnlockAll(ev) {
     showModal('<div class="modal"><h3 id="modalTitle">' + t("parent.unlockAll") + "</h3><p>" + t("parent.unlockAllConfirm") + '</p><div class="btn-row"><button class="btn secondary" id="unlockCancel" type="button">' + t("common.cancel") + '</button><button class="btn" id="unlockOk" type="button">' + t("parent.unlockAll") + "</button></div></div>", ev && ev.currentTarget);
@@ -2005,7 +2117,7 @@
           if (text2.length > 1e6) throw new Error(t("parent.importedTooLarge"));
           var parsed = JSON.parse(text2);
           if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new Error(t("parent.importBadFormat"));
-          progress = MathCore.sanitizeProgress(parsed);
+          setProgress(MathCore.sanitizeProgress(parsed));
           saveProgress();
           clearSession();
           state.lang = progress.lang || state.lang;
@@ -2031,7 +2143,7 @@
       closeModal();
     });
     $("resetOk").addEventListener("click", function() {
-      progress = MathCore.newProgress();
+      setProgress(MathCore.newProgress());
       progress.lang = state.lang;
       progress.sound = state.sound;
       progress.theme = state.theme;
@@ -2041,106 +2153,6 @@
       renderHome();
       if (!restoreFocus(opener)) focusScreen();
     });
-  }
-  function renderFormulas() {
-    var F = Formulas;
-    if (!F) {
-      $("screen-formulas").innerHTML = '<p class="page-sub">—</p>';
-      show("formulas");
-      return;
-    }
-    var lang = state.lang === "zh" ? "zh" : "en";
-    var html = '<h1 class="page-title">📐 ' + t("formulas.title") + '</h1><p class="page-sub">' + esc(F.intro[lang]) + "</p>";
-    F.sections.forEach(function(sec) {
-      html += '<div class="outline-stage"><h2>' + esc(sec[lang]) + "</h2>";
-      sec.items.forEach(function(it) {
-        html += '<div class="formula-row"><div class="formula-name">' + esc(it[lang]) + '</div><div class="formula-latex">' + renderMath("$" + it.latex + "$") + "</div></div>";
-      });
-      html += "</div>";
-    });
-    $("screen-formulas").innerHTML = html;
-    show("formulas");
-  }
-  function renderOutline() {
-    var o = CurriculumOutline;
-    if (!o) {
-      $("screen-outline").innerHTML = '<p class="page-sub">—</p>';
-      show("outline");
-      return;
-    }
-    var lang = state.lang === "zh" ? "zh" : "en";
-    var KS_APP = { ks1: ["prek", "g1", "g2", "g3"], ks2: ["g4", "g5", "g6"], js: ["ms1", "ms2", "ms3"], ss: ["hs1", "hs2", "hs3"] };
-    var html = '<h1 class="page-title">📚 ' + t("outline.title") + '</h1><p class="page-sub">' + esc(o.intro[lang]) + '</p><p class="page-sub" style="font-size:13px">' + esc(o.note[lang]) + "</p>";
-    o.stages.forEach(function(stage) {
-      html += '<div class="outline-stage"><h2>' + esc(stage[lang]) + "</h2>";
-      var skillNames = [];
-      (KS_APP[stage.id] || []).forEach(function(sid) {
-        var st = getStage(sid);
-        if (!st) return;
-        stageSkills(st).forEach(function(sk) {
-          if (!sk.scaffold) skillNames.push(nameOf(sk));
-        });
-      });
-      if (skillNames.length) {
-        html += '<div class="outline-covered">📌 ' + t("outline.covered") + "：" + skillNames.map(esc).join("、") + "</div>";
-      }
-      stage.strands.forEach(function(strand) {
-        html += '<div class="outline-strand"><div class="outline-strand-title">' + esc(strand[lang]) + '</div><ul class="outline-units">';
-        strand.units.forEach(function(u) {
-          html += "<li>" + esc(u[lang]) + "</li>";
-        });
-        html += "</ul></div>";
-      });
-      html += "</div>";
-    });
-    $("screen-outline").innerHTML = html;
-    show("outline");
-  }
-  function renderSettings() {
-    var html = '<h1 class="page-title">' + t("settings.title") + '</h1><div class="panel"><div class="settings-row"><span class="k">' + t("settings.language") + '</span><button class="btn secondary" id="setLangBtn" type="button">' + t("langName") + ' ⇄</button></div><div class="settings-row"><span class="k">' + t("settings.sound") + '</span><div class="switch' + (state.sound ? " on" : "") + '" id="soundSwitch" role="switch" tabindex="0" aria-label="' + esc(t("settings.sound")) + '" aria-checked="' + state.sound + '"></div></div><div class="settings-row"><span class="k">' + t("settings.theme") + '</span><div class="seg">' + themeSegBtn("light", t("settings.themeLight")) + themeSegBtn("dark", t("settings.themeDark")) + themeSegBtn("auto", t("settings.themeAuto")) + '</div></div></div><button class="btn secondary big" id="settingsRefresh" type="button" style="margin-bottom:10px">🔄 ' + t("settings.refreshApp") + '</button><button class="btn secondary big" id="settingsParent" type="button">👨‍👩‍👦 ' + t("home.parent") + "</button>";
-    $("screen-settings").innerHTML = html;
-    $("setLangBtn").addEventListener("click", function() {
-      toggleLang();
-    });
-    var toggleSound = function() {
-      state.sound = !state.sound;
-      progress.sound = state.sound;
-      saveProgress();
-      renderSettings();
-      updateTopbar();
-    };
-    $("soundSwitch").addEventListener("click", toggleSound);
-    $("soundSwitch").addEventListener("keydown", function(e) {
-      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
-        e.preventDefault();
-        toggleSound();
-      }
-    });
-    $("screen-settings").querySelectorAll(".seg-btn").forEach(function(b) {
-      b.addEventListener("click", function() {
-        state.theme = b.getAttribute("data-theme");
-        progress.theme = state.theme;
-        saveProgress();
-        applyTheme();
-        renderSettings();
-      });
-    });
-    $("settingsRefresh").addEventListener("click", forceUpdate);
-    $("settingsParent").addEventListener("click", function() {
-      navigate({ screen: "parent" });
-    });
-    show("settings");
-  }
-  function themeSegBtn(value, label) {
-    return '<button class="seg-btn' + (state.theme === value ? " on" : "") + '" data-theme="' + value + '" type="button">' + label + "</button>";
-  }
-  function toggleLang() {
-    state.lang = state.lang === "zh" ? "en" : "zh";
-    progress.lang = state.lang;
-    saveProgress();
-    applyLang();
-    renderRouteSafely(currentRoute());
-    updateTopbar();
   }
   function bindTopbar() {
     $("backBtn").addEventListener("click", back);
@@ -2223,6 +2235,14 @@
       });
     }).then(done).catch(done);
   }
+  function toggleLang() {
+    state.lang = state.lang === "zh" ? "en" : "zh";
+    progress.lang = state.lang;
+    app.saveProgress();
+    app.applyLang();
+    renderRouteSafely(currentRoute());
+    app.updateTopbar();
+  }
   function init() {
     bindTopbar();
     applyTheme();
@@ -2257,6 +2277,34 @@
     }
     navigate(target || HOME_ROUTE, { replace: true });
   }
+  Object.assign(app, {
+    navigate,
+    show,
+    startPractice,
+    startQuiz,
+    renderGradeExam,
+    resumeSession,
+    readSession,
+    confirmUnlockAll,
+    exportProgress,
+    importProgress,
+    confirmReset,
+    applyTheme,
+    applyLang,
+    updateTopbar,
+    toast,
+    saveProgress,
+    toggleLang,
+    bindTopbar,
+    renderRouteSafely,
+    currentRoute,
+    finishExam,
+    renderQuestion,
+    advanceQuiz,
+    finishQuiz,
+    sessionSummary,
+    forceUpdate
+  });
   init();
   window.__mathApp = {
     getState: function() {
