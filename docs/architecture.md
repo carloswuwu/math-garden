@@ -129,7 +129,7 @@ Hash routes are pure strings; `parseHash`/`serializeRoute`/`resolveRoute` valida
 1. **Step 0 — generated modules:** `tools/build.js` bundles each `src/data/*.js` into a classic wrapper and `src/core/index.js` into a UMD `math-core.js` (browser + Node), keeping the public globals unchanged.
 2. `node tools/build.js` reads the classic sources in fixed order, normalises line endings, bundles with esbuild (IIFE), hashes content → `dist/app.<hash>.js`, copies HTML/CSS/icons/vendors, writes hashed SW cache name and precache list.
 3. `dist/` and all generated wrappers are committed; `.github/workflows/tests.yml` rebuilds and **fails on drift** in either, then runs six suites.
-4. `.github/workflows/pages.yml` deploys `dist/` **only when the Pages source is GitHub Actions**; until the one-time settings switch the live site is the legacy root deploy.
+4. `.github/workflows/pages.yml` deploys `dist/` on every main push — **Pages source is set to “GitHub Actions”** (switched via the Pages API); the workflow validates source, builds, checks wrappers, uploads the artifact and deploys.
 5. SW: install precaches, activate waits for user confirmation (`#updateChip`), navigation is network-first with 3 s timeout + cache fallback; generated SW never auto-`skipWaiting`.
 
 ## 8. Testing strategy
@@ -143,6 +143,7 @@ Hash routes are pure strings; `parseHash`/`serializeRoute`/`resolveRoute` valida
 | `a11y.test.js` | jsdom (dist IIFE) + axe-core | headings/labels/focus/inert/lang/visual alt, axe subset on 13 screens |
 | `perf.test.js` | node + jsdom (dist IIFE) | engine p95, route render p95, bundle gzip, precache ≤ 1.2 MB |
 | `npm run lighthouse` | real headless Chrome | full Lighthouse accessibility gate ≥ 0.95 (local 1.000; CI step) |
+| `npm run offline-check` | real headless Chrome + service worker | cold offline start: load dist → SW control → close/offline → fresh page renders from cache |
 
 ## 9. Performance budgets
 
@@ -155,7 +156,7 @@ Measured on the current build (local, warm JIT); budgets in parentheses are the 
 | `composeExam(20)` p95 | ~0.4 ms | < 400 ms |
 | jsdom boot p95 | ~64 ms | < 5000 ms |
 | jsdom route render p95 | ~500 ms | < 2000 ms |
-| bundle gzip | 129.6 KB | ≤ 140 KB |
+| bundle gzip | 134.0 KB | ≤ 140 KB |
 | SW precache payload | 0.99 MB | ≤ 1.2 MB |
 | Lighthouse accessibility | 1.000 | ≥ 0.95 |
 
@@ -179,7 +180,7 @@ The source is no longer order-coupled classic scripts. Phase 5 converted everyth
 4. **UI modules** (done): `src/ui/` contains `index` (init + `window.__mathApp` hooks, ~175 lines), `globals`, `format`, `router`, `state`, `i18n`, `selectors`, `visual`, `dom`, `a11y`, `context`, `screens`, `assessment`, `session`, `nav-state`, `modal-state`, `nav`, `chrome`, `dialog`, `sw-state`, `sw`, `keyboard`. Cross-module actions use the `app` context object to avoid cycles. Build step 0 generates the classic `app.js` IIFE.
 5. **Tooling/tests** (done): `ui`, `a11y` and `perf` suites boot the built `dist/app.<hash>.js` IIFE; contract still validates source modules/contracts. `npm run lighthouse` runs a real-Chrome Lighthouse accessibility gate (local score **1.000**) and CI has a Lighthouse step.
 
-Guardrails preserved throughout: one module/commit, all six suites green, `dist/` + wrappers rebuilt and committed, public APIs unchanged, stored progress/session schemas unchanged. Remaining non-Phase-5 polish: one-time Pages source switch to GitHub Actions, post-roadmap content P1 items, optional real-device cold-offline check.
+Guardrails preserved throughout: one module/commit, all six suites green, `dist/` + wrappers rebuilt and committed, public APIs unchanged, stored progress/session schemas unchanged. Post-roadmap batch added: Pages source switched to GitHub Actions (dist deploys on push), per-mode `typeAcc`, tiny-pool/word-archetype content depth, college exam width, cold-offline real-Chrome check, and bilingual lesson glossaries. Remaining optional work: mathematician-audit P2 items, more lesson visuals/glossary coverage, real-device spot check.
 
 ## 12. Decision records
 
