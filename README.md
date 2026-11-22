@@ -69,7 +69,7 @@
 | `docs/PLAN.md` | 專案交接、架構現況、路線圖與 backlog（權威文件） |
 | `docs/architecture.md` | 現行架構地圖：執行拓樸、模組、路由／狀態、建置、測試、效能預算、無障礙、Phase 5 目標 |
 | `docs/adr/` | 架構決策記錄（ADR-0001 至 0008） |
-| `src/` | **ESM 來源**：`data/`（i18n、curriculum、outline、formulas、lessons）與 `core/`（engine entry、rng、values、facts、math-spec、progress）；root 同名 classic/UMD 檔由 `npm run build` 生成，請勿手改 |
+| `src/` | **ESM 來源**：`data/`（i18n、curriculum、outline、formulas、lessons）與 `core/`（engine entry、rng、values、facts、display、generators、math-spec、progress）；root 同名 classic/UMD 檔由 `npm run build` 生成，請勿手改 |
 | `index.html` | 頁面結構 |
 | `style.css` | 界面樣式 |
 | `app.js` | 界面交互、導航、進度、雙語切換 |

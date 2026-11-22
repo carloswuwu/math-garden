@@ -47,6 +47,8 @@ index.html ── classic root wrappers (generated) ─────────�
 | `src/core/rng.js` | Seeded RNG: `seedRandom`, `randInt`, `pick`, `shuffle` | ESM imports |
 | `src/core/values.js` | Value/fraction helpers: `isFraction`, `gcdInt`, `reduceFraction`, `valueKey`, `renderValue`, `valuesEqual`, `normalizeInput` | ESM imports |
 | `src/core/facts.js` | Shared factorial helper (`factInt`) | ESM imports |
+| `src/core/display.js` | Shared display helpers: `fmtDecimal`, `fmtNum`, equation explanation sentences | ESM imports |
+| `src/core/generators.js` | All `gen*` generators, support constants, `GENERATORS` catalogue (107 generator fns) | ESM imports |
 | `src/core/math-spec.js` | `MATH_SPEC` answer oracle + `answerFromMath` | ESM imports |
 | `src/core/progress.js` | `defaultSkillProgress`, `sanitizeProgress`, stars/mastery, `applyResult`, `applyQuizResult`, `gradeQuiz` | ESM imports |
 | `math-core.js` | **Generated UMD wrapper** of `src/core/index.js` (browser `window.MathCore`, Node `require`) | `window.MathCore` / `module.exports` |
@@ -153,7 +155,7 @@ Current source is order-coupled classic scripts; Phase 5 converts to ESM **while
 
 1. **Foundation** (done): architecture map, ADRs, performance budgets in CI.
 2. **Content modules** (done): `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` now live in `src/data/*.js` as ESM; build step 0 generates the classic root wrappers with the unchanged `window.*` API; CI verifies wrappers are in sync.
-3. **Engine modules** (in progress): `src/core/index.js` is now the ESM engine entry; extracted so far: `rng`, `values`, `facts`, `math-spec` (oracle), `progress` (mastery/grading). `math-core.js` is a generated UMD wrapper. Remaining extracts: `generators`, `explain`, `compose` behind the unchanged `window.MathCore` API.
+3. **Engine modules** (in progress): `src/core/index.js` is now the ESM engine entry; extracted so far: `rng`, `values`, `facts`, `display`, `generators` (all `gen*` + `GENERATORS`), `math-spec` (oracle), `progress` (mastery/grading). `math-core.js` is a generated UMD wrapper. Remaining extracts: `explain` (SOLVERS + explain) and `compose` behind the unchanged `window.MathCore` API.
 4. **UI modules**: split `app.js` into `ui/router`, `ui/state`, `ui/screens/*`, `ui/dialog`, `ui/visual`, `ui/a11y`, `ui/sw`; `app/index` keeps `window.__mathApp`.
 5. **Tooling/tests**: tests load the built IIFE (contract/UI/a11y/perf) instead of eval'ing root wrappers; keep file:// by committing the classic bundle as today.
 
