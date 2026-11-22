@@ -1,8 +1,8 @@
 /* 由 tools/build.js 生成 —— 請勿手改；改 tools/sw-template.js 後重新 build。 */
-const CACHE = 'math-garden-47727d6f972f';
+const CACHE = 'math-garden-2d4ea0548dfc';
 const NAV_TIMEOUT_MS = 3000;
 const ASSETS = [
-  './app.47727d6f972f.js',
+  './app.2d4ea0548dfc.js',
   './apple-touch-icon.png',
   './icon-192.png',
   './icon-512.png',
