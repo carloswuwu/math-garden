@@ -45,7 +45,9 @@ const DATA_MODULES = [
   { source: 'src/data/formulas.js', rootFile: 'formulas.js', exportName: 'Formulas', globalName: 'Formulas' },
   { source: 'src/data/lessons.js', rootFile: 'lessons.js', exportName: 'Lessons', globalName: 'Lessons' },
   /* Stage D：引擎 ESM 來源；生成 UMD root wrapper（瀏覽器 window.MathCore、Node require）。 */
-  { source: 'src/core/index.js', rootFile: 'math-core.js', exportName: 'MathCore', globalName: 'MathCore', umd: true }
+  { source: 'src/core/index.js', rootFile: 'math-core.js', exportName: 'MathCore', globalName: 'MathCore', umd: true },
+  /* Stage E：UI ESM 來源；生成 classic app.js（side-effect IIFE，自行掛 window.__mathApp） */
+  { source: 'src/ui/index.js', rootFile: 'app.js', sideEffect: true }
 ];
 
 /* 直接複製到 dist 的根目錄檔案 */
@@ -95,6 +97,25 @@ function walkFiles(dir) {
 function generateDataModules() {
   const header = (m) => '/* 由 tools/build.js 從 ' + m.source + ' 生成 —— 請勿手改；改 ' + m.source + ' 後重新 npm run build。 */\n';
   DATA_MODULES.forEach((m) => {
+    if (m.sideEffect) {
+      const result = esbuild.buildSync({
+        stdin: {
+          contents: "import './" + m.source + "';\n",
+          resolveDir: ROOT,
+          sourcefile: 'ui-entry.js',
+          loader: 'js'
+        },
+        bundle: true,
+        format: 'iife',
+        platform: 'browser',
+        target: ['es2020'],
+        write: false,
+        legalComments: 'none',
+        charset: 'utf8'
+      });
+      fs.writeFileSync(path.join(ROOT, m.rootFile), header(m) + result.outputFiles[0].text.replace(/\r\n?/g, '\n'));
+      return;
+    }
     if (m.umd) {
       /* 引擎：先 bundle 成 globalName IIFE，再用 UMD 外殼接上 Node require 與 window 全局 */
       const result = esbuild.buildSync({

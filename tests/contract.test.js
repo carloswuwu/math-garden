@@ -61,6 +61,16 @@ const CJK = /[\u4e00-\u9fff]/;
   const coreRoot = fs.readFileSync(path.join(ROOT, 'math-core.js'), 'utf8');
   check(coreRoot.startsWith('/* 由 tools/build.js 從 src/core/index.js 生成'), 'root math-core.js 應是生成檔（含 header）');
   check(coreRoot.indexOf('module.exports') !== -1 && coreRoot.indexOf('root.MathCore') !== -1, 'math-core.js 應保留 UMD（Node require + window.MathCore）');
+
+  /* Stage E：UI ESM 來源（src/ui）與生成的 classic app.js wrapper */
+  ['index', 'globals', 'format', 'router'].forEach((name) => {
+    const p = path.join(ROOT, 'src', 'ui', name + '.js');
+    check(fs.existsSync(p), '缺少 ESM UI 模組 src/ui/' + name + '.js');
+    check(/export\s/.test(fs.readFileSync(p, 'utf8')), 'src/ui/' + name + '.js 應是 ESM 匯出');
+  });
+  const appRoot = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+  check(appRoot.startsWith('/* 由 tools/build.js 從 src/ui/index.js 生成'), 'root app.js 應是生成檔（含 header）');
+  check(appRoot.indexOf('__mathApp') !== -1, 'app.js 應保留 window.__mathApp 測試鉤子');
 })();
 const skills = Object.values(C.skills).filter((s) => !s.scaffold && (s.types || []).length);
 const typeOf = (t) => (typeof t === 'string' ? t : t.t);
@@ -147,10 +157,20 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
 
 /* ---------------- 3. i18n 與內容對齊 ---------------- */
 (() => {
-  const app = fs.readFileSync(path.join(ROOT, 'app.js'), 'utf8');
+  /* Stage E：UI 以 src/ui ESM 為來源；root app.js 是生成物，掃描來源 */
+  function readUiSources(dir) {
+    let out = '';
+    fs.readdirSync(dir, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name)).forEach((entry) => {
+      const abs = path.join(dir, entry.name);
+      if (entry.isDirectory()) out += readUiSources(abs);
+      else if (entry.name.endsWith('.js')) out += fs.readFileSync(abs, 'utf8') + '\n';
+    });
+    return out;
+  }
+  const app = readUiSources(path.join(ROOT, 'src', 'ui'));
   const literals = new Set();
   for (const m of app.matchAll(/\bt\('([^']*)'/g)) literals.add(m[1]);
-  check(literals.size >= 80, 'app.js 應有 80+ 個 t() 字面量，實際 ' + literals.size);
+  check(literals.size >= 80, 'src/ui 應有 80+ 個 t() 字面量，實際 ' + literals.size);
 
   const resolvePath = (dict, key) => {
     let v = dict;
