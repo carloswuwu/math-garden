@@ -55,7 +55,7 @@ async function main() {
   let ctx = boot();
   let w = ctx.w, d = ctx.d;
   check(!!w.Curriculum && !!w.MathCore && !!w.I18N && !!w.Lessons, '全局模塊已加載');
-  check(w.Curriculum.stages.length === 15, '應有 15 個階段（14 個年級 + 挑戰區）');
+  check(w.Curriculum.stages.length === 16, '應有 15 個階段（14 個年級 + 挑戰區）');
   const stageCards = d.querySelectorAll('#screen-home .stage-card');
   check(stageCards.length === 1, '首頁初始只顯示 1 個已解鎖階段（學前）');
   check(stageCards[0].getAttribute('data-stage') === 'prek', '第一個可見階段應為學前');

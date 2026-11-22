@@ -1202,6 +1202,17 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
       case 'decimalmixed':
         if (m.mode === 'add' || m.mode === 'sub') return { zh: ['小數點對齊，再逐位計算。', '= ' + fmtDecimal(m.r) + '。'], en: ['Line up the decimal points and calculate column by column.', '= ' + fmtDecimal(m.r) + '.'] };
         return { zh: ['先當整數計算，再點回小數點。', '= ' + fmtDecimal(m.r) + '。'], en: ['Calculate as whole numbers, then place the decimal point.', '= ' + fmtDecimal(m.r) + '.'] };
+      case 'gradanalysis':
+        if (m.mode === 'limit') return { zh: ['分子分母同除以 n。', '最高次項係數比 = ' + m.a + ' ÷ ' + m.c + ' = ' + p.answer + '。'], en: ['Divide numerator and denominator by n.', 'Ratio of leading coefficients = ' + m.a + ' ÷ ' + m.c + ' = ' + p.answer + '.'] };
+        return { zh: ['無窮等比級數和 = 首項 ÷ (1 − 公比)。', '= ' + m.first + ' ÷ (1 − 1/' + m.den + ') = ' + p.answer + '。'], en: ['Infinite geometric sum = first term ÷ (1 − ratio).', '= ' + m.first + ' ÷ (1 − 1/' + m.den + ') = ' + p.answer + '.'] };
+      case 'gradalgebra':
+        if (m.mode === 'order') return { zh: ['逐次乘 ' + m.a + ' 並取模 ' + m.p + '。', '第一次回到 1 的次數就是階：' + p.answer + '。'], en: ['Multiply by ' + m.a + ' repeatedly modulo ' + m.p + '.', 'The first return to 1 gives the order: ' + p.answer + '.'] };
+        if (m.mode === 'symmetric') return { zh: ['n 個元素的排列數是 n!。', p.answer + ' 個元素。'], en: ['The number of permutations of n elements is n!.', p.answer + ' elements.'] };
+        return { zh: ['循環群 Cₙ 的生成元數目 = φ(n)。', 'φ(' + m.n + ') = ' + p.answer + '。'], en: ['The number of generators of Cₙ is φ(n).', 'φ(' + m.n + ') = ' + p.answer + '.'] };
+      case 'gradtopology':
+        return m.mode === 'discrete'
+          ? { zh: ['離散拓撲：所有子集都是開集。', '共 2^' + m.n + ' = ' + p.answer + ' 個。'], en: ['Discrete topology: every subset is open.', '2^' + m.n + ' = ' + p.answer + ' open sets.'] }
+          : { zh: ['含指定點 p 的子集有 2^(n−1) 個，再加空集。', '= 1 + 2^' + (m.n - 1) + ' = ' + p.answer + '。'], en: ['There are 2^(n−1) subsets containing p, plus the empty set.', '= 1 + 2^' + (m.n - 1) + ' = ' + p.answer + '.'] };
       default:
         return null;
     }

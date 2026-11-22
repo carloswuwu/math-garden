@@ -524,6 +524,39 @@ var __MathCoreBundle = (() => {
     linalg2: function(m) {
       return m.mode === "det" ? m.a * m.d - m.b * m.c : m.a * m.e + m.b * m.g;
     },
+    gradanalysis: function(m) {
+      if (m.mode === "limit") return m.a / m.c;
+      return m.first * m.den / (m.den - 1);
+    },
+    gradalgebra: function(m) {
+      if (m.mode === "order") {
+        var v = 1;
+        for (var i = 1; i <= m.p; i++) {
+          v = v * m.a % m.p;
+          if (v === 1) return i;
+        }
+        return 1;
+      }
+      if (m.mode === "symmetric") {
+        var f = 1;
+        for (var j = 2; j <= m.n; j++) f *= j;
+        return f;
+      }
+      var count = 0;
+      for (var k = 1; k <= m.n; k++) {
+        var a = m.n, b = k;
+        while (b) {
+          var t = a % b;
+          a = b;
+          b = t;
+        }
+        if (a === 1) count++;
+      }
+      return count;
+    },
+    gradtopology: function(m) {
+      return m.mode === "discrete" ? Math.pow(2, m.n) : 1 + Math.pow(2, m.n - 1);
+    },
     fraccompare: function(m) {
       if (m.mode === "simplify") return { n: m.n, d: m.d };
       if (m.mode === "expand") return m.n * m.k;
@@ -4271,6 +4304,106 @@ var __MathCoreBundle = (() => {
       hint: { zh: "先判斷運算次序；小數點要對齊（加減）或先當整數算（乘除）。", en: "Decide the operation first; line up decimal points (add/sub) or calculate as whole numbers (×/÷)." }
     };
   }
+  function genGradanalysis(rng, o) {
+    var mode = pick(rng, ["limit", "series"]);
+    if (mode === "limit") {
+      var c = randInt(rng, 2, 5);
+      var k = randInt(rng, 2, 9);
+      var a = c * k;
+      var b = randInt(rng, 1, 9), d = randInt(rng, 1, 9);
+      return {
+        type: "gradanalysis",
+        prompt: { zh: "求 $\\displaystyle\\lim_{n\\to\\infty}\\frac{" + a + "n + " + b + "}{" + c + "n + " + d + "}$。", en: "Find $\\displaystyle\\lim_{n\\to\\infty}\\frac{" + a + "n + " + b + "}{" + c + "n + " + d + "}$." },
+        visual: null,
+        answer: k,
+        math: { op: "gradanalysis", mode, a, b, c, d },
+        hint: { zh: "分子分母同除以 n，常數項趨近 0，極限是最高次項係數之比。", en: "Divide top and bottom by n; constants vanish, so the limit is the ratio of leading coefficients." }
+      };
+    }
+    var den = randInt(rng, 2, 5);
+    var kk = randInt(rng, 1, 5);
+    var first = (den - 1) * kk;
+    var sum = first * den / (den - 1);
+    return {
+      type: "gradanalysis",
+      prompt: { zh: "求無窮等比級數 $\\displaystyle\\sum_{n=0}^{\\infty} " + first + "\\left(\\frac{1}{" + den + "}\\right)^n$ 的和。", en: "Find the sum of the infinite geometric series $\\displaystyle\\sum_{n=0}^{\\infty} " + first + "\\left(\\frac{1}{" + den + "}\\right)^n$." },
+      visual: null,
+      answer: sum,
+      math: { op: "gradanalysis", mode, first, den },
+      hint: { zh: "無窮等比級數和 = 首項 ÷ (1 − 公比)。", en: "Sum = first term ÷ (1 − common ratio)." }
+    };
+  }
+  function eulerPhiG(n) {
+    var count = 0;
+    for (var k = 1; k <= n; k++) {
+      var a = n, b = k;
+      while (b) {
+        var t = a % b;
+        a = b;
+        b = t;
+      }
+      if (a === 1) count++;
+    }
+    return count;
+  }
+  function genGradalgebra(rng, o) {
+    var mode = pick(rng, ["order", "symmetric", "generators"]);
+    if (mode === "order") {
+      var p = pick(rng, [5, 7, 11, 13]);
+      var a = randInt(rng, 2, p - 1);
+      var order = 0, v = 1;
+      for (var i = 1; i <= p; i++) {
+        v = v * a % p;
+        if (v === 1) {
+          order = i;
+          break;
+        }
+      }
+      return {
+        type: "gradalgebra",
+        prompt: { zh: "在乘法群 $(\\mathbb{Z}/" + p + "\\mathbb{Z})^\\times$ 中，元素 " + a + " 的階是多少？", en: "In the multiplicative group $(\\mathbb{Z}/" + p + "\\mathbb{Z})^\\times$, what is the order of " + a + "?" },
+        visual: null,
+        answer: order,
+        math: { op: "gradalgebra", mode, p, a },
+        hint: { zh: "階是最小的正整數 k 使 aᵏ ≡ 1 (mod p)。", en: "The order is the smallest positive k with aᵏ ≡ 1 (mod p)." }
+      };
+    }
+    if (mode === "symmetric") {
+      var n = randInt(rng, 3, 6);
+      var fact = 1;
+      for (var j = 2; j <= n; j++) fact *= j;
+      return {
+        type: "gradalgebra",
+        prompt: { zh: "對稱群 $S_{" + n + "}$ 有多少個元素？", en: "How many elements does the symmetric group $S_{" + n + "}$ have?" },
+        visual: null,
+        answer: fact,
+        math: { op: "gradalgebra", mode, n },
+        hint: { zh: "|Sₙ| = n!。", en: "|Sₙ| = n!." }
+      };
+    }
+    var m = pick(rng, [5, 7, 8, 9, 10, 12]);
+    return {
+      type: "gradalgebra",
+      prompt: { zh: "循環群 $C_{" + m + "}$ 有多少個生成元？", en: "How many generators does the cyclic group $C_{" + m + "}$ have?" },
+      visual: null,
+      answer: eulerPhiG(m),
+      math: { op: "gradalgebra", mode, n: m },
+      hint: { zh: "生成元數目 = φ(n)，即 1..n 中與 n 互質的數的個數。", en: "Number of generators = φ(n), the count of 1..n coprime to n." }
+    };
+  }
+  function genGradtopology(rng, o) {
+    var mode = pick(rng, ["discrete", "particular"]);
+    var n = randInt(rng, 2, 9);
+    var answer = mode === "discrete" ? Math.pow(2, n) : 1 + Math.pow(2, n - 1);
+    return {
+      type: "gradtopology",
+      prompt: mode === "discrete" ? { zh: "在 " + n + " 個元素的集合上取離散拓撲，共有多少個開集？", en: "On a set with " + n + " elements, how many open sets are there in the discrete topology?" } : { zh: "在 " + n + " 個元素的集合上取特定點拓撲（開集為 ∅ 及所有含指定點 p 的子集），共有多少個開集？", en: "On a set with " + n + " elements, take the particular-point topology (open sets: ∅ and every subset containing p). How many open sets are there?" },
+      visual: null,
+      answer,
+      math: { op: "gradtopology", mode, n },
+      hint: { zh: mode === "discrete" ? "離散拓撲中每個子集都是開集，共 2ⁿ 個。" : "含 p 的子集有 2ⁿ⁻¹ 個，再加空集。", en: mode === "discrete" ? "Every subset is open in the discrete topology, giving 2ⁿ open sets." : "There are 2ⁿ⁻¹ subsets containing p, plus the empty set." }
+    };
+  }
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -4391,7 +4524,10 @@ var __MathCoreBundle = (() => {
     ode: genOde,
     numtheory: genNumtheory,
     fraccompare: genFraccompare,
-    decimalmixed: genDecimalmixed
+    decimalmixed: genDecimalmixed,
+    gradanalysis: genGradanalysis,
+    gradalgebra: genGradalgebra,
+    gradtopology: genGradtopology
   };
 
   // src/core/format.js
@@ -5624,6 +5760,15 @@ var __MathCoreBundle = (() => {
       case "decimalmixed":
         if (m.mode === "add" || m.mode === "sub") return { zh: ["小數點對齊，再逐位計算。", "= " + fmtDecimal(m.r) + "。"], en: ["Line up the decimal points and calculate column by column.", "= " + fmtDecimal(m.r) + "."] };
         return { zh: ["先當整數計算，再點回小數點。", "= " + fmtDecimal(m.r) + "。"], en: ["Calculate as whole numbers, then place the decimal point.", "= " + fmtDecimal(m.r) + "."] };
+      case "gradanalysis":
+        if (m.mode === "limit") return { zh: ["分子分母同除以 n。", "最高次項係數比 = " + m.a + " ÷ " + m.c + " = " + p.answer + "。"], en: ["Divide numerator and denominator by n.", "Ratio of leading coefficients = " + m.a + " ÷ " + m.c + " = " + p.answer + "."] };
+        return { zh: ["無窮等比級數和 = 首項 ÷ (1 − 公比)。", "= " + m.first + " ÷ (1 − 1/" + m.den + ") = " + p.answer + "。"], en: ["Infinite geometric sum = first term ÷ (1 − ratio).", "= " + m.first + " ÷ (1 − 1/" + m.den + ") = " + p.answer + "."] };
+      case "gradalgebra":
+        if (m.mode === "order") return { zh: ["逐次乘 " + m.a + " 並取模 " + m.p + "。", "第一次回到 1 的次數就是階：" + p.answer + "。"], en: ["Multiply by " + m.a + " repeatedly modulo " + m.p + ".", "The first return to 1 gives the order: " + p.answer + "."] };
+        if (m.mode === "symmetric") return { zh: ["n 個元素的排列數是 n!。", p.answer + " 個元素。"], en: ["The number of permutations of n elements is n!.", p.answer + " elements."] };
+        return { zh: ["循環群 Cₙ 的生成元數目 = φ(n)。", "φ(" + m.n + ") = " + p.answer + "。"], en: ["The number of generators of Cₙ is φ(n).", "φ(" + m.n + ") = " + p.answer + "."] };
+      case "gradtopology":
+        return m.mode === "discrete" ? { zh: ["離散拓撲：所有子集都是開集。", "共 2^" + m.n + " = " + p.answer + " 個。"], en: ["Discrete topology: every subset is open.", "2^" + m.n + " = " + p.answer + " open sets."] } : { zh: ["含指定點 p 的子集有 2^(n−1) 個，再加空集。", "= 1 + 2^" + (m.n - 1) + " = " + p.answer + "。"], en: ["There are 2^(n−1) subsets containing p, plus the empty set.", "= 1 + 2^" + (m.n - 1) + " = " + p.answer + "."] };
       default:
         return null;
     }
@@ -5681,7 +5826,7 @@ var __MathCoreBundle = (() => {
   }
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
-    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory"].indexOf(p.type) !== -1) {
+    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory", "gradanalysis", "gradalgebra", "gradtopology"].indexOf(p.type) !== -1) {
       return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
     }
     if (p.type === "quadsolve") return 120;

@@ -730,6 +730,40 @@
       levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
     },
+    /* ===================== 研究院 ===================== */
+    "grad.analysis": {
+      id: "grad.analysis",
+      stage: "grad",
+      order: 1,
+      zh: { name: "實分析", goal: "會求數列極限與無窮等比級數的和。" },
+      en: { name: "Real Analysis", goal: "Find limits of sequences and sums of infinite geometric series." },
+      lesson: "grad.analysis",
+      types: ["gradanalysis"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    "grad.algebra": {
+      id: "grad.algebra",
+      stage: "grad",
+      order: 2,
+      zh: { name: "抽象代數", goal: "會求群元素的階、對稱群大小與循環群的生成元數。" },
+      en: { name: "Abstract Algebra", goal: "Find element orders, symmetric-group sizes and numbers of cyclic generators." },
+      lesson: "grad.algebra",
+      types: ["gradalgebra"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    "grad.topology": {
+      id: "grad.topology",
+      stage: "grad",
+      order: 3,
+      zh: { name: "拓撲學", goal: "會數有限集合上離散拓撲與特定點拓撲的開集數。" },
+      en: { name: "Topology", goal: "Count open sets in discrete and particular-point topologies on finite sets." },
+      lesson: "grad.topology",
+      types: ["gradtopology"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
     /* ===================== 中學與大學增補（二） ===================== */
     "ms.s2.identity": {
       id: "ms.s2.identity",
@@ -1715,6 +1749,19 @@
         { id: "col.lin", zh: "線性代數", en: "Linear Algebra", skills: ["col.linalg", "col.linalg2"] },
         { id: "col.prob", zh: "概率統計", en: "Statistics", skills: ["col.prob", "col.stats2"] },
         { id: "col.nt", zh: "數論", en: "Number Theory", skills: ["col.nt"] }
+      ]
+    },
+    {
+      id: "grad",
+      zh: "研究院",
+      en: "Graduate School",
+      desc: { zh: "實分析、抽象代數、拓撲學", en: "Real analysis, abstract algebra, topology" },
+      color: "#5E5E7A",
+      emoji: "🎓",
+      topics: [
+        { id: "grad.analysis.t", zh: "實分析", en: "Real Analysis", skills: ["grad.analysis"] },
+        { id: "grad.algebra.t", zh: "抽象代數", en: "Abstract Algebra", skills: ["grad.algebra"] },
+        { id: "grad.topology.t", zh: "拓撲學", en: "Topology", skills: ["grad.topology"] }
       ]
     },
     {

@@ -240,6 +240,30 @@ var MATH_SPEC = {
     return m.mode === 'defint' ? m.a * Math.pow(m.b, m.n + 1) / (m.n + 1) : m.a * m.n * Math.pow(m.x, m.n - 1);
   },
   linalg2: function (m) { return m.mode === 'det' ? m.a * m.d - m.b * m.c : m.a * m.e + m.b * m.g; },
+  gradanalysis: function (m) {
+    if (m.mode === 'limit') return m.a / m.c;
+    return m.first * m.den / (m.den - 1);
+  },
+  gradalgebra: function (m) {
+    if (m.mode === 'order') {
+      var v = 1;
+      for (var i = 1; i <= m.p; i++) { v = (v * m.a) % m.p; if (v === 1) return i; }
+      return 1;
+    }
+    if (m.mode === 'symmetric') {
+      var f = 1;
+      for (var j = 2; j <= m.n; j++) f *= j;
+      return f;
+    }
+    var count = 0;
+    for (var k = 1; k <= m.n; k++) {
+      var a = m.n, b = k;
+      while (b) { var t = a % b; a = b; b = t; }
+      if (a === 1) count++;
+    }
+    return count;
+  },
+  gradtopology: function (m) { return m.mode === 'discrete' ? Math.pow(2, m.n) : 1 + Math.pow(2, m.n - 1); },
   fraccompare: function (m) {
     if (m.mode === 'simplify') return { n: m.n, d: m.d };
     if (m.mode === 'expand') return m.n * m.k;

@@ -1941,6 +1941,101 @@
       if (L[key][lang] && !L[key][lang].visual) L[key][lang].visual = visual;
     });
   });
+  var GRAD_LESSONS = {
+    "grad.analysis": {
+      zh: {
+        title: "實分析",
+        intro: "實分析研究極限、連續與收斂；數列極限看 n 很大時的趋势，無窮級數則是無窮多項的和。",
+        steps: ["有理函數的極限：分子分母同除以最高次冪。", "只看最高次項的係數比。", "無窮等比級數（|r|<1）和 = 首項 ÷ (1 − r)。"],
+        example: "lim (4n+3)/(2n+5) = 4/2 = 2；Σ 3(1/2)ⁿ = 3 ÷ (1−1/2) = 6。",
+        tip: "常數項在 n→∞ 時趨近 0，不影響極限。",
+        mistake: "把低次項也代入 n→∞，或忘記等比級數要求 |r|<1。",
+        visual: null,
+        glossary: [
+          { term: "極限", def: "n 趨向無窮時數列趨近的值。" },
+          { term: "收斂", def: "數列或級數有有限極限。" },
+          { term: "等比級數", def: "相鄰項比值固定的級數。" }
+        ]
+      },
+      en: {
+        title: "Real Analysis",
+        intro: "Real analysis studies limits, continuity and convergence; a sequence limit is the long-run value, and a series is an infinite sum.",
+        steps: ["For a rational limit, divide numerator and denominator by the highest power of n.", "Keep only the ratio of leading coefficients.", "For an infinite geometric series with |r|<1, sum = first term ÷ (1 − r)."],
+        example: "lim (4n+3)/(2n+5) = 4/2 = 2; Σ 3(1/2)ⁿ = 3 ÷ (1−1/2) = 6.",
+        tip: "Constant terms vanish as n→∞, so they do not affect the limit.",
+        mistake: "Substituting n→∞ into lower-order terms, or forgetting |r|<1 for geometric series.",
+        visual: null,
+        glossary: [
+          { term: "Limit", def: "The value a sequence approaches as n grows." },
+          { term: "Convergence", def: "A sequence or series has a finite limit." },
+          { term: "Geometric series", def: "A series with a constant ratio between terms." }
+        ]
+      }
+    },
+    "grad.algebra": {
+      zh: {
+        title: "抽象代數",
+        intro: "抽象代數用公理研究群、環、域；群元素的階是回到單位元所需的最少次數。",
+        steps: ["元素 a 的階：最小正整數 k 使 aᵏ = e。", "對稱群 Sₙ 有 n! 個元素。", "循環群 Cₙ 的生成元數目是 φ(n)。"],
+        example: "在 (ℤ/7ℤ)× 中，2 的階是 3（2³=8≡1）；C₈ 有 φ(8)=4 個生成元。",
+        tip: "階必定整除群的階（拉格朗日定理）。",
+        mistake: "把群的階和元素的階混為一談。",
+        visual: null,
+        glossary: [
+          { term: "群", def: "有結合律、單位元和反元素的集合。" },
+          { term: "元素的階", def: "使 aᵏ = e 的最小正整數 k。" },
+          { term: "生成元", def: "能生成整個循環群的元素。" }
+        ]
+      },
+      en: {
+        title: "Abstract Algebra",
+        intro: "Abstract algebra studies groups, rings and fields axiomatically; the order of an element is the least power returning to the identity.",
+        steps: ["Order of a: least positive k with aᵏ = e.", "The symmetric group Sₙ has n! elements.", "The cyclic group Cₙ has φ(n) generators."],
+        example: "In (ℤ/7ℤ)×, the order of 2 is 3 since 2³=8≡1; C₈ has φ(8)=4 generators.",
+        tip: "An element’s order divides the group order (Lagrange).",
+        mistake: "Confusing the order of a group with the order of an element.",
+        visual: null,
+        glossary: [
+          { term: "Group", def: "A set with an associative operation, identity and inverses." },
+          { term: "Order of an element", def: "The least positive k with aᵏ = e." },
+          { term: "Generator", def: "An element that generates the whole cyclic group." }
+        ]
+      }
+    },
+    "grad.topology": {
+      zh: {
+        title: "拓撲學",
+        intro: "拓撲學研究「開集」結構；同一個集合可以定義不同的拓撲，開集數目也不同。",
+        steps: ["離散拓撲：所有子集都是開集，共 2ⁿ 個。", "特定點拓撲：開集為 ∅ 及所有含 p 的子集。", "含 p 的子集有 2ⁿ⁻¹ 個，再加空集。"],
+        example: "3 個元素的集合：離散拓撲有 8 個開集；特定點拓撲有 1+4=5 個。",
+        tip: "開集族必須包含 ∅、全集，並對任意並集和有限交集封閉。",
+        mistake: "把「開集」當成「開區間」，或忘記空集和全集也要算。",
+        visual: null,
+        glossary: [
+          { term: "拓撲", def: "滿足開集公理的子集族。" },
+          { term: "離散拓撲", def: "所有子集都是開集。" },
+          { term: "特定點拓撲", def: "開集為空集及所有含指定點的集合。" }
+        ]
+      },
+      en: {
+        title: "Topology",
+        intro: "Topology studies open-set structures; the same set can carry different topologies with different numbers of open sets.",
+        steps: ["Discrete topology: every subset is open, so 2ⁿ open sets.", "Particular-point topology: ∅ and all subsets containing p.", "There are 2ⁿ⁻¹ subsets containing p, plus the empty set."],
+        example: "On a 3-element set: discrete topology has 8 open sets; particular-point topology has 1+4=5.",
+        tip: "A topology contains ∅ and the whole set and is closed under arbitrary unions and finite intersections.",
+        mistake: "Treating “open set” as “open interval”, or forgetting ∅ and the whole set.",
+        visual: null,
+        glossary: [
+          { term: "Topology", def: "A family of subsets satisfying the open-set axioms." },
+          { term: "Discrete topology", def: "Every subset is open." },
+          { term: "Particular-point topology", def: "Open sets are ∅ and all sets containing a fixed point." }
+        ]
+      }
+    }
+  };
+  Object.keys(GRAD_LESSONS).forEach(function(key) {
+    L[key] = GRAD_LESSONS[key];
+  });
 
   // data-entry.js
   (typeof window !== "undefined" ? window : globalThis).Lessons = L;

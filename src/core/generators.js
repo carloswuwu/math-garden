@@ -3587,6 +3587,108 @@ import { fmtDecimal, fmtNum } from './display.js';
     };
   }
 
+
+  /* ---------------- 研究院：實分析、抽象代數、拓撲學 ---------------- */
+
+  function genGradanalysis(rng, o) {
+    var mode = pick(rng, ['limit', 'series']);
+    if (mode === 'limit') {
+      var c = randInt(rng, 2, 5);
+      var k = randInt(rng, 2, 9);
+      var a = c * k;
+      var b = randInt(rng, 1, 9), d = randInt(rng, 1, 9);
+      return {
+        type: 'gradanalysis',
+        prompt: { zh: '求 $\\displaystyle\\lim_{n\\to\\infty}\\frac{' + a + 'n + ' + b + '}{' + c + 'n + ' + d + '}$。', en: 'Find $\\displaystyle\\lim_{n\\to\\infty}\\frac{' + a + 'n + ' + b + '}{' + c + 'n + ' + d + '}$.' },
+        visual: null,
+        answer: k,
+        math: { op: 'gradanalysis', mode: mode, a: a, b: b, c: c, d: d },
+        hint: { zh: '分子分母同除以 n，常數項趨近 0，極限是最高次項係數之比。', en: 'Divide top and bottom by n; constants vanish, so the limit is the ratio of leading coefficients.' }
+      };
+    }
+    var den = randInt(rng, 2, 5);
+    var kk = randInt(rng, 1, 5);
+    var first = (den - 1) * kk;
+    var sum = first * den / (den - 1);
+    return {
+      type: 'gradanalysis',
+      prompt: { zh: '求無窮等比級數 $\\displaystyle\\sum_{n=0}^{\\infty} ' + first + '\\left(\\frac{1}{' + den + '}\\right)^n$ 的和。', en: 'Find the sum of the infinite geometric series $\\displaystyle\\sum_{n=0}^{\\infty} ' + first + '\\left(\\frac{1}{' + den + '}\\right)^n$.' },
+      visual: null,
+      answer: sum,
+      math: { op: 'gradanalysis', mode: mode, first: first, den: den },
+      hint: { zh: '無窮等比級數和 = 首項 ÷ (1 − 公比)。', en: 'Sum = first term ÷ (1 − common ratio).' }
+    };
+  }
+
+  function eulerPhiG(n) {
+    var count = 0;
+    for (var k = 1; k <= n; k++) {
+      var a = n, b = k;
+      while (b) { var t = a % b; a = b; b = t; }
+      if (a === 1) count++;
+    }
+    return count;
+  }
+
+  function genGradalgebra(rng, o) {
+    var mode = pick(rng, ['order', 'symmetric', 'generators']);
+    if (mode === 'order') {
+      var p = pick(rng, [5, 7, 11, 13]);
+      var a = randInt(rng, 2, p - 1);
+      var order = 0, v = 1;
+      for (var i = 1; i <= p; i++) {
+        v = (v * a) % p;
+        if (v === 1) { order = i; break; }
+      }
+      return {
+        type: 'gradalgebra',
+        prompt: { zh: '在乘法群 $(\\mathbb{Z}/' + p + '\\mathbb{Z})^\\times$ 中，元素 ' + a + ' 的階是多少？', en: 'In the multiplicative group $(\\mathbb{Z}/' + p + '\\mathbb{Z})^\\times$, what is the order of ' + a + '?' },
+        visual: null,
+        answer: order,
+        math: { op: 'gradalgebra', mode: mode, p: p, a: a },
+        hint: { zh: '階是最小的正整數 k 使 aᵏ ≡ 1 (mod p)。', en: 'The order is the smallest positive k with aᵏ ≡ 1 (mod p).' }
+      };
+    }
+    if (mode === 'symmetric') {
+      var n = randInt(rng, 3, 6);
+      var fact = 1;
+      for (var j = 2; j <= n; j++) fact *= j;
+      return {
+        type: 'gradalgebra',
+        prompt: { zh: '對稱群 $S_{' + n + '}$ 有多少個元素？', en: 'How many elements does the symmetric group $S_{' + n + '}$ have?' },
+        visual: null,
+        answer: fact,
+        math: { op: 'gradalgebra', mode: mode, n: n },
+        hint: { zh: '|Sₙ| = n!。', en: '|Sₙ| = n!.' }
+      };
+    }
+    var m = pick(rng, [5, 7, 8, 9, 10, 12]);
+    return {
+      type: 'gradalgebra',
+      prompt: { zh: '循環群 $C_{' + m + '}$ 有多少個生成元？', en: 'How many generators does the cyclic group $C_{' + m + '}$ have?' },
+      visual: null,
+      answer: eulerPhiG(m),
+      math: { op: 'gradalgebra', mode: mode, n: m },
+      hint: { zh: '生成元數目 = φ(n)，即 1..n 中與 n 互質的數的個數。', en: 'Number of generators = φ(n), the count of 1..n coprime to n.' }
+    };
+  }
+
+  function genGradtopology(rng, o) {
+    var mode = pick(rng, ['discrete', 'particular']);
+    var n = randInt(rng, 2, 9);
+    var answer = mode === 'discrete' ? Math.pow(2, n) : 1 + Math.pow(2, n - 1);
+    return {
+      type: 'gradtopology',
+      prompt: mode === 'discrete'
+        ? { zh: '在 ' + n + ' 個元素的集合上取離散拓撲，共有多少個開集？', en: 'On a set with ' + n + ' elements, how many open sets are there in the discrete topology?' }
+        : { zh: '在 ' + n + ' 個元素的集合上取特定點拓撲（開集為 ∅ 及所有含指定點 p 的子集），共有多少個開集？', en: 'On a set with ' + n + ' elements, take the particular-point topology (open sets: ∅ and every subset containing p). How many open sets are there?' },
+      visual: null,
+      answer: answer,
+      math: { op: 'gradtopology', mode: mode, n: n },
+      hint: { zh: mode === 'discrete' ? '離散拓撲中每個子集都是開集，共 2ⁿ 個。' : '含 p 的子集有 2ⁿ⁻¹ 個，再加空集。', en: mode === 'discrete' ? 'Every subset is open in the discrete topology, giving 2ⁿ open sets.' : 'There are 2ⁿ⁻¹ subsets containing p, plus the empty set.' }
+    };
+  }
+
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -3707,7 +3809,10 @@ import { fmtDecimal, fmtNum } from './display.js';
     ode: genOde,
     numtheory: genNumtheory,
     fraccompare: genFraccompare,
-    decimalmixed: genDecimalmixed
+    decimalmixed: genDecimalmixed,
+    gradanalysis: genGradanalysis,
+    gradalgebra: genGradalgebra,
+    gradtopology: genGradtopology
   };
 
 export { GENERATORS, DIR_LABEL, CENTRE_LABEL };

@@ -352,7 +352,7 @@ import { app } from './context.js';
     var rng = MathCore.seedRandom(Date.now() & 0xffffffff);
     var exam = MathCore.composeExam(skills, n, {
       rng: rng,
-      maxPerSkill: 3,
+      maxPerSkill: Math.max(3, Math.ceil((n || 20) / skills.length)),
       stepFor: function (skill) {
         var levels = Math.max(1, (skill.levels || []).length);
         var top = levels - 1;
