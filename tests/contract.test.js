@@ -63,7 +63,7 @@ const CJK = /[\u4e00-\u9fff]/;
   check(coreRoot.indexOf('module.exports') !== -1 && coreRoot.indexOf('root.MathCore') !== -1, 'math-core.js 應保留 UMD（Node require + window.MathCore）');
 
   /* Stage E：UI ESM 來源（src/ui）與生成的 classic app.js wrapper */
-  ['index', 'globals', 'format', 'router'].forEach((name) => {
+  ['index', 'globals', 'format', 'router', 'state', 'i18n', 'selectors', 'visual', 'dom', 'a11y', 'context', 'screens', 'assessment', 'session', 'nav-state', 'modal-state', 'nav', 'chrome', 'dialog', 'sw-state', 'sw', 'keyboard'].forEach((name) => {
     const p = path.join(ROOT, 'src', 'ui', name + '.js');
     check(fs.existsSync(p), '缺少 ESM UI 模組 src/ui/' + name + '.js');
     check(/export\s/.test(fs.readFileSync(p, 'utf8')), 'src/ui/' + name + '.js 應是 ESM 匯出');

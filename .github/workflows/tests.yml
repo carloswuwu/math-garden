@@ -38,3 +38,5 @@ jobs:
         run: node tests/a11y.test.js
       - name: Performance budgets (engine p95, render, bundle/precache sizes)
         run: node tests/perf.test.js
+      - name: Lighthouse accessibility (real Chrome, a11y >= 0.95)
+        run: npm run lighthouse

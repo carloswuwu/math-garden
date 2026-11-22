@@ -46,11 +46,23 @@ const M = require('../math-core.js');
 const C = ctx.Curriculum;
 const skills = Object.values(C.skills).filter((s) => !s.scaffold && (s.types || []).length);
 
+function loadAppScript(w) {
+  /* Phase 5：優先載入建置後的單一 IIFE（dist/app.<hash>.js）；未建置時才退回 7 個 root wrappers。 */
+  const distIndex = path.join(ROOT, 'dist', 'index.html');
+  if (fs.existsSync(distIndex)) {
+    const m = fs.readFileSync(distIndex, 'utf8').match(/src="(app\.[0-9a-f]+\.js)"/);
+    if (m && fs.existsSync(path.join(ROOT, 'dist', m[1]))) {
+      w.eval(fs.readFileSync(path.join(ROOT, 'dist', m[1]), 'utf8'));
+      return;
+    }
+  }
+  loadAppScript(w);
+}
 function boot() {
   const dom = new JSDOM(HTML, { runScripts: 'dangerously', url: 'http://localhost/' });
   const w = dom.window;
   w.scrollTo = function () {};
-  SCRIPTS.forEach((f) => w.eval(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+  loadAppScript(w);
   return { w, d: w.document };
 }
 
@@ -109,7 +121,7 @@ function boot() {
   const w = dom.window, d = w.document;
   w.scrollTo = function () {};
   w.localStorage.setItem('mathpath.progress.v1', seed);
-  SCRIPTS.forEach((f) => w.eval(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+  loadAppScript(w);
   const routes = [
     { screen: 'home' },
     { screen: 'stage', stageId: 'g6' },

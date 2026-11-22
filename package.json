@@ -5,7 +5,8 @@
   "description": "Math Garden — bilingual offline-first math PWA. Build with esbuild; tests live in tests/.",
   "scripts": {
     "build": "node tools/build.js",
-    "test": "node tests/core.test.js && node tests/ui.test.js && node tests/generators.test.js && node tests/contract.test.js && node tests/a11y.test.js && node tests/perf.test.js"
+    "test": "node tests/core.test.js && node tests/ui.test.js && node tests/generators.test.js && node tests/contract.test.js && node tests/a11y.test.js && node tests/perf.test.js",
+    "lighthouse": "node tools/lighthouse-check.js"
   },
   "devDependencies": {
     "esbuild": "0.28.2"

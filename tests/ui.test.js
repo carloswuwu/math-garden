@@ -13,6 +13,18 @@ let checks = 0;
 function check(cond, msg) { checks++; assert.ok(cond, msg); }
 function sleep(ms) { return new Promise((r) => setTimeout(r, ms)); }
 
+function loadAppScript(w) {
+  /* Phase 5：優先載入建置後的單一 IIFE（dist/app.<hash>.js）；未建置時才退回 7 個 root wrappers。 */
+  const distIndex = path.join(ROOT, 'dist', 'index.html');
+  if (fs.existsSync(distIndex)) {
+    const m = fs.readFileSync(distIndex, 'utf8').match(/src="(app\.[0-9a-f]+\.js)"/);
+    if (m && fs.existsSync(path.join(ROOT, 'dist', m[1]))) {
+      w.eval(fs.readFileSync(path.join(ROOT, 'dist', m[1]), 'utf8'));
+      return;
+    }
+  }
+  loadAppScript(w);
+}
 function boot(seedProgress, opts) {
   opts = opts || {};
   const dom = new JSDOM(HTML, { runScripts: 'dangerously', url: opts.url || 'http://localhost/' });
@@ -20,7 +32,7 @@ function boot(seedProgress, opts) {
   w.scrollTo = function () {}; // jsdom 未實現，樁掉
   if (seedProgress) w.localStorage.setItem('mathpath.progress.v1', seedProgress);
   if (opts.session) w.sessionStorage.setItem('mathpath.session.v1', opts.session);
-  SCRIPTS.forEach((f) => w.eval(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+  loadAppScript(w);
   return { dom, w, d: w.document };
 }
 
