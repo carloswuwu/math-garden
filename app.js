@@ -1894,10 +1894,7 @@
     navigate(parent || HOME_ROUTE);
   }
 
-  // src/ui/index.js
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
+  // src/ui/chrome.js
   function applyTheme() {
     document.documentElement.setAttribute("data-theme", state.theme || "light");
   }
@@ -1913,7 +1910,6 @@
     var langBtn = $("langBtn");
     if (langBtn) langBtn.setAttribute("aria-label", state.lang === "zh" ? t("a11y.languageZh") : t("a11y.languageEn"));
   }
-  var audioCtx = null;
   function playTone(ok) {
     if (!state.sound) return;
     try {
@@ -1970,6 +1966,28 @@
     progress.streak.lastDay = day;
     saveProgress();
   }
+  function bindTopbar() {
+    $("backBtn").addEventListener("click", back);
+    $("langBtn").addEventListener("click", toggleLang);
+    $("settingsBtn").addEventListener("click", function() {
+      navigate({ screen: "settings" });
+    });
+    var chip = $("updateChip");
+    if (chip) chip.addEventListener("click", app.acceptUpdate);
+  }
+  function toggleLang() {
+    state.lang = state.lang === "zh" ? "en" : "zh";
+    progress.lang = state.lang;
+    app.saveProgress();
+    app.applyLang();
+    renderRouteSafely(currentRoute());
+    app.updateTopbar();
+  }
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  // src/ui/index.js
   function handlePracticeKeys(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (isTypingTarget(e.target)) return;
@@ -2164,15 +2182,6 @@
       if (!restoreFocus(opener)) focusScreen();
     });
   }
-  function bindTopbar() {
-    $("backBtn").addEventListener("click", back);
-    $("langBtn").addEventListener("click", toggleLang);
-    $("settingsBtn").addEventListener("click", function() {
-      navigate({ screen: "settings" });
-    });
-    var chip = $("updateChip");
-    if (chip) chip.addEventListener("click", acceptUpdate);
-  }
   var updateState = { worker: null, accepted: false };
   function showUpdateChip(waiting) {
     updateState.worker = waiting || null;
@@ -2245,14 +2254,6 @@
       });
     }).then(done).catch(done);
   }
-  function toggleLang() {
-    state.lang = state.lang === "zh" ? "en" : "zh";
-    progress.lang = state.lang;
-    app.saveProgress();
-    app.applyLang();
-    renderRouteSafely(currentRoute());
-    app.updateTopbar();
-  }
   function init() {
     bindTopbar();
     applyTheme();
@@ -2324,7 +2325,8 @@
     resolveRoute,
     writeHash,
     closeModal,
-    init
+    init,
+    acceptUpdate
   });
   init();
   window.__mathApp = {
