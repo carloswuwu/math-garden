@@ -1,13 +1,14 @@
 /* 由 tools/build.js 生成 —— 請勿手改；改 tools/sw-template.js 後重新 build。 */
-const CACHE = 'math-garden-ce7a35e17108';
+const CACHE = 'math-garden-8ec549231a6c';
 const NAV_TIMEOUT_MS = 3000;
 const ASSETS = [
-  './app.ce7a35e17108.js',
+  './app.8ec549231a6c.js',
   './apple-touch-icon.png',
   './icon-192.png',
   './icon-512.png',
   './icon.ico',
   './index.html',
+  './lessons.8ec549231a6c.js',
   './manifest.webmanifest',
   './style.css',
   './vendor/katex/fonts/KaTeX_AMS-Regular.woff2',
@@ -34,7 +35,7 @@ const ASSETS = [
   './vendor/katex/katex.min.js'
 ];
 
-const VERSIONED = /\/app\.[0-9a-f]+\.js$/;
+const VERSIONED = /\/(?:app|lessons)\.[0-9a-f]+\.js$/;
 
 function isNavigation(req) {
   return req.mode === 'navigate' ||

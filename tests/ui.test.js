@@ -25,6 +25,18 @@ function loadAppScript(w) {
   }
   loadAppScript(w);
 }
+
+/* 課堂文字是 lazy chunk；正常使用時會在小課堂前載入，這裡模擬已載入的狀態。
+ * 未建置（root wrappers）時 lessons.js 已同步載入，直接略過。 */
+function loadLessonsChunk(w) {
+  const distIndex = path.join(ROOT, 'dist', 'index.html');
+  if (!fs.existsSync(distIndex)) return;
+  const m = fs.readFileSync(distIndex, 'utf8').match(/name="math-garden-lessons" content="([^"]+)"/);
+  if (m && fs.existsSync(path.join(ROOT, 'dist', m[1]))) {
+    w.eval(fs.readFileSync(path.join(ROOT, 'dist', m[1]), 'utf8'));
+  }
+}
+
 function boot(seedProgress, opts) {
   opts = opts || {};
   const dom = new JSDOM(HTML, { runScripts: 'dangerously', url: opts.url || 'http://localhost/' });
@@ -33,6 +45,7 @@ function boot(seedProgress, opts) {
   if (seedProgress) w.localStorage.setItem('mathpath.progress.v1', seedProgress);
   if (opts.session) w.sessionStorage.setItem('mathpath.session.v1', opts.session);
   loadAppScript(w);
+  loadLessonsChunk(w);
   return { dom, w, d: w.document };
 }
 
@@ -510,7 +523,7 @@ async function main() {
   check(postedMessages.length === 1 && postedMessages[0].type === 'SKIP_WAITING', '確認更新送出 SKIP_WAITING');
   check(chipU.hidden, '確認後 chip 收起');
 
-  /* 30. dist 建置冒煙：成品只用 KaTeX + 單一 app bundle，全局與路由仍可用 */
+  /* 30. dist 建置冒煙：成品只用 KaTeX + 單一 boot bundle，課堂文字是 lazy chunk */
   const distIndexPath = path.join(ROOT, 'dist', 'index.html');
   if (!fs.existsSync(distIndexPath)) {
     console.log('… 跳過 dist 冒煙測試（先執行 npm run build）');
@@ -525,11 +538,25 @@ async function main() {
       dw.eval(fs.readFileSync(path.join(ROOT, 'dist', src), 'utf8'));
     });
     const dd = dw.document;
-    check(!!dw.__mathApp && !!dw.MathCore && !!dw.Curriculum && !!dw.Lessons, 'dist bundle 提供全部全局');
+    const lessonsMeta = dd.querySelector('meta[name="math-garden-lessons"]');
+    check(!!lessonsMeta && /^lessons\.[0-9a-f]{12}\.js$/.test(lessonsMeta.getAttribute('content')),
+      'dist index 應帶 lazy lessons chunk meta');
+    check(!!dw.__mathApp && !!dw.MathCore && !!dw.Curriculum, 'dist bundle 提供核心全局');
+    check(!dw.Lessons, '課堂文字不應在 boot bundle 內');
     check(dd.querySelectorAll('#screen-home .stage-card').length === 1, 'dist bundle 能渲染首頁');
     dw.__mathApp.navigate({ screen: 'stage', stageId: 'prek' });
     check(!dd.getElementById('screen-stage').hidden, 'dist bundle 的路由可用');
     check(!!dd.getElementById('updateChip'), 'dist index 帶更新 chip');
+
+    /* 30b. lazy 課堂：未載入 chunk 時先顯示載入卡，載入後重繪同一 route */
+    dw.__mathApp.navigate({ screen: 'lesson', skillId: 'prek.count' });
+    check(!dd.getElementById('screen-lesson').hidden, '未載入課堂 chunk 仍進入小課堂畫面');
+    check(dd.getElementById('screen-lesson').textContent.indexOf('載入中') !== -1, '未載入課堂 chunk 顯示載入中');
+    dw.eval(fs.readFileSync(path.join(ROOT, 'dist', lessonsMeta.getAttribute('content')), 'utf8'));
+    check(!!dw.Lessons, 'lessons chunk 提供 Lessons 全局');
+    dw.__mathApp.navigate({ screen: 'lesson', skillId: 'prek.count' });
+    check(dd.body.textContent.includes('數一數'), '載入 chunk 後可渲染課堂內容');
+    check(!!dd.getElementById('lessonPractice'), '載入後有小課堂行動按鈕');
   }
 
   /* 31. 組卷：固定種子下測驗/考試長度正確、題目互不重複、模板有變化 */

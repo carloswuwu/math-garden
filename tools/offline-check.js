@@ -82,10 +82,22 @@ function findChrome() {
     const heading = await offlinePage.$eval('#screen-home h1', (el) => el.textContent.trim());
     if (!heading) throw new Error('離線首頁沒有標題');
     const swCount = await offlinePage.evaluate(() => (navigator.serviceWorker.controller ? 1 : 0));
+
+    /* 冷啟動 + 直接開小課堂：課堂文字是 lazy chunk，必須由 SW precache 離線供應 */
+    const lessonPage = await browser.newPage();
+    await lessonPage.setOfflineMode(true);
+    await lessonPage.goto(url + '#/lesson/prek.count', { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await lessonPage.waitForSelector('#lessonPractice', { timeout: 30000 });
+    const lessonHeading = await lessonPage.$eval('#screen-lesson h1', (el) => el.textContent.trim());
+    if (!lessonHeading) throw new Error('離線小課堂沒有標題');
+    const lessonLoaded = await lessonPage.evaluate(() => !!window.Lessons && !!window.__mathApp);
+
     console.log('online title:  ' + titleOnline);
     console.log('offline title: ' + titleOffline);
     console.log('offline home:  ' + heading + ' (SW controller=' + swCount + ')');
-    console.log('✓ cold offline start renders from cache');
+    console.log('offline lesson: ' + lessonHeading + ' (lazy chunk loaded=' + lessonLoaded + ')');
+    if (!lessonLoaded) throw new Error('離線時 lessons lazy chunk 未能載入');
+    console.log('✓ cold offline start renders from cache (home + lazy lesson chunk)');
   } finally {
     await browser.close();
     server.close();

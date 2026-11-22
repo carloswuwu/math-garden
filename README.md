@@ -33,7 +33,7 @@
 任選一種方式：
 
 1. **雙擊 `play-math.bat`**（Windows）：優先打開建置後的 `dist/index.html`（沒有 dist 時退回開發用 `index.html`），在乾淨的桌面應用窗口裡打開，無需聯網。
-2. **雙擊 `dist/index.html` 或 `index.html`**：用任意瀏覽器直接打開（建置版是單一 bundle，載入更快）。
+2. **雙擊 `dist/index.html` 或 `index.html`**：用任意瀏覽器直接打開（建置版把課堂文字切成按需載入的 chunk，首屏更輕）。
 3. **安裝成 App（PWA）**：部署到 HTTPS（如 GitHub Pages）後，在 Chrome/Edge 裡點「安裝」，即可離線全屏使用；手機 / 平板也能添加到主屏幕。有新版本時會顯示「新版本」按鈕，確認後才重新載入。
 
 > 進度保存在瀏覽器本地（`localStorage`）；家長中心支持**導出 / 導入**進度，方便備份或換設備。
@@ -70,7 +70,7 @@
 | --- | --- |
 | `docs/PLAN.md` | 專案交接、架構現況、路線圖與 backlog（權威文件） |
 | `docs/architecture.md` | 現行架構地圖：執行拓樸、模組、路由／狀態、建置、測試、效能預算、無障礙、Phase 5 目標 |
-| `docs/adr/` | 架構決策記錄（ADR-0001 至 0008） |
+| `docs/adr/` | 架構決策記錄（ADR-0001 至 0009） |
 | `src/` | **ESM 來源**：`data/`（i18n、curriculum、outline、formulas、lessons）、`core/`（完整引擎 14 個模組）與 `ui/`（22 個介面模組：index/globals/format/router/state/i18n/selectors/visual/dom/a11y/context/screens/assessment/session/nav*/chrome/dialog/sw*/keyboard）；root 同名 classic/UMD 檔由 `npm run build` 生成，請勿手改 |
 | `index.html` | 頁面結構 |
 | `style.css` | 界面樣式 |
@@ -84,7 +84,7 @@
 | `play-math.bat` | Windows 啟動器（優先使用 `dist/`） |
 | `package.json` / `package-lock.json` | 建置工具（esbuild）依賴 |
 | `tools/build.js` / `tools/sw-template.js` | 建置腳本與 Service Worker 範本 |
-| `dist/` | 建置產物（單一 bundle、生成的 SW、複製的字型／圖標；已提交，CI 驗證沒有漂移） |
+| `dist/` | 建置產物（boot bundle `app.<hash>.js`、按需載入的 `lessons.<hash>.js`、生成的 SW、複製的字型／圖標；已提交，CI 驗證沒有漂移） |
 | `tests/` | 開發測試（普通用戶不需要） |
 
 ## 開發與測試
@@ -95,14 +95,15 @@
 
 ```bash
 npm ci               # 安裝建置依賴（esbuild）
-npm run build        # 輸出 dist/app.<hash>.js、dist/index.html、dist/sw.js
+npm run build        # 輸出 dist/app.<hash>.js（boot）、dist/lessons.<hash>.js（lazy）、dist/index.html、dist/sw.js
 ```
 
+- **課堂文字按需載入**：`lessons.js` 不再打進開機 bundle，而是獨立的 `lessons.<hash>.js`；只有進入小課堂時才注入（`<link rel="prefetch">` 會先下載，Service Worker 也會 precache，離線照用）。開機 bundle 因此由 ~169 KB gzip 降到 ~112 KB，課堂 chunk ~58 KB。
 - 建置是**決定性**的（文字檔先統一 LF、esbuild 版本納入 hash）：同一份 repo 在任何平台都產生相同的 `dist/`，CI 會用 `git status --porcelain -- dist` 檢查是否忘記提交建置結果。
 - 改完 `src/data/`、`src/core/`、`src/ui/` 或 `style.css` 後，記得 `npm run build` 並把 `dist/` 與生成的 classic/UMD 檔一併提交。
 - Service Worker 的 precache 清單與 cache 版本由建置產出，不再手動維護。
 - 真實瀏覽器無障礙 gate：`npm run lighthouse`（需 Chrome/Edge，a11y ≥ 0.95；本機目前 1.000）。
-- 冷啟動離線檢查：`npm run offline-check`（真實 Chrome + Service Worker：載入後斷網，新頁面仍能由快取渲染）。
+- 冷啟動離線檢查：`npm run offline-check`（真實 Chrome + Service Worker：載入後斷網，新頁面仍能由快取渲染；並直接開啟小課堂，驗證 lazy `lessons.<hash>.js` chunk 亦已 precache）。
 
 ### 測試
 

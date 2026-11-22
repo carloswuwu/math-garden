@@ -31,8 +31,14 @@ const SOURCE_SCRIPTS = [
   'curriculum.js',
   'curriculum-outline.js',
   'formulas.js',
-  'lessons.js',
   'app.js'
+];
+
+/* 不進開機 bundle 的 lazy chunks：目前只有課堂教學文字（最重、只有小課堂畫面需要）。
+ * 生成 `lessons.<buildHash>.js`，由 src/ui/lessons-loader.js 在進入小課堂時注入；
+ * root classic 模式仍照舊同步載入 `lessons.js`，所以 file:// 與 Node 測試不受影響。 */
+const LAZY_SCRIPTS = [
+  { file: 'lessons.js', name: 'lessons', globalName: 'Lessons' }
 ];
 
 /* Phase 5 Stage C：內容模組以 ESM（src/data/*.js）為來源，
@@ -174,6 +180,9 @@ function build() {
   SOURCE_SCRIPTS.forEach((file) => {
     inputs.set(file, readNormalized(path.join(ROOT, file)));
   });
+  LAZY_SCRIPTS.forEach((chunk) => {
+    inputs.set(chunk.file, readNormalized(path.join(ROOT, chunk.file)));
+  });
   ROOT_ASSETS.forEach((file) => {
     inputs.set(file, readNormalized(path.join(ROOT, file)));
   });
@@ -206,6 +215,24 @@ function build() {
   const banner = '/*! Math Garden build ' + hash + ' — 由 tools/build.js 生成，請勿手改。 */\n';
   const bundle = banner + bundled;
 
+  /* ---- 3b. lazy chunks：同樣 minify，檔名帶同一個 build hash ---- */
+  const lazyChunks = LAZY_SCRIPTS.map((chunk) => {
+    const wrappedChunk = '(function () {\n' + inputs.get(chunk.file) + '\n})();\n';
+    const minifiedChunk = esbuild.transformSync(wrappedChunk, {
+      minify: true,
+      target: ['es2018'],
+      charset: 'utf8',
+      legalComments: 'none',
+      loader: 'js'
+    }).code;
+    return {
+      name: chunk.name + '.' + hash + '.js',
+      globalName: chunk.globalName,
+      code: banner + minifiedChunk
+    };
+  });
+  const lessonsChunk = lazyChunks[0];
+
   /* ---- 4. 生成 index.html（腳本區塊換成 vendor KaTeX + 單一 bundle） ---- */
   const scriptBlock = /  <script src="math-core\.js"><\/script>\n[\s\S]*?  <script src="app\.js"><\/script>/;
   if (!scriptBlock.test(inputs.get('index.html'))) {
@@ -218,13 +245,16 @@ function build() {
   );
   indexHtml = indexHtml.replace(
     '<head>',
-    '<head>\n  <meta name="math-garden-build" content="' + hash + '">'
+    '<head>\n  <meta name="math-garden-build" content="' + hash + '">\n' +
+    '  <meta name="math-garden-lessons" content="' + lessonsChunk.name + '">\n' +
+    '  <link rel="prefetch" href="' + lessonsChunk.name + '" as="script">'
   );
 
   /* ---- 5. 組裝 dist ---- */
   const files = new Map();
   files.set('index.html', indexHtml);
   files.set(bundleName, bundle);
+  lazyChunks.forEach((chunk) => files.set(chunk.name, chunk.code));
   ROOT_ASSETS.forEach((file) => {
     files.set(file, inputs.get(file));
   });
@@ -246,20 +276,26 @@ function build() {
 
   const bundleBytes = Buffer.byteLength(bundle, 'utf8');
   const gzipBytes = zlib.gzipSync(Buffer.from(bundle, 'utf8')).length;
-  const advisory = 170 * 1024;
+  const bootAdvisory = 130 * 1024;
   console.log('Math Garden build ' + hash);
-  console.log('  dist/' + bundleName + ': ' + (bundleBytes / 1024).toFixed(1) + ' KB (' +
+  console.log('  dist/' + bundleName + ' (boot): ' + (bundleBytes / 1024).toFixed(1) + ' KB (' +
     (gzipBytes / 1024).toFixed(1) + ' KB gzip)');
+  lazyChunks.forEach((chunk) => {
+    const chunkBytes = Buffer.byteLength(chunk.code, 'utf8');
+    const chunkGzip = zlib.gzipSync(Buffer.from(chunk.code, 'utf8')).length;
+    console.log('  dist/' + chunk.name + ' (lazy ' + chunk.globalName + '): ' + (chunkBytes / 1024).toFixed(1) +
+      ' KB (' + (chunkGzip / 1024).toFixed(1) + ' KB gzip)');
+  });
   console.log('  precache: ' + precache.length + ' files · cache ' + cacheName);
-  if (gzipBytes > advisory) {
-    console.warn('  ⚠ bundle gzip ' + (gzipBytes / 1024).toFixed(1) + ' KB 超過建議的 170 KB');
+  if (gzipBytes > bootAdvisory) {
+    console.warn('  ⚠ boot bundle gzip ' + (gzipBytes / 1024).toFixed(1) + ' KB 超過建議的 130 KB');
   }
 
-  return { hash, bundleName, size: bundleBytes, gzipSize: gzipBytes, precache, cacheName };
+  return { hash, bundleName, size: bundleBytes, gzipSize: gzipBytes, lazyChunks, precache, cacheName };
 }
 
 if (require.main === module) {
   build();
 }
 
-module.exports = { build, SOURCE_SCRIPTS, ROOT_ASSETS };
+module.exports = { build, SOURCE_SCRIPTS, LAZY_SCRIPTS, ROOT_ASSETS };

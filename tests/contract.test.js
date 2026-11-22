@@ -63,7 +63,7 @@ const CJK = /[\u4e00-\u9fff]/;
   check(coreRoot.indexOf('module.exports') !== -1 && coreRoot.indexOf('root.MathCore') !== -1, 'math-core.js 應保留 UMD（Node require + window.MathCore）');
 
   /* Stage E：UI ESM 來源（src/ui）與生成的 classic app.js wrapper */
-  ['index', 'globals', 'format', 'router', 'state', 'i18n', 'selectors', 'visual', 'dom', 'a11y', 'context', 'screens', 'assessment', 'session', 'nav-state', 'modal-state', 'nav', 'chrome', 'dialog', 'sw-state', 'sw', 'keyboard'].forEach((name) => {
+  ['index', 'globals', 'format', 'router', 'state', 'i18n', 'selectors', 'visual', 'dom', 'a11y', 'context', 'screens', 'assessment', 'session', 'nav-state', 'modal-state', 'nav', 'chrome', 'dialog', 'sw-state', 'sw', 'keyboard', 'lessons-loader'].forEach((name) => {
     const p = path.join(ROOT, 'src', 'ui', name + '.js');
     check(fs.existsSync(p), '缺少 ESM UI 模組 src/ui/' + name + '.js');
     check(/export\s/.test(fs.readFileSync(p, 'utf8')), 'src/ui/' + name + '.js 應是 ESM 匯出');
@@ -444,7 +444,14 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
   check(fs.existsSync(path.join(DIST, appRef)), 'hashed bundle 不存在：' + appRef);
   check(distIndex.indexOf('src="math-core.js"') === -1 && distIndex.indexOf('src="app.js"') === -1,
     'dist/index.html 不應再引用未打包的源碼');
+  check(distIndex.indexOf('src="lessons.js"') === -1, 'dist/index.html 不應同步引用 lessons.js（它是 lazy chunk）');
   check(distIndex.indexOf('vendor/katex/katex.min.js') !== -1, 'dist 應保留 KaTeX classic script');
+
+  /* 課堂 lazy chunk：meta 指到的 hashed 檔必須存在，且由 SW precache 離線供應 */
+  const lessonsRef = (distIndex.match(/name="math-garden-lessons" content="([^"]+)"/) || [])[1];
+  check(lessonsRef === 'lessons.' + buildMeta + '.js', 'lessons chunk 檔名必須等於 lessons.<buildHash>.js');
+  check(fs.existsSync(path.join(DIST, lessonsRef || '')), 'lessons chunk 不存在：' + lessonsRef);
+  check(distIndex.indexOf('rel="prefetch" href="' + lessonsRef + '"') !== -1, 'dist 應 prefetch lessons chunk');
 
   const distRefs = [...distIndex.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1]);
   distRefs.forEach((ref) => {
@@ -482,12 +489,16 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
   check(swSrc.indexOf('Promise.allSettled') !== -1, 'SW 安裝應使用 Promise.allSettled');
   check(swSrc.indexOf("caches.match('./index.html')") !== -1, 'SW 導覽失敗應回退快取外殼');
   check(swSrc.indexOf('Response.error()') !== -1, '非導覽資源 miss 應回傳錯誤而非 HTML');
+  check(swSrc.indexOf('(?:app|lessons)') !== -1,
+    'SW 的 cache-first 規則應同時覆蓋 app 與 lessons chunk');
   const installBlock = (swSrc.match(/addEventListener\('install',[\s\S]*?\}\);/g) || []).join('');
   check(installBlock.indexOf('self.skipWaiting()') === -1, '安裝時不應自動 skipWaiting（更新要等使用者確認）');
 
-  /* 體積：advisory 上限 170 KB gzip（108 課教學步驟/常見錯誤 + 8 個新課堂與視覺化） */
+  /* 體積：boot bundle 不含課堂文字（≤130 KB gzip），lazy lessons chunk 獨立預算（≤100 KB） */
   const gzipBytes = zlib.gzipSync(fs.readFileSync(path.join(DIST, appRef))).length;
-  check(gzipBytes <= 170 * 1024, 'bundle gzip 應 ≤ 170 KB，實際 ' + (gzipBytes / 1024).toFixed(1) + ' KB');
+  check(gzipBytes <= 130 * 1024, 'boot bundle gzip 應 ≤ 130 KB，實際 ' + (gzipBytes / 1024).toFixed(1) + ' KB');
+  const lessonsGzip = zlib.gzipSync(fs.readFileSync(path.join(DIST, lessonsRef))).length;
+  check(lessonsGzip <= 100 * 1024, 'lessons chunk gzip 應 ≤ 100 KB，實際 ' + (lessonsGzip / 1024).toFixed(1) + ' KB');
 })();
 
 console.log('✓ 契約測試全部通過（' + checks + ' 項斷言，' + skills.length + ' 個技能）');

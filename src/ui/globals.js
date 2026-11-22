@@ -5,4 +5,7 @@ export var I18N = root.I18N;
 export var Curriculum = root.Curriculum;
 export var CurriculumOutline = root.CurriculumOutline;
 export var Formulas = root.Formulas;
-export var Lessons = root.Lessons;
+
+/* 課堂內容是 lazy chunk：root/file:// 模式在 app.js 前已同步載入，
+ * dist 模式要進小課堂時才由 lessons-loader 注入。因此這裡用 getter 晚綁定。 */
+export function getLessons() { return root.Lessons; }

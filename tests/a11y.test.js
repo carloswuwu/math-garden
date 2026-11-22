@@ -38,12 +38,24 @@ function loadAppScript(w) {
   }
   loadAppScript(w);
 }
+
+/* 小課堂文字是 lazy chunk（見 tests/ui.test.js）；這裡模擬已載入。 */
+function loadLessonsChunk(w) {
+  const distIndex = path.join(ROOT, 'dist', 'index.html');
+  if (!fs.existsSync(distIndex)) return;
+  const m = fs.readFileSync(distIndex, 'utf8').match(/name="math-garden-lessons" content="([^"]+)"/);
+  if (m && fs.existsSync(path.join(ROOT, 'dist', m[1]))) {
+    w.eval(fs.readFileSync(path.join(ROOT, 'dist', m[1]), 'utf8'));
+  }
+}
+
 function boot(seedProgress) {
   const dom = new JSDOM(HTML, { runScripts: 'dangerously', url: 'http://localhost/' });
   const w = dom.window;
   w.scrollTo = function () {};
   if (seedProgress) w.localStorage.setItem('mathpath.progress.v1', seedProgress);
   loadAppScript(w);
+  loadLessonsChunk(w);
   return { w, d: w.document };
 }
 

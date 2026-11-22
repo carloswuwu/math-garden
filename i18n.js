@@ -31,7 +31,10 @@
       nextExample: "換一題",
       start: "開始練習",
       skip: "直接去測驗",
-      later: "先練習"
+      later: "先練習",
+      loading: "課堂內容載入中…",
+      loadFailed: "課堂內容載入失敗，請檢查網絡後重試。",
+      retry: "重試"
     },
     practice: {
       title: "練習",
@@ -212,7 +215,10 @@
       nextExample: "Another one",
       start: "Start Practice",
       skip: "Skip to Quiz",
-      later: "Practice first"
+      later: "Practice first",
+      loading: "Loading lesson…",
+      loadFailed: "Could not load the lesson. Check your connection and try again.",
+      retry: "Retry"
     },
     practice: {
       title: "Practice",

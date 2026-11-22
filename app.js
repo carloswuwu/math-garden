@@ -7,7 +7,39 @@
   var Curriculum2 = root.Curriculum;
   var CurriculumOutline = root.CurriculumOutline;
   var Formulas = root.Formulas;
-  var Lessons = root.Lessons;
+  function getLessons() {
+    return root.Lessons;
+  }
+
+  // src/ui/lessons-loader.js
+  var root2 = typeof window !== "undefined" ? window : globalThis;
+  var pending = null;
+  function chunkUrl() {
+    var meta = root2.document && root2.document.querySelector ? root2.document.querySelector('meta[name="math-garden-lessons"]') : null;
+    return meta ? meta.getAttribute("content") : null;
+  }
+  function ensureLessons() {
+    if (root2.Lessons) return Promise.resolve(root2.Lessons);
+    if (pending) return pending;
+    var src = chunkUrl();
+    if (!src) return Promise.reject(new Error("lessons chunk 未設定"));
+    pending = new Promise(function(resolve, reject) {
+      var script = root2.document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = function() {
+        pending = null;
+        if (root2.Lessons) resolve(root2.Lessons);
+        else reject(new Error("lessons chunk 沒有提供 Lessons"));
+      };
+      script.onerror = function() {
+        pending = null;
+        reject(new Error("lessons chunk 載入失敗"));
+      };
+      (root2.document.head || root2.document.documentElement).appendChild(script);
+    });
+    return pending;
+  }
 
   // src/ui/format.js
   function esc(s) {
@@ -968,11 +1000,35 @@
       }
     });
   }
+  function renderLessonPending(skill, info, failed) {
+    var html = '<h1 class="page-title">' + esc(info.name) + '</h1><p class="page-sub">' + t("stage.goal") + "：" + esc(info.goal) + '</p><div class="lesson-card"><p class="lesson-text">' + (failed ? t("lesson.loadFailed") : t("lesson.loading")) + "</p>";
+    if (failed) {
+      html += '<button class="btn" id="lessonRetry" type="button">' + t("lesson.retry") + "</button>";
+    }
+    html += "</div>";
+    $("screen-lesson").innerHTML = html;
+    if (failed) {
+      $("lessonRetry").addEventListener("click", function() {
+        renderLesson(skill.id);
+      });
+    }
+    app.show("lesson");
+  }
   function renderLesson(skillId) {
     state.skillId = skillId;
     var skill = getSkill(skillId);
     var info = skill[state.lang === "zh" ? "zh" : "en"];
-    var lesson = Lessons[skill.lesson];
+    var lessons = getLessons();
+    if (!lessons) {
+      renderLessonPending(skill, info, false);
+      ensureLessons().then(function() {
+        if (state.screen === "lesson" && state.skillId === skillId) app.renderRouteSafely(app.currentRoute());
+      }, function() {
+        if (state.screen === "lesson" && state.skillId === skillId) renderLessonPending(skill, info, true);
+      });
+      return;
+    }
+    var lesson = lessons[skill.lesson];
     var html = '<h1 class="page-title">' + esc(info.name) + '</h1><p class="page-sub">' + t("stage.goal") + "：" + esc(info.goal) + "</p>";
     if (lesson) {
       var l = state.lang === "zh" ? lesson.zh : lesson.en;
@@ -2442,6 +2498,7 @@
     parentOf,
     currentRoute,
     navigate,
+    ensureLessons,
     showUpdateChip,
     acceptUpdate,
     session: {

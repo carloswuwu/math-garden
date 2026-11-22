@@ -66,6 +66,16 @@ function boot() {
   return { w, d: w.document };
 }
 
+/* 小課堂文字是 lazy chunk；量測開機時刻意不載入，路線測試前才載入（模擬實際順序）。 */
+function loadLessonsChunk(w) {
+  const distIndex = path.join(ROOT, 'dist', 'index.html');
+  if (!fs.existsSync(distIndex)) return;
+  const m = fs.readFileSync(distIndex, 'utf8').match(/name="math-garden-lessons" content="([^"]+)"/);
+  if (m && fs.existsSync(path.join(ROOT, 'dist', m[1]))) {
+    w.eval(fs.readFileSync(path.join(ROOT, 'dist', m[1]), 'utf8'));
+  }
+}
+
 /* ---------------- 1. 引擎生成 p95 ---------------- */
 (() => {
   /* 先攤平 (skill, type) 清單，避免生成過程共用 index 造成抖動 */
@@ -122,6 +132,7 @@ function boot() {
   w.scrollTo = function () {};
   w.localStorage.setItem('mathpath.progress.v1', seed);
   loadAppScript(w);
+  loadLessonsChunk(w);
   const routes = [
     { screen: 'home' },
     { screen: 'stage', stageId: 'g6' },
@@ -155,14 +166,25 @@ function boot() {
 (() => {
   const idx = fs.readFileSync(path.join(DIST, 'index.html'), 'utf8');
   const m = idx.match(/(app\.[0-9a-f]+\.js)/);
-  check(!!m, 'dist/index.html 應引用 hashed bundle');
+  check(!!m, 'dist/index.html 應引用 hashed boot bundle');
   const bundlePath = path.join(DIST, m[1]);
   const gzip = zlib.gzipSync(fs.readFileSync(bundlePath)).length;
-  check(gzip <= 170 * 1024, 'bundle gzip 應 ≤ 170 KB，實際 ' + (gzip / 1024).toFixed(1) + ' KB');
+  check(gzip <= 130 * 1024, 'boot bundle gzip 應 ≤ 130 KB，實際 ' + (gzip / 1024).toFixed(1) + ' KB');
+
+  /* 課堂文字是 lazy chunk：開機不付它的下載/解析成本，但離線 precache 仍包含它 */
+  const meta = idx.match(/name="math-garden-lessons" content="([^"]+)"/);
+  check(!!meta, 'dist/index.html 應帶 lessons chunk meta');
+  const lessonsRef = meta ? meta[1] : '';
+  check(/^lessons\.[0-9a-f]{12}\.js$/.test(lessonsRef), 'lessons chunk 檔名應帶 build hash');
+  const lessonsPath = path.join(DIST, lessonsRef);
+  check(fs.existsSync(lessonsPath), 'lessons lazy chunk 不存在：' + lessonsRef);
+  const lessonsGzip = zlib.gzipSync(fs.readFileSync(lessonsPath)).length;
+  check(lessonsGzip <= 100 * 1024, 'lessons chunk gzip 應 ≤ 100 KB，實際 ' + (lessonsGzip / 1024).toFixed(1) + ' KB');
 
   const sw = fs.readFileSync(path.join(DIST, 'sw.js'), 'utf8');
   const assets = [...sw.matchAll(/'\.\/([^']+)'/g)].map((x) => x[1]);
   check(assets.length >= 20, 'SW precache 清單應有 20+ 資產，實際 ' + assets.length);
+  check(assets.indexOf(lessonsRef) !== -1, 'SW precache 應包含 lessons chunk');
   const total = assets.reduce((sum, rel) => {
     const abs = path.join(DIST, rel);
     if (!fs.existsSync(abs)) throw new Error('precache 資產不存在：' + rel);
@@ -171,7 +193,8 @@ function boot() {
   check(total <= 1.2 * 1024 * 1024, 'precache 總大小應 ≤ 1.2 MB，實際 ' + (total / 1024 / 1024).toFixed(2) + ' MB');
   check(total > 0, 'precache 總大小應 > 0');
 
-  console.log('  bundle gzip ' + (gzip / 1024).toFixed(1) + ' KB · precache ' + (total / 1024 / 1024).toFixed(2) + ' MB · ' + assets.length + ' assets');
+  console.log('  boot gzip ' + (gzip / 1024).toFixed(1) + ' KB · lessons gzip ' + (lessonsGzip / 1024).toFixed(1) +
+    ' KB · precache ' + (total / 1024 / 1024).toFixed(2) + ' MB · ' + assets.length + ' assets');
 })();
 
 console.log(`✓ 效能預算全部通過（${checks} 項檢查）`);

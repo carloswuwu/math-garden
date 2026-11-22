@@ -23,7 +23,8 @@ index.html ── classic root wrappers (generated) ─────────�
                                                                ▼
                                               tools/build.js (esbuild)
                                                                │
-                             dist/app.<hash>.js  single classic IIFE
+                             dist/app.<hash>.js  boot IIFE (engine + UI + curriculum)
+                              dist/lessons.<hash>.js  lazy IIFE (teaching text)
                              dist/index.html + style.css + vendors
                              dist/sw.js (generated precache + update protocol)
                                                                │
@@ -32,17 +33,18 @@ index.html ── classic root wrappers (generated) ─────────�
 
 - **Source of truth** is now mixed: content modules live in `src/data/*.js` (ESM); engine helpers live in `src/core/{index,rng,values}.js` (ESM). `tools/build.js` step 0 bundles them into generated classic wrappers at the repo root (content assigns `window.*`; engine is a **UMD** wrapper for `window.MathCore` + Node `require`). `app.js` is still a classic script, so script order still matters (§4).
 - **Deployable artifact** is `dist/`, committed to the repo. `npm run build` is deterministic: generated wrappers are LF-normalised, the esbuild version participates in the hash, and CI fails if committed `dist/` **or any generated wrapper** differs from a fresh build.
-- **No bundler in dev**: opening root `index.html` from `file://` executes the classic scripts directly; opening `dist/index.html` runs the production IIFE. `play-math.bat` prefers `dist/`.
+- **Content code-splitting:** teaching text (`lessons.js`, the heaviest content module) is not part of the boot bundle. The build emits a hashed `lessons.<hash>.js` classic chunk, `dist/index.html` carries `<meta name="math-garden-lessons">` + `<link rel="prefetch">`, and `src/ui/lessons-loader.js` injects it the first time a lesson screen opens. The SW precaches it, so cold offline still works; the lesson screen renders a small “loading” card and re-renders the same route when the chunk is ready. Root `index.html` keeps the synchronous seven-script order (no meta → loader resolves immediately).
+- **No bundler in dev**: opening root `index.html` from `file://` executes the classic scripts directly; opening `dist/index.html` runs the production IIFEs. `play-math.bat` prefers `dist/`.
 
 ## 2. Source inventory
 
 | File | Responsibility | Public surface |
 | --- | --- | --- |
 | `src/data/i18n.js` | UI strings for `zh`/`en`, ARIA labels, visual alt templates (ESM source) | `I18N` export → generated `i18n.js` global |
-| `src/data/curriculum.js` | 15 stages (pre-K→S6 + 🏆 Challenge), 117 skills, type lists, difficulty levels, word-op tables, unlock metadata (ESM source) | `Curriculum` export → generated `curriculum.js` global |
+| `src/data/curriculum.js` | 16 stages (pre-K → graduate + 🏆 Challenge), 148 skills, type lists, difficulty levels, word-op tables, unlock metadata (ESM source) | `Curriculum` export → generated `curriculum.js` global |
 | `src/data/curriculum-outline.js` | Parent-facing syllabus outline (ESM source) | `CurriculumOutline` export → generated `curriculum-outline.js` |
 | `src/data/formulas.js` | Formula reference items tagged with skills (ESM source) | `Formulas` export → generated `formulas.js` |
-| `src/data/lessons.js` | 108 bilingual lessons (ESM source) | `Lessons` export → generated `lessons.js` |
+| `src/data/lessons.js` | 139 bilingual lessons (ESM source) | `Lessons` export → generated `lessons.js`; boot-sync in dev, lazy chunk in dist |
 | `src/core/format.js` | `formatMathText` (caret expressions outside `$...$` → KaTeX) | ESM imports |
 | `src/core/signatures.js` | `stableStringify`, `mathSig`, `templateSig`, `contextSig` (dedupe/diversity) | ESM imports |
 | `src/core/choices.js` | Distractor generation: `buildChoices`, `distractorMax/Min`, `fractionDistractor` | ESM imports |
@@ -59,7 +61,8 @@ index.html ── classic root wrappers (generated) ─────────�
 | `src/core/progress.js` | `defaultSkillProgress`, `sanitizeProgress`, stars/mastery, `applyResult`, `applyQuizResult`, `gradeQuiz` | ESM imports |
 | `math-core.js` | **Generated UMD wrapper** of `src/core/index.js` (browser `window.MathCore`, Node `require`) | `window.MathCore` / `module.exports` |
 | `src/ui/index.js` | UI ESM source: state, screens, routing/navigation, progress/session, dialogs, SW update chip, language, a11y; exports `init` | side-effect build → generated `app.js` |
-| `src/ui/globals.js` | Bridge to `window.MathCore`/`I18N`/`Curriculum`/... for the classic build | ESM imports |
+| `src/ui/globals.js` | Bridge to `window.MathCore`/`I18N`/`Curriculum`/... for the classic build (Lessons is a late-bound getter) | ESM imports |
+| `src/ui/lessons-loader.js` | `ensureLessons()`: inject `lessons.<hash>.js` on demand (resolves immediately in root/file:// mode) | ESM imports |
 | `src/ui/format.js` | `esc`, `renderMath` (KaTeX with graceful fallback) | ESM imports |
 | `src/ui/router.js` | Pure route helpers: `parseHash`, `serializeRoute`, `sameRoute` | ESM imports |
 | `src/ui/state.js` | constants, mutable `state`, live `progress`, localStorage load/save, session keys | ESM imports |
@@ -127,23 +130,23 @@ Hash routes are pure strings; `parseHash`/`serializeRoute`/`resolveRoute` valida
 ## 7. Build and deploy
 
 1. **Step 0 — generated modules:** `tools/build.js` bundles each `src/data/*.js` into a classic wrapper and `src/core/index.js` into a UMD `math-core.js` (browser + Node), keeping the public globals unchanged.
-2. `node tools/build.js` reads the classic sources in fixed order, normalises line endings, bundles with esbuild (IIFE), hashes content → `dist/app.<hash>.js`, copies HTML/CSS/icons/vendors, writes hashed SW cache name and precache list.
+2. `node tools/build.js` reads the classic sources in fixed order, normalises line endings, bundles with esbuild (IIFE), hashes content → `dist/app.<hash>.js` (**boot**) and `dist/lessons.<hash>.js` (**lazy**), copies HTML/CSS/icons/vendors, writes hashed SW cache name and precache list (both chunks included).
 3. `dist/` and all generated wrappers are committed; `.github/workflows/tests.yml` rebuilds and **fails on drift** in either, then runs six suites.
 4. `.github/workflows/pages.yml` deploys `dist/` on every main push — **Pages source is set to “GitHub Actions”** (switched via the Pages API); the workflow validates source, builds, checks wrappers, uploads the artifact and deploys.
-5. SW: install precaches, activate waits for user confirmation (`#updateChip`), navigation is network-first with 3 s timeout + cache fallback; generated SW never auto-`skipWaiting`.
+5. SW: install precaches (including the lazy lessons chunk), activate waits for user confirmation (`#updateChip`), navigation is network-first with 3 s timeout + cache fallback; `app.<hash>.js` and `lessons.<hash>.js` are cache-first; generated SW never auto-`skipWaiting`.
 
 ## 8. Testing strategy
 
 | Suite | Environment | Protects |
 | --- | --- | --- |
 | `core.test.js` | node | engine invariants, grading, progress, composition/diversity, schema fuzz |
-| `ui.test.js` | jsdom (dist IIFE) | routing/history, resume, keyboard, typed/MC flows, challenge, quit-run fix, KaTeX, bug regressions |
+| `ui.test.js` | jsdom (dist IIFE + lazy lessons chunk) | routing/history, resume, keyboard, typed/MC flows, challenge, quit-run fix, KaTeX, lazy lesson loading, bug regressions |
 | `generators.test.js` | node | per-type contracts, pools, explain coverage, typed-input invariants |
 | `contract.test.js` | node + vm | MATH_SPEC by typeIndex, assets/i18n, solver coverage, formulas, exam uniqueness, dist/SW consistency, formatting, ESM source/wrapper sync |
 | `a11y.test.js` | jsdom (dist IIFE) + axe-core | headings/labels/focus/inert/lang/visual alt, axe subset on 13 screens |
-| `perf.test.js` | node + jsdom (dist IIFE) | engine p95, route render p95, bundle gzip, precache ≤ 1.2 MB |
+| `perf.test.js` | node + jsdom (dist IIFE) | engine p95, route render p95, boot + lazy chunk gzip, precache ≤ 1.2 MB |
 | `npm run lighthouse` | real headless Chrome | full Lighthouse accessibility gate ≥ 0.95 (local 1.000; CI step) |
-| `npm run offline-check` | real headless Chrome + service worker | cold offline start: load dist → SW control → close/offline → fresh page renders from cache |
+| `npm run offline-check` | real headless Chrome + service worker | cold offline start: load dist → SW control → close/offline → fresh page renders home, and a fresh `#/lesson/...` page loads the lazy lessons chunk from cache |
 
 ## 9. Performance budgets
 
@@ -156,8 +159,9 @@ Measured on the current build (local, warm JIT); budgets in parentheses are the 
 | `composeExam(20)` p95 | ~0.4 ms | < 400 ms |
 | jsdom boot p95 | ~64 ms | < 5000 ms |
 | jsdom route render p95 | ~500 ms | < 2000 ms |
-| bundle gzip | 169.4 KB | ≤ 170 KB |
-| SW precache payload | 0.99 MB | ≤ 1.2 MB |
+| boot bundle gzip (app) | 112.4 KB | ≤ 130 KB |
+| lazy lessons chunk gzip | 58.4 KB | ≤ 100 KB |
+| SW precache payload | 1.12 MB | ≤ 1.2 MB |
 | Lighthouse accessibility | 1.000 | ≥ 0.95 |
 
 Budgets are deliberately 3–8× local measurements to absorb CI variance. They guard against structural regressions (accidental O(n²), content bloat), not micro-benchmarks.
@@ -177,10 +181,10 @@ The source is no longer order-coupled classic scripts. Phase 5 converted everyth
 1. **Foundation** (done): architecture map, ADRs, performance budgets in CI.
 2. **Content modules** (done): `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` live in `src/data/*.js`; build step 0 generates the classic root wrappers with the unchanged `window.*` API; CI verifies wrappers are in sync.
 3. **Engine modules** (done): the engine is fully split behind the unchanged `window.MathCore`: `rng`, `values`, `facts`, `display`, `format`, `signatures`, `choices`, `generators`, `math-spec`, `explain`, `progress`, `problem`, `compose`; `src/core/index.js` (~374 lines) only assembles the API, keeps `checkAnswer`/`nextProblem` and exports `MathCore`. `math-core.js` remains a generated UMD wrapper.
-4. **UI modules** (done): `src/ui/` contains `index` (init + `window.__mathApp` hooks, ~175 lines), `globals`, `format`, `router`, `state`, `i18n`, `selectors`, `visual`, `dom`, `a11y`, `context`, `screens`, `assessment`, `session`, `nav-state`, `modal-state`, `nav`, `chrome`, `dialog`, `sw-state`, `sw`, `keyboard`. Cross-module actions use the `app` context object to avoid cycles. Build step 0 generates the classic `app.js` IIFE.
+4. **UI modules** (done): `src/ui/` contains `index` (init + `window.__mathApp` hooks, ~175 lines), `globals`, `lessons-loader`, `format`, `router`, `state`, `i18n`, `selectors`, `visual`, `dom`, `a11y`, `context`, `screens`, `assessment`, `session`, `nav-state`, `modal-state`, `nav`, `chrome`, `dialog`, `sw-state`, `sw`, `keyboard`. Cross-module actions use the `app` context object to avoid cycles. Build step 0 generates the classic `app.js` IIFE.
 5. **Tooling/tests** (done): `ui`, `a11y` and `perf` suites boot the built `dist/app.<hash>.js` IIFE; contract still validates source modules/contracts. `npm run lighthouse` runs a real-Chrome Lighthouse accessibility gate (local score **1.000**) and CI has a Lighthouse step.
 
-Guardrails preserved throughout: one module/commit, all six suites green, `dist/` + wrappers rebuilt and committed, public APIs unchanged, stored progress/session schemas unchanged. Post-roadmap batch added: Pages source switched to GitHub Actions (dist deploys on push), per-mode `typeAcc`, tiny-pool/word-archetype content depth, college exam width, cold-offline real-Chrome check, and bilingual lesson glossaries. Remaining optional work: mathematician-audit P2 items, more lesson visuals/glossary coverage, real-device spot check.
+Guardrails preserved throughout: one module/commit, all six suites green, `dist/` + wrappers rebuilt and committed, public APIs unchanged, stored progress/session schemas unchanged. Post-roadmap batch added: Pages source switched to GitHub Actions (dist deploys on push), per-mode `typeAcc`, tiny-pool/word-archetype content depth, college exam width, cold-offline real-Chrome check, bilingual lesson glossaries, and the lazy lessons chunk split (ADR-0009). Remaining optional work: mathematician-audit P2 items, more lesson visuals/glossary coverage, lazy-loading KaTeX / outline+formulas, real-device spot check.
 
 ## 12. Decision records
 
@@ -194,3 +198,4 @@ Guardrails preserved throughout: one module/commit, all six suites green, `dist/
 | [0006](adr/0006-challenge-stage-outside-unlock-chain.md) | Challenge stage is always open and outside progression |
 | [0007](adr/0007-assessment-fairness.md) | First-attempt-only practice credit; configurable quiz pass mark |
 | [0008](adr/0008-performance-budgets.md) | CI-enforced performance and size budgets |
+| [0009](adr/0009-lazy-lessons-chunk.md) | Teaching content is a lazy `lessons.<hash>.js` chunk; boot ≤130 KB gzip |

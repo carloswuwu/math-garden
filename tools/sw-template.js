@@ -18,7 +18,7 @@ const ASSETS = [
 ${list}
 ];
 
-const VERSIONED = /\\/app\\.[0-9a-f]+\\.js$/;
+const VERSIONED = /\\/(?:app|lessons)\\.[0-9a-f]+\\.js$/;
 
 function isNavigation(req) {
   return req.mode === 'navigate' ||

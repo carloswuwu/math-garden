@@ -23,7 +23,8 @@ var zh = {
     lesson: {
       title: '小課堂', intro: '講解', steps: '解題步驟', example: '舉例', tip: '小技巧', mistake: '常見錯誤', glossary: '詞彙表',
       showExample: '看一步步示範', nextExample: '換一題',
-      start: '開始練習', skip: '直接去測驗', later: '先練習'
+      start: '開始練習', skip: '直接去測驗', later: '先練習',
+      loading: '課堂內容載入中…', loadFailed: '課堂內容載入失敗，請檢查網絡後重試。', retry: '重試'
     },
 
     practice: {
@@ -168,7 +169,8 @@ var zh = {
     lesson: {
       title: 'Lesson', intro: 'Learn', steps: 'Steps', example: 'Example', tip: 'Tip', mistake: 'Common mistake', glossary: 'Glossary',
       showExample: 'Step-by-step example', nextExample: 'Another one',
-      start: 'Start Practice', skip: 'Skip to Quiz', later: 'Practice first'
+      start: 'Start Practice', skip: 'Skip to Quiz', later: 'Practice first',
+      loading: 'Loading lesson…', loadFailed: 'Could not load the lesson. Check your connection and try again.', retry: 'Retry'
     },
 
     practice: {

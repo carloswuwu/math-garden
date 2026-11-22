@@ -3,7 +3,8 @@
  * 由 build step 0 生成 root app.js（classic IIFE），file:// / legacy 部署照舊。
  * 引擎與內容依賴透過 ./globals.js 讀取 build 後仍存在的 window.* 全局。
  */
-import { MathCore, I18N, Curriculum, CurriculumOutline, Formulas, Lessons } from './globals.js';
+import { MathCore, I18N, Curriculum, CurriculumOutline, Formulas } from './globals.js';
+import { ensureLessons } from './lessons-loader.js';
 import { esc, renderMath } from './format.js';
 import { parseHash, serializeRoute, sameRoute } from './router.js';
 import {
@@ -162,6 +163,7 @@ import { currentRoute, skillStageId, parentOf, isRealStage, stageHasExam, skillL
     parentOf: parentOf,
     currentRoute: currentRoute,
     navigate: navigate,
+    ensureLessons: ensureLessons,
     showUpdateChip: showUpdateChip,
     acceptUpdate: acceptUpdate,
     session: {

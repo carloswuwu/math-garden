@@ -2,7 +2,8 @@
  * 畫面渲染（ESM）：首頁、階段/技能、小課堂、家長中心、公式、大綱、設置。
  * 跨層動作（app.navigate/app.show/app.startPractice/...）透過 ./context.js 的 app 物件注入，避免循環 import。
  */
-import { MathCore, I18N, Curriculum, CurriculumOutline, Formulas, Lessons } from './globals.js';
+import { MathCore, I18N, Curriculum, CurriculumOutline, Formulas, getLessons } from './globals.js';
+import { ensureLessons } from './lessons-loader.js';
 import { state, progress } from './state.js';
 import { t, L, nameOf, goalOf } from './i18n.js';
 import { esc, renderMath } from './format.js';
@@ -167,11 +168,42 @@ import { app } from './context.js';
 
   /* ---------------- 小課堂 ---------------- */
 
+  /* 小課堂 chunk 載入中 / 失敗卡：仍是一個完整畫面（單一 h1、可聚焦標題） */
+  function renderLessonPending(skill, info, failed) {
+    var html = '<h1 class="page-title">' + esc(info.name) + '</h1>' +
+      '<p class="page-sub">' + t('stage.goal') + '：' + esc(info.goal) + '</p>' +
+      '<div class="lesson-card"><p class="lesson-text">' +
+      (failed ? t('lesson.loadFailed') : t('lesson.loading')) + '</p>';
+    if (failed) {
+      html += '<button class="btn" id="lessonRetry" type="button">' + t('lesson.retry') + '</button>';
+    }
+    html += '</div>';
+    $('screen-lesson').innerHTML = html;
+    if (failed) {
+      $('lessonRetry').addEventListener('click', function () { renderLesson(skill.id); });
+    }
+    app.show('lesson');
+  }
+
   function renderLesson(skillId) {
     state.skillId = skillId;
     var skill = getSkill(skillId);
     var info = skill[state.lang === 'zh' ? 'zh' : 'en'];
-    var lesson = Lessons[skill.lesson];
+    var lessons = getLessons();
+
+    /* dist 模式：教學文字在 lazy chunk。未載入時先顯示載入卡，載入完成後
+     * 以目前 route 無歷史地重繪；若使用者已離開，回呼自動放棄。 */
+    if (!lessons) {
+      renderLessonPending(skill, info, false);
+      ensureLessons().then(function () {
+        if (state.screen === 'lesson' && state.skillId === skillId) app.renderRouteSafely(app.currentRoute());
+      }, function () {
+        if (state.screen === 'lesson' && state.skillId === skillId) renderLessonPending(skill, info, true);
+      });
+      return;
+    }
+
+    var lesson = lessons[skill.lesson];
 
     var html = '<h1 class="page-title">' + esc(info.name) + '</h1>' +
       '<p class="page-sub">' + t('stage.goal') + '：' + esc(info.goal) + '</p>';
