@@ -765,6 +765,9 @@
   // src/ui/nav-state.js
   var nav = { lastHash: null };
 
+  // src/ui/modal-state.js
+  var modalState = { open: false, opener: null };
+
   // src/ui/screens.js
   function renderHome2() {
     var realStages = realStageList();
@@ -1120,7 +1123,7 @@
     state.locked = false;
     state.hintShown = false;
     state.attemptWrong = false;
-    renderQuestion(p);
+    renderQuestion2(p);
     app.saveSession();
   }
   function startQuiz(skillId) {
@@ -1136,7 +1139,7 @@
     state.hintShown = false;
     state.quizStart = Date.now();
     state.run = { mode: "quiz", key: skillId };
-    renderQuestion(state.problems[0]);
+    renderQuestion2(state.problems[0]);
     app.show("practice");
     app.saveSession();
   }
@@ -1165,7 +1168,7 @@
     if (p.type === "centre") return t("centre." + c);
     return MathCore.isFraction(c) ? MathCore.renderValue(c) : String(c);
   }
-  function renderQuestion(p) {
+  function renderQuestion2(p) {
     var isQuiz = state.mode === "quiz" || state.mode === "exam";
     var skill = state.mode === "exam" ? null : getSkill(state.skillId);
     var headHtml;
@@ -1360,7 +1363,7 @@
       renderStage(stageId);
       return;
     }
-    renderQuestion(state.problems[0]);
+    renderQuestion2(state.problems[0]);
     app.show("practice");
     app.saveSession();
   }
@@ -1417,7 +1420,7 @@
     if (state.index < state.problems.length) {
       state.locked = false;
       state.attemptWrong = false;
-      renderQuestion(state.problems[state.index]);
+      renderQuestion2(state.problems[state.index]);
       app.saveSession();
     } else if (state.mode === "exam") {
       finishExam();
@@ -1542,7 +1545,7 @@
     state.hintShown = false;
     state.attemptWrong = false;
     state.run = { mode: parsed.screen, key: parsed.screen === "exam" ? parsed.stageId : parsed.skillId };
-    renderQuestion(state.problems[state.index]);
+    renderQuestion2(state.problems[state.index]);
     app.show("practice");
     saveSession();
   }
@@ -1577,82 +1580,7 @@
     return { route, modeLabel, name, index: s.index, total: s.problems.length };
   }
 
-  // src/ui/index.js
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-  function applyTheme() {
-    document.documentElement.setAttribute("data-theme", state.theme || "light");
-  }
-  function applyLang() {
-    var code = state.lang === "en" ? "en" : "zh-Hant-HK";
-    document.documentElement.setAttribute("lang", code);
-    var skip = $("skipLink");
-    if (skip) skip.textContent = t("a11y.skipLink");
-    [["backBtn", "a11y.back"], ["settingsBtn", "a11y.settings"], ["topbarStars", "a11y.stars"]].forEach(function(pair) {
-      var el = $(pair[0]);
-      if (el) el.setAttribute("aria-label", t(pair[1]));
-    });
-    var langBtn = $("langBtn");
-    if (langBtn) langBtn.setAttribute("aria-label", state.lang === "zh" ? t("a11y.languageZh") : t("a11y.languageEn"));
-  }
-  var audioCtx = null;
-  function playTone(ok) {
-    if (!state.sound) return;
-    try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      var o = audioCtx.createOscillator();
-      var g = audioCtx.createGain();
-      o.connect(g);
-      g.connect(audioCtx.destination);
-      o.type = "sine";
-      o.frequency.value = ok ? 880 : 220;
-      var now = audioCtx.currentTime;
-      g.gain.setValueAtTime(0.12, now);
-      g.gain.exponentialRampToValueAtTime(1e-3, now + (ok ? 0.35 : 0.22));
-      o.start(now);
-      o.stop(now + (ok ? 0.35 : 0.22));
-    } catch (e) {
-    }
-  }
-  function confetti() {
-    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    var box = $("confetti");
-    var colors = ["#FF9500", "#34C759", "#007AFF", "#AF52DE", "#FF2D55", "#FFCC00"];
-    for (var i = 0; i < 22; i++) {
-      var el = document.createElement("div");
-      el.className = "confetti-piece";
-      el.style.left = Math.random() * 100 + "vw";
-      el.style.width = 6 + Math.random() * 6 + "px";
-      el.style.height = 9 + Math.random() * 10 + "px";
-      el.style.background = colors[Math.floor(Math.random() * colors.length)];
-      el.style.animationDuration = 1.5 + Math.random() * 1.5 + "s";
-      el.style.animationDelay = Math.random() * 0.25 + "s";
-      box.appendChild(el);
-      (function(node) {
-        setTimeout(function() {
-          node.remove();
-        }, 3300);
-      })(el);
-    }
-  }
-  function toast(msg) {
-    var el = $("toast");
-    el.textContent = msg;
-    el.hidden = false;
-    clearTimeout(el._timer);
-    el._timer = setTimeout(function() {
-      el.hidden = true;
-    }, 2200);
-  }
-  function touchStreak() {
-    var day = (/* @__PURE__ */ new Date()).toDateString();
-    if (progress.streak.lastDay === day) return;
-    var yesterday = new Date(Date.now() - 864e5).toDateString();
-    progress.streak.count = progress.streak.lastDay === yesterday ? progress.streak.count + 1 : 1;
-    progress.streak.lastDay = day;
-    saveProgress();
-  }
+  // src/ui/nav.js
   function currentRoute() {
     switch (state.screen) {
       case "stage":
@@ -1887,7 +1815,7 @@
     var canonical = serializeRoute(target);
     nav.lastHash = canonical;
     if (canonical !== hash) writeHash(canonical, true);
-    if (modalState.open) closeModal({ restore: false });
+    if (modalState.open) app.closeModal({ restore: false });
     renderRouteSafely(target);
   }
   function renderRoute(route) {
@@ -1948,7 +1876,7 @@
     box.innerHTML = '<div class="result-card"><div class="big">⚠️</div><h1>' + t("error.title") + '</h1><p class="page-sub">' + t("error.body") + '</p><div class="result-actions"><button class="btn secondary" id="errorExport" type="button">📤 ' + t("error.export") + '</button><button class="btn" id="errorHome" type="button">' + t("error.home") + "</button></div></div>";
     var exportBtn = $("errorExport");
     if (exportBtn) exportBtn.addEventListener("click", function() {
-      exportProgress();
+      app.exportProgress();
     });
     var homeBtn = $("errorHome");
     if (homeBtn) homeBtn.addEventListener("click", function() {
@@ -1964,6 +1892,83 @@
   function back() {
     var parent = parentOf(currentRoute());
     navigate(parent || HOME_ROUTE);
+  }
+
+  // src/ui/index.js
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+  function applyTheme() {
+    document.documentElement.setAttribute("data-theme", state.theme || "light");
+  }
+  function applyLang() {
+    var code = state.lang === "en" ? "en" : "zh-Hant-HK";
+    document.documentElement.setAttribute("lang", code);
+    var skip = $("skipLink");
+    if (skip) skip.textContent = t("a11y.skipLink");
+    [["backBtn", "a11y.back"], ["settingsBtn", "a11y.settings"], ["topbarStars", "a11y.stars"]].forEach(function(pair) {
+      var el = $(pair[0]);
+      if (el) el.setAttribute("aria-label", t(pair[1]));
+    });
+    var langBtn = $("langBtn");
+    if (langBtn) langBtn.setAttribute("aria-label", state.lang === "zh" ? t("a11y.languageZh") : t("a11y.languageEn"));
+  }
+  var audioCtx = null;
+  function playTone(ok) {
+    if (!state.sound) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      var o = audioCtx.createOscillator();
+      var g = audioCtx.createGain();
+      o.connect(g);
+      g.connect(audioCtx.destination);
+      o.type = "sine";
+      o.frequency.value = ok ? 880 : 220;
+      var now = audioCtx.currentTime;
+      g.gain.setValueAtTime(0.12, now);
+      g.gain.exponentialRampToValueAtTime(1e-3, now + (ok ? 0.35 : 0.22));
+      o.start(now);
+      o.stop(now + (ok ? 0.35 : 0.22));
+    } catch (e) {
+    }
+  }
+  function confetti() {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var box = $("confetti");
+    var colors = ["#FF9500", "#34C759", "#007AFF", "#AF52DE", "#FF2D55", "#FFCC00"];
+    for (var i = 0; i < 22; i++) {
+      var el = document.createElement("div");
+      el.className = "confetti-piece";
+      el.style.left = Math.random() * 100 + "vw";
+      el.style.width = 6 + Math.random() * 6 + "px";
+      el.style.height = 9 + Math.random() * 10 + "px";
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.animationDuration = 1.5 + Math.random() * 1.5 + "s";
+      el.style.animationDelay = Math.random() * 0.25 + "s";
+      box.appendChild(el);
+      (function(node) {
+        setTimeout(function() {
+          node.remove();
+        }, 3300);
+      })(el);
+    }
+  }
+  function toast(msg) {
+    var el = $("toast");
+    el.textContent = msg;
+    el.hidden = false;
+    clearTimeout(el._timer);
+    el._timer = setTimeout(function() {
+      el.hidden = true;
+    }, 2200);
+  }
+  function touchStreak() {
+    var day = (/* @__PURE__ */ new Date()).toDateString();
+    if (progress.streak.lastDay === day) return;
+    var yesterday = new Date(Date.now() - 864e5).toDateString();
+    progress.streak.count = progress.streak.lastDay === yesterday ? progress.streak.count + 1 : 1;
+    progress.streak.lastDay = day;
+    saveProgress();
   }
   function handlePracticeKeys(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -2033,7 +2038,6 @@
     if (!screen || screen.hidden) return;
     handlePracticeKeys(e);
   }
-  var modalState = { open: false, opener: null };
   function showModal(innerHTML, opener) {
     var modal = $("modal");
     if (!modal) return;
@@ -2305,7 +2309,7 @@
     renderRouteSafely,
     currentRoute,
     finishExam,
-    renderQuestion,
+    renderQuestion: renderQuestion2,
     advanceQuiz,
     finishQuiz,
     sessionSummary,
@@ -2318,7 +2322,9 @@
     touchStreak,
     skillStageId,
     resolveRoute,
-    writeHash
+    writeHash,
+    closeModal,
+    init
   });
   init();
   window.__mathApp = {
