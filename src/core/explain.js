@@ -1225,6 +1225,18 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
         return m.mode === 'functions'
           ? { zh: ['每個輸入有 ' + m.n + ' 個選擇，共 ' + m.m + ' 個輸入。', '= ' + m.n + '^' + m.m + ' = ' + p.answer + '。'], en: ['Each of ' + m.m + ' inputs has ' + m.n + ' choices.', '= ' + m.n + '^' + m.m + ' = ' + p.answer + '.'] }
           : { zh: ['每個元素可映射到 ' + m.k + ' 個元素之一。', '= ' + m.k + '^' + m.k + ' = ' + p.answer + '。'], en: ['Each element maps to one of ' + m.k + ' elements.', '= ' + m.k + '^' + m.k + ' = ' + p.answer + '.'] };
+      case 'trigident':
+        if (m.mode === 'pythagorean') return { zh: ['$\sin^2\theta + \cos^2\theta = 1$。', '$\cos\theta = \sqrt{1 - (' + m.a + '/' + m.c + ')^2} = ' + renderValue(p.answer) + '$。'], en: ['$\sin^2\theta + \cos^2\theta = 1$.', '$\cos\theta = \sqrt{1 - (' + m.a + '/' + m.c + ')^2} = ' + renderValue(p.answer) + '$.' ] };
+        if (m.mode === 'double') return { zh: ['二倍角公式：$\sin 2\theta = 2\sin\theta\cos\theta$。', '= 2 × ' + m.a + '/' + m.c + ' × ' + m.b + '/' + m.c + ' = ' + renderValue(p.answer) + '。'], en: ['Double angle: $\sin 2\theta = 2\sin\theta\cos\theta$.', '= 2 × ' + m.a + '/' + m.c + ' × ' + m.b + '/' + m.c + ' = ' + renderValue(p.answer) + '.'] };
+        return { zh: ['$\tan\theta = \dfrac{\sin\theta}{\cos\theta}$。', '= ' + m.a + '/' + m.b + ' = ' + renderValue(p.answer) + '。'], en: ['$\tan\theta = \dfrac{\sin\theta}{\cos\theta}$.', '= ' + m.a + '/' + m.b + ' = ' + renderValue(p.answer) + '.'] };
+      case 'sinerule':
+        if (m.mode === 'cosine') return { zh: ['餘弦定理：$c^2 = a^2 + b^2 - 2ab\cos C$。', '$\cos C = \dfrac{a^2+b^2-c^2}{2ab} = ' + renderValue(p.answer) + '$。'], en: ['Cosine rule: $c^2 = a^2 + b^2 - 2ab\cos C$.', '$\cos C = \dfrac{a^2+b^2-c^2}{2ab} = ' + renderValue(p.answer) + '$.' ] };
+        if (m.mode === 'area') return { zh: ['面積 = $\dfrac{1}{2}ab\sin C$。', '= ½ × ' + m.a + ' × ' + m.b + ' × ' + m.x + '/' + m.z + ' = ' + renderValue(p.answer) + '。'], en: ['Area = $\dfrac{1}{2}ab\sin C$.', '= ½ × ' + m.a + ' × ' + m.b + ' × ' + m.x + '/' + m.z + ' = ' + renderValue(p.answer) + '.'] };
+        return { zh: ['正弦定理：$\dfrac{a}{\sin A} = \dfrac{b}{\sin B}$。', '$a = b\sin A / \sin B = ' + p.answer + '$。'], en: ['Sine rule: $\dfrac{a}{\sin A} = \dfrac{b}{\sin B}$.', '$a = b\sin A / \sin B = ' + p.answer + '$.' ] };
+      case 'triggraph':
+        return m.mode === 'amplitude'
+          ? { zh: ['$y = a\sin(bx)$ 的振幅是 |a|。', '振幅 = ' + m.a + '。'], en: ['The amplitude of $y = a\sin(bx)$ is |a|.', 'Amplitude = ' + m.a + '.'] }
+          : { zh: ['週期 = 360° ÷ |b|。', '週期 = 360° ÷ ' + m.b + ' = ' + p.answer + '°。'], en: ['Period = 360° ÷ |b|.', 'Period = 360° ÷ ' + m.b + ' = ' + p.answer + '°.'] };
       default:
         return null;
     }

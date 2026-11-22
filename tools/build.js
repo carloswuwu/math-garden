@@ -246,13 +246,13 @@ function build() {
 
   const bundleBytes = Buffer.byteLength(bundle, 'utf8');
   const gzipBytes = zlib.gzipSync(Buffer.from(bundle, 'utf8')).length;
-  const advisory = 162 * 1024;
+  const advisory = 166 * 1024;
   console.log('Math Garden build ' + hash);
   console.log('  dist/' + bundleName + ': ' + (bundleBytes / 1024).toFixed(1) + ' KB (' +
     (gzipBytes / 1024).toFixed(1) + ' KB gzip)');
   console.log('  precache: ' + precache.length + ' files · cache ' + cacheName);
   if (gzipBytes > advisory) {
-    console.warn('  ⚠ bundle gzip ' + (gzipBytes / 1024).toFixed(1) + ' KB 超過建議的 162 KB');
+    console.warn('  ⚠ bundle gzip ' + (gzipBytes / 1024).toFixed(1) + ' KB 超過建議的 166 KB');
   }
 
   return { hash, bundleName, size: bundleBytes, gzipSize: gzipBytes, precache, cacheName };

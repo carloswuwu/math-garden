@@ -61,6 +61,17 @@ var MATH_SPEC = {
   },
   log: function (m) { return m.mode === 'law' ? Math.round(Math.log(m.m * m.n) / Math.log(m.base)) : m.n; },
   fx: function (m) { return m.a * m.x * m.x + m.b * m.x + m.c; },
+  trigident: function (m) {
+    if (m.mode === 'pythagorean') return { n: m.b, d: m.c };
+    if (m.mode === 'double') return { n: 2 * m.a * m.b, d: m.c * m.c };
+    return { n: m.a, d: m.b };
+  },
+  sinerule: function (m) {
+    if (m.mode === 'cosine') return { n: m.a * m.a + m.b * m.b - m.c * m.c, d: 2 * m.a * m.b };
+    if (m.mode === 'area') return { n: m.a * m.b * m.x, d: 2 * m.z };
+    return Math.round(m.b * Math.sin(m.A * Math.PI / 180) * 1000) / 1000;
+  },
+  triggraph: function (m) { return m.mode === 'amplitude' ? m.a : 360 / m.b; },
   trig: function (m) {
     if (m.which === 'sin') return { n: m.a, d: m.c };
     if (m.which === 'cos') return { n: m.b, d: m.c };

@@ -2257,5 +2257,100 @@ var L = {
     L['col.linalg2'].en.visual = { kind: 'matrix', a: 1, b: 2, c: 3, d: 4 };
   }
 
+
+  var TRIG_LESSONS = {
+    'hs.s4.identities': {
+      zh: {
+        title: '三角恆等式',
+        intro: '三角恆等式把 sin、cos、tan 連起來；最核心是 $\\sin^2\\theta + \\cos^2\\theta = 1$。',
+        steps: ['平方關係：$\\sin^2\\theta + \\cos^2\\theta = 1$。', '商數關係：$\\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}$。', '二倍角：$\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$。'],
+        example: '已知 $\\sin\\theta = 3/5$，則 $\\cos\\theta = 4/5$，$\\tan\\theta = 3/4$。',
+        tip: '用畢氏三元組（3-4-5、5-12-13）快速驗算。',
+        mistake: '把 $\\sin^2\\theta$ 當成 $\\sin(\\theta^2)$，或忘記銳角時 cos 取正。',
+        visual: { kind: 'righttri' },
+        glossary: [
+          { term: '恆等式', def: '對所有允許角度都成立的等式。' },
+          { term: '平方關係', def: '$\\sin^2\\theta + \\cos^2\\theta = 1$。' },
+          { term: '二倍角公式', def: '$\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$。' }
+        ]
+      },
+      en: {
+        title: 'Trigonometric Identities',
+        intro: 'Identities connect sin, cos and tan; the core one is $\\sin^2\\theta + \\cos^2\\theta = 1$.',
+        steps: ['Pythagorean: $\\sin^2\\theta + \\cos^2\\theta = 1$.', 'Quotient: $\\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}$.', 'Double angle: $\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$.'],
+        example: 'Given $\\sin\\theta = 3/5$, $\\cos\\theta = 4/5$ and $\\tan\\theta = 3/4$.',
+        tip: 'Use Pythagorean triples (3-4-5, 5-12-13) for quick checks.',
+        mistake: 'Reading $\\sin^2\\theta$ as $\\sin(\\theta^2)$, or forgetting cos is positive for acute angles.',
+        visual: { kind: 'righttri' },
+        glossary: [
+          { term: 'Identity', def: 'An equation true for all allowed angles.' },
+          { term: 'Pythagorean identity', def: '$\\sin^2\\theta + \\cos^2\\theta = 1$.' },
+          { term: 'Double-angle formula', def: '$\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$.' }
+        ]
+      }
+    },
+    'hs.s5.sinerule': {
+      zh: {
+        title: '正弦與餘弦定理',
+        intro: '正弦定理連繫邊與對角；餘弦定理是畢氏定理的推廣，適用於非直角三角形。',
+        steps: ['正弦定理：$\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B} = \\dfrac{c}{\\sin C}$。', '餘弦定理：$c^2 = a^2 + b^2 - 2ab\\cos C$。', '面積：$\\dfrac{1}{2}ab\\sin C$。'],
+        example: '三邊 3、4、5，$\\cos C = (9+16-25)/(2×3×4) = 0$，所以 C = 90°。',
+        tip: '已知兩邊及夾角用餘弦定理；已知兩角及一邊用正弦定理。',
+        mistake: '餘弦定理中忘記乘以 2ab，或正弦定理的邊角沒有配對。',
+        visual: { kind: 'triangle', b: 6, h: 4 },
+        glossary: [
+          { term: '正弦定理', def: '$a/\\sin A = b/\\sin B = c/\\sin C$。' },
+          { term: '餘弦定理', def: '$c^2 = a^2 + b^2 - 2ab\\cos C$。' },
+          { term: '夾角', def: '兩邊之間的角。' }
+        ]
+      },
+      en: {
+        title: 'Sine & Cosine Rules',
+        intro: 'The sine rule links sides to opposite angles; the cosine rule generalises Pythagoras to non-right triangles.',
+        steps: ['Sine rule: $\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B} = \\dfrac{c}{\\sin C}$.', 'Cosine rule: $c^2 = a^2 + b^2 - 2ab\\cos C$.', 'Area: $\\dfrac{1}{2}ab\\sin C$.'],
+        example: 'For sides 3, 4, 5: $\\cos C = (9+16-25)/(2×3×4) = 0$, so C = 90°.',
+        tip: 'Two sides and the included angle → cosine rule; two angles and a side → sine rule.',
+        mistake: 'Forgetting the 2ab term, or mismatching sides and angles in the sine rule.',
+        visual: { kind: 'triangle', b: 6, h: 4 },
+        glossary: [
+          { term: 'Sine rule', def: '$a/\\sin A = b/\\sin B = c/\\sin C$.' },
+          { term: 'Cosine rule', def: '$c^2 = a^2 + b^2 - 2ab\\cos C$.' },
+          { term: 'Included angle', def: 'The angle between two sides.' }
+        ]
+      }
+    },
+    'hs.s5.triggraph': {
+      zh: {
+        title: '三角函數圖像',
+        intro: '$y = a\\sin(bx)$ 的振幅是 |a|，週期是 $360^\\circ/|b|$；cos 曲線形狀相同、只是左右平移。',
+        steps: ['振幅 = |a|（最高點與平衡線的距離）。', '週期 = $360^\\circ \\div |b|$（度）或 $2\\pi \\div |b|$（弧度）。', '比較 sin 與 cos 的起點與相位。'],
+        example: '$y = 3\\sin(2x^\\circ)$ 的振幅是 3，週期是 180°。',
+        tip: 'b 越大，曲線在水平方向越壓縮、週期越短。',
+        mistake: '把週期當成 b，或把振幅和最大值混淆。',
+        visual: { kind: 'sinewave' },
+        glossary: [
+          { term: '振幅', def: '曲線偏離平衡線的最大距離。' },
+          { term: '週期', def: '圖形重複一次所需的 x 距離。' },
+          { term: '相位', def: '曲線水平平移的量。' }
+        ]
+      },
+      en: {
+        title: 'Trigonometric Graphs',
+        intro: 'For $y = a\\sin(bx)$ the amplitude is |a| and the period is $360^\\circ/|b|$; a cosine curve has the same shape shifted horizontally.',
+        steps: ['Amplitude = |a| (distance from the midline to a peak).', 'Period = $360^\\circ \\div |b|$ (degrees) or $2\\pi \\div |b|$ (radians).', 'Compare the starting points and phases of sin and cos.'],
+        example: '$y = 3\\sin(2x^\\circ)$ has amplitude 3 and period 180°.',
+        tip: 'A larger b compresses the curve horizontally and shortens the period.',
+        mistake: 'Taking the period as b, or confusing amplitude with the maximum value.',
+        visual: { kind: 'sinewave' },
+        glossary: [
+          { term: 'Amplitude', def: 'The maximum distance from the midline.' },
+          { term: 'Period', def: 'The x-distance for one complete repetition.' },
+          { term: 'Phase', def: 'The horizontal shift of the curve.' }
+        ]
+      }
+    }
+  };
+  Object.keys(TRIG_LESSONS).forEach(function (key) { L[key] = TRIG_LESSONS[key]; });
+
   export { L as Lessons };
 

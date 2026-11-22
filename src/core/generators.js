@@ -3763,6 +3763,105 @@ import { fmtDecimal, fmtNum } from './display.js';
     };
   }
 
+
+  /* ---------------- 三角學加深：恆等式、正弦/餘弦定理、圖像 ---------------- */
+
+  function genTrigident(rng, o) {
+    var t = pick(rng, TRIG_TRIPLES);
+    var a = t[0], b = t[1], c = t[2];
+    var mode = pick(rng, ['pythagorean', 'double', 'quotient']);
+    if (mode === 'pythagorean') {
+      return {
+        type: 'trigident',
+        prompt: { zh: '已知 $\\sin\\theta = \\frac{' + a + '}{' + c + '}$ 且 θ 為銳角，求 $\\cos\\theta$。', en: 'Given $\\sin\\theta = \\frac{' + a + '}{' + c + '}$ with θ acute, find $\\cos\\theta$.' },
+        visual: { kind: 'righttri' },
+        answer: reduceFraction({ n: b, d: c }),
+        math: { op: 'trigident', mode: mode, a: a, b: b, c: c },
+        hint: { zh: '用 $\\sin^2\\theta + \\cos^2\\theta = 1$，或畫直角三角形用畢氏定理。', en: 'Use $\\sin^2\\theta + \\cos^2\\theta = 1$, or draw a right triangle and use Pythagoras.' }
+      };
+    }
+    if (mode === 'double') {
+      return {
+        type: 'trigident',
+        prompt: { zh: '已知 $\\sin\\theta = \\frac{' + a + '}{' + c + '}$、$\\cos\\theta = \\frac{' + b + '}{' + c + '}$，求 $\\sin 2\\theta$。', en: 'Given $\\sin\\theta = \\frac{' + a + '}{' + c + '}$ and $\\cos\\theta = \\frac{' + b + '}{' + c + '}$, find $\\sin 2\\theta$.' },
+        visual: null,
+        answer: reduceFraction({ n: 2 * a * b, d: c * c }),
+        math: { op: 'trigident', mode: mode, a: a, b: b, c: c },
+        hint: { zh: '用二倍角公式 $\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$。', en: 'Use the double-angle formula $\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$.' }
+      };
+    }
+    return {
+      type: 'trigident',
+      prompt: { zh: '已知 $\\sin\\theta = \\frac{' + a + '}{' + c + '}$、$\\cos\\theta = \\frac{' + b + '}{' + c + '}$，求 $\\tan\\theta$。', en: 'Given $\\sin\\theta = \\frac{' + a + '}{' + c + '}$ and $\\cos\\theta = \\frac{' + b + '}{' + c + '}$, find $\\tan\\theta$.' },
+      visual: { kind: 'righttri' },
+      answer: reduceFraction({ n: a, d: b }),
+      math: { op: 'trigident', mode: mode, a: a, b: b, c: c },
+      hint: { zh: '用 $\\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}$。', en: 'Use $\\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}$.' }
+    };
+  }
+
+  function genSinerule(rng, o) {
+    var mode = pick(rng, ['cosine', 'area', 'sine']);
+    if (mode === 'cosine') {
+      var a = randInt(rng, 3, 9), b = randInt(rng, 3, 9);
+      var minC = Math.abs(a - b) + 1;
+      var maxC = Math.floor(Math.sqrt(a * a + b * b)) || minC;
+      if (maxC <= minC) maxC = minC + 1;
+      var c = randInt(rng, minC, maxC);
+      return {
+        type: 'sinerule',
+        prompt: { zh: '三角形三邊 $a = ' + a + '$、$b = ' + b + '$、$c = ' + c + '$，求 $\\cos C$（C 為 c 的對角）。', en: 'A triangle has sides $a = ' + a + '$, $b = ' + b + '$, $c = ' + c + '$. Find $\\cos C$ (C opposite c).' },
+        visual: { kind: 'triangle', b: b, h: 3 },
+        answer: reduceFraction({ n: a * a + b * b - c * c, d: 2 * a * b }),
+        math: { op: 'sinerule', mode: mode, a: a, b: b, c: c },
+        hint: { zh: '餘弦定理：$c^2 = a^2 + b^2 - 2ab\\cos C$。', en: 'Cosine rule: $c^2 = a^2 + b^2 - 2ab\\cos C$.' }
+      };
+    }
+    if (mode === 'area') {
+      var t = pick(rng, TRIG_TRIPLES);
+      var x = t[0], y = t[1], z = t[2];
+      var sideA = x * randInt(rng, 1, 3), sideB = y * randInt(rng, 1, 3);
+      return {
+        type: 'sinerule',
+        prompt: { zh: '三角形兩邊 $a = ' + sideA + '$、$b = ' + sideB + '$，夾角 C 滿足 $\\sin C = \\frac{' + x + '}{' + z + '}$，求面積。', en: 'A triangle has $a = ' + sideA + '$, $b = ' + sideB + '$, and included angle C with $\\sin C = \\frac{' + x + '}{' + z + '}$. Find its area.' },
+        visual: null,
+        answer: reduceFraction({ n: sideA * sideB * x, d: 2 * z }),
+        math: { op: 'sinerule', mode: mode, a: sideA, b: sideB, x: x, z: z },
+        hint: { zh: '面積 = $\\dfrac{1}{2}ab\\sin C$。', en: 'Area = $\\dfrac{1}{2}ab\\sin C$.' }
+      };
+    }
+    var angleA = pick(rng, [30, 45, 60]);
+    var angleB = 90;
+    var bSide = randInt(rng, 2, 12) * (angleA === 60 ? 2 : 4);
+    var aSide = bSide * Math.sin(angleA * Math.PI / 180);
+    return {
+      type: 'sinerule',
+      prompt: { zh: '在三角形中，$A = ' + angleA + '^\\circ$、$B = 90^\\circ$、$b = ' + bSide + '$，用正弦定理求 $a$。', en: 'In a triangle, $A = ' + angleA + '^\\circ$, $B = 90^\\circ$ and $b = ' + bSide + '$. Use the sine rule to find $a$.' },
+      visual: { kind: 'righttri' },
+      answer: Math.round(aSide * 1000) / 1000,
+      math: { op: 'sinerule', mode: mode, A: angleA, B: angleB, b: bSide },
+      hint: { zh: '正弦定理：$\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B}$。', en: 'Sine rule: $\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B}$.' }
+    };
+  }
+
+  function genTriggraph(rng, o) {
+    var a = randInt(rng, 1, 5);
+    var b = pick(rng, [1, 2, 3, 4, 6]);
+    var fn = pick(rng, ['sin', 'cos']);
+    var mode = pick(rng, ['amplitude', 'period']);
+    return {
+      type: 'triggraph',
+      prompt: {
+        zh: '考慮 $y = ' + a + '\\' + fn + '(' + b + 'x^\\circ)$，求' + (mode === 'amplitude' ? '振幅' : '週期') + '（度）。',
+        en: 'For $y = ' + a + '\\' + fn + '(' + b + 'x^\\circ)$, find the ' + (mode === 'amplitude' ? 'amplitude' : 'period') + ' in degrees.'
+      },
+      visual: { kind: 'sinewave' },
+      answer: mode === 'amplitude' ? a : 360 / b,
+      math: { op: 'triggraph', mode: mode, a: a, b: b },
+      hint: { zh: mode === 'amplitude' ? '振幅 = |a|。' : '週期 = 360° ÷ |b|。', en: mode === 'amplitude' ? 'Amplitude = |a|.' : 'Period = 360° ÷ |b|.' }
+    };
+  }
+
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -3889,7 +3988,10 @@ import { fmtDecimal, fmtNum } from './display.js';
     gradtopology: genGradtopology,
     gradmeasure: genGradmeasure,
     gradgeometry: genGradgeometry,
-    gradcategory: genGradcategory
+    gradcategory: genGradcategory,
+    trigident: genTrigident,
+    sinerule: genSinerule,
+    triggraph: genTriggraph
   };
 
 export { GENERATORS, DIR_LABEL, CENTRE_LABEL };

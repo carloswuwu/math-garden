@@ -67,7 +67,13 @@ var F = {
       {
         zh: '三角學', en: 'Trigonometry', items: [
           { zh: '三角比', en: 'Trigonometric ratios', latex: '\\sin\\theta = \\dfrac{\\text{opp}}{\\text{hyp}},\\ \\cos\\theta = \\dfrac{\\text{adj}}{\\text{hyp}},\\ \\tan\\theta = \\dfrac{\\text{opp}}{\\text{adj}}', skills: ['hs.s4.trig'] },
-          { zh: '正弦／餘弦定理', en: 'Sine / cosine rules', latex: '\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B} = \\dfrac{c}{\\sin C},\\quad c^2 = a^2 + b^2 - 2ab\\cos C', skills: ['hs.s4.trig'] }
+          { zh: '平方關係', en: 'Pythagorean identity', latex: '\\sin^2\\theta + \\cos^2\\theta = 1', skills: ['hs.s4.identities'] },
+          { zh: '商數關係', en: 'Quotient identity', latex: '\\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}', skills: ['hs.s4.identities'] },
+          { zh: '二倍角公式', en: 'Double-angle formulae', latex: '\\sin 2\\theta = 2\\sin\\theta\\cos\\theta,\\quad \\cos 2\\theta = \\cos^2\\theta - \\sin^2\\theta', skills: ['hs.s4.identities'] },
+          { zh: '正弦定理', en: 'Sine rule', latex: '\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B} = \\dfrac{c}{\\sin C}', skills: ['hs.s5.sinerule'] },
+          { zh: '餘弦定理', en: 'Cosine rule', latex: 'c^2 = a^2 + b^2 - 2ab\\cos C', skills: ['hs.s5.sinerule'] },
+          { zh: '三角形面積（兩邊及夾角）', en: 'Area of triangle (SAS)', latex: 'A = \\dfrac{1}{2}ab\\sin C', skills: ['hs.s5.sinerule'] },
+          { zh: '正弦曲線的振幅與週期', en: 'Amplitude and period of sine curve', latex: 'y = a\\sin(bx):\\ \\text{amplitude} = |a|,\\ \\text{period} = \\dfrac{360^\\circ}{|b|}', skills: ['hs.s5.triggraph'] }
         ]
       },
       {

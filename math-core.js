@@ -211,6 +211,19 @@ var __MathCoreBundle = (() => {
     fx: function(m) {
       return m.a * m.x * m.x + m.b * m.x + m.c;
     },
+    trigident: function(m) {
+      if (m.mode === "pythagorean") return { n: m.b, d: m.c };
+      if (m.mode === "double") return { n: 2 * m.a * m.b, d: m.c * m.c };
+      return { n: m.a, d: m.b };
+    },
+    sinerule: function(m) {
+      if (m.mode === "cosine") return { n: m.a * m.a + m.b * m.b - m.c * m.c, d: 2 * m.a * m.b };
+      if (m.mode === "area") return { n: m.a * m.b * m.x, d: 2 * m.z };
+      return Math.round(m.b * Math.sin(m.A * Math.PI / 180) * 1e3) / 1e3;
+    },
+    triggraph: function(m) {
+      return m.mode === "amplitude" ? m.a : 360 / m.b;
+    },
     trig: function(m) {
       if (m.which === "sin") return { n: m.a, d: m.c };
       if (m.which === "cos") return { n: m.b, d: m.c };
@@ -4481,6 +4494,99 @@ var __MathCoreBundle = (() => {
       hint: { zh: "每個元素可映射到 k 個元素之一，共 kᵏ 個。", en: "Each element maps to one of k elements, giving kᵏ endomorphisms." }
     };
   }
+  function genTrigident(rng, o) {
+    var t = pick(rng, TRIG_TRIPLES);
+    var a = t[0], b = t[1], c = t[2];
+    var mode = pick(rng, ["pythagorean", "double", "quotient"]);
+    if (mode === "pythagorean") {
+      return {
+        type: "trigident",
+        prompt: { zh: "已知 $\\sin\\theta = \\frac{" + a + "}{" + c + "}$ 且 θ 為銳角，求 $\\cos\\theta$。", en: "Given $\\sin\\theta = \\frac{" + a + "}{" + c + "}$ with θ acute, find $\\cos\\theta$." },
+        visual: { kind: "righttri" },
+        answer: reduceFraction({ n: b, d: c }),
+        math: { op: "trigident", mode, a, b, c },
+        hint: { zh: "用 $\\sin^2\\theta + \\cos^2\\theta = 1$，或畫直角三角形用畢氏定理。", en: "Use $\\sin^2\\theta + \\cos^2\\theta = 1$, or draw a right triangle and use Pythagoras." }
+      };
+    }
+    if (mode === "double") {
+      return {
+        type: "trigident",
+        prompt: { zh: "已知 $\\sin\\theta = \\frac{" + a + "}{" + c + "}$、$\\cos\\theta = \\frac{" + b + "}{" + c + "}$，求 $\\sin 2\\theta$。", en: "Given $\\sin\\theta = \\frac{" + a + "}{" + c + "}$ and $\\cos\\theta = \\frac{" + b + "}{" + c + "}$, find $\\sin 2\\theta$." },
+        visual: null,
+        answer: reduceFraction({ n: 2 * a * b, d: c * c }),
+        math: { op: "trigident", mode, a, b, c },
+        hint: { zh: "用二倍角公式 $\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$。", en: "Use the double-angle formula $\\sin 2\\theta = 2\\sin\\theta\\cos\\theta$." }
+      };
+    }
+    return {
+      type: "trigident",
+      prompt: { zh: "已知 $\\sin\\theta = \\frac{" + a + "}{" + c + "}$、$\\cos\\theta = \\frac{" + b + "}{" + c + "}$，求 $\\tan\\theta$。", en: "Given $\\sin\\theta = \\frac{" + a + "}{" + c + "}$ and $\\cos\\theta = \\frac{" + b + "}{" + c + "}$, find $\\tan\\theta$." },
+      visual: { kind: "righttri" },
+      answer: reduceFraction({ n: a, d: b }),
+      math: { op: "trigident", mode, a, b, c },
+      hint: { zh: "用 $\\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}$。", en: "Use $\\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}$." }
+    };
+  }
+  function genSinerule(rng, o) {
+    var mode = pick(rng, ["cosine", "area", "sine"]);
+    if (mode === "cosine") {
+      var a = randInt(rng, 3, 9), b = randInt(rng, 3, 9);
+      var minC = Math.abs(a - b) + 1;
+      var maxC = Math.floor(Math.sqrt(a * a + b * b)) || minC;
+      if (maxC <= minC) maxC = minC + 1;
+      var c = randInt(rng, minC, maxC);
+      return {
+        type: "sinerule",
+        prompt: { zh: "三角形三邊 $a = " + a + "$、$b = " + b + "$、$c = " + c + "$，求 $\\cos C$（C 為 c 的對角）。", en: "A triangle has sides $a = " + a + "$, $b = " + b + "$, $c = " + c + "$. Find $\\cos C$ (C opposite c)." },
+        visual: { kind: "triangle", b, h: 3 },
+        answer: reduceFraction({ n: a * a + b * b - c * c, d: 2 * a * b }),
+        math: { op: "sinerule", mode, a, b, c },
+        hint: { zh: "餘弦定理：$c^2 = a^2 + b^2 - 2ab\\cos C$。", en: "Cosine rule: $c^2 = a^2 + b^2 - 2ab\\cos C$." }
+      };
+    }
+    if (mode === "area") {
+      var t = pick(rng, TRIG_TRIPLES);
+      var x = t[0], y = t[1], z = t[2];
+      var sideA = x * randInt(rng, 1, 3), sideB = y * randInt(rng, 1, 3);
+      return {
+        type: "sinerule",
+        prompt: { zh: "三角形兩邊 $a = " + sideA + "$、$b = " + sideB + "$，夾角 C 滿足 $\\sin C = \\frac{" + x + "}{" + z + "}$，求面積。", en: "A triangle has $a = " + sideA + "$, $b = " + sideB + "$, and included angle C with $\\sin C = \\frac{" + x + "}{" + z + "}$. Find its area." },
+        visual: null,
+        answer: reduceFraction({ n: sideA * sideB * x, d: 2 * z }),
+        math: { op: "sinerule", mode, a: sideA, b: sideB, x, z },
+        hint: { zh: "面積 = $\\dfrac{1}{2}ab\\sin C$。", en: "Area = $\\dfrac{1}{2}ab\\sin C$." }
+      };
+    }
+    var angleA = pick(rng, [30, 45, 60]);
+    var angleB = 90;
+    var bSide = randInt(rng, 2, 12) * (angleA === 60 ? 2 : 4);
+    var aSide = bSide * Math.sin(angleA * Math.PI / 180);
+    return {
+      type: "sinerule",
+      prompt: { zh: "在三角形中，$A = " + angleA + "^\\circ$、$B = 90^\\circ$、$b = " + bSide + "$，用正弦定理求 $a$。", en: "In a triangle, $A = " + angleA + "^\\circ$, $B = 90^\\circ$ and $b = " + bSide + "$. Use the sine rule to find $a$." },
+      visual: { kind: "righttri" },
+      answer: Math.round(aSide * 1e3) / 1e3,
+      math: { op: "sinerule", mode, A: angleA, B: angleB, b: bSide },
+      hint: { zh: "正弦定理：$\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B}$。", en: "Sine rule: $\\dfrac{a}{\\sin A} = \\dfrac{b}{\\sin B}$." }
+    };
+  }
+  function genTriggraph(rng, o) {
+    var a = randInt(rng, 1, 5);
+    var b = pick(rng, [1, 2, 3, 4, 6]);
+    var fn = pick(rng, ["sin", "cos"]);
+    var mode = pick(rng, ["amplitude", "period"]);
+    return {
+      type: "triggraph",
+      prompt: {
+        zh: "考慮 $y = " + a + "\\" + fn + "(" + b + "x^\\circ)$，求" + (mode === "amplitude" ? "振幅" : "週期") + "（度）。",
+        en: "For $y = " + a + "\\" + fn + "(" + b + "x^\\circ)$, find the " + (mode === "amplitude" ? "amplitude" : "period") + " in degrees."
+      },
+      visual: { kind: "sinewave" },
+      answer: mode === "amplitude" ? a : 360 / b,
+      math: { op: "triggraph", mode, a, b },
+      hint: { zh: mode === "amplitude" ? "振幅 = |a|。" : "週期 = 360° ÷ |b|。", en: mode === "amplitude" ? "Amplitude = |a|." : "Period = 360° ÷ |b|." }
+    };
+  }
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -4607,7 +4713,10 @@ var __MathCoreBundle = (() => {
     gradtopology: genGradtopology,
     gradmeasure: genGradmeasure,
     gradgeometry: genGradgeometry,
-    gradcategory: genGradcategory
+    gradcategory: genGradcategory,
+    trigident: genTrigident,
+    sinerule: genSinerule,
+    triggraph: genTriggraph
   };
 
   // src/core/format.js
@@ -5855,6 +5964,16 @@ var __MathCoreBundle = (() => {
         return m.mode === "curvature" ? { zh: ["圓的曲率 κ = 1/r。", "κ = 1/" + m.r + " = " + renderValue(p.answer) + "。"], en: ["Circle curvature κ = 1/r.", "κ = 1/" + m.r + " = " + renderValue(p.answer) + "."] } : { zh: ["球面高斯曲率 K = 1/r²。", "K = 1/" + m.r * m.r + " = " + renderValue(p.answer) + "。"], en: ["Sphere Gaussian curvature K = 1/r².", "K = 1/" + m.r * m.r + " = " + renderValue(p.answer) + "."] };
       case "gradcategory":
         return m.mode === "functions" ? { zh: ["每個輸入有 " + m.n + " 個選擇，共 " + m.m + " 個輸入。", "= " + m.n + "^" + m.m + " = " + p.answer + "。"], en: ["Each of " + m.m + " inputs has " + m.n + " choices.", "= " + m.n + "^" + m.m + " = " + p.answer + "."] } : { zh: ["每個元素可映射到 " + m.k + " 個元素之一。", "= " + m.k + "^" + m.k + " = " + p.answer + "。"], en: ["Each element maps to one of " + m.k + " elements.", "= " + m.k + "^" + m.k + " = " + p.answer + "."] };
+      case "trigident":
+        if (m.mode === "pythagorean") return { zh: ["$sin^2	heta + cos^2	heta = 1$。", "$cos	heta = sqrt{1 - (" + m.a + "/" + m.c + ")^2} = " + renderValue(p.answer) + "$。"], en: ["$sin^2	heta + cos^2	heta = 1$.", "$cos	heta = sqrt{1 - (" + m.a + "/" + m.c + ")^2} = " + renderValue(p.answer) + "$."] };
+        if (m.mode === "double") return { zh: ["二倍角公式：$sin 2	heta = 2sin	hetacos	heta$。", "= 2 × " + m.a + "/" + m.c + " × " + m.b + "/" + m.c + " = " + renderValue(p.answer) + "。"], en: ["Double angle: $sin 2	heta = 2sin	hetacos	heta$.", "= 2 × " + m.a + "/" + m.c + " × " + m.b + "/" + m.c + " = " + renderValue(p.answer) + "."] };
+        return { zh: ["$	an	heta = dfrac{sin	heta}{cos	heta}$。", "= " + m.a + "/" + m.b + " = " + renderValue(p.answer) + "。"], en: ["$	an	heta = dfrac{sin	heta}{cos	heta}$.", "= " + m.a + "/" + m.b + " = " + renderValue(p.answer) + "."] };
+      case "sinerule":
+        if (m.mode === "cosine") return { zh: ["餘弦定理：$c^2 = a^2 + b^2 - 2abcos C$。", "$cos C = dfrac{a^2+b^2-c^2}{2ab} = " + renderValue(p.answer) + "$。"], en: ["Cosine rule: $c^2 = a^2 + b^2 - 2abcos C$.", "$cos C = dfrac{a^2+b^2-c^2}{2ab} = " + renderValue(p.answer) + "$."] };
+        if (m.mode === "area") return { zh: ["面積 = $dfrac{1}{2}absin C$。", "= ½ × " + m.a + " × " + m.b + " × " + m.x + "/" + m.z + " = " + renderValue(p.answer) + "。"], en: ["Area = $dfrac{1}{2}absin C$.", "= ½ × " + m.a + " × " + m.b + " × " + m.x + "/" + m.z + " = " + renderValue(p.answer) + "."] };
+        return { zh: ["正弦定理：$dfrac{a}{sin A} = dfrac{b}{sin B}$。", "$a = bsin A / sin B = " + p.answer + "$。"], en: ["Sine rule: $dfrac{a}{sin A} = dfrac{b}{sin B}$.", "$a = bsin A / sin B = " + p.answer + "$."] };
+      case "triggraph":
+        return m.mode === "amplitude" ? { zh: ["$y = asin(bx)$ 的振幅是 |a|。", "振幅 = " + m.a + "。"], en: ["The amplitude of $y = asin(bx)$ is |a|.", "Amplitude = " + m.a + "."] } : { zh: ["週期 = 360° ÷ |b|。", "週期 = 360° ÷ " + m.b + " = " + p.answer + "°。"], en: ["Period = 360° ÷ |b|.", "Period = 360° ÷ " + m.b + " = " + p.answer + "°."] };
       default:
         return null;
     }
@@ -5912,7 +6031,7 @@ var __MathCoreBundle = (() => {
   }
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
-    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory", "gradanalysis", "gradalgebra", "gradtopology", "gradmeasure", "gradgeometry", "gradcategory"].indexOf(p.type) !== -1) {
+    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory", "gradanalysis", "gradalgebra", "gradtopology", "gradmeasure", "gradgeometry", "gradcategory", "trigident", "sinerule", "triggraph"].indexOf(p.type) !== -1) {
       return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
     }
     if (p.type === "quadsolve") return 120;

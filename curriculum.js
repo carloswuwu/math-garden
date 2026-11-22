@@ -585,6 +585,17 @@
       levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
     },
+    "hs.s4.identities": {
+      id: "hs.s4.identities",
+      stage: "hs1",
+      order: 4,
+      zh: { name: "三角恆等式", goal: "會用平方關係、商數關係與二倍角公式。" },
+      en: { name: "Trigonometric Identities", goal: "Use Pythagorean, quotient and double-angle identities." },
+      lesson: "hs.s4.identities",
+      types: ["trigident"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
     /* ===================== 中五（S5） ===================== */
     "hs.s5.ap": {
       id: "hs.s5.ap",
@@ -595,6 +606,28 @@
       lesson: "hs.s5.ap",
       types: ["ap"],
       levels: [{ modes: ["term"] }, { modes: ["term", "sum"] }, { modes: ["term", "sum", "findN"] }],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    "hs.s5.sinerule": {
+      id: "hs.s5.sinerule",
+      stage: "hs2",
+      order: 3,
+      zh: { name: "正弦與餘弦定理", goal: "會用正弦定理、餘弦定理及三角形面積公式。" },
+      en: { name: "Sine & Cosine Rules", goal: "Use the sine rule, cosine rule and triangle area formula." },
+      lesson: "hs.s5.sinerule",
+      types: ["sinerule"],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+    "hs.s5.triggraph": {
+      id: "hs.s5.triggraph",
+      stage: "hs2",
+      order: 4,
+      zh: { name: "三角函數圖像", goal: "會求正弦/餘弦曲線的振幅與週期。" },
+      en: { name: "Trigonometric Graphs", goal: "Find amplitude and period of sine/cosine curves." },
+      lesson: "hs.s5.triggraph",
+      types: ["triggraph"],
+      levels: [{}],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     "hs.s5.gp": {
@@ -1728,7 +1761,7 @@
       emoji: "🧠",
       topics: [
         { id: "hs1.num", zh: "數與代數", en: "Number & Algebra", skills: ["hs.s4.log", "hs.s4.fx"] },
-        { id: "hs1.trig", zh: "三角學", en: "Trigonometry", skills: ["hs.s4.trig"] },
+        { id: "hs1.trig", zh: "三角學", en: "Trigonometry", skills: ["hs.s4.trig", "hs.s4.identities"] },
         { id: "hs1.word", zh: "解決問題", en: "Word Problems", skills: ["hs.s4.word"] },
         { id: "hs1.quad", zh: "代數（續）", en: "Algebra (cont.)", skills: ["hs.s4.quadsolve"] },
         { id: "hs1.geo", zh: "圖形與空間", en: "Shape & Space", skills: ["hs.s4.line"] },
@@ -1747,6 +1780,7 @@
       emoji: "📈",
       topics: [
         { id: "hs2.seq", zh: "數列", en: "Sequences", skills: ["hs.s5.ap", "hs.s5.gp"] },
+        { id: "hs2.trig", zh: "三角學（續）", en: "Trigonometry (cont.)", skills: ["hs.s5.sinerule", "hs.s5.triggraph"] },
         { id: "hs2.prob", zh: "概率", en: "Probability", skills: ["hs.s5.prob"] },
         { id: "hs2.word", zh: "解決問題", en: "Word Problems", skills: ["hs.s5.word"] },
         { id: "hs2.alg", zh: "代數", en: "Algebra", skills: ["hs.s5.variation"] },

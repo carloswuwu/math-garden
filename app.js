@@ -329,6 +329,8 @@
         return tpl("linegraph");
       case "matrix":
         return tpl("matrix", { a: v.a, b: v.b, c: v.c, d: v.d });
+      case "sinewave":
+        return tpl("sinewave");
       case "percentgrid":
         return tpl("percentgrid", { pct: v.pct });
       case "twotri":
@@ -464,6 +466,9 @@
         break;
       case "matrix":
         html = matrixHTML(visual);
+        break;
+      case "sinewave":
+        html = sinewaveSVG();
         break;
       case "percentgrid":
         html = percentgridSVG(visual.pct);
@@ -629,6 +634,15 @@
     }
     s += "</svg>";
     return s;
+  }
+  function sinewaveSVG() {
+    var W = 260, H = 120, mid = 60, amp = 38, path = "";
+    for (var j = 0; j < 48; j += 2) {
+      var x1 = 20 + j / 48 * (W - 40), y1 = mid - amp * Math.sin(j / 48 * Math.PI * 2);
+      var x2 = 20 + (j + 1) / 48 * (W - 40), y2 = mid - amp * Math.sin((j + 1) / 48 * Math.PI * 2);
+      path += '<line x1="' + x1.toFixed(1) + '" y1="' + y1.toFixed(1) + '" x2="' + x2.toFixed(1) + '" y2="' + y2.toFixed(1) + '" stroke="#007AFF" stroke-width="2.5"/>';
+    }
+    return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" xmlns="http://www.w3.org/2000/svg"><line x1="15" y1="' + mid + '" x2="' + (W - 10) + '" y2="' + mid + '" stroke="#333" stroke-width="1.5"/><line x1="20" y1="15" x2="20" y2="105" stroke="#333" stroke-width="1.5"/>' + path + "</svg>";
   }
   function matrixHTML(v) {
     var tex = "\\begin{bmatrix}" + v.a + " & " + v.b + " \\\\ " + v.c + " & " + v.d + "\\end{bmatrix}";
