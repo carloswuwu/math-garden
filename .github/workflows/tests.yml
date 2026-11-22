@@ -40,3 +40,5 @@ jobs:
         run: node tests/perf.test.js
       - name: Lighthouse accessibility (real Chrome, a11y >= 0.95)
         run: npm run lighthouse
+      - name: Cold offline start (real Chrome + service worker)
+        run: npm run offline-check

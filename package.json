@@ -6,9 +6,11 @@
   "scripts": {
     "build": "node tools/build.js",
     "test": "node tests/core.test.js && node tests/ui.test.js && node tests/generators.test.js && node tests/contract.test.js && node tests/a11y.test.js && node tests/perf.test.js",
-    "lighthouse": "node tools/lighthouse-check.js"
+    "lighthouse": "node tools/lighthouse-check.js",
+    "offline-check": "node tools/offline-check.js"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "puppeteer-core": "^23.11.1"
   }
 }
