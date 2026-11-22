@@ -17,6 +17,8 @@ var MATH_SPEC = {
   comparegroup: function (m) { return m.mode === 'max' ? (m.a > m.b ? 'green' : 'orange') : (m.a < m.b ? 'green' : 'orange'); },
   fadd: function (m) { return { n: m.a + m.b, d: m.d }; },
   fsub: function (m) { return { n: m.a - m.b, d: m.d }; },
+  fractiondiff: function (m) { return { n: m.a * m.d + m.sign * m.c * m.b, d: m.b * m.d }; },
+  fractionmul: function (m) { return m.mode === 'mul' ? { n: m.a * m.c, d: m.b * m.d } : { n: m.a * m.d, d: m.b * m.c }; },
   dadd: function (m) { return (m.r / 10).toFixed(1); },
   dsub: function (m) { return (m.r / 10).toFixed(1); },
   dmul: function (m) { return (m.r / 10).toFixed(1); },
@@ -227,6 +229,22 @@ var MATH_SPEC = {
   approx: function (m) { return m.mode === 'range' ? m.a : m.a / 2; },
   direction: function (m) { return m.k; },
   time24: function (m) { return m.a; },
+  area2: function (m) {
+    if (m.mode === 'parallelogram') return m.b * m.h;
+    if (m.mode === 'triangle') return m.b * m.h / 2;
+    return (m.a + m.b) * m.h / 2;
+  },
+  volume1: function (m) { return m.l * m.w * m.h; },
+  rotation: function (m) { return m.mode === 'order' ? m.n : 360 / m.n; },
+  calculus2: function (m) {
+    return m.mode === 'defint' ? m.a * Math.pow(m.b, m.n + 1) / (m.n + 1) : m.a * m.n * Math.pow(m.x, m.n - 1);
+  },
+  linalg2: function (m) { return m.mode === 'det' ? m.a * m.d - m.b * m.c : m.a * m.e + m.b * m.g; },
+  stats2: function (m) {
+    var mean = m.nums.reduce(function (x, y) { return x + y; }, 0) / m.nums.length;
+    var v = m.nums.reduce(function (x, y) { return x + (y - mean) * (y - mean); }, 0) / m.nums.length;
+    return m.mode === 'variance' ? v : Math.round(Math.sqrt(v) * 1000) / 1000;
+  },
   cone: function (m) { return piValue(m.coef); },
   centre: function (m) { return m.k; },
   circleangle: function (m) { return m.mode === 'centre' ? 2 * m.a : m.a; },

@@ -298,6 +298,56 @@ var skills = {
       mastery: { practice: 12, quizPass: 0.8 }
     },
 
+    'g5.fractiondiff': {
+      id: 'g5.fractiondiff', stage: 'g5', order: 5,
+      zh: { name: '異分母分數加減', goal: '會通分後做異分母分數的加減。' },
+      en: { name: 'Add/Subtract Unlike Fractions', goal: 'Use a common denominator to add or subtract unlike fractions.' },
+      lesson: 'g5.fractiondiff',
+      types: ['fractiondiff'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    'g5.fractionmul': {
+      id: 'g5.fractionmul', stage: 'g5', order: 6,
+      zh: { name: '分數乘除', goal: '會做分數乘法與除以一個分數。' },
+      en: { name: 'Multiply & Divide Fractions', goal: 'Multiply fractions and divide by a fraction.' },
+      lesson: 'g5.fractionmul',
+      types: ['fractionmul'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    'g5.area2': {
+      id: 'g5.area2', stage: 'g5', order: 7,
+      zh: { name: '面積（二）', goal: '會求平行四邊形、三角形與梯形的面積。' },
+      en: { name: 'Area II', goal: 'Find areas of parallelograms, triangles and trapeziums.' },
+      lesson: 'g5.area2',
+      types: ['area2'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    'g5.volume1': {
+      id: 'g5.volume1', stage: 'g5', order: 8,
+      zh: { name: '體積（一）', goal: '認識體積，用長×闊×高求長方體體積。' },
+      en: { name: 'Volume I', goal: 'Understand volume and find cuboid volume as length × width × height.' },
+      lesson: 'g5.volume1',
+      types: ['volume1'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    'g5.rotation': {
+      id: 'g5.rotation', stage: 'g5', order: 9,
+      zh: { name: '旋轉對稱', goal: '認識旋轉對稱的階數與最小旋轉角。' },
+      en: { name: 'Rotational Symmetry', goal: 'Find the order of rotational symmetry and the smallest angle.' },
+      lesson: 'g5.rotation',
+      types: ['rotation'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
     /* ===================== 六年級 小六 ===================== */
 
     'g6.equation': {
@@ -500,6 +550,24 @@ var skills = {
       zh: { name: '概率與統計', goal: '會求期望值與二項概率。' },
       en: { name: 'Probability & Statistics', goal: 'Find expected values and binomial probabilities.' },
       lesson: 'col.prob', types: ['expectation'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'col.calculus2': {
+      id: 'col.calculus2', stage: 'college', order: 4,
+      zh: { name: '微積分（二）', goal: '會求冪函數的定積分與指定點的導數。' },
+      en: { name: 'Calculus II', goal: 'Evaluate definite integrals and derivatives at a point for power functions.' },
+      lesson: 'col.calculus2', types: ['calculus2'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'col.linalg2': {
+      id: 'col.linalg2', stage: 'college', order: 5,
+      zh: { name: '線性代數（二）', goal: '會計算二階行列式與矩陣乘法元素。' },
+      en: { name: 'Linear Algebra II', goal: 'Compute 2×2 determinants and matrix product entries.' },
+      lesson: 'col.linalg2', types: ['linalg2'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'col.stats2': {
+      id: 'col.stats2', stage: 'college', order: 6,
+      zh: { name: '統計（二）', goal: '會求一組數據的方差與標準差。' },
+      en: { name: 'Statistics II', goal: 'Find variance and standard deviation of a small data set.' },
+      lesson: 'col.stats2', types: ['stats2'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
     },
 
     /* ===================== 中學與大學增補（二） ===================== */
@@ -1047,8 +1115,10 @@ var skills = {
       ] },
     { id: 'g5', zh: '小五', en: 'Primary 5', desc: { zh: '小數乘除、平均數、分數乘法', en: 'Decimal ×/÷, averages, fraction of a number' }, color: '#5856D6', emoji: '⛰️',
       topics: [
-        { id: 'g5.num', zh: '數與運算', en: 'Numbers & Operations', skills: ['g5.decimalmul', 'g5.fractionof'] },
+        { id: 'g5.num', zh: '數與運算', en: 'Numbers & Operations', skills: ['g5.decimalmul', 'g5.fractionof', 'g5.fractiondiff', 'g5.fractionmul'] },
+        { id: 'g5.measure', zh: '度量', en: 'Measurement', skills: ['g5.area2', 'g5.volume1'] },
         { id: 'g5.data', zh: '數據處理', en: 'Data Handling', skills: ['g5.average'] },
+        { id: 'g5.shape', zh: '圖形與空間', en: 'Shape & Space', skills: ['g5.rotation'] },
         { id: 'g5.word', zh: '解決問題', en: 'Word Problems', skills: ['g5.word'] }
       ] },
     { id: 'g6', zh: '小六', en: 'Primary 6', desc: { zh: '方程、百分數、比與比例', en: 'Equations, percentages, ratio' }, color: '#FF2D55', emoji: '🏆',
@@ -1125,9 +1195,9 @@ var skills = {
       ] },
     { id: 'college', zh: '大學', en: 'University', desc: { zh: '微積分、線性代數、概率統計', en: 'Calculus, linear algebra, statistics' }, color: '#8E8E93', emoji: '🎯',
       topics: [
-        { id: 'col.calc', zh: '微積分', en: 'Calculus', skills: ['col.calculus'] },
-        { id: 'col.lin', zh: '線性代數', en: 'Linear Algebra', skills: ['col.linalg'] },
-        { id: 'col.prob', zh: '概率統計', en: 'Statistics', skills: ['col.prob'] }
+        { id: 'col.calc', zh: '微積分', en: 'Calculus', skills: ['col.calculus', 'col.calculus2'] },
+        { id: 'col.lin', zh: '線性代數', en: 'Linear Algebra', skills: ['col.linalg', 'col.linalg2'] },
+        { id: 'col.prob', zh: '概率統計', en: 'Statistics', skills: ['col.prob', 'col.stats2'] }
       ] },
     { id: 'challenge', zh: '挑戰區', en: 'Challenge', desc: { zh: '奧林匹克風格的額外難題：數論、計數、幾何、邏輯、代數與概率', en: 'Extra-hard olympiad-style problems: number theory, counting, geometry, logic, algebra and probability' }, color: '#B07C2A', emoji: '🏆',
       topics: [

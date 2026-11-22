@@ -135,6 +135,12 @@ var __MathCoreBundle = (() => {
     fsub: function(m) {
       return { n: m.a - m.b, d: m.d };
     },
+    fractiondiff: function(m) {
+      return { n: m.a * m.d + m.sign * m.c * m.b, d: m.b * m.d };
+    },
+    fractionmul: function(m) {
+      return m.mode === "mul" ? { n: m.a * m.c, d: m.b * m.d } : { n: m.a * m.d, d: m.b * m.c };
+    },
     dadd: function(m) {
       return (m.r / 10).toFixed(1);
     },
@@ -500,6 +506,32 @@ var __MathCoreBundle = (() => {
     },
     time24: function(m) {
       return m.a;
+    },
+    area2: function(m) {
+      if (m.mode === "parallelogram") return m.b * m.h;
+      if (m.mode === "triangle") return m.b * m.h / 2;
+      return (m.a + m.b) * m.h / 2;
+    },
+    volume1: function(m) {
+      return m.l * m.w * m.h;
+    },
+    rotation: function(m) {
+      return m.mode === "order" ? m.n : 360 / m.n;
+    },
+    calculus2: function(m) {
+      return m.mode === "defint" ? m.a * Math.pow(m.b, m.n + 1) / (m.n + 1) : m.a * m.n * Math.pow(m.x, m.n - 1);
+    },
+    linalg2: function(m) {
+      return m.mode === "det" ? m.a * m.d - m.b * m.c : m.a * m.e + m.b * m.g;
+    },
+    stats2: function(m) {
+      var mean = m.nums.reduce(function(x, y) {
+        return x + y;
+      }, 0) / m.nums.length;
+      var v = m.nums.reduce(function(x, y) {
+        return x + (y - mean) * (y - mean);
+      }, 0) / m.nums.length;
+      return m.mode === "variance" ? v : Math.round(Math.sqrt(v) * 1e3) / 1e3;
     },
     cone: function(m) {
       return piValue(m.coef);
@@ -3772,6 +3804,195 @@ var __MathCoreBundle = (() => {
       hint: { zh: "數出點數和大於 " + k + " 的組合數，再除以 36。", en: "Count the outcomes with sum greater than " + k + ", then divide by 36." }
     };
   }
+  function genFractiondiff(rng, o) {
+    var a, b, c, d, num, den, sign;
+    do {
+      b = randInt(rng, 2, 9);
+      d = randInt(rng, 2, 9);
+      while (d === b) d = randInt(rng, 2, 9);
+      a = randInt(rng, 1, b - 1);
+      c = randInt(rng, 1, d - 1);
+      sign = rng() < 0.5 ? 1 : -1;
+      num = a * d + sign * c * b;
+      den = b * d;
+    } while (num <= 0);
+    var ans = reduceFraction({ n: num, d: den });
+    var sym = sign > 0 ? "+" : "−";
+    return {
+      type: "fractiondiff",
+      prompt: { zh: a + "/" + b + " " + sym + " " + c + "/" + d + " = ?", en: a + "/" + b + " " + sym + " " + c + "/" + d + " = ?" },
+      visual: { kind: "fraction", n: ans.n, d: ans.d },
+      answer: ans,
+      math: { op: "fractiondiff", a, b, c, d, sign },
+      hint: { zh: "先通分：分母取 " + b + " × " + d + "，再把分子相加（減）。", en: "Find a common denominator (" + b + " × " + d + ") first, then add/subtract numerators." }
+    };
+  }
+  function genFractionmul(rng, o) {
+    var mode = pick(rng, ["mul", "div"]);
+    var a = randInt(rng, 1, 6), b = randInt(rng, 2, 9);
+    var c = randInt(rng, 1, 6), d = randInt(rng, 2, 9);
+    while (a >= b) b = randInt(rng, 2, 9);
+    while (c >= d) d = randInt(rng, 2, 9);
+    var num = mode === "mul" ? a * c : a * d;
+    var den = mode === "mul" ? b * d : b * c;
+    var ans = reduceFraction({ n: num, d: den });
+    return {
+      type: "fractionmul",
+      prompt: {
+        zh: a + "/" + b + (mode === "mul" ? " × " : " ÷ ") + c + "/" + d + " = ?",
+        en: a + "/" + b + (mode === "mul" ? " × " : " ÷ ") + c + "/" + d + " = ?"
+      },
+      visual: { kind: "fraction", n: ans.n, d: ans.d },
+      answer: ans,
+      math: { op: "fractionmul", mode, a, b, c, d },
+      hint: { zh: mode === "mul" ? "分子乘分子、分母乘分母，最後約簡。" : "除以一個分數等於乘以它的倒數，再約簡。", en: mode === "mul" ? "Multiply numerators and denominators, then simplify." : "Dividing by a fraction = multiplying by its reciprocal; then simplify." }
+    };
+  }
+  function genArea2(rng, o) {
+    var mode = pick(rng, ["parallelogram", "triangle", "trapezoid"]);
+    var b, h, a, answer, prompt, hint, visual;
+    if (mode === "parallelogram") {
+      b = randInt(rng, 3, 18);
+      h = randInt(rng, 2, 12);
+      answer = b * h;
+      prompt = { zh: "平行四邊形的底是 " + b + " cm、高是 " + h + " cm，面積是多少 cm²？", en: "A parallelogram has base " + b + " cm and height " + h + " cm. What is its area?" };
+      hint = { zh: "平行四邊形面積 = 底 × 高。", en: "Parallelogram area = base × height." };
+      visual = { kind: "parallelogram", b, h };
+    } else if (mode === "triangle") {
+      b = randInt(rng, 2, 20);
+      h = randInt(rng, 2, 12);
+      if (b * h % 2 !== 0) b += 1;
+      answer = b * h / 2;
+      prompt = { zh: "三角形的底是 " + b + " cm、高是 " + h + " cm，面積是多少 cm²？", en: "A triangle has base " + b + " cm and height " + h + " cm. What is its area?" };
+      hint = { zh: "三角形面積 = 底 × 高 ÷ 2。", en: "Triangle area = base × height ÷ 2." };
+      visual = { kind: "triangle", b, h };
+    } else {
+      a = randInt(rng, 2, 12);
+      b = randInt(rng, 3, 15);
+      h = randInt(rng, 2, 10);
+      if ((a + b) * h % 2 !== 0) h += 1;
+      answer = (a + b) * h / 2;
+      prompt = { zh: "梯形的上底是 " + a + " cm、下底是 " + b + " cm、高是 " + h + " cm，面積是多少 cm²？", en: "A trapezium has parallel sides " + a + " cm and " + b + " cm and height " + h + " cm. What is its area?" };
+      hint = { zh: "梯形面積 = (上底 + 下底) × 高 ÷ 2。", en: "Trapezium area = (a + b) × height ÷ 2." };
+      visual = { kind: "trapezoid", a, b, h };
+    }
+    return {
+      type: "area2",
+      prompt,
+      visual,
+      answer,
+      math: { op: "area2", mode, b, h, a: a || 0 },
+      hint
+    };
+  }
+  function genVolume1(rng, o) {
+    var l = randInt(rng, 2, 8), w = randInt(rng, 2, 8), h = randInt(rng, 2, 8);
+    return {
+      type: "volume1",
+      prompt: {
+        zh: "用棱長 1 cm 的小正方體堆成長 " + l + " cm、闊 " + w + " cm、高 " + h + " cm 的長方體，共需多少個小正方體？",
+        en: "Unit cubes of edge 1 cm are stacked into a cuboid " + l + " cm by " + w + " cm by " + h + " cm. How many unit cubes are needed?"
+      },
+      visual: { kind: "cuboid", l, w, h },
+      answer: l * w * h,
+      math: { op: "volume1", l, w, h },
+      hint: { zh: "體積 = 長 × 闊 × 高，也就是小正方體的數目。", en: "Volume = length × width × height, which equals the number of unit cubes." }
+    };
+  }
+  function genRotation(rng, o) {
+    var n = pick(rng, [3, 4, 5, 6, 8, 9, 10, 12]);
+    var mode = pick(rng, ["order", "angle"]);
+    var answer = mode === "order" ? n : 360 / n;
+    return {
+      type: "rotation",
+      prompt: mode === "order" ? { zh: "正 " + n + " 邊形繞中心旋轉多少個「非零」角度會與原圖重合（旋轉對稱的階數）？", en: "How many non-zero rotations (orders of rotational symmetry) map a regular " + n + "-gon onto itself?" } : { zh: "正 " + n + " 邊形繞中心最少旋轉多少度會與原圖重合？", en: "What is the smallest angle that maps a regular " + n + "-gon onto itself?" },
+      visual: { kind: "polygon", n },
+      answer,
+      math: { op: "rotation", n, mode },
+      hint: { zh: mode === "order" ? "旋轉對稱的階數等於邊數。" : "最小旋轉角 = 360° ÷ 邊數。", en: mode === "order" ? "The order of rotational symmetry equals the number of sides." : "Smallest angle = 360° ÷ number of sides." }
+    };
+  }
+  function genCalculus2(rng, o) {
+    var mode = pick(rng, ["defint", "tangent"]);
+    if (mode === "defint") {
+      var n, a, b, ans;
+      do {
+        n = randInt(rng, 1, 4);
+        a = randInt(rng, 1, 6);
+        b = randInt(rng, 1, 5);
+        ans = a * Math.pow(b, n + 1) / (n + 1);
+      } while (Math.abs(ans - Math.round(ans)) > 1e-9);
+      return {
+        type: "calculus2",
+        prompt: { zh: "計算 $\\int_0^{" + b + "} " + a + "x^{" + n + "}\\,dx$。", en: "Evaluate $\\int_0^{" + b + "} " + a + "x^{" + n + "}\\,dx$." },
+        visual: null,
+        answer: ans,
+        math: { op: "calculus2", mode, a, n, b },
+        hint: { zh: "先用冪函數積分公式，再代入上下限。", en: "Use the power rule for integration, then substitute the limits." }
+      };
+    }
+    var ta = randInt(rng, 1, 6), tn = randInt(rng, 2, 5), tx = randInt(rng, 1, 4);
+    var slope = ta * tn * Math.pow(tx, tn - 1);
+    return {
+      type: "calculus2",
+      prompt: { zh: "設 $f(x) = " + ta + "x^{" + tn + "}$，求 $f\\'(" + tx + ")$。", en: "Let $f(x) = " + ta + "x^{" + tn + "}$. Find $f\\'(" + tx + ")$." },
+      visual: null,
+      answer: slope,
+      math: { op: "calculus2", mode, a: ta, n: tn, x: tx },
+      hint: { zh: "先求導：$f\\'(x) = a n x^{n-1}$，再代入 x。", en: "Differentiate first: $f\\'(x) = a n x^{n-1}$, then substitute x." }
+    };
+  }
+  function genLinalg2(rng, o) {
+    var mode = pick(rng, ["det", "prod"]);
+    var a = randInt(rng, 1, 6), b = randInt(rng, 1, 6), c = randInt(rng, 1, 6), d = randInt(rng, 1, 6);
+    if (mode === "det") {
+      return {
+        type: "linalg2",
+        prompt: { zh: "求矩陣 $\\begin{pmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{pmatrix}$ 的行列式。", en: "Find the determinant of $\\begin{pmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{pmatrix}$." },
+        visual: null,
+        answer: a * d - b * c,
+        math: { op: "linalg2", mode, a, b, c, d },
+        hint: { zh: "2×2 行列式 = ad − bc。", en: "2×2 determinant = ad − bc." }
+      };
+    }
+    var e = randInt(rng, 1, 6), f = randInt(rng, 1, 6), g = randInt(rng, 1, 6), h = randInt(rng, 1, 6);
+    return {
+      type: "linalg2",
+      prompt: { zh: "求 $\\begin{pmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{pmatrix}\\begin{pmatrix} " + e + " & " + f + " \\\\ " + g + " & " + h + " \\end{pmatrix}$ 的左上角元素。", en: "Find the top-left entry of $\\begin{pmatrix} " + a + " & " + b + " \\\\ " + c + " & " + d + " \\end{pmatrix}\\begin{pmatrix} " + e + " & " + f + " \\\\ " + g + " & " + h + " \\end{pmatrix}$." },
+      visual: null,
+      answer: a * e + b * g,
+      math: { op: "linalg2", mode, a, b, c, d, e, f, g, h },
+      hint: { zh: "矩陣乘法：行乘列，左上角 = a×e + b×g。", en: "Matrix product: row times column; top-left = a×e + b×g." }
+    };
+  }
+  function genStats2(rng, o) {
+    var count = 5, nums, mean, variance, guard = 0;
+    do {
+      nums = [];
+      for (var i = 0; i < count; i++) nums.push(randInt(rng, 1, 10));
+      var sum = nums.reduce(function(x, y) {
+        return x + y;
+      }, 0);
+      mean = sum / count;
+      variance = nums.reduce(function(x, y) {
+        return x + (y - mean) * (y - mean);
+      }, 0) / count;
+    } while (guard++ < 200 && Math.abs(variance - Math.round(variance)) > 1e-9);
+    var mode = pick(rng, ["variance", "sd"]);
+    var sd = Math.sqrt(variance);
+    var answer = mode === "variance" ? variance : Math.round(sd * 1e3) / 1e3;
+    return {
+      type: "stats2",
+      prompt: {
+        zh: "數據 " + nums.join("、") + " 的" + (mode === "variance" ? "方差" : "標準差") + "是多少？",
+        en: "Find the " + (mode === "variance" ? "variance" : "standard deviation") + " of " + nums.join(", ") + "."
+      },
+      visual: { kind: "barchart", values: nums },
+      answer,
+      math: { op: "stats2", mode, nums },
+      hint: { zh: mode === "variance" ? "先求平均數，再求各項與平均數差的平方的平均。" : "先求方差，再開平方根。", en: mode === "variance" ? "Find the mean, then average the squared deviations." : "Find the variance first, then take the square root." }
+    };
+  }
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -3877,7 +4098,15 @@ var __MathCoreBundle = (() => {
     gridrect: genGridrect,
     polygonsum: genPolygonsum,
     train: genTrain,
-    dicecompare: genDicecompare
+    dicecompare: genDicecompare,
+    fractiondiff: genFractiondiff,
+    fractionmul: genFractionmul,
+    area2: genArea2,
+    volume1: genVolume1,
+    rotation: genRotation,
+    calculus2: genCalculus2,
+    linalg2: genLinalg2,
+    stats2: genStats2
   };
 
   // src/core/format.js
@@ -5043,6 +5272,50 @@ var __MathCoreBundle = (() => {
           en: ["There are " + dcWays + " outcomes with sum greater than " + m.k + " out of 36.", "Probability = " + dcWays + "/36 = " + renderValue(p.answer) + "."]
         };
       }
+      case "fractiondiff": {
+        var fdDen = m.b * m.d;
+        var fdNum = m.a * m.d + m.sign * m.c * m.b;
+        return {
+          zh: ["通分：分母 " + m.b + " × " + m.d + " = " + fdDen + "。", m.a + "/" + m.b + " = " + m.a * m.d + "/" + fdDen + "，" + m.c + "/" + m.d + " = " + m.c * m.b + "/" + fdDen + "。", "分子合併得 " + fdNum + "/" + fdDen + " = " + renderValue(p.answer) + "。"],
+          en: ["Common denominator " + m.b + " × " + m.d + " = " + fdDen + ".", m.a + "/" + m.b + " = " + m.a * m.d + "/" + fdDen + ", " + m.c + "/" + m.d + " = " + m.c * m.b + "/" + fdDen + ".", "Combine numerators: " + fdNum + "/" + fdDen + " = " + renderValue(p.answer) + "."]
+        };
+      }
+      case "fractionmul":
+        return m.mode === "mul" ? { zh: ["分子乘分子、分母乘分母。", "= " + renderValue(p.answer) + "。"], en: ["Multiply numerators and denominators.", "= " + renderValue(p.answer) + "."] } : { zh: ["除以 " + m.c + "/" + m.d + " 等於乘以 " + m.d + "/" + m.c + "。", "= " + renderValue(p.answer) + "。"], en: ["Dividing by " + m.c + "/" + m.d + " is multiplying by " + m.d + "/" + m.c + ".", "= " + renderValue(p.answer) + "."] };
+      case "area2":
+        if (m.mode === "parallelogram") return { zh: ["平行四邊形面積 = 底 × 高。", "= " + m.b + " × " + m.h + " = " + p.answer + " cm²。"], en: ["Parallelogram area = base × height.", "= " + m.b + " × " + m.h + " = " + p.answer + " cm²."] };
+        if (m.mode === "triangle") return { zh: ["三角形面積 = 底 × 高 ÷ 2。", "= " + m.b + " × " + m.h + " ÷ 2 = " + p.answer + " cm²。"], en: ["Triangle area = base × height ÷ 2.", "= " + m.b + " × " + m.h + " ÷ 2 = " + p.answer + " cm²."] };
+        return { zh: ["梯形面積 = (上底 + 下底) × 高 ÷ 2。", "= (" + m.a + " + " + m.b + ") × " + m.h + " ÷ 2 = " + p.answer + " cm²。"], en: ["Trapezium area = (a + b) × height ÷ 2.", "= (" + m.a + " + " + m.b + ") × " + m.h + " ÷ 2 = " + p.answer + " cm²."] };
+      case "volume1":
+        return { zh: ["體積 = 長 × 闊 × 高。", "= " + m.l + " × " + m.w + " × " + m.h + " = " + p.answer + " 個小正方體。"], en: ["Volume = length × width × height.", "= " + m.l + " × " + m.w + " × " + m.h + " = " + p.answer + " unit cubes."] };
+      case "rotation":
+        return m.mode === "order" ? { zh: ["旋轉對稱的階數 = 邊數。", "正 " + m.n + " 邊形有 " + p.answer + " 個非零旋轉對稱。"], en: ["Order of rotational symmetry = number of sides.", "A regular " + m.n + "-gon has " + p.answer + " non-zero rotational symmetries."] } : { zh: ["最小旋轉角 = 360° ÷ 邊數。", "= 360° ÷ " + m.n + " = " + p.answer + "°。"], en: ["Smallest angle = 360° ÷ number of sides.", "= 360° ÷ " + m.n + " = " + p.answer + "°."] };
+      case "calculus2":
+        if (m.mode === "defint") {
+          return {
+            zh: ["積分：$int ax^{n} dx = \frac{a x^{n+1}}{n+1}$。", "代入 0 與 " + m.b + "：= " + p.answer + "。"],
+            en: ["Integrate: $int ax^{n} dx = \frac{a x^{n+1}}{n+1}$.", "Substitute 0 and " + m.b + ": = " + p.answer + "."]
+          };
+        }
+        return {
+          zh: ["求導：$f'(x) = a n x^{n-1}$。", "代入 x = " + m.x + "：= " + p.answer + "。"],
+          en: ["Differentiate: $f'(x) = a n x^{n-1}$.", "Substitute x = " + m.x + ": = " + p.answer + "."]
+        };
+      case "linalg2":
+        if (m.mode === "det") return { zh: ["2×2 行列式 = ad − bc。", "= " + m.a + "×" + m.d + " − " + m.b + "×" + m.c + " = " + p.answer + "。"], en: ["2×2 determinant = ad − bc.", "= " + m.a + "×" + m.d + " − " + m.b + "×" + m.c + " = " + p.answer + "."] };
+        return { zh: ["矩陣乘法：行乘列。", "左上角 = " + m.a + "×" + m.e + " + " + m.b + "×" + m.g + " = " + p.answer + "。"], en: ["Matrix product: row times column.", "Top-left = " + m.a + "×" + m.e + " + " + m.b + "×" + m.g + " = " + p.answer + "."] };
+      case "stats2": {
+        var sMean = m.nums.reduce(function(x, y) {
+          return x + y;
+        }, 0) / m.nums.length;
+        var sVar = m.nums.reduce(function(x, y) {
+          return x + (y - sMean) * (y - sMean);
+        }, 0) / m.nums.length;
+        return {
+          zh: ["平均數 = " + sMean + "。", "方差 = 各項與平均數差的平方的平均 = " + sVar + "。", m.mode === "variance" ? "方差 = " + p.answer + "。" : "標準差 = √" + sVar + " = " + p.answer + "。"],
+          en: ["Mean = " + sMean + ".", "Variance = average of squared deviations = " + sVar + ".", m.mode === "variance" ? "Variance = " + p.answer + "." : "Standard deviation = √" + sVar + " = " + p.answer + "."]
+        };
+      }
       default:
         return null;
     }
@@ -5100,7 +5373,7 @@ var __MathCoreBundle = (() => {
   }
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
-    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train"].indexOf(p.type) !== -1) {
+    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2"].indexOf(p.type) !== -1) {
       return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
     }
     if (p.type === "quadsolve") return 120;

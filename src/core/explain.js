@@ -1133,6 +1133,50 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
           en: ['There are ' + dcWays + ' outcomes with sum greater than ' + m.k + ' out of 36.', 'Probability = ' + dcWays + '/36 = ' + renderValue(p.answer) + '.']
         };
       }
+      case 'fractiondiff': {
+        var fdDen = m.b * m.d;
+        var fdNum = m.a * m.d + m.sign * m.c * m.b;
+        return {
+          zh: ['通分：分母 ' + m.b + ' × ' + m.d + ' = ' + fdDen + '。', m.a + '/' + m.b + ' = ' + (m.a * m.d) + '/' + fdDen + '，' + m.c + '/' + m.d + ' = ' + (m.c * m.b) + '/' + fdDen + '。', '分子合併得 ' + fdNum + '/' + fdDen + ' = ' + renderValue(p.answer) + '。'],
+          en: ['Common denominator ' + m.b + ' × ' + m.d + ' = ' + fdDen + '.', m.a + '/' + m.b + ' = ' + (m.a * m.d) + '/' + fdDen + ', ' + m.c + '/' + m.d + ' = ' + (m.c * m.b) + '/' + fdDen + '.', 'Combine numerators: ' + fdNum + '/' + fdDen + ' = ' + renderValue(p.answer) + '.']
+        };
+      }
+      case 'fractionmul':
+        return m.mode === 'mul'
+          ? { zh: ['分子乘分子、分母乘分母。', '= ' + renderValue(p.answer) + '。'], en: ['Multiply numerators and denominators.', '= ' + renderValue(p.answer) + '.'] }
+          : { zh: ['除以 ' + m.c + '/' + m.d + ' 等於乘以 ' + m.d + '/' + m.c + '。', '= ' + renderValue(p.answer) + '。'], en: ['Dividing by ' + m.c + '/' + m.d + ' is multiplying by ' + m.d + '/' + m.c + '.', '= ' + renderValue(p.answer) + '.'] };
+      case 'area2':
+        if (m.mode === 'parallelogram') return { zh: ['平行四邊形面積 = 底 × 高。', '= ' + m.b + ' × ' + m.h + ' = ' + p.answer + ' cm²。'], en: ['Parallelogram area = base × height.', '= ' + m.b + ' × ' + m.h + ' = ' + p.answer + ' cm².'] };
+        if (m.mode === 'triangle') return { zh: ['三角形面積 = 底 × 高 ÷ 2。', '= ' + m.b + ' × ' + m.h + ' ÷ 2 = ' + p.answer + ' cm²。'], en: ['Triangle area = base × height ÷ 2.', '= ' + m.b + ' × ' + m.h + ' ÷ 2 = ' + p.answer + ' cm².'] };
+        return { zh: ['梯形面積 = (上底 + 下底) × 高 ÷ 2。', '= (' + m.a + ' + ' + m.b + ') × ' + m.h + ' ÷ 2 = ' + p.answer + ' cm²。'], en: ['Trapezium area = (a + b) × height ÷ 2.', '= (' + m.a + ' + ' + m.b + ') × ' + m.h + ' ÷ 2 = ' + p.answer + ' cm².'] };
+      case 'volume1':
+        return { zh: ['體積 = 長 × 闊 × 高。', '= ' + m.l + ' × ' + m.w + ' × ' + m.h + ' = ' + p.answer + ' 個小正方體。'], en: ['Volume = length × width × height.', '= ' + m.l + ' × ' + m.w + ' × ' + m.h + ' = ' + p.answer + ' unit cubes.'] };
+      case 'rotation':
+        return m.mode === 'order'
+          ? { zh: ['旋轉對稱的階數 = 邊數。', '正 ' + m.n + ' 邊形有 ' + p.answer + ' 個非零旋轉對稱。'], en: ['Order of rotational symmetry = number of sides.', 'A regular ' + m.n + '-gon has ' + p.answer + ' non-zero rotational symmetries.'] }
+          : { zh: ['最小旋轉角 = 360° ÷ 邊數。', '= 360° ÷ ' + m.n + ' = ' + p.answer + '°。'], en: ['Smallest angle = 360° ÷ number of sides.', '= 360° ÷ ' + m.n + ' = ' + p.answer + '°.'] };
+      case 'calculus2':
+        if (m.mode === 'defint') {
+          return {
+            zh: ['積分：$\int ax^{n} dx = \frac{a x^{n+1}}{n+1}$。', '代入 0 與 ' + m.b + '：= ' + p.answer + '。'],
+            en: ['Integrate: $\int ax^{n} dx = \frac{a x^{n+1}}{n+1}$.', 'Substitute 0 and ' + m.b + ': = ' + p.answer + '.']
+          };
+        }
+        return {
+          zh: ['求導：$f\'(x) = a n x^{n-1}$。', '代入 x = ' + m.x + '：= ' + p.answer + '。'],
+          en: ['Differentiate: $f\'(x) = a n x^{n-1}$.', 'Substitute x = ' + m.x + ': = ' + p.answer + '.']
+        };
+      case 'linalg2':
+        if (m.mode === 'det') return { zh: ['2×2 行列式 = ad − bc。', '= ' + m.a + '×' + m.d + ' − ' + m.b + '×' + m.c + ' = ' + p.answer + '。'], en: ['2×2 determinant = ad − bc.', '= ' + m.a + '×' + m.d + ' − ' + m.b + '×' + m.c + ' = ' + p.answer + '.'] };
+        return { zh: ['矩陣乘法：行乘列。', '左上角 = ' + m.a + '×' + m.e + ' + ' + m.b + '×' + m.g + ' = ' + p.answer + '。'], en: ['Matrix product: row times column.', 'Top-left = ' + m.a + '×' + m.e + ' + ' + m.b + '×' + m.g + ' = ' + p.answer + '.'] };
+      case 'stats2': {
+        var sMean = m.nums.reduce(function (x, y) { return x + y; }, 0) / m.nums.length;
+        var sVar = m.nums.reduce(function (x, y) { return x + (y - sMean) * (y - sMean); }, 0) / m.nums.length;
+        return {
+          zh: ['平均數 = ' + sMean + '。', '方差 = 各項與平均數差的平方的平均 = ' + sVar + '。', m.mode === 'variance' ? '方差 = ' + p.answer + '。' : '標準差 = √' + sVar + ' = ' + p.answer + '。'],
+          en: ['Mean = ' + sMean + '.', 'Variance = average of squared deviations = ' + sVar + '.', m.mode === 'variance' ? 'Variance = ' + p.answer + '.' : 'Standard deviation = √' + sVar + ' = ' + p.answer + '.']
+        };
+      }
       default:
         return null;
     }

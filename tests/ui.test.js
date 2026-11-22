@@ -749,6 +749,28 @@ async function main() {
   check(stCollege.problems.some((p) => p.skillId && p.skillId.indexOf('col.') === 0), '大學考試包含大學技能');
   check(stCollege.problems.some((p) => p.skillId && p.skillId.indexOf('hs.s6.') === 0), '大學考試加入 S6 技能以擴闊覆蓋');
 
+
+  /* 38. 小五擴充：9 個技能、面積視覺化與詞彙表 */
+  const ctxG5 = boot(seniorSeed);
+  const wG5 = ctxG5.w;
+  const gpG5 = wG5.__mathApp.getProgress();
+  gpG5.stageExams.hs1 = { passed: true };
+  gpG5.stageExams.hs2 = { passed: true };
+  gpG5.stageExams.hs3 = { passed: true };
+  ['g5.decimalmul', 'g5.average', 'g5.fractionof', 'g5.fractiondiff', 'g5.fractionmul', 'col.calculus'].forEach(function (id) {
+    gpG5.skills[id] = Object.assign({}, gpG5.skills[id] || {}, { quizStars: 2 });
+  });
+  wG5.__mathApp.navigate({ screen: 'stage', stageId: 'g5' });
+  const g5Cards = ctxG5.d.querySelectorAll('#screen-stage .skill-card');
+  check(g5Cards.length === 9, '小五應有 9 個技能（原 4 + 新增 5）');
+  wG5.__mathApp.navigate({ screen: 'lesson', skillId: 'g5.area2' });
+  check(ctxG5.d.querySelectorAll('#screen-lesson .lesson-glossary dt').length >= 2, '小五面積課有詞彙表');
+  check(!!ctxG5.d.querySelector('#lessonVisual svg'), '小五面積課有梯形視覺化');
+  wG5.__mathApp.navigate({ screen: 'lesson', skillId: 'g5.rotation' });
+  check(!!ctxG5.d.querySelector('#lessonVisual svg'), '旋轉對稱課有多邊形視覺化');
+  wG5.__mathApp.navigate({ screen: 'lesson', skillId: 'col.calculus2' });
+  check(ctxG5.d.querySelectorAll('#screen-lesson .lesson-glossary dt').length >= 2, '大學微積分（二）有詞彙表');
+
   console.log(`✓ ui 全部通過（${checks} 項斷言）`);
   process.exit(0);
 }

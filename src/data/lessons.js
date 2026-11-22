@@ -1512,5 +1512,250 @@ var L = {
     });
   });
 
+
+  /* 新增課堂：小五補充 + 大學加深（視覺化 + 詞彙表）。 */
+  var EXTRA_LESSONS = {
+    'g5.fractiondiff': {
+      zh: {
+        title: '異分母分數加減',
+        intro: '分母不同時，要先通分（找共同分母），再合併分子。',
+        steps: ['找兩個分母的最小公倍數作共同分母。', '把兩個分數擴分成同分母。', '分母不變，分子相加或相減，最後約簡。'],
+        example: '1/3 + 1/4 = 4/12 + 3/12 = 7/12。',
+        tip: '分母相乘一定是共同分母，但不一定是最小；能約簡就約簡。',
+        mistake: '直接把分子和分母分別相加：1/3 + 1/4 ≠ 2/7。',
+        visual: { kind: 'fraction', n: 7, d: 12 },
+        glossary: [
+          { term: '通分', def: '把異分母分數改寫成同分母分數。' },
+          { term: '最小公倍數', def: '兩個分母最小的共同倍數。' },
+          { term: '約簡', def: '分子分母同除以公因數。' }
+        ]
+      },
+      en: {
+        title: 'Adding & Subtracting Unlike Fractions',
+        intro: 'When denominators differ, make a common denominator first, then combine the numerators.',
+        steps: ['Find the least common multiple of the denominators.', 'Rewrite both fractions with that denominator.', 'Add or subtract numerators, keep the denominator, then simplify.'],
+        example: '1/3 + 1/4 = 4/12 + 3/12 = 7/12.',
+        tip: 'Multiplying the denominators always gives a common denominator, but not always the smallest; simplify at the end.',
+        mistake: 'Adding numerators and denominators separately: 1/3 + 1/4 ≠ 2/7.',
+        visual: { kind: 'fraction', n: 7, d: 12 },
+        glossary: [
+          { term: 'Common denominator', def: 'A shared denominator for unlike fractions.' },
+          { term: 'LCM', def: 'The smallest common multiple of the denominators.' },
+          { term: 'Simplify', def: 'Divide numerator and denominator by a common factor.' }
+        ]
+      }
+    },
+    'g5.fractionmul': {
+      zh: {
+        title: '分數乘除',
+        intro: '分數相乘：分子乘分子、分母乘分母；除以一個分數，等於乘它的倒數。',
+        steps: ['乘法：分子相乘、分母相乘。', '除法：把除數倒轉，改成乘法。', '先約簡再相乘，最後化為最簡分數。'],
+        example: '2/3 × 3/4 = 6/12 = 1/2；2/3 ÷ 3/4 = 2/3 × 4/3 = 8/9。',
+        tip: '交叉約簡可以令數字更小、更易算。',
+        mistake: '除法時只把被除數倒轉；正確是把除數倒轉。',
+        visual: { kind: 'fraction', n: 1, d: 2 },
+        glossary: [
+          { term: '倒數', def: '分子分母對調，例如 3/4 的倒數是 4/3。' },
+          { term: '最簡分數', def: '分子分母只有公因數 1。' }
+        ]
+      },
+      en: {
+        title: 'Multiplying & Dividing Fractions',
+        intro: 'To multiply fractions, multiply numerators and denominators; to divide, multiply by the reciprocal.',
+        steps: ['Multiply: numerators together, denominators together.', 'Divide: flip the divisor and multiply.', 'Simplify before or after multiplying; give the answer in lowest terms.'],
+        example: '2/3 × 3/4 = 6/12 = 1/2; 2/3 ÷ 3/4 = 2/3 × 4/3 = 8/9.',
+        tip: 'Cross-cancelling keeps the numbers small and the arithmetic easy.',
+        mistake: 'Flipping the dividend instead of the divisor when dividing.',
+        visual: { kind: 'fraction', n: 1, d: 2 },
+        glossary: [
+          { term: 'Reciprocal', def: 'Swap numerator and denominator, e.g. 4/3 is the reciprocal of 3/4.' },
+          { term: 'Lowest terms', def: 'Numerator and denominator share only the factor 1.' }
+        ]
+      }
+    },
+    'g5.area2': {
+      zh: {
+        title: '面積（二）',
+        intro: '平行四邊形、三角形和梯形都有各自的面积公式；關鍵是找對「底」和「高」。',
+        steps: ['平行四邊形：底 × 高。', '三角形：底 × 高 ÷ 2。', '梯形：(上底 + 下底) × 高 ÷ 2。'],
+        example: '梯形上底 4 cm、下底 8 cm、高 5 cm，面積 = (4 + 8) × 5 ÷ 2 = 30 cm²。',
+        tip: '高必須垂直於底，不是斜邊。',
+        mistake: '把斜邊當作高，或用三角形公式時忘記除以 2。',
+        visual: { kind: 'trapezoid', a: 4, b: 8, h: 5 },
+        glossary: [
+          { term: '底', def: '計算面積時所選的邊。' },
+          { term: '高', def: '從底到對邊的垂直距離。' },
+          { term: '梯形', def: '只有一組對邊平行的四邊形。' }
+        ]
+      },
+      en: {
+        title: 'Area II',
+        intro: 'Parallelograms, triangles and trapeziums each have their own area formula; identify the correct base and height.',
+        steps: ['Parallelogram: base × height.', 'Triangle: base × height ÷ 2.', 'Trapezium: (a + b) × height ÷ 2.'],
+        example: 'A trapezium with parallel sides 4 cm and 8 cm and height 5 cm has area (4 + 8) × 5 ÷ 2 = 30 cm².',
+        tip: 'The height is perpendicular to the base, not a slant side.',
+        mistake: 'Using a slant side as the height, or forgetting to divide by 2 for a triangle.',
+        visual: { kind: 'trapezoid', a: 4, b: 8, h: 5 },
+        glossary: [
+          { term: 'Base', def: 'The side chosen for the area calculation.' },
+          { term: 'Height', def: 'The perpendicular distance from the base to the opposite side.' },
+          { term: 'Trapezium', def: 'A quadrilateral with one pair of parallel sides.' }
+        ]
+      }
+    },
+    'g5.volume1': {
+      zh: {
+        title: '體積（一）',
+        intro: '體積是立體所佔空間的大小；長方體體積 = 長 × 闊 × 高。',
+        steps: ['找出長、闊、高（同一單位）。', '三個數相乘。', '答案寫上立方單位，例如 cm³。'],
+        example: '長 4 cm、闊 3 cm、高 2 cm 的長方體，體積 = 4 × 3 × 2 = 24 cm³。',
+        tip: '用棱長 1 cm 的小正方體去堆，數目正好等於體積的數值。',
+        mistake: '把表面積和體積混淆，或忘記寫立方單位。',
+        visual: { kind: 'cuboid', l: 4, w: 3, h: 2 },
+        glossary: [
+          { term: '體積', def: '立體所佔空間的大小。' },
+          { term: '立方厘米', def: '棱長 1 cm 的正方體體積，寫作 cm³。' }
+        ]
+      },
+      en: {
+        title: 'Volume I',
+        intro: 'Volume measures the space a solid occupies; cuboid volume = length × width × height.',
+        steps: ['Identify length, width and height in the same unit.', 'Multiply the three numbers.', 'Write the cubic unit, e.g. cm³.'],
+        example: 'A cuboid 4 cm by 3 cm by 2 cm has volume 4 × 3 × 2 = 24 cm³.',
+        tip: 'Stacking unit cubes is a good model: the number of cubes equals the volume in cm³.',
+        mistake: 'Confusing surface area with volume, or omitting the cubic unit.',
+        visual: { kind: 'cuboid', l: 4, w: 3, h: 2 },
+        glossary: [
+          { term: 'Volume', def: 'The amount of space a solid occupies.' },
+          { term: 'Cubic centimetre', def: 'The volume of a 1 cm cube, written cm³.' }
+        ]
+      }
+    },
+    'g5.rotation': {
+      zh: {
+        title: '旋轉對稱',
+        intro: '圖形繞中心旋轉某個角度後能與原圖重合，就是旋轉對稱。',
+        steps: ['找出圖形的中心。', '用 360° 除以邊數，得到最小旋轉角。', '非零旋轉的數目（階數）等於邊數。'],
+        example: '正六邊形每轉 60° 重合一次；非零旋轉共有 6 個。',
+        tip: '正方形有 4 個非零旋轉對稱（90°、180°、270°、360°）。',
+        mistake: '把軸對稱的數目和旋轉對稱的階數混為一談。',
+        visual: { kind: 'polygon', n: 6 },
+        glossary: [
+          { term: '旋轉對稱', def: '旋轉後與原圖重合的性質。' },
+          { term: '最小旋轉角', def: '360° ÷ 邊數。' },
+          { term: '階數', def: '非零旋轉對稱的數目。' }
+        ]
+      },
+      en: {
+        title: 'Rotational Symmetry',
+        intro: 'A shape has rotational symmetry if a rotation about its centre maps it onto itself.',
+        steps: ['Find the centre of the shape.', 'Divide 360° by the number of sides for the smallest angle.', 'The number of non-zero rotations (order) equals the number of sides.'],
+        example: 'A regular hexagon maps onto itself every 60°; it has 6 non-zero rotational symmetries.',
+        tip: 'A square has 4 non-zero rotations (90°, 180°, 270°, 360°).',
+        mistake: 'Confusing the number of lines of symmetry with the order of rotational symmetry.',
+        visual: { kind: 'polygon', n: 6 },
+        glossary: [
+          { term: 'Rotational symmetry', def: 'The shape looks unchanged after rotation.' },
+          { term: 'Smallest angle', def: '360° ÷ number of sides.' },
+          { term: 'Order', def: 'The number of non-zero rotations that map the shape onto itself.' }
+        ]
+      }
+    },
+    'col.calculus2': {
+      zh: {
+        title: '微積分（二）',
+        intro: '冪函數的導數與定積分是微積分的核心工具。',
+        steps: ['求導：d/dx (a x^n) = a n x^(n-1)。', '積分：∫ a x^n dx = a x^(n+1)/(n+1) + C。', '定積分代入上下限：F(b) − F(a)。'],
+        example: '∫₀² 3x² dx = [x³]₀² = 8。',
+        tip: '先做不定積分，再代入上限減下限。',
+        mistake: '定積分忘記代入下限，或求導時指數忘記減 1。',
+        visual: null,
+        glossary: [
+          { term: '導數', def: '函數在某一點的瞬時變化率。' },
+          { term: '定積分', def: '函數在區間上與 x 軸之間的有向面積。' },
+          { term: '冪規則', def: 'd/dx x^n = n x^(n-1)。' }
+        ]
+      },
+      en: {
+        title: 'Calculus II',
+        intro: 'Derivatives and definite integrals of power functions are core calculus tools.',
+        steps: ['Differentiate: d/dx (a x^n) = a n x^(n-1).', 'Integrate: ∫ a x^n dx = a x^(n+1)/(n+1) + C.', 'Evaluate a definite integral: F(b) − F(a).'],
+        example: '∫₀² 3x² dx = [x³]₀² = 8.',
+        tip: 'Find the antiderivative first, then substitute the upper and lower limits.',
+        mistake: 'Forgetting the lower limit, or not decreasing the exponent when differentiating.',
+        visual: null,
+        glossary: [
+          { term: 'Derivative', def: 'The instantaneous rate of change at a point.' },
+          { term: 'Definite integral', def: 'The signed area between a curve and the x-axis over an interval.' },
+          { term: 'Power rule', def: 'd/dx x^n = n x^(n-1).' }
+        ]
+      }
+    },
+    'col.linalg2': {
+      zh: {
+        title: '線性代數（二）',
+        intro: '二階行列式與矩陣乘法是線性代數的基本運算。',
+        steps: ['行列式：|A| = ad − bc。', '矩陣乘法：左矩陣的列乘右矩陣的行。', '乘積的第 i 行第 j 列 = 左第 i 列 · 右第 j 行。'],
+        example: 'A = [[1,2],[3,4]]，det A = 1×4 − 2×3 = −2。',
+        tip: '矩陣乘法一般不可交換：AB ≠ BA。',
+        mistake: '把行列式寫成 ad + bc，或把矩陣元素逐個相乘。',
+        visual: null,
+        glossary: [
+          { term: '行列式', def: '二階矩陣 ad − bc 的值。' },
+          { term: '矩陣乘法', def: '列乘行再相加。' },
+          { term: '單位矩陣', def: '主對角線為 1、其餘為 0 的矩陣。' }
+        ]
+      },
+      en: {
+        title: 'Linear Algebra II',
+        intro: '2×2 determinants and matrix multiplication are basic linear-algebra operations.',
+        steps: ['Determinant: |A| = ad − bc.', 'Matrix product: rows of the left matrix times columns of the right.', 'The (i,j) entry is the dot product of row i and column j.'],
+        example: 'For A = [[1,2],[3,4]], det A = 1×4 − 2×3 = −2.',
+        tip: 'Matrix multiplication is not commutative: AB ≠ BA in general.',
+        mistake: 'Writing ad + bc for the determinant, or multiplying entries position by position.',
+        visual: null,
+        glossary: [
+          { term: 'Determinant', def: 'For a 2×2 matrix, ad − bc.' },
+          { term: 'Matrix product', def: 'Multiply rows by columns and add.' },
+          { term: 'Identity matrix', def: '1s on the main diagonal and 0s elsewhere.' }
+        ]
+      }
+    },
+    'col.stats2': {
+      zh: {
+        title: '統計（二）',
+        intro: '方差衡量數據偏離平均數的程度；標準差是方差的平方根。',
+        steps: ['求平均數。', '求每個數據與平均數的差，再平方。', '取平均得方差；開平方根得標準差。'],
+        example: '數據 4, 6, 8：平均 6，方差 (4+0+4)/3 = 8/3。',
+        tip: '標準差與原數據同單位，較容易解釋。',
+        mistake: '忘記平方差，或把方差和標準差混為一談。',
+        visual: null,
+        glossary: [
+          { term: '方差', def: '各數據與平均數差的平方的平均。' },
+          { term: '標準差', def: '方差的平方根。' },
+          { term: '平均數', def: '所有數據的總和除以數據數目。' }
+        ]
+      },
+      en: {
+        title: 'Statistics II',
+        intro: 'Variance measures how far data spread from the mean; standard deviation is its square root.',
+        steps: ['Find the mean.', 'Find each deviation from the mean and square it.', 'Average the squared deviations for variance; take the square root for standard deviation.'],
+        example: 'For 4, 6, 8: mean 6, variance (4+0+4)/3 = 8/3.',
+        tip: 'Standard deviation has the same units as the data, so it is easier to interpret.',
+        mistake: 'Forgetting to square deviations, or confusing variance with standard deviation.',
+        visual: null,
+        glossary: [
+          { term: 'Variance', def: 'The average of squared deviations from the mean.' },
+          { term: 'Standard deviation', def: 'The square root of variance.' },
+          { term: 'Mean', def: 'The sum of the data divided by the number of values.' }
+        ]
+      }
+    }
+  };
+
+  Object.keys(EXTRA_LESSONS).forEach(function (key) {
+    L[key] = EXTRA_LESSONS[key];
+  });
+
   export { L as Lessons };
 

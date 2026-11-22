@@ -180,7 +180,7 @@ import { app } from './context.js';
       var l = state.lang === 'zh' ? lesson.zh : lesson.en;
       html += '<div class="lesson-card"><h2>' + t('lesson.title') + '</h2>' +
         '<div class="lesson-label">' + t('lesson.intro') + '</div><p class="lesson-text">' + renderMath(l.intro) + '</p>';
-      if (lesson.visual) {
+      if (l.visual || lesson.visual) {
         html += '<div class="lesson-visual" id="lessonVisual"></div>';
       }
       if (l.steps && l.steps.length) {
@@ -214,8 +214,8 @@ import { app } from './context.js';
 
     $('screen-lesson').innerHTML = html;
 
-    if (lesson && lesson.visual) {
-      renderVisual($('lessonVisual'), lesson.visual, null);
+    if (lesson && (l.visual || lesson.visual)) {
+      renderVisual($('lessonVisual'), l.visual || lesson.visual, null);
     }
     if (lesson) {
       $('lessonExample').addEventListener('click', function () { showWorkedExample(skillId); });

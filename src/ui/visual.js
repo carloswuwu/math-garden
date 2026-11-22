@@ -57,6 +57,8 @@ function visualAlt(visual, math) {
       case 'symmetry': return tpl('symmetry');
       case 'righttri': return tpl('righttri');
       case 'polygon': return tpl('polygon', { n: v.n });
+      case 'parallelogram': return tpl('parallelogram', { b: v.b, h: v.h });
+      case 'trapezoid': return tpl('trapezoid', { a: v.a, b: v.b, h: v.h });
       case 'parallel': return tpl('parallel');
       case 'angletype': return tpl('angletype') + ' · ' + tpl('angle_' + v.kind);
       case 'quadri': return tpl('quadri');
@@ -164,6 +166,12 @@ function renderVisual(container, visual, math) {
         break;
       case 'righttri':
         html = righttriSVG();
+        break;
+      case 'parallelogram':
+        html = parallelogramSVG(visual.b, visual.h);
+        break;
+      case 'trapezoid':
+        html = trapezoidSVG(visual.a, visual.b, visual.h);
         break;
       case 'polygon':
         html = polygonSVG(visual.n);
@@ -379,7 +387,22 @@ function polygonSVG(n) {
       '</svg>';
   }
 
-function parallelSVG() {
+function parallelogramSVG(b, h) {
+    return '<svg width="200" height="130" viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">' +
+      '<polygon points="40,105 150,105 170,25 60,25" fill="#FFD9A8" stroke="#FF9500" stroke-width="2"/>' +
+      '<line x1="60" y1="25" x2="60" y2="105" stroke="#888" stroke-dasharray="4 4"/>' +
+      '<text x="100" y="122" text-anchor="middle" font-size="12" fill="#333">底 ' + b + ' cm</text>' +
+      '<text x="48" y="70" text-anchor="end" font-size="12" fill="#333">' + h + '</text></svg>';
+  }
+  function trapezoidSVG(a, b, h) {
+    return '<svg width="200" height="130" viewBox="0 0 200 130" xmlns="http://www.w3.org/2000/svg">' +
+      '<polygon points="55,105 145,105 170,25 30,25" fill="#FFD9A8" stroke="#FF9500" stroke-width="2"/>' +
+      '<line x1="60" y1="25" x2="60" y2="105" stroke="#888" stroke-dasharray="4 4"/>' +
+      '<text x="100" y="122" text-anchor="middle" font-size="12" fill="#333">下底 ' + b + ' cm</text>' +
+      '<text x="100" y="18" text-anchor="middle" font-size="12" fill="#333">上底 ' + a + ' cm</text>' +
+      '<text x="48" y="70" text-anchor="end" font-size="12" fill="#333">' + h + '</text></svg>';
+  }
+  function parallelSVG() {
     var W = 260, H = 200, x0 = 40, x1 = 220;
     return '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
       '<line x1="' + x0 + '" y1="55" x2="' + x1 + '" y2="55" stroke="#007AFF" stroke-width="3"/>' +

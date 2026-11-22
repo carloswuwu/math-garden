@@ -143,7 +143,9 @@
         shape_square: "正方形",
         shape_triangle: "三角形",
         shape_rect: "長方形",
-        generic: "題目附圖"
+        generic: "題目附圖",
+        parallelogram: "平行四邊形，底 {b} 厘米、高 {h} 厘米。",
+        trapezoid: "梯形，上底 {a} 厘米、下底 {b} 厘米、高 {h} 厘米。"
       }
     },
     outline: { title: "課程大綱", covered: "本 app 已有練習" },
@@ -318,7 +320,9 @@
         shape_square: "square",
         shape_triangle: "triangle",
         shape_rect: "rectangle",
-        generic: "A diagram for the question"
+        generic: "A diagram for the question",
+        parallelogram: "A parallelogram with base {b} cm and height {h} cm.",
+        trapezoid: "A trapezium with parallel sides {a} cm and {b} cm and height {h} cm."
       }
     },
     outline: { title: "Curriculum Outline", covered: "covered in this app" },
