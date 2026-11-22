@@ -9,19 +9,17 @@ This document is the current-state map; decision records live in [`docs/adr/`](a
 ## 1. Runtime topology
 
 ```
-src/data/*.js ── ESM source of truth (content) ──────────────┐
-  i18n / curriculum / curriculum-outline / formulas / lessons
+src/data/*.js ── ESM content source of truth ────────────────┐
+src/core/{index,rng,values}.js ── ESM engine source of truth ┘
                                                              │
                               tools/build.js step 0 (esbuild)
                                                              ▼
 index.html ── classic root wrappers (generated) ──────────────┐
   ├─ vendor/katex/katex.min.js        (math typesetting)      │
-  ├─ math-core.js      engine                                   │
-  ├─ i18n.js           UI strings        (generated wrapper)    │
-  ├─ curriculum.js     content           (generated wrapper)    │
-  ├─ curriculum-outline.js / formulas.js (generated wrappers)   │
-  ├─ lessons.js        teaching content (generated wrapper)     │
-  └─ app.js            router + screens + state                 │
+  ├─ math-core.js      engine (generated UMD wrapper)         │
+  ├─ i18n.js / curriculum.js / curriculum-outline.js          │
+  ├─ formulas.js / lessons.js   (generated wrappers)          │
+  └─ app.js            router + screens + state               │
                                                                ▼
                                               tools/build.js (esbuild)
                                                                │
@@ -32,8 +30,8 @@ index.html ── classic root wrappers (generated) ─────────�
                                                     GitHub Pages / file://
 ```
 
-- **Source of truth** is now mixed: the five content modules live in `src/data/*.js` as **ESM**; `tools/build.js` step 0 bundles each into a generated classic wrapper at the repo root (`i18n.js`, `curriculum.js`, `curriculum-outline.js`, `formulas.js`, `lessons.js`) that assigns the same `window.*` global. `math-core.js` and `app.js` are still classic scripts and communicate through explicit `window.*` globals, so **script order still matters** (see §4).
-- **Deployable artifact** is `dist/`, committed to the repo. `npm run build` is deterministic: generated wrappers are LF-normalised, the esbuild version participates in the hash, and CI fails if committed `dist/` **or generated wrappers** differ from a fresh build.
+- **Source of truth** is now mixed: content modules live in `src/data/*.js` (ESM); engine helpers live in `src/core/{index,rng,values}.js` (ESM). `tools/build.js` step 0 bundles them into generated classic wrappers at the repo root (content assigns `window.*`; engine is a **UMD** wrapper for `window.MathCore` + Node `require`). `app.js` is still a classic script, so script order still matters (§4).
+- **Deployable artifact** is `dist/`, committed to the repo. `npm run build` is deterministic: generated wrappers are LF-normalised, the esbuild version participates in the hash, and CI fails if committed `dist/` **or any generated wrapper** differs from a fresh build.
 - **No bundler in dev**: opening root `index.html` from `file://` executes the classic scripts directly; opening `dist/index.html` runs the production IIFE. `play-math.bat` prefers `dist/`.
 
 ## 2. Source inventory
@@ -45,8 +43,11 @@ index.html ── classic root wrappers (generated) ─────────�
 | `src/data/curriculum-outline.js` | Parent-facing syllabus outline (ESM source) | `CurriculumOutline` export → generated `curriculum-outline.js` |
 | `src/data/formulas.js` | Formula reference items tagged with skills (ESM source) | `Formulas` export → generated `formulas.js` |
 | `src/data/lessons.js` | 108 bilingual lessons (ESM source) | `Lessons` export → generated `lessons.js` |
-| `math-core.js` | RNG, value/fraction helpers, `GENERATORS`, `MATH_SPEC` oracle, `SOLVERS`, `generateProblem/Set`, `nextProblem`, `composeSet/composeExam`, `checkAnswer`, `explain`, `applyResult`, `applyQuizResult`, `sanitizeProgress`, `formatMathText` | `window.MathCore` |
-| `app.js` | Router, screens, state, progress, session, dialogs, SW update chip, language, a11y | `window.__mathApp` (test/debug API) |
+| `src/core/index.js` | Engine ESM entry: generators, MATH_SPEC, explain, composition, progress, grading (imports `rng`/`values`) | `MathCore` export → generated `math-core.js` UMD |
+| `src/core/rng.js` | Seeded RNG: `seedRandom`, `randInt`, `pick`, `shuffle` | ESM imports |
+| `src/core/values.js` | Value/fraction helpers: `isFraction`, `gcdInt`, `reduceFraction`, `valueKey`, `renderValue`, `valuesEqual`, `normalizeInput` | ESM imports |
+| `math-core.js` | **Generated UMD wrapper** of `src/core/index.js` (browser `window.MathCore`, Node `require`) | `window.MathCore` / `module.exports` |
+| `app.js` | Router, screens, state, progress, session, dialogs, SW update chip, language, a11y (still classic source) | `window.__mathApp` (test/debug API) |
 | `tools/build.js` / `tools/sw-template.js` | Deterministic bundle, dist assembly, SW generation | build script |
 | `tests/*.test.js` | Six suites: engine, UI (jsdom), generators, cross-layer contract, a11y (axe), performance budgets | `npm test` |
 
@@ -76,7 +77,7 @@ index.html ── classic root wrappers (generated) ─────────�
 katex → math-core → i18n → curriculum → curriculum-outline → formulas → lessons → app
 ```
 
-The five content modules are now **generated classic wrappers** (ESM source lives in `src/data/`), but they still assign `window.*` globals at load time; `math-core.js` and `app.js` remain classic scripts. `app.js` reads globals at call time (not load time), so most cross-references are late-bound, but data modules must exist before app handlers run. Remaining Phase 5 modularization target: engine (`core/`) and UI (`ui/`) modules.
+The content modules (`src/data/*`) and engine helpers (`src/core/*`) are ESM sources; build step 0 generates the classic wrappers. But they still assign `window.*` globals at load time and `app.js` remains a classic script. `app.js` reads globals at call time (not load time), so most cross-references are late-bound, but data/engine wrappers must exist before app handlers run. Remaining Phase 5 modularization target: finish splitting the engine (`generators`, `math-spec`, `explain`, `compose`, `progress`) and the UI (`ui/*`).
 
 ## 5. Routing and state machine
 
@@ -102,9 +103,9 @@ Hash routes are pure strings; `parseHash`/`serializeRoute`/`resolveRoute` valida
 
 ## 7. Build and deploy
 
-1. **Step 0 — content modules:** `tools/build.js` bundles each `src/data/*.js` ESM module into a generated classic wrapper at the repo root (same `window.*` global as before).
+1. **Step 0 — generated modules:** `tools/build.js` bundles each `src/data/*.js` into a classic wrapper and `src/core/index.js` into a UMD `math-core.js` (browser + Node), keeping the public globals unchanged.
 2. `node tools/build.js` reads the classic sources in fixed order, normalises line endings, bundles with esbuild (IIFE), hashes content → `dist/app.<hash>.js`, copies HTML/CSS/icons/vendors, writes hashed SW cache name and precache list.
-3. `dist/` and the generated wrappers are committed; `.github/workflows/tests.yml` rebuilds and **fails on drift** in either, then runs six suites.
+3. `dist/` and all generated wrappers are committed; `.github/workflows/tests.yml` rebuilds and **fails on drift** in either, then runs six suites.
 4. `.github/workflows/pages.yml` deploys `dist/` **only when the Pages source is GitHub Actions**; until the one-time settings switch the live site is the legacy root deploy.
 5. SW: install precaches, activate waits for user confirmation (`#updateChip`), navigation is network-first with 3 s timeout + cache fallback; generated SW never auto-`skipWaiting`.
 
@@ -149,9 +150,9 @@ Current source is order-coupled classic scripts; Phase 5 converts to ESM **while
 
 1. **Foundation** (done): architecture map, ADRs, performance budgets in CI.
 2. **Content modules** (done): `i18n`, `curriculum`, `curriculum-outline`, `formulas`, `lessons` now live in `src/data/*.js` as ESM; build step 0 generates the classic root wrappers with the unchanged `window.*` API; CI verifies wrappers are in sync.
-3. **Engine modules**: split `math-core.js` into `core/rng`, `core/values`, `core/generators/*`, `core/math-spec`, `core/explain`, `core/compose`, `core/progress`; a thin `core/index` keeps `window.MathCore`.
+3. **Engine modules** (in progress): `src/core/index.js` is now the ESM engine entry and the first split (`core/rng.js`, `core/values.js`) is landed; `math-core.js` is a generated UMD wrapper. Next extracts: `generators`, `math-spec`, `explain`, `compose`, `progress` behind the unchanged `window.MathCore` API.
 4. **UI modules**: split `app.js` into `ui/router`, `ui/state`, `ui/screens/*`, `ui/dialog`, `ui/visual`, `ui/a11y`, `ui/sw`; `app/index` keeps `window.__mathApp`.
-5. **Tooling/tests**: tests load the built IIFE (contract/UI/a11y/perf) instead of seven `vm` evals; keep file:// by committing the classic bundle as today.
+5. **Tooling/tests**: tests load the built IIFE (contract/UI/a11y/perf) instead of eval'ing root wrappers; keep file:// by committing the classic bundle as today.
 
 Guardrails for every slice: one module/commit, all six suites green, `dist/` rebuilt and committed, public APIs unchanged, no change to stored progress/session schemas.
 
