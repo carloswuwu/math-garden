@@ -718,6 +718,16 @@ h1, h2, h3, p { margin: 0; }
 .challenge-count { font-family: var(--font-hand); font-size: 13px; font-weight: 700; }
 .challenge-arrow { font-family: var(--font-display); font-size: 24px; font-weight: 800; }
 
+/* ---------- 課堂深化：解題步驟與常見錯誤 ---------- */
+.lesson-steps { margin: 6px 0 14px 22px; display: grid; gap: 7px; }
+.lesson-steps li { line-height: 1.65; color: var(--ink); }
+.lesson-mistake {
+  background: var(--tint-red, #fff1ef);
+  border-left: 4px solid var(--red, #d9534f);
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
 /* ---------- 鍵入答案（挑戰區：不提供選項） ---------- */
 .answer-row { display: flex; gap: 10px; align-items: stretch; margin-bottom: 8px; }
 .answer-input {
