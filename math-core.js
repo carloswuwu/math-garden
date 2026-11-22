@@ -524,6 +524,40 @@ var __MathCoreBundle = (() => {
     linalg2: function(m) {
       return m.mode === "det" ? m.a * m.d - m.b * m.c : m.a * m.e + m.b * m.g;
     },
+    rounding: function(m) {
+      if (m.mode === "round") return Math.round(m.n / m.unit) * m.unit;
+      return Math.round(m.a / m.unit) * m.unit + Math.round(m.b / m.unit) * m.unit;
+    },
+    chartread: function(m) {
+      if (m.mode === "diff") return Math.max.apply(null, m.values) - Math.min.apply(null, m.values);
+      if (m.mode === "total") return m.values.reduce(function(x, y) {
+        return x + y;
+      }, 0);
+      return m.values[m.values.length - 1] - m.values[0];
+    },
+    circleparts: function(m) {
+      return m.mode === "diameter" ? m.r * 2 : m.d / 2;
+    },
+    ode: function(m) {
+      return m.y0 + m.h * m.a * m.y0;
+    },
+    numtheory: function(m) {
+      if (m.mode === "phi") {
+        var count = 0;
+        for (var k = 1; k <= m.n; k++) {
+          var a = m.n, b = k;
+          while (b) {
+            var t = a % b;
+            a = b;
+            b = t;
+          }
+          if (a === 1) count++;
+        }
+        return count;
+      }
+      for (var x = 1; x < m.m; x++) if (m.a * x % m.m === 1) return x;
+      return 1;
+    },
     stats2: function(m) {
       var mean = m.nums.reduce(function(x, y) {
         return x + y;
@@ -3993,6 +4027,152 @@ var __MathCoreBundle = (() => {
       hint: { zh: mode === "variance" ? "先求平均數，再求各項與平均數差的平方的平均。" : "先求方差，再開平方根。", en: mode === "variance" ? "Find the mean, then average the squared deviations." : "Find the variance first, then take the square root." }
     };
   }
+  function genRounding(rng, o) {
+    var mode = pick(rng, ["round", "estimate"]);
+    if (mode === "round") {
+      var unit = pick(rng, [10, 100, 1e3]);
+      var n = randInt(rng, 2, 9) * unit + randInt(rng, 1, unit - 1);
+      var answer = Math.round(n / unit) * unit;
+      return {
+        type: "rounding",
+        prompt: { zh: "把 " + n + " 四捨五入至最接近的 " + unit + "。", en: "Round " + n + " to the nearest " + unit + "." },
+        visual: { kind: "numberline" },
+        answer,
+        math: { op: "rounding", mode, n, unit },
+        hint: { zh: "看下一位數字：5 或以上進位，4 或以下不進位。", en: "Look at the next digit: 5 or more rounds up, 4 or less rounds down." }
+      };
+    }
+    var unitE = pick(rng, [10, 100]);
+    var a = randInt(rng, 11, 89) * unitE;
+    var b = randInt(rng, 11, 89) * unitE;
+    var estimate = Math.round(a / unitE) * unitE + Math.round(b / unitE) * unitE;
+    return {
+      type: "rounding",
+      prompt: { zh: "先取近似值至最接近的 " + unitE + "，再估計 " + a + " + " + b + " 的和。", en: "Round each number to the nearest " + unitE + ", then estimate " + a + " + " + b + "." },
+      visual: null,
+      answer: estimate,
+      math: { op: "rounding", mode, a, b, unit: unitE },
+      hint: { zh: "把兩個數分別取近似值，再相加。", en: "Round each number first, then add the estimates." }
+    };
+  }
+  var CHART_NAMES = ["A", "B", "C", "D"];
+  function genChartread(rng, o) {
+    var values = [];
+    for (var i = 0; i < 4; i++) values.push(randInt(rng, 2, 9));
+    var mode = pick(rng, ["diff", "total", "rise"]);
+    var answer, prompt, hint;
+    if (mode === "diff") {
+      answer = Math.max.apply(null, values) - Math.min.apply(null, values);
+      prompt = { zh: "棒形圖顯示四位同學的分數：" + values.map(function(v, j) {
+        return CHART_NAMES[j] + " = " + v;
+      }).join("、") + "。最高與最低相差多少？", en: "A bar chart shows four scores: " + values.map(function(v, j) {
+        return CHART_NAMES[j] + " = " + v;
+      }).join(", ") + ". What is the difference between the highest and lowest?" };
+      hint = { zh: "先找出最大值和最小值，再相減。", en: "Find the maximum and minimum, then subtract." };
+    } else if (mode === "total") {
+      answer = values.reduce(function(x, y) {
+        return x + y;
+      }, 0);
+      prompt = { zh: "棒形圖顯示四位同學的分數：" + values.map(function(v, j) {
+        return CHART_NAMES[j] + " = " + v;
+      }).join("、") + "。四人的總分是多少？", en: "A bar chart shows four scores: " + values.map(function(v, j) {
+        return CHART_NAMES[j] + " = " + v;
+      }).join(", ") + ". What is the total score?" };
+      hint = { zh: "把四根棒的值加起來。", en: "Add the four bar values." };
+    } else {
+      answer = values[3] - values[0];
+      prompt = { zh: "折線圖顯示連續四天的氣溫：" + values.map(function(v, j) {
+        return "第" + (j + 1) + "天 " + v + "°C";
+      }).join("、") + "。由第一天到第四天上升了多少度？", en: "A line graph shows temperatures over four days: " + values.map(function(v, j) {
+        return "day " + (j + 1) + " = " + v;
+      }).join(", ") + ". How much did it rise from day 1 to day 4?" };
+      hint = { zh: "用最後一天的數值減第一天的數值。", en: "Subtract the first value from the last." };
+    }
+    return {
+      type: "chartread",
+      prompt,
+      visual: { kind: mode === "rise" ? "linegraph" : "barchart", values, labels: CHART_NAMES.slice() },
+      answer,
+      math: { op: "chartread", mode, values },
+      hint
+    };
+  }
+  function genCircleparts(rng, o) {
+    var mode = pick(rng, ["diameter", "radius"]);
+    var r = randInt(rng, 2, 15);
+    var d = 2 * r;
+    return mode === "diameter" ? {
+      type: "circleparts",
+      prompt: { zh: "圓的半徑是 " + r + " cm，直徑是多少 cm？", en: "A circle has radius " + r + " cm. What is its diameter?" },
+      visual: { kind: "circle", r },
+      answer: d,
+      math: { op: "circleparts", mode, r },
+      hint: { zh: "直徑 = 半徑 × 2。", en: "Diameter = radius × 2." }
+    } : {
+      type: "circleparts",
+      prompt: { zh: "圓的直徑是 " + d + " cm，半徑是多少 cm？", en: "A circle has diameter " + d + " cm. What is its radius?" },
+      visual: { kind: "circle", r },
+      answer: r,
+      math: { op: "circleparts", mode, d },
+      hint: { zh: "半徑 = 直徑 ÷ 2。", en: "Radius = diameter ÷ 2." }
+    };
+  }
+  function genOde(rng, o) {
+    var a = randInt(rng, 1, 4);
+    var y0 = randInt(rng, 1, 5);
+    var h = 1;
+    var answer = y0 + h * a * y0;
+    return {
+      type: "ode",
+      prompt: { zh: "已知 $\\frac{dy}{dx} = " + a + "y$ 且 $y(0) = " + y0 + "$。用歐拉法取步長 $h = 1$，估計 $y(1)$。", en: "Given $\\frac{dy}{dx} = " + a + "y$ and $y(0) = " + y0 + "$, use Euler's method with step $h = 1$ to estimate $y(1)$." },
+      visual: null,
+      answer,
+      math: { op: "ode", a, y0, h },
+      hint: { zh: "歐拉法：y₁ = y₀ + h·f(x₀, y₀)。", en: "Euler: y₁ = y₀ + h·f(x₀, y₀)." }
+    };
+  }
+  function phi(n) {
+    var count = 0;
+    for (var k = 1; k <= n; k++) {
+      var a = n, b = k;
+      while (b) {
+        var t = a % b;
+        a = b;
+        b = t;
+      }
+      if (a === 1) count++;
+    }
+    return count;
+  }
+  function genNumtheory(rng, o) {
+    var mode = pick(rng, ["phi", "inverse"]);
+    if (mode === "phi") {
+      var n = pick(rng, [8, 9, 10, 12, 14, 15, 16, 18, 20]);
+      return {
+        type: "numtheory",
+        prompt: { zh: "求歐拉函數 $\\varphi(" + n + ")$（1 至 " + n + " 中與 " + n + " 互質的數的個數）。", en: "Find Euler's totient $\\varphi(" + n + ")$: the count of integers from 1 to " + n + " coprime to " + n + "." },
+        visual: null,
+        answer: phi(n),
+        math: { op: "numtheory", mode, n },
+        hint: { zh: "逐個檢查 1 至 " + n + " 中與 " + n + " 的最大公因數是否為 1。", en: "Check which numbers 1.." + n + " are coprime to " + n + "." }
+      };
+    }
+    var m = pick(rng, [5, 7, 9, 11, 13]);
+    var a = randInt(rng, 2, m - 1);
+    var inv = 1;
+    for (var k = 1; k < m; k++) if (a * k % m === 1) {
+      inv = k;
+      break;
+    }
+    return {
+      type: "numtheory",
+      prompt: { zh: "求 " + a + " 在模 " + m + " 下的乘法反元素（即 $" + a + "x \\equiv 1 \\pmod{" + m + "}$ 的最小正整數解）。", en: "Find the multiplicative inverse of " + a + " modulo " + m + " (the smallest positive x with $" + a + "x \\equiv 1 \\pmod{" + m + "}$)." },
+      visual: null,
+      answer: inv,
+      math: { op: "numtheory", mode, a, m },
+      hint: { zh: "逐個試 x = 1, 2, …，直到 " + a + "x 除以 " + m + " 餘 1。", en: "Try x = 1, 2, … until " + a + "x leaves remainder 1 modulo " + m + "." }
+    };
+  }
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -4106,7 +4286,12 @@ var __MathCoreBundle = (() => {
     rotation: genRotation,
     calculus2: genCalculus2,
     linalg2: genLinalg2,
-    stats2: genStats2
+    stats2: genStats2,
+    rounding: genRounding,
+    chartread: genChartread,
+    circleparts: genCircleparts,
+    ode: genOde,
+    numtheory: genNumtheory
   };
 
   // src/core/format.js
@@ -5316,6 +5501,22 @@ var __MathCoreBundle = (() => {
           en: ["Mean = " + sMean + ".", "Variance = average of squared deviations = " + sVar + ".", m.mode === "variance" ? "Variance = " + p.answer + "." : "Standard deviation = √" + sVar + " = " + p.answer + "."]
         };
       }
+      case "rounding":
+        if (m.mode === "round") {
+          return { zh: ["看要捨入的單位：" + m.unit + "。", m.n + " 四捨五入至最接近的 " + m.unit + " 是 " + p.answer + "。"], en: ["Look at the rounding unit: " + m.unit + ".", m.n + " rounded to the nearest " + m.unit + " is " + p.answer + "."] };
+        }
+        return { zh: ["先把每個數取近似值至 " + m.unit + "。", m.a + " ≈ " + Math.round(m.a / m.unit) * m.unit + "，" + m.b + " ≈ " + Math.round(m.b / m.unit) * m.unit + "，和 ≈ " + p.answer + "。"], en: ["Round each number to the nearest " + m.unit + ".", m.a + " ≈ " + Math.round(m.a / m.unit) * m.unit + ", " + m.b + " ≈ " + Math.round(m.b / m.unit) * m.unit + ", sum ≈ " + p.answer + "."] };
+      case "chartread":
+        if (m.mode === "diff") return { zh: ["最大值減最小值。", "= " + Math.max.apply(null, m.values) + " − " + Math.min.apply(null, m.values) + " = " + p.answer + "。"], en: ["Largest minus smallest.", "= " + Math.max.apply(null, m.values) + " − " + Math.min.apply(null, m.values) + " = " + p.answer + "."] };
+        if (m.mode === "total") return { zh: ["把各棒/各點的數值相加。", "總和 = " + p.answer + "。"], en: ["Add the values.", "Total = " + p.answer + "."] };
+        return { zh: ["用最後一點減第一點。", "= " + m.values[m.values.length - 1] + " − " + m.values[0] + " = " + p.answer + "。"], en: ["Subtract the first point from the last.", "= " + m.values[m.values.length - 1] + " − " + m.values[0] + " = " + p.answer + "."] };
+      case "circleparts":
+        return m.mode === "diameter" ? { zh: ["直徑 = 半徑 × 2。", "= " + m.r + " × 2 = " + p.answer + " cm。"], en: ["Diameter = radius × 2.", "= " + m.r + " × 2 = " + p.answer + " cm."] } : { zh: ["半徑 = 直徑 ÷ 2。", "= " + m.d + " ÷ 2 = " + p.answer + " cm。"], en: ["Radius = diameter ÷ 2.", "= " + m.d + " ÷ 2 = " + p.answer + " cm."] };
+      case "ode":
+        return { zh: ["歐拉法一步：y₁ = y₀ + h·f(x₀, y₀)。", "f(x₀, y₀) = " + m.a + "×" + m.y0 + " = " + m.a * m.y0 + "，所以 y₁ = " + m.y0 + " + 1×" + m.a * m.y0 + " = " + p.answer + "。"], en: ["One Euler step: y₁ = y₀ + h·f(x₀, y₀).", "f(x₀, y₀) = " + m.a + "×" + m.y0 + " = " + m.a * m.y0 + ", so y₁ = " + m.y0 + " + 1×" + m.a * m.y0 + " = " + p.answer + "."] };
+      case "numtheory":
+        if (m.mode === "phi") return { zh: ["數一數 1 至 " + m.n + " 中與 " + m.n + " 互質的數。", "φ(" + m.n + ") = " + p.answer + "。"], en: ["Count integers 1.." + m.n + " coprime to " + m.n + ".", "φ(" + m.n + ") = " + p.answer + "."] };
+        return { zh: ["找最小的 x 使 " + m.a + "x 除以 " + m.m + " 餘 1。", "x = " + p.answer + "。"], en: ["Find the smallest x with " + m.a + "x ≡ 1 (mod " + m.m + ").", "x = " + p.answer + "."] };
       default:
         return null;
     }
@@ -5373,7 +5574,7 @@ var __MathCoreBundle = (() => {
   }
   function distractorMax(p, o) {
     if (isFraction(p.answer)) return 20;
-    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2"].indexOf(p.type) !== -1) {
+    if (["modpow", "gcdlcm", "remainderSystem", "pathcount", "handshake", "arrange", "inclusion", "clockangle", "trapezoid", "seqnext", "pigeon", "workrate", "mixture", "lastdigit", "gridrect", "polygonsum", "train", "area2", "volume1", "rotation", "calculus2", "linalg2", "stats2", "rounding", "chartread", "circleparts", "ode", "numtheory"].indexOf(p.type) !== -1) {
       return Math.max(30, Math.ceil(Number(p.answer) * 2) + 10);
     }
     if (p.type === "quadsolve") return 120;

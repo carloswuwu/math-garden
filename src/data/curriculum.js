@@ -348,6 +348,46 @@ var skills = {
       mastery: { practice: 12, quizPass: 0.8 }
     },
 
+    'g5.estimation': {
+      id: 'g5.estimation', stage: 'g5', order: 10,
+      zh: { name: '近似值與估算', goal: '會四捨五入及用近似值估算加法的和。' },
+      en: { name: 'Approximation & Estimation', goal: 'Round numbers and estimate sums using approximations.' },
+      lesson: 'g5.estimation',
+      types: ['rounding'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    'g5.chart': {
+      id: 'g5.chart', stage: 'g5', order: 11,
+      zh: { name: '統計圖', goal: '會讀棒形圖與折線圖，求相差、總和及變化。' },
+      en: { name: 'Charts', goal: 'Read bar charts and line graphs to find differences, totals and changes.' },
+      lesson: 'g5.chart',
+      types: ['chartread'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    'g5.algebra': {
+      id: 'g5.algebra', stage: 'g5', order: 12,
+      zh: { name: '代數符號（一）', goal: '會用字母表示未知數，並代入求值。' },
+      en: { name: 'Algebraic Symbols I', goal: 'Use letters for unknowns and evaluate expressions by substitution.' },
+      lesson: 'g5.algebra',
+      types: ['exprsub'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
+    'g5.circle': {
+      id: 'g5.circle', stage: 'g5', order: 13,
+      zh: { name: '圓的認識', goal: '認識圓心、半徑與直徑，並互算長度。' },
+      en: { name: 'Circles', goal: 'Know the centre, radius and diameter, and convert between radius and diameter.' },
+      lesson: 'g5.circle',
+      types: ['circleparts'],
+      levels: [{}],
+      mastery: { practice: 12, quizPass: 0.8 }
+    },
+
     /* ===================== 六年級 小六 ===================== */
 
     'g6.equation': {
@@ -568,6 +608,18 @@ var skills = {
       zh: { name: '統計（二）', goal: '會求一組數據的方差與標準差。' },
       en: { name: 'Statistics II', goal: 'Find variance and standard deviation of a small data set.' },
       lesson: 'col.stats2', types: ['stats2'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'col.ode': {
+      id: 'col.ode', stage: 'college', order: 7,
+      zh: { name: '微分方程（歐拉法）', goal: '會用歐拉法估計一階微分方程的數值解。' },
+      en: { name: 'Differential Equations (Euler)', goal: 'Use Euler’s method to estimate solutions of first-order ODEs.' },
+      lesson: 'col.ode', types: ['ode'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
+    },
+    'col.nt': {
+      id: 'col.nt', stage: 'college', order: 8,
+      zh: { name: '數論（歐拉函數與反元素）', goal: '會求歐拉函數與模乘法反元素。' },
+      en: { name: 'Number Theory', goal: 'Find Euler totients and modular multiplicative inverses.' },
+      lesson: 'col.nt', types: ['numtheory'], levels: [{}], mastery: { practice: 12, quizPass: 0.8 }
     },
 
     /* ===================== 中學與大學增補（二） ===================== */
@@ -1115,10 +1167,11 @@ var skills = {
       ] },
     { id: 'g5', zh: '小五', en: 'Primary 5', desc: { zh: '小數乘除、平均數、分數乘法', en: 'Decimal ×/÷, averages, fraction of a number' }, color: '#5856D6', emoji: '⛰️',
       topics: [
-        { id: 'g5.num', zh: '數與運算', en: 'Numbers & Operations', skills: ['g5.decimalmul', 'g5.fractionof', 'g5.fractiondiff', 'g5.fractionmul'] },
+        { id: 'g5.num', zh: '數與運算', en: 'Numbers & Operations', skills: ['g5.decimalmul', 'g5.fractionof', 'g5.fractiondiff', 'g5.fractionmul', 'g5.estimation'] },
         { id: 'g5.measure', zh: '度量', en: 'Measurement', skills: ['g5.area2', 'g5.volume1'] },
-        { id: 'g5.data', zh: '數據處理', en: 'Data Handling', skills: ['g5.average'] },
-        { id: 'g5.shape', zh: '圖形與空間', en: 'Shape & Space', skills: ['g5.rotation'] },
+        { id: 'g5.data', zh: '數據處理', en: 'Data Handling', skills: ['g5.average', 'g5.chart'] },
+        { id: 'g5.shape', zh: '圖形與空間', en: 'Shape & Space', skills: ['g5.rotation', 'g5.circle'] },
+        { id: 'g5.algebra', zh: '代數', en: 'Algebra', skills: ['g5.algebra'] },
         { id: 'g5.word', zh: '解決問題', en: 'Word Problems', skills: ['g5.word'] }
       ] },
     { id: 'g6', zh: '小六', en: 'Primary 6', desc: { zh: '方程、百分數、比與比例', en: 'Equations, percentages, ratio' }, color: '#FF2D55', emoji: '🏆',
@@ -1195,9 +1248,10 @@ var skills = {
       ] },
     { id: 'college', zh: '大學', en: 'University', desc: { zh: '微積分、線性代數、概率統計', en: 'Calculus, linear algebra, statistics' }, color: '#8E8E93', emoji: '🎯',
       topics: [
-        { id: 'col.calc', zh: '微積分', en: 'Calculus', skills: ['col.calculus', 'col.calculus2'] },
+        { id: 'col.calc', zh: '微積分', en: 'Calculus', skills: ['col.calculus', 'col.calculus2', 'col.ode'] },
         { id: 'col.lin', zh: '線性代數', en: 'Linear Algebra', skills: ['col.linalg', 'col.linalg2'] },
-        { id: 'col.prob', zh: '概率統計', en: 'Statistics', skills: ['col.prob', 'col.stats2'] }
+        { id: 'col.prob', zh: '概率統計', en: 'Statistics', skills: ['col.prob', 'col.stats2'] },
+        { id: 'col.nt', zh: '數論', en: 'Number Theory', skills: ['col.nt'] }
       ] },
     { id: 'challenge', zh: '挑戰區', en: 'Challenge', desc: { zh: '奧林匹克風格的額外難題：數論、計數、幾何、邏輯、代數與概率', en: 'Extra-hard olympiad-style problems: number theory, counting, geometry, logic, algebra and probability' }, color: '#B07C2A', emoji: '🏆',
       topics: [

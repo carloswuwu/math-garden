@@ -1177,6 +1177,24 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
           en: ['Mean = ' + sMean + '.', 'Variance = average of squared deviations = ' + sVar + '.', m.mode === 'variance' ? 'Variance = ' + p.answer + '.' : 'Standard deviation = √' + sVar + ' = ' + p.answer + '.']
         };
       }
+      case 'rounding':
+        if (m.mode === 'round') {
+          return { zh: ['看要捨入的單位：' + m.unit + '。', m.n + ' 四捨五入至最接近的 ' + m.unit + ' 是 ' + p.answer + '。'], en: ['Look at the rounding unit: ' + m.unit + '.', m.n + ' rounded to the nearest ' + m.unit + ' is ' + p.answer + '.'] };
+        }
+        return { zh: ['先把每個數取近似值至 ' + m.unit + '。', m.a + ' ≈ ' + (Math.round(m.a / m.unit) * m.unit) + '，' + m.b + ' ≈ ' + (Math.round(m.b / m.unit) * m.unit) + '，和 ≈ ' + p.answer + '。'], en: ['Round each number to the nearest ' + m.unit + '.', m.a + ' ≈ ' + (Math.round(m.a / m.unit) * m.unit) + ', ' + m.b + ' ≈ ' + (Math.round(m.b / m.unit) * m.unit) + ', sum ≈ ' + p.answer + '.'] };
+      case 'chartread':
+        if (m.mode === 'diff') return { zh: ['最大值減最小值。', '= ' + Math.max.apply(null, m.values) + ' − ' + Math.min.apply(null, m.values) + ' = ' + p.answer + '。'], en: ['Largest minus smallest.', '= ' + Math.max.apply(null, m.values) + ' − ' + Math.min.apply(null, m.values) + ' = ' + p.answer + '.'] };
+        if (m.mode === 'total') return { zh: ['把各棒/各點的數值相加。', '總和 = ' + p.answer + '。'], en: ['Add the values.', 'Total = ' + p.answer + '.'] };
+        return { zh: ['用最後一點減第一點。', '= ' + m.values[m.values.length - 1] + ' − ' + m.values[0] + ' = ' + p.answer + '。'], en: ['Subtract the first point from the last.', '= ' + m.values[m.values.length - 1] + ' − ' + m.values[0] + ' = ' + p.answer + '.'] };
+      case 'circleparts':
+        return m.mode === 'diameter'
+          ? { zh: ['直徑 = 半徑 × 2。', '= ' + m.r + ' × 2 = ' + p.answer + ' cm。'], en: ['Diameter = radius × 2.', '= ' + m.r + ' × 2 = ' + p.answer + ' cm.'] }
+          : { zh: ['半徑 = 直徑 ÷ 2。', '= ' + m.d + ' ÷ 2 = ' + p.answer + ' cm。'], en: ['Radius = diameter ÷ 2.', '= ' + m.d + ' ÷ 2 = ' + p.answer + ' cm.'] };
+      case 'ode':
+        return { zh: ['歐拉法一步：y₁ = y₀ + h·f(x₀, y₀)。', 'f(x₀, y₀) = ' + m.a + '×' + m.y0 + ' = ' + (m.a * m.y0) + '，所以 y₁ = ' + m.y0 + ' + 1×' + (m.a * m.y0) + ' = ' + p.answer + '。'], en: ['One Euler step: y₁ = y₀ + h·f(x₀, y₀).', 'f(x₀, y₀) = ' + m.a + '×' + m.y0 + ' = ' + (m.a * m.y0) + ', so y₁ = ' + m.y0 + ' + 1×' + (m.a * m.y0) + ' = ' + p.answer + '.'] };
+      case 'numtheory':
+        if (m.mode === 'phi') return { zh: ['數一數 1 至 ' + m.n + ' 中與 ' + m.n + ' 互質的數。', 'φ(' + m.n + ') = ' + p.answer + '。'], en: ['Count integers 1..' + m.n + ' coprime to ' + m.n + '.', 'φ(' + m.n + ') = ' + p.answer + '.'] };
+        return { zh: ['找最小的 x 使 ' + m.a + 'x 除以 ' + m.m + ' 餘 1。', 'x = ' + p.answer + '。'], en: ['Find the smallest x with ' + m.a + 'x ≡ 1 (mod ' + m.m + ').', 'x = ' + p.answer + '.'] };
       default:
         return null;
     }

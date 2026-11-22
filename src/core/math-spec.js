@@ -240,6 +240,30 @@ var MATH_SPEC = {
     return m.mode === 'defint' ? m.a * Math.pow(m.b, m.n + 1) / (m.n + 1) : m.a * m.n * Math.pow(m.x, m.n - 1);
   },
   linalg2: function (m) { return m.mode === 'det' ? m.a * m.d - m.b * m.c : m.a * m.e + m.b * m.g; },
+  rounding: function (m) {
+    if (m.mode === 'round') return Math.round(m.n / m.unit) * m.unit;
+    return Math.round(m.a / m.unit) * m.unit + Math.round(m.b / m.unit) * m.unit;
+  },
+  chartread: function (m) {
+    if (m.mode === 'diff') return Math.max.apply(null, m.values) - Math.min.apply(null, m.values);
+    if (m.mode === 'total') return m.values.reduce(function (x, y) { return x + y; }, 0);
+    return m.values[m.values.length - 1] - m.values[0];
+  },
+  circleparts: function (m) { return m.mode === 'diameter' ? m.r * 2 : m.d / 2; },
+  ode: function (m) { return m.y0 + m.h * m.a * m.y0; },
+  numtheory: function (m) {
+    if (m.mode === 'phi') {
+      var count = 0;
+      for (var k = 1; k <= m.n; k++) {
+        var a = m.n, b = k;
+        while (b) { var t = a % b; a = b; b = t; }
+        if (a === 1) count++;
+      }
+      return count;
+    }
+    for (var x = 1; x < m.m; x++) if ((m.a * x) % m.m === 1) return x;
+    return 1;
+  },
   stats2: function (m) {
     var mean = m.nums.reduce(function (x, y) { return x + y; }, 0) / m.nums.length;
     var v = m.nums.reduce(function (x, y) { return x + (y - mean) * (y - mean); }, 0) / m.nums.length;

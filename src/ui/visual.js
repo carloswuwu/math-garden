@@ -66,6 +66,7 @@ function visualAlt(visual, math) {
       case 'clock': return tpl('clock');
       case 'numberline': return tpl('numberline');
       case 'barchart': return tpl('barchart');
+      case 'linegraph': return tpl('linegraph');
       case 'percentgrid': return tpl('percentgrid', { pct: v.pct });
       case 'twotri': return tpl('twotri');
       case 'centre': return tpl('centre');
@@ -195,7 +196,10 @@ function renderVisual(container, visual, math) {
         html = numberlineSVG();
         break;
       case 'barchart':
-        html = barchartSVG();
+        html = barchartSVG(visual.values, visual.labels);
+        break;
+      case 'linegraph':
+        html = linegraphSVG(visual.values, visual.labels);
         break;
       case 'percentgrid':
         html = percentgridSVG(visual.pct);
@@ -484,9 +488,28 @@ function numberlineSVG() {
     return s;
   }
 
-function barchartSVG() {
+function linegraphSVG(values, labels) {
+    var vals = values && values.length ? values : [2, 4, 3, 6];
+    var W = 240, H = 180, x0 = 35, y0 = 150, top = 20, maxV = Math.max.apply(null, vals) + 1;
+    var step = (W - x0 - 20) / Math.max(1, vals.length - 1);
+    var pts = vals.map(function (v, i) {
+      return (x0 + i * step) + ',' + (y0 - (v / maxV) * (y0 - top));
+    }).join(' ');
+    var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
+      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + (W - 15) + '" y2="' + y0 + '" stroke="#333" stroke-width="2"/>' +
+      '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x0 + '" y2="' + top + '" stroke="#333" stroke-width="2"/>' +
+      '<polyline points="' + pts + '" fill="none" stroke="#007AFF" stroke-width="3"/>';
+    vals.forEach(function (v, i) {
+      var cx = x0 + i * step, cy = y0 - (v / maxV) * (y0 - top);
+      s += '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="#007AFF"/>';
+      s += '<text x="' + cx + '" y="' + (y0 + 16) + '" text-anchor="middle" font-size="11" fill="#333">' + ((labels && labels[i]) || (i + 1)) + '</text>';
+    });
+    return s + '</svg>';
+  }
+
+  function barchartSVG(values, labels) {
     var W = 220, H = 170, x0 = 40, y0 = 140;
-    var vals = [3, 5, 2, 6, 4];
+    var vals = values && values.length ? values : [3, 5, 2, 6, 4];
     var s = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">' +
       '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + (W - 15) + '" y2="' + y0 + '" stroke="#333" stroke-width="2"/>' +
       '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x0 + '" y2="' + 15 + '" stroke="#333" stroke-width="2"/>';

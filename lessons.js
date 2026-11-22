@@ -1676,6 +1676,191 @@
   Object.keys(EXTRA_LESSONS).forEach(function(key) {
     L[key] = EXTRA_LESSONS[key];
   });
+  var EXTRA_LESSONS2 = {
+    "g5.estimation": {
+      zh: {
+        title: "近似值與估算",
+        intro: "四捨五入可以快速得到接近的數；估算就是先用近似值再計算。",
+        steps: ["找出要捨入的單位（十、百、千）。", "看下一位數字：5 或以上進位，4 或以下不變。", "估算加減時，先把各數取近似值再運算。"],
+        example: "4 380 四捨五入至最接近的千位是 4 000；3 870 + 2 140 ≈ 4 000 + 2 000 = 6 000。",
+        tip: "題目問「大約」時，通常用估算而不是精確計算。",
+        mistake: "看錯位值，或把 4 捨入時當成 5 進位。",
+        visual: { kind: "numberline" },
+        glossary: [
+          { term: "四捨五入", def: "看下一位數字決定進位或捨去。" },
+          { term: "近似值", def: "接近真確值的數。" },
+          { term: "估算", def: "用近似值快速計算。" }
+        ]
+      },
+      en: {
+        title: "Approximation & Estimation",
+        intro: "Rounding gives a nearby number; estimation uses rounded values to calculate quickly.",
+        steps: ["Identify the rounding unit (tens, hundreds, thousands).", "Look at the next digit: 5 or more rounds up, 4 or less stays.", "To estimate a sum, round first, then add."],
+        example: "4 380 rounded to the nearest thousand is 4 000; 3 870 + 2 140 ≈ 4 000 + 2 000 = 6 000.",
+        tip: "When a question says “about”, estimation is usually expected.",
+        mistake: "Misreading place value, or rounding a 4 up.",
+        visual: { kind: "numberline" },
+        glossary: [
+          { term: "Rounding", def: "Use the next digit to decide whether to round up or down." },
+          { term: "Approximation", def: "A number close to the exact value." },
+          { term: "Estimation", def: "Calculating with rounded values." }
+        ]
+      }
+    },
+    "g5.chart": {
+      zh: {
+        title: "統計圖",
+        intro: "棒形圖用棒的高度比較數量；折線圖用線的升降顯示變化。",
+        steps: ["先讀座標軸的單位和每格代表多少。", "找出各棒/各點對應的數值。", "按題目要求求相差、總和或變化。"],
+        example: "四天溫度 3、5、2、6°C：最高與最低相差 6 − 2 = 4°C。",
+        tip: "折線圖看趨勢，棒形圖看比較。",
+        mistake: "把格數當成數值，忽略每格代表的單位。",
+        visual: { kind: "barchart", values: [3, 5, 2, 6], labels: ["A", "B", "C", "D"] },
+        glossary: [
+          { term: "棒形圖", def: "用棒的高度表示數量。" },
+          { term: "折線圖", def: "用線段連接各點顯示變化。" },
+          { term: "座標軸", def: "圖表的橫軸和縱軸。" }
+        ]
+      },
+      en: {
+        title: "Charts",
+        intro: "Bar charts compare amounts by bar height; line graphs show change by rises and falls.",
+        steps: ["Read the axes and the value of each grid unit.", "Read the value of each bar or point.", "Find the difference, total or change as asked."],
+        example: "Temperatures 3, 5, 2, 6°C over four days: the range is 6 − 2 = 4°C.",
+        tip: "Line graphs show trends; bar charts make comparisons easy.",
+        mistake: "Counting grid squares instead of reading the scale.",
+        visual: { kind: "barchart", values: [3, 5, 2, 6], labels: ["A", "B", "C", "D"] },
+        glossary: [
+          { term: "Bar chart", def: "Uses bar heights to show amounts." },
+          { term: "Line graph", def: "Joins points with line segments to show change." },
+          { term: "Axis", def: "The horizontal or vertical scale of a chart." }
+        ]
+      }
+    },
+    "g5.algebra": {
+      zh: {
+        title: "代數符號（一）",
+        intro: "用字母表示未知數，例如 x 代表一個數；代入數值就可以求代數式的值。",
+        steps: ["看清楚字母代表哪個數。", "把字母換成該數值。", "按先乘除後加減計算。"],
+        example: "已知 x = 4，3x + 7 = 3×4 + 7 = 19。",
+        tip: "3x 表示 3 × x，不是 3 + x。",
+        mistake: "把 3x 當成 3 + x，或代入後忘記先乘。",
+        visual: null,
+        glossary: [
+          { term: "代數式", def: "含字母和數字的算式，例如 3x + 7。" },
+          { term: "未知數", def: "用字母表示的未知數量。" },
+          { term: "代入", def: "把字母換成指定的數值。" }
+        ]
+      },
+      en: {
+        title: "Algebraic Symbols I",
+        intro: "Letters stand for unknown numbers; substituting a value lets you evaluate an expression.",
+        steps: ["See which value the letter stands for.", "Replace the letter with that value.", "Calculate using multiplication/division before addition/subtraction."],
+        example: "Given x = 4, 3x + 7 = 3×4 + 7 = 19.",
+        tip: "3x means 3 × x, not 3 + x.",
+        mistake: "Treating 3x as 3 + x, or not multiplying first.",
+        visual: null,
+        glossary: [
+          { term: "Expression", def: "A combination of letters and numbers, e.g. 3x + 7." },
+          { term: "Unknown", def: "A quantity represented by a letter." },
+          { term: "Substitute", def: "Replace a letter with a given value." }
+        ]
+      }
+    },
+    "g5.circle": {
+      zh: {
+        title: "圓的認識",
+        intro: "圓心是圓的中心；半徑是圓心到圓周的距離；直徑穿過圓心，是半徑的兩倍。",
+        steps: ["認出圓心、半徑和直徑。", "直徑 = 半徑 × 2。", "半徑 = 直徑 ÷ 2。"],
+        example: "半徑 7 cm 的圓，直徑是 14 cm。",
+        tip: "直徑是圓內最長的弦，必定穿過圓心。",
+        mistake: "把直徑當成半徑，或以為所有弦都穿過圓心。",
+        visual: { kind: "circle", r: 7 },
+        glossary: [
+          { term: "圓心", def: "圓的中心點。" },
+          { term: "半徑", def: "圓心到圓周的距離。" },
+          { term: "直徑", def: "穿過圓心、兩端在圓周上的線段。" }
+        ]
+      },
+      en: {
+        title: "Circles",
+        intro: "The centre is the middle point; the radius runs from the centre to the circle; the diameter passes through the centre and is twice the radius.",
+        steps: ["Identify the centre, radius and diameter.", "Diameter = radius × 2.", "Radius = diameter ÷ 2."],
+        example: "A circle of radius 7 cm has diameter 14 cm.",
+        tip: "The diameter is the longest chord and passes through the centre.",
+        mistake: "Confusing diameter with radius, or thinking every chord passes through the centre.",
+        visual: { kind: "circle", r: 7 },
+        glossary: [
+          { term: "Centre", def: "The middle point of a circle." },
+          { term: "Radius", def: "The distance from the centre to the circle." },
+          { term: "Diameter", def: "A chord through the centre; twice the radius." }
+        ]
+      }
+    },
+    "col.ode": {
+      zh: {
+        title: "微分方程（歐拉法）",
+        intro: "微分方程描述變化率；歐拉法用切線一步步估計數值解。",
+        steps: ["寫出 dy/dx = f(x, y) 及初始值。", "選步長 h，用 y₁ = y₀ + h·f(x₀, y₀)。", "重複步驟得到後續估計值。"],
+        example: "dy/dx = 2y、y(0)=1、h=1：y₁ = 1 + 1×2 = 3。",
+        tip: "h 越小，歐拉法通常越準，但步數越多。",
+        mistake: "忘記乘 h，或把初始值代入錯誤的位置。",
+        visual: null,
+        glossary: [
+          { term: "微分方程", def: "含導數的方程，描述變化率。" },
+          { term: "歐拉法", def: "用切線逐步估計解的數值方法。" },
+          { term: "步長", def: "每次前進的 x 增量 h。" }
+        ]
+      },
+      en: {
+        title: "Differential Equations (Euler)",
+        intro: "A differential equation describes a rate of change; Euler’s method follows the tangent step by step.",
+        steps: ["Write dy/dx = f(x, y) with an initial value.", "Choose step h and use y₁ = y₀ + h·f(x₀, y₀).", "Repeat for later estimates."],
+        example: "dy/dx = 2y, y(0)=1, h=1: y₁ = 1 + 1×2 = 3.",
+        tip: "Smaller h is usually more accurate but needs more steps.",
+        mistake: "Forgetting to multiply by h, or substituting the initial value in the wrong place.",
+        visual: null,
+        glossary: [
+          { term: "Differential equation", def: "An equation involving derivatives, describing a rate of change." },
+          { term: "Euler’s method", def: "A numerical method following tangent steps." },
+          { term: "Step size", def: "The x-increment h per step." }
+        ]
+      }
+    },
+    "col.nt": {
+      zh: {
+        title: "數論（歐拉函數與反元素）",
+        intro: "歐拉函數 φ(n) 數出 1 至 n 中與 n 互質的數；模反元素是乘積餘 1 的數。",
+        steps: ["φ(n)：逐一檢查最大公因數是否為 1。", "模 m 反元素：找最小的 x 使 ax ≡ 1 (mod m)。", "只當 a 與 m 互質時反元素才存在。"],
+        example: "φ(8) = 4（1、3、5、7）；3 在模 5 下的反元素是 2，因為 3×2=6≡1。",
+        tip: "若 a 與 m 不互質，反元素不存在。",
+        mistake: "把 φ(n) 當成 n 的因數數目。",
+        visual: null,
+        glossary: [
+          { term: "歐拉函數", def: "1 至 n 中與 n 互質的數的個數。" },
+          { term: "互質", def: "最大公因數為 1。" },
+          { term: "模反元素", def: "使 ax ≡ 1 (mod m) 的 x。" }
+        ]
+      },
+      en: {
+        title: "Number Theory",
+        intro: "Euler’s totient φ(n) counts integers 1..n coprime to n; a modular inverse multiplies to 1 mod m.",
+        steps: ["φ(n): check which numbers have gcd 1 with n.", "Modular inverse: find the smallest x with ax ≡ 1 (mod m).", "An inverse exists only when a and m are coprime."],
+        example: "φ(8) = 4 (1, 3, 5, 7); the inverse of 3 mod 5 is 2 because 3×2=6≡1.",
+        tip: "If a and m are not coprime, no inverse exists.",
+        mistake: "Confusing φ(n) with the number of divisors of n.",
+        visual: null,
+        glossary: [
+          { term: "Euler’s totient", def: "The count of integers 1..n coprime to n." },
+          { term: "Coprime", def: "Having gcd 1." },
+          { term: "Modular inverse", def: "The x with ax ≡ 1 (mod m)." }
+        ]
+      }
+    }
+  };
+  Object.keys(EXTRA_LESSONS2).forEach(function(key) {
+    L[key] = EXTRA_LESSONS2[key];
+  });
 
   // data-entry.js
   (typeof window !== "undefined" ? window : globalThis).Lessons = L;

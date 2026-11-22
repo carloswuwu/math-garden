@@ -3369,6 +3369,145 @@ import { fmtDecimal, fmtNum } from './display.js';
     };
   }
 
+
+  /* ---------------- 小五補充（二）：近似值、統計圖、代數符號、圓的認識 ---------------- */
+
+  function genRounding(rng, o) {
+    var mode = pick(rng, ['round', 'estimate']);
+    if (mode === 'round') {
+      var unit = pick(rng, [10, 100, 1000]);
+      var n = randInt(rng, 2, 9) * unit + randInt(rng, 1, unit - 1);
+      var answer = Math.round(n / unit) * unit;
+      return {
+        type: 'rounding',
+        prompt: { zh: '把 ' + n + ' 四捨五入至最接近的 ' + unit + '。', en: 'Round ' + n + ' to the nearest ' + unit + '.' },
+        visual: { kind: 'numberline' },
+        answer: answer,
+        math: { op: 'rounding', mode: mode, n: n, unit: unit },
+        hint: { zh: '看下一位數字：5 或以上進位，4 或以下不進位。', en: 'Look at the next digit: 5 or more rounds up, 4 or less rounds down.' }
+      };
+    }
+    var unitE = pick(rng, [10, 100]);
+    var a = randInt(rng, 11, 89) * unitE;
+    var b = randInt(rng, 11, 89) * unitE;
+    var estimate = Math.round(a / unitE) * unitE + Math.round(b / unitE) * unitE;
+    return {
+      type: 'rounding',
+      prompt: { zh: '先取近似值至最接近的 ' + unitE + '，再估計 ' + a + ' + ' + b + ' 的和。', en: 'Round each number to the nearest ' + unitE + ', then estimate ' + a + ' + ' + b + '.' },
+      visual: null,
+      answer: estimate,
+      math: { op: 'rounding', mode: mode, a: a, b: b, unit: unitE },
+      hint: { zh: '把兩個數分別取近似值，再相加。', en: 'Round each number first, then add the estimates.' }
+    };
+  }
+
+  var CHART_NAMES = ['A', 'B', 'C', 'D'];
+
+  function genChartread(rng, o) {
+    var values = [];
+    for (var i = 0; i < 4; i++) values.push(randInt(rng, 2, 9));
+    var mode = pick(rng, ['diff', 'total', 'rise']);
+    var answer, prompt, hint;
+    if (mode === 'diff') {
+      answer = Math.max.apply(null, values) - Math.min.apply(null, values);
+      prompt = { zh: '棒形圖顯示四位同學的分數：' + values.map(function (v, j) { return CHART_NAMES[j] + ' = ' + v; }).join('、') + '。最高與最低相差多少？', en: 'A bar chart shows four scores: ' + values.map(function (v, j) { return CHART_NAMES[j] + ' = ' + v; }).join(', ') + '. What is the difference between the highest and lowest?' };
+      hint = { zh: '先找出最大值和最小值，再相減。', en: 'Find the maximum and minimum, then subtract.' };
+    } else if (mode === 'total') {
+      answer = values.reduce(function (x, y) { return x + y; }, 0);
+      prompt = { zh: '棒形圖顯示四位同學的分數：' + values.map(function (v, j) { return CHART_NAMES[j] + ' = ' + v; }).join('、') + '。四人的總分是多少？', en: 'A bar chart shows four scores: ' + values.map(function (v, j) { return CHART_NAMES[j] + ' = ' + v; }).join(', ') + '. What is the total score?' };
+      hint = { zh: '把四根棒的值加起來。', en: 'Add the four bar values.' };
+    } else {
+      answer = values[3] - values[0];
+      prompt = { zh: '折線圖顯示連續四天的氣溫：' + values.map(function (v, j) { return '第' + (j + 1) + '天 ' + v + '°C'; }).join('、') + '。由第一天到第四天上升了多少度？', en: 'A line graph shows temperatures over four days: ' + values.map(function (v, j) { return 'day ' + (j + 1) + ' = ' + v; }).join(', ') + '. How much did it rise from day 1 to day 4?' };
+      hint = { zh: '用最後一天的數值減第一天的數值。', en: 'Subtract the first value from the last.' };
+    }
+    return {
+      type: 'chartread',
+      prompt: prompt,
+      visual: { kind: mode === 'rise' ? 'linegraph' : 'barchart', values: values, labels: CHART_NAMES.slice() },
+      answer: answer,
+      math: { op: 'chartread', mode: mode, values: values },
+      hint: hint
+    };
+  }
+
+  function genCircleparts(rng, o) {
+    var mode = pick(rng, ['diameter', 'radius']);
+    var r = randInt(rng, 2, 15);
+    var d = 2 * r;
+    return mode === 'diameter'
+      ? {
+        type: 'circleparts',
+        prompt: { zh: '圓的半徑是 ' + r + ' cm，直徑是多少 cm？', en: 'A circle has radius ' + r + ' cm. What is its diameter?' },
+        visual: { kind: 'circle', r: r },
+        answer: d,
+        math: { op: 'circleparts', mode: mode, r: r },
+        hint: { zh: '直徑 = 半徑 × 2。', en: 'Diameter = radius × 2.' }
+      }
+      : {
+        type: 'circleparts',
+        prompt: { zh: '圓的直徑是 ' + d + ' cm，半徑是多少 cm？', en: 'A circle has diameter ' + d + ' cm. What is its radius?' },
+        visual: { kind: 'circle', r: r },
+        answer: r,
+        math: { op: 'circleparts', mode: mode, d: d },
+        hint: { zh: '半徑 = 直徑 ÷ 2。', en: 'Radius = diameter ÷ 2.' }
+      };
+  }
+
+  /* ---------------- 大學加深（二）：微分方程、數論 ---------------- */
+
+  function genOde(rng, o) {
+    var a = randInt(rng, 1, 4);
+    var y0 = randInt(rng, 1, 5);
+    var h = 1;
+    var answer = y0 + h * a * y0;
+    return {
+      type: 'ode',
+      prompt: { zh: '已知 $\\frac{dy}{dx} = ' + a + 'y$ 且 $y(0) = ' + y0 + '$。用歐拉法取步長 $h = 1$，估計 $y(1)$。', en: 'Given $\\frac{dy}{dx} = ' + a + 'y$ and $y(0) = ' + y0 + '$, use Euler\'s method with step $h = 1$ to estimate $y(1)$.' },
+      visual: null,
+      answer: answer,
+      math: { op: 'ode', a: a, y0: y0, h: h },
+      hint: { zh: '歐拉法：y₁ = y₀ + h·f(x₀, y₀)。', en: 'Euler: y₁ = y₀ + h·f(x₀, y₀).' }
+    };
+  }
+
+  function phi(n) {
+    var count = 0;
+    for (var k = 1; k <= n; k++) {
+      var a = n, b = k;
+      while (b) { var t = a % b; a = b; b = t; }
+      if (a === 1) count++;
+    }
+    return count;
+  }
+
+  function genNumtheory(rng, o) {
+    var mode = pick(rng, ['phi', 'inverse']);
+    if (mode === 'phi') {
+      var n = pick(rng, [8, 9, 10, 12, 14, 15, 16, 18, 20]);
+      return {
+        type: 'numtheory',
+        prompt: { zh: '求歐拉函數 $\\varphi(' + n + ')$（1 至 ' + n + ' 中與 ' + n + ' 互質的數的個數）。', en: 'Find Euler\'s totient $\\varphi(' + n + ')$: the count of integers from 1 to ' + n + ' coprime to ' + n + '.' },
+        visual: null,
+        answer: phi(n),
+        math: { op: 'numtheory', mode: mode, n: n },
+        hint: { zh: '逐個檢查 1 至 ' + n + ' 中與 ' + n + ' 的最大公因數是否為 1。', en: 'Check which numbers 1..' + n + ' are coprime to ' + n + '.' }
+      };
+    }
+    var m = pick(rng, [5, 7, 9, 11, 13]);
+    var a = randInt(rng, 2, m - 1);
+    var inv = 1;
+    for (var k = 1; k < m; k++) if ((a * k) % m === 1) { inv = k; break; }
+    return {
+      type: 'numtheory',
+      prompt: { zh: '求 ' + a + ' 在模 ' + m + ' 下的乘法反元素（即 $' + a + 'x \\equiv 1 \\pmod{' + m + '}$ 的最小正整數解）。', en: 'Find the multiplicative inverse of ' + a + ' modulo ' + m + ' (the smallest positive x with $' + a + 'x \\equiv 1 \\pmod{' + m + '}$).' },
+      visual: null,
+      answer: inv,
+      math: { op: 'numtheory', mode: mode, a: a, m: m },
+      hint: { zh: '逐個試 x = 1, 2, …，直到 ' + a + 'x 除以 ' + m + ' 餘 1。', en: 'Try x = 1, 2, … until ' + a + 'x leaves remainder 1 modulo ' + m + '.' }
+    };
+  }
+
   var GENERATORS = {
     count: genCount,
     compare: genCompare,
@@ -3482,7 +3621,12 @@ import { fmtDecimal, fmtNum } from './display.js';
     rotation: genRotation,
     calculus2: genCalculus2,
     linalg2: genLinalg2,
-    stats2: genStats2
+    stats2: genStats2,
+    rounding: genRounding,
+    chartread: genChartread,
+    circleparts: genCircleparts,
+    ode: genOde,
+    numtheory: genNumtheory
   };
 
 export { GENERATORS, DIR_LABEL, CENTRE_LABEL };
