@@ -762,8 +762,11 @@
   // src/ui/context.js
   var app = {};
 
+  // src/ui/nav-state.js
+  var nav = { lastHash: null };
+
   // src/ui/screens.js
-  function renderHome() {
+  function renderHome2() {
     var realStages = realStageList();
     var unlockedCount = 0;
     var session = app.sessionSummary();
@@ -811,7 +814,7 @@
     });
     app.show("home");
   }
-  function renderStage(stageId) {
+  function renderStage2(stageId) {
     state.stageId = stageId;
     var stage = getStage(stageId);
     var stats = stageSkillStats(stage);
@@ -1082,10 +1085,370 @@
     return '<button class="seg-btn' + (state.theme === value ? " on" : "") + '" data-theme="' + value + '" type="button">' + label + "</button>";
   }
 
-  // src/ui/index.js
-  function pick(arr) {
-    return arr[Math.floor(Math.random() * arr.length)];
+  // src/ui/assessment.js
+  function progressBarHTML(pct, label) {
+    var now = Math.max(0, Math.min(100, Math.round(pct || 0)));
+    return '<div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + now + '"' + (label ? ' aria-label="' + esc(label) + '"' : "") + '><i style="width:' + now + '%"></i></div>';
   }
+  function choiceAriaLabel(index, text) {
+    return t("a11y.choice", { i: index + 1, text });
+  }
+  function startPractice(skillId) {
+    state.skillId = skillId;
+    state.stageId = app.skillStageId(skillId);
+    state.examStage = null;
+    state.mode = "practice";
+    state.problems = [];
+    state.index = 0;
+    state.correct = 0;
+    state.results = [];
+    state.quizStart = 0;
+    state.locked = false;
+    state.hintShown = false;
+    state.attemptWrong = false;
+    state.run = { mode: "practice", key: skillId };
+    nextPracticeProblem();
+    app.show("practice");
+    app.saveSession();
+  }
+  function nextPracticeProblem() {
+    var skill = getSkill(state.skillId);
+    var rng = MathCore.seedRandom(Date.now() & 4294967295 ^ Math.floor(Math.random() * 65535));
+    var p = MathCore.nextProblem(skill, progress, { rng, avoid: state.problems.slice(-4) });
+    state.problems.push(p);
+    state.index = state.problems.length - 1;
+    state.locked = false;
+    state.hintShown = false;
+    state.attemptWrong = false;
+    renderQuestion(p);
+    app.saveSession();
+  }
+  function startQuiz(skillId) {
+    state.skillId = skillId;
+    state.stageId = app.skillStageId(skillId);
+    state.examStage = null;
+    state.mode = "quiz";
+    state.problems = buildQuiz(getSkill(skillId), QUIZ_LENGTH);
+    state.index = 0;
+    state.correct = 0;
+    state.results = [];
+    state.locked = false;
+    state.hintShown = false;
+    state.quizStart = Date.now();
+    state.run = { mode: "quiz", key: skillId };
+    renderQuestion(state.problems[0]);
+    app.show("practice");
+    app.saveSession();
+  }
+  var TYPED_ASSESSMENT_STAGES = ["ms1", "ms2", "ms3", "hs1", "hs2", "hs3", "college"];
+  function applyTypedAssessment(problems, stageId) {
+    if (TYPED_ASSESSMENT_STAGES.indexOf(stageId) === -1) return problems;
+    problems.forEach(function(p, i) {
+      if (p.input) return;
+      var numericAnswer = typeof p.answer === "number" || MathCore.isFraction(p.answer);
+      if (numericAnswer && i % 3 === 2) p.input = "text";
+    });
+    return problems;
+  }
+  function buildQuiz(skill, n) {
+    var levels = Math.max(1, (skill.levels || []).length);
+    var baseStep = skillProgress(skill.id).difficultyStep || 0;
+    var step = Math.min(Math.max(1, baseStep), levels - 1);
+    var rng = MathCore.seedRandom(Date.now() & 4294967295);
+    return applyTypedAssessment(MathCore.composeSet(skill, n, { rng, difficultyStep: step }), skill.stage);
+  }
+  function currentProblem() {
+    return state.problems[state.index];
+  }
+  function choiceLabel(p, c) {
+    if (p.type === "direction") return t("direction." + c);
+    if (p.type === "centre") return t("centre." + c);
+    return MathCore.isFraction(c) ? MathCore.renderValue(c) : String(c);
+  }
+  function renderQuestion(p) {
+    var isQuiz = state.mode === "quiz" || state.mode === "exam";
+    var skill = state.mode === "exam" ? null : getSkill(state.skillId);
+    var headHtml;
+    var pctNow;
+    if (state.mode === "exam") {
+      var examStage = getStage(state.examStage);
+      pctNow = Math.round(state.index / state.problems.length * 100);
+      headHtml = '<div class="practice-head"><h1 class="p-title">📝 ' + t("exam.title") + " · " + L(examStage) + '</h1><span class="p-count">' + t("practice.question", { i: state.index + 1, n: state.problems.length }) + "</span></div>" + progressBarHTML(pctNow, t("practice.question", { i: state.index + 1, n: state.problems.length }));
+    } else if (isQuiz) {
+      var done = state.index;
+      pctNow = Math.round(done / state.problems.length * 100);
+      headHtml = '<div class="practice-head"><h1 class="p-title">' + t("quiz.title") + '</h1><span class="p-count">' + t("practice.question", { i: state.index + 1, n: state.problems.length }) + "</span></div>" + progressBarHTML(pctNow, t("practice.question", { i: state.index + 1, n: state.problems.length }));
+    } else {
+      var practice = skill.mastery && skill.mastery.practice || 10;
+      var c = skillProgress(skill.id).correct;
+      pctNow = Math.min(100, Math.round(c / practice * 100));
+      headHtml = '<div class="practice-head"><h1 class="p-title">' + nameOf(skill) + '</h1><span class="p-count">' + t("practice.progress") + " " + c + "/" + practice + "</span></div>" + progressBarHTML(pctNow, t("practice.progress") + " " + c + "/" + practice);
+    }
+    var bodyHtml = '<div class="prompt-card"><div class="prompt-text">' + renderMath(L(p.prompt)) + '</div><div class="prompt-visual" id="qVisual"></div></div>';
+    var choiceHtml;
+    if (p.input) {
+      choiceHtml = '<div class="answer-row"><label class="sr-only" for="typedAnswer">' + esc(t("practice.typeAnswer")) + '</label><input class="answer-input" id="typedAnswer" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="answerHint"><button class="btn" id="typedSubmit" type="button">' + esc(t("practice.submit")) + '</button></div><p class="answer-hint" id="answerHint">' + esc(t("practice.answerHint")) + "</p>";
+    } else {
+      choiceHtml = '<div class="choices" id="choices" role="group" aria-label="' + esc(t("practice.chooseAnswer")) + '">';
+      if (p.type === "comparegroup") {
+        p.choices.forEach(function(c2, i) {
+          var colorLabel = t("colors." + c2);
+          choiceHtml += '<button class="choice color-choice" type="button" data-value="' + c2 + '" data-key="' + c2 + '" aria-label="' + esc(choiceAriaLabel(i, colorLabel)) + '" aria-disabled="false"><span class="swatch" style="background:' + swatchColor(c2) + '"></span><span>' + colorLabel + "</span></button>";
+        });
+      } else {
+        p.choices.forEach(function(c2, i) {
+          var label = choiceLabel(p, c2);
+          choiceHtml += '<button class="choice" type="button" data-value="' + MathCore.renderValue(c2) + '" data-key="' + MathCore.valueKey(c2) + '" aria-label="' + esc(choiceAriaLabel(i, label)) + '" aria-disabled="false">' + label + "</button>";
+        });
+      }
+      choiceHtml += "</div>";
+    }
+    var footerHtml = '<div class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>';
+    if (!isQuiz) {
+      footerHtml += '<div class="practice-footer"><button class="btn hint" id="hintBtn" type="button">💡 ' + t("practice.hint") + '</button><button class="btn" id="nextBtn" type="button" hidden>' + t("practice.next") + '</button></div><div class="hint-box" id="hintBox" hidden></div>';
+    }
+    $("screen-practice").innerHTML = headHtml + bodyHtml + choiceHtml + footerHtml;
+    renderVisual($("qVisual"), p.visual, p.math);
+    var feedback = $("feedback");
+    var choicesEl = $("choices");
+    if (choicesEl) {
+      choicesEl.querySelectorAll(".choice").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+          if (state.locked) return;
+          handleAnswer(btn, p);
+        });
+      });
+    }
+    if (p.input) {
+      var typedSubmit = $("typedSubmit");
+      if (typedSubmit) typedSubmit.addEventListener("click", function() {
+        handleTypedAnswer(p);
+      });
+      var typedField = $("typedAnswer");
+      if (typedField) typedField.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          handleTypedAnswer(p);
+        }
+      });
+    }
+    if (!isQuiz) {
+      $("hintBtn").addEventListener("click", function() {
+        state.hintShown = true;
+        var hb = $("hintBox");
+        hb.textContent = L(p.hint);
+        hb.hidden = false;
+      });
+      $("nextBtn").addEventListener("click", nextPracticeProblem);
+    }
+  }
+  function gradeAnswered(p, correct, delayMs) {
+    if (correct) {
+      state.locked = true;
+      state.correct++;
+      app.touchStreak();
+      app.playTone(true);
+      app.confetti();
+      if (state.mode === "practice") {
+        MathCore.applyResult(progress, getSkill(state.skillId), p, true, { credit: !state.attemptWrong });
+        saveProgress();
+        app.updateTopbar();
+        $("nextBtn").hidden = false;
+      } else {
+        state.results.push({ correct: true, problem: p });
+        setTimeout(advanceQuiz, delayMs || 900);
+      }
+    } else {
+      app.playTone(false);
+      if (state.mode === "practice") {
+        MathCore.applyResult(progress, getSkill(state.skillId), p, false);
+        saveProgress();
+      } else {
+        state.results.push({ correct: false, problem: p });
+        setTimeout(advanceQuiz, delayMs || 1100);
+      }
+    }
+  }
+  function handleAnswer(btn, p) {
+    var correct = MathCore.checkAnswer(p, btn.getAttribute("data-value")).correct;
+    if (correct) {
+      btn.classList.add("correct");
+      disableChoices();
+      setFeedback(state.mode === "practice" && state.attemptWrong ? t("practice.correctRetry") : app.pick(t("practice.correct")), "ok");
+      gradeAnswered(p, true);
+      return;
+    }
+    btn.classList.add("wrong");
+    btn.disabled = true;
+    btn.setAttribute("aria-disabled", "true");
+    setFeedback(app.pick(t("practice.wrong")), "no");
+    if (state.mode === "practice") {
+      state.attemptWrong = true;
+      gradeAnswered(p, false);
+      return;
+    }
+    disableChoices();
+    $("screen-practice").querySelectorAll(".choice").forEach(function(b) {
+      if (MathCore.checkAnswer(p, b.getAttribute("data-value")).correct) b.classList.add("correct");
+    });
+    gradeAnswered(p, false, 1100);
+  }
+  function handleTypedAnswer(p) {
+    if (state.locked) return;
+    var field = $("typedAnswer");
+    if (!field) return;
+    var raw = String(field.value || "").trim();
+    if (!raw) {
+      setFeedback(t("practice.enterAnswer"), "no");
+      try {
+        field.focus();
+      } catch (e) {
+      }
+      return;
+    }
+    var submit = $("typedSubmit");
+    var correct = MathCore.checkAnswer(p, raw).correct;
+    if (correct) {
+      field.disabled = true;
+      if (submit) submit.disabled = true;
+      setFeedback(state.mode === "practice" && state.attemptWrong ? t("practice.correctRetry") : app.pick(t("practice.correct")), "ok");
+      gradeAnswered(p, true);
+      return;
+    }
+    if (state.mode === "practice") {
+      state.attemptWrong = true;
+      setFeedback(app.pick(t("practice.wrong")), "no");
+      gradeAnswered(p, false);
+      try {
+        field.select();
+      } catch (e) {
+      }
+      return;
+    }
+    field.disabled = true;
+    if (submit) submit.disabled = true;
+    setFeedback(t("practice.answerWas", { answer: MathCore.renderValue(p.answer) }), "no");
+    gradeAnswered(p, false, 1700);
+  }
+  function disableChoices() {
+    $("screen-practice").querySelectorAll(".choice").forEach(function(b) {
+      b.disabled = true;
+      b.setAttribute("aria-disabled", "true");
+    });
+  }
+  function setFeedback(msg, cls) {
+    var f = $("feedback");
+    f.textContent = msg;
+    f.className = "feedback " + cls;
+  }
+  function renderGradeExam(stageId) {
+    var stage = getStage(stageId);
+    state.examStage = stageId;
+    state.stageId = stageId;
+    state.mode = "exam";
+    state.skillId = null;
+    state.problems = buildGradeExam(stage, EXAM_LENGTH);
+    state.index = 0;
+    state.correct = 0;
+    state.results = [];
+    state.locked = false;
+    state.hintShown = false;
+    state.quizStart = Date.now();
+    state.run = { mode: "exam", key: stageId };
+    if (!state.problems.length) {
+      app.toast(t("exam.empty"));
+      renderStage(stageId);
+      return;
+    }
+    renderQuestion(state.problems[0]);
+    app.show("practice");
+    app.saveSession();
+  }
+  function buildGradeExam(stage, n) {
+    var skills = stageSkills(stage).filter(function(s) {
+      return !s.scaffold && s.types && s.types.length;
+    });
+    if (!skills.length) return [];
+    var rng = MathCore.seedRandom(Date.now() & 4294967295);
+    var exam = MathCore.composeExam(skills, n, {
+      rng,
+      maxPerSkill: 3,
+      stepFor: function(skill) {
+        var levels = Math.max(1, (skill.levels || []).length);
+        var top = levels - 1;
+        if (top <= 0) return 0;
+        var sp = skillProgress(skill.id).difficultyStep || 0;
+        return rng() < 0.67 ? Math.max(1, top) : Math.max(1, Math.min(sp, top));
+      }
+    });
+    return applyTypedAssessment(exam, stage.id);
+  }
+  function finishExam() {
+    var stage = getStage(state.examStage);
+    var grade = MathCore.gradeQuiz(state.results);
+    var seconds = Math.round((Date.now() - state.quizStart) / 1e3);
+    app.clearSession();
+    var passed = grade.total > 0 && grade.percent >= EXAM_PASS;
+    var perfect = grade.total > 0 && grade.correct === grade.total;
+    progress.stageExams = progress.stageExams || {};
+    var prev = progress.stageExams[state.examStage] || {};
+    progress.stageExams[state.examStage] = {
+      passed: !!(prev.passed || prev.perfect || passed),
+      perfect: !!(prev.perfect || perfect),
+      best: Math.max(prev.best || 0, Math.round(grade.percent * 100))
+    };
+    saveProgress();
+    app.updateTopbar();
+    var starsHtml = "";
+    for (var i = 1; i <= 3; i++) starsHtml += '<span style="opacity:' + (i <= grade.stars ? 1 : 0.2) + '">★</span>';
+    $("screen-practice").innerHTML = '<div class="result-card"><div class="big">' + (grade.stars >= 2 ? "🎉" : grade.stars >= 1 ? "👍" : "💪") + "</div><h1>" + t("exam.result") + '</h1><p class="page-sub">' + L(stage) + '</p><div class="score">' + t("quiz.score", { c: grade.correct, t: grade.total }) + '</div><div class="result-stars">' + starsHtml + '</div><p class="page-sub">' + Math.round(grade.percent * 100) + "% · " + t("quiz.time") + "：" + Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0") + '</p><p class="page-sub">' + (passed ? perfect ? t("exam.perfectUnlock") : t("exam.passUnlock") : t("exam.needPass")) + '</p><div class="result-actions"><button class="btn secondary" id="examBack" type="button">' + t("quiz.back") + '</button><button class="btn" id="examRetry" type="button">' + t("quiz.retry") + "</button></div></div>";
+    $("examBack").addEventListener("click", function() {
+      app.navigate({ screen: "stage", stageId: state.examStage });
+    });
+    $("examRetry").addEventListener("click", function() {
+      renderGradeExam(state.examStage);
+    });
+    app.show("practice");
+    var examAnnouncer = $("announcer");
+    if (examAnnouncer) examAnnouncer.textContent = t("exam.result");
+  }
+  function advanceQuiz() {
+    state.index++;
+    if (state.index < state.problems.length) {
+      state.locked = false;
+      state.attemptWrong = false;
+      renderQuestion(state.problems[state.index]);
+      app.saveSession();
+    } else if (state.mode === "exam") {
+      finishExam();
+    } else {
+      finishQuiz();
+    }
+  }
+  function finishQuiz() {
+    var skill = getSkill(state.skillId);
+    var quizPass = skill.mastery && skill.mastery.quizPass || 0.8;
+    var grade = MathCore.gradeQuiz(state.results, quizPass);
+    var seconds = Math.round((Date.now() - state.quizStart) / 1e3);
+    app.clearSession();
+    MathCore.applyQuizResult(progress, skill, grade.percent);
+    saveProgress();
+    app.updateTopbar();
+    var starsHtml = "";
+    for (var i = 1; i <= 3; i++) starsHtml += '<span style="opacity:' + (i <= grade.stars ? 1 : 0.2) + '">★</span>';
+    $("screen-practice").innerHTML = '<div class="result-card"><div class="big">' + (grade.stars >= 2 ? "🎉" : grade.stars >= 1 ? "👍" : "💪") + "</div><h1>" + t("quiz.result") + '</h1><p class="page-sub">' + nameOf(skill) + '</p><div class="score">' + t("quiz.score", { c: grade.correct, t: grade.total }) + '</div><div class="result-stars">' + starsHtml + '</div><p class="page-sub">' + t("quiz.time") + "：" + Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0") + '</p><div class="result-actions"><button class="btn secondary" id="quizBack" type="button">' + t("quiz.back") + '</button><button class="btn" id="quizRetry" type="button">' + t("quiz.retry") + "</button></div></div>";
+    $("quizBack").addEventListener("click", function() {
+      app.navigate({ screen: "stage", stageId: app.skillStageId(state.skillId) });
+    });
+    $("quizRetry").addEventListener("click", function() {
+      startQuiz(state.skillId);
+    });
+    app.show("practice");
+    var quizAnnouncer = $("announcer");
+    if (quizAnnouncer) quizAnnouncer.textContent = t("quiz.result");
+  }
+
+  // src/ui/session.js
   function clearSession() {
     try {
       sessionStorage.removeItem(SESSION_KEY);
@@ -1103,7 +1466,7 @@
     if (s.mode !== parsed.screen) return false;
     if (parsed.screen === "exam") {
       if (s.stageId !== parsed.stageId) return false;
-    } else if (s.skillId !== parsed.skillId || s.stageId !== skillStageId(parsed.skillId)) {
+    } else if (s.skillId !== parsed.skillId || s.stageId !== app.skillStageId(parsed.skillId)) {
       return false;
     }
     if (!Array.isArray(s.problems) || !s.problems.length || s.problems.length > 200) return false;
@@ -1128,7 +1491,7 @@
       }
       if (!res || !res.correct) return false;
     }
-    var resolved = resolveRoute(parsed);
+    var resolved = app.resolveRoute(parsed);
     if (!resolved || !sameRoute(resolved, parsed)) return false;
     return true;
   }
@@ -1149,9 +1512,9 @@
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({
         v: SESSION_VERSION,
-        route: serializeRoute(currentRoute()),
+        route: serializeRoute(app.currentRoute()),
         mode: state.mode,
-        stageId: state.mode === "exam" ? state.examStage : skillStageId(state.skillId),
+        stageId: state.mode === "exam" ? state.examStage : app.skillStageId(state.skillId),
         skillId: state.mode === "exam" ? null : state.skillId,
         problems: state.problems,
         index: state.index,
@@ -1169,7 +1532,7 @@
     state.mode = parsed.screen;
     state.skillId = parsed.screen === "exam" ? null : parsed.skillId;
     state.examStage = parsed.screen === "exam" ? parsed.stageId : null;
-    state.stageId = parsed.screen === "exam" ? parsed.stageId : skillStageId(parsed.skillId);
+    state.stageId = parsed.screen === "exam" ? parsed.stageId : app.skillStageId(parsed.skillId);
     state.problems = s.problems;
     state.index = s.index;
     state.correct = s.correct || 0;
@@ -1180,20 +1543,20 @@
     state.attemptWrong = false;
     state.run = { mode: parsed.screen, key: parsed.screen === "exam" ? parsed.stageId : parsed.skillId };
     renderQuestion(state.problems[state.index]);
-    show("practice");
+    app.show("practice");
     saveSession();
   }
   function resumeSession() {
     var s = readSession();
     var parsed = s ? parseHash(s.route) : null;
-    var route = parsed ? resolveRoute(parsed) : null;
+    var route = parsed ? app.resolveRoute(parsed) : null;
     if (!s || !route || !sameRoute(route, parsed)) {
       clearSession();
       renderHome();
       return;
     }
     var hash = serializeRoute(route);
-    writeHash(hash, false);
+    app.writeHash(hash, false);
     nav.lastHash = hash;
     restoreSession(s);
   }
@@ -1212,6 +1575,11 @@
     }
     var modeLabel = route.screen === "quiz" ? t("quiz.title") : route.screen === "exam" ? t("exam.title") : t("practice.title");
     return { route, modeLabel, name, index: s.index, total: s.problems.length };
+  }
+
+  // src/ui/index.js
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
   }
   function applyTheme() {
     document.documentElement.setAttribute("data-theme", state.theme || "light");
@@ -1397,7 +1765,6 @@
     }
     return { screen: "home" };
   }
-  var nav = { lastHash: null };
   function writeHash(hash, replace) {
     if (location.hash === hash) return;
     try {
@@ -1526,9 +1893,9 @@
   function renderRoute(route) {
     switch (route.screen) {
       case "home":
-        return renderHome();
+        return renderHome2();
       case "stage":
-        return renderStage(route.stageId);
+        return renderStage2(route.stageId);
       case "lesson":
         return renderLesson(route.skillId);
       case "practice":
@@ -1544,7 +1911,7 @@
       case "formulas":
         return renderFormulas();
     }
-    return renderHome();
+    return renderHome2();
   }
   function renderAssessmentRoute(route) {
     var mode = route.screen;
@@ -1597,261 +1964,6 @@
   function back() {
     var parent = parentOf(currentRoute());
     navigate(parent || HOME_ROUTE);
-  }
-  function progressBarHTML(pct, label) {
-    var now = Math.max(0, Math.min(100, Math.round(pct || 0)));
-    return '<div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + now + '"' + (label ? ' aria-label="' + esc(label) + '"' : "") + '><i style="width:' + now + '%"></i></div>';
-  }
-  function choiceAriaLabel(index, text) {
-    return t("a11y.choice", { i: index + 1, text });
-  }
-  function startPractice(skillId) {
-    state.skillId = skillId;
-    state.stageId = skillStageId(skillId);
-    state.examStage = null;
-    state.mode = "practice";
-    state.problems = [];
-    state.index = 0;
-    state.correct = 0;
-    state.results = [];
-    state.quizStart = 0;
-    state.locked = false;
-    state.hintShown = false;
-    state.attemptWrong = false;
-    state.run = { mode: "practice", key: skillId };
-    nextPracticeProblem();
-    show("practice");
-    saveSession();
-  }
-  function nextPracticeProblem() {
-    var skill = getSkill(state.skillId);
-    var rng = MathCore.seedRandom(Date.now() & 4294967295 ^ Math.floor(Math.random() * 65535));
-    var p = MathCore.nextProblem(skill, progress, { rng, avoid: state.problems.slice(-4) });
-    state.problems.push(p);
-    state.index = state.problems.length - 1;
-    state.locked = false;
-    state.hintShown = false;
-    state.attemptWrong = false;
-    renderQuestion(p);
-    saveSession();
-  }
-  function startQuiz(skillId) {
-    state.skillId = skillId;
-    state.stageId = skillStageId(skillId);
-    state.examStage = null;
-    state.mode = "quiz";
-    state.problems = buildQuiz(getSkill(skillId), QUIZ_LENGTH);
-    state.index = 0;
-    state.correct = 0;
-    state.results = [];
-    state.locked = false;
-    state.hintShown = false;
-    state.quizStart = Date.now();
-    state.run = { mode: "quiz", key: skillId };
-    renderQuestion(state.problems[0]);
-    show("practice");
-    saveSession();
-  }
-  var TYPED_ASSESSMENT_STAGES = ["ms1", "ms2", "ms3", "hs1", "hs2", "hs3", "college"];
-  function applyTypedAssessment(problems, stageId) {
-    if (TYPED_ASSESSMENT_STAGES.indexOf(stageId) === -1) return problems;
-    problems.forEach(function(p, i) {
-      if (p.input) return;
-      var numericAnswer = typeof p.answer === "number" || MathCore.isFraction(p.answer);
-      if (numericAnswer && i % 3 === 2) p.input = "text";
-    });
-    return problems;
-  }
-  function buildQuiz(skill, n) {
-    var levels = Math.max(1, (skill.levels || []).length);
-    var baseStep = skillProgress(skill.id).difficultyStep || 0;
-    var step = Math.min(Math.max(1, baseStep), levels - 1);
-    var rng = MathCore.seedRandom(Date.now() & 4294967295);
-    return applyTypedAssessment(MathCore.composeSet(skill, n, { rng, difficultyStep: step }), skill.stage);
-  }
-  function currentProblem() {
-    return state.problems[state.index];
-  }
-  function choiceLabel(p, c) {
-    if (p.type === "direction") return t("direction." + c);
-    if (p.type === "centre") return t("centre." + c);
-    return MathCore.isFraction(c) ? MathCore.renderValue(c) : String(c);
-  }
-  function renderQuestion(p) {
-    var isQuiz = state.mode === "quiz" || state.mode === "exam";
-    var skill = state.mode === "exam" ? null : getSkill(state.skillId);
-    var headHtml;
-    var pctNow;
-    if (state.mode === "exam") {
-      var examStage = getStage(state.examStage);
-      pctNow = Math.round(state.index / state.problems.length * 100);
-      headHtml = '<div class="practice-head"><h1 class="p-title">📝 ' + t("exam.title") + " · " + L(examStage) + '</h1><span class="p-count">' + t("practice.question", { i: state.index + 1, n: state.problems.length }) + "</span></div>" + progressBarHTML(pctNow, t("practice.question", { i: state.index + 1, n: state.problems.length }));
-    } else if (isQuiz) {
-      var done = state.index;
-      pctNow = Math.round(done / state.problems.length * 100);
-      headHtml = '<div class="practice-head"><h1 class="p-title">' + t("quiz.title") + '</h1><span class="p-count">' + t("practice.question", { i: state.index + 1, n: state.problems.length }) + "</span></div>" + progressBarHTML(pctNow, t("practice.question", { i: state.index + 1, n: state.problems.length }));
-    } else {
-      var practice = skill.mastery && skill.mastery.practice || 10;
-      var c = skillProgress(skill.id).correct;
-      pctNow = Math.min(100, Math.round(c / practice * 100));
-      headHtml = '<div class="practice-head"><h1 class="p-title">' + nameOf(skill) + '</h1><span class="p-count">' + t("practice.progress") + " " + c + "/" + practice + "</span></div>" + progressBarHTML(pctNow, t("practice.progress") + " " + c + "/" + practice);
-    }
-    var bodyHtml = '<div class="prompt-card"><div class="prompt-text">' + renderMath(L(p.prompt)) + '</div><div class="prompt-visual" id="qVisual"></div></div>';
-    var choiceHtml;
-    if (p.input) {
-      choiceHtml = '<div class="answer-row"><label class="sr-only" for="typedAnswer">' + esc(t("practice.typeAnswer")) + '</label><input class="answer-input" id="typedAnswer" type="text" inputmode="decimal" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="answerHint"><button class="btn" id="typedSubmit" type="button">' + esc(t("practice.submit")) + '</button></div><p class="answer-hint" id="answerHint">' + esc(t("practice.answerHint")) + "</p>";
-    } else {
-      choiceHtml = '<div class="choices" id="choices" role="group" aria-label="' + esc(t("practice.chooseAnswer")) + '">';
-      if (p.type === "comparegroup") {
-        p.choices.forEach(function(c2, i) {
-          var colorLabel = t("colors." + c2);
-          choiceHtml += '<button class="choice color-choice" type="button" data-value="' + c2 + '" data-key="' + c2 + '" aria-label="' + esc(choiceAriaLabel(i, colorLabel)) + '" aria-disabled="false"><span class="swatch" style="background:' + swatchColor(c2) + '"></span><span>' + colorLabel + "</span></button>";
-        });
-      } else {
-        p.choices.forEach(function(c2, i) {
-          var label = choiceLabel(p, c2);
-          choiceHtml += '<button class="choice" type="button" data-value="' + MathCore.renderValue(c2) + '" data-key="' + MathCore.valueKey(c2) + '" aria-label="' + esc(choiceAriaLabel(i, label)) + '" aria-disabled="false">' + label + "</button>";
-        });
-      }
-      choiceHtml += "</div>";
-    }
-    var footerHtml = '<div class="feedback" id="feedback" role="status" aria-live="polite" aria-atomic="true"></div>';
-    if (!isQuiz) {
-      footerHtml += '<div class="practice-footer"><button class="btn hint" id="hintBtn" type="button">💡 ' + t("practice.hint") + '</button><button class="btn" id="nextBtn" type="button" hidden>' + t("practice.next") + '</button></div><div class="hint-box" id="hintBox" hidden></div>';
-    }
-    $("screen-practice").innerHTML = headHtml + bodyHtml + choiceHtml + footerHtml;
-    renderVisual($("qVisual"), p.visual, p.math);
-    var feedback = $("feedback");
-    var choicesEl = $("choices");
-    if (choicesEl) {
-      choicesEl.querySelectorAll(".choice").forEach(function(btn) {
-        btn.addEventListener("click", function() {
-          if (state.locked) return;
-          handleAnswer(btn, p);
-        });
-      });
-    }
-    if (p.input) {
-      var typedSubmit = $("typedSubmit");
-      if (typedSubmit) typedSubmit.addEventListener("click", function() {
-        handleTypedAnswer(p);
-      });
-      var typedField = $("typedAnswer");
-      if (typedField) typedField.addEventListener("keydown", function(e) {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          handleTypedAnswer(p);
-        }
-      });
-    }
-    if (!isQuiz) {
-      $("hintBtn").addEventListener("click", function() {
-        state.hintShown = true;
-        var hb = $("hintBox");
-        hb.textContent = L(p.hint);
-        hb.hidden = false;
-      });
-      $("nextBtn").addEventListener("click", nextPracticeProblem);
-    }
-  }
-  function gradeAnswered(p, correct, delayMs) {
-    if (correct) {
-      state.locked = true;
-      state.correct++;
-      touchStreak();
-      playTone(true);
-      confetti();
-      if (state.mode === "practice") {
-        MathCore.applyResult(progress, getSkill(state.skillId), p, true, { credit: !state.attemptWrong });
-        saveProgress();
-        updateTopbar();
-        $("nextBtn").hidden = false;
-      } else {
-        state.results.push({ correct: true, problem: p });
-        setTimeout(advanceQuiz, delayMs || 900);
-      }
-    } else {
-      playTone(false);
-      if (state.mode === "practice") {
-        MathCore.applyResult(progress, getSkill(state.skillId), p, false);
-        saveProgress();
-      } else {
-        state.results.push({ correct: false, problem: p });
-        setTimeout(advanceQuiz, delayMs || 1100);
-      }
-    }
-  }
-  function handleAnswer(btn, p) {
-    var correct = MathCore.checkAnswer(p, btn.getAttribute("data-value")).correct;
-    if (correct) {
-      btn.classList.add("correct");
-      disableChoices();
-      setFeedback(state.mode === "practice" && state.attemptWrong ? t("practice.correctRetry") : pick(t("practice.correct")), "ok");
-      gradeAnswered(p, true);
-      return;
-    }
-    btn.classList.add("wrong");
-    btn.disabled = true;
-    btn.setAttribute("aria-disabled", "true");
-    setFeedback(pick(t("practice.wrong")), "no");
-    if (state.mode === "practice") {
-      state.attemptWrong = true;
-      gradeAnswered(p, false);
-      return;
-    }
-    disableChoices();
-    $("screen-practice").querySelectorAll(".choice").forEach(function(b) {
-      if (MathCore.checkAnswer(p, b.getAttribute("data-value")).correct) b.classList.add("correct");
-    });
-    gradeAnswered(p, false, 1100);
-  }
-  function handleTypedAnswer(p) {
-    if (state.locked) return;
-    var field = $("typedAnswer");
-    if (!field) return;
-    var raw = String(field.value || "").trim();
-    if (!raw) {
-      setFeedback(t("practice.enterAnswer"), "no");
-      try {
-        field.focus();
-      } catch (e) {
-      }
-      return;
-    }
-    var submit = $("typedSubmit");
-    var correct = MathCore.checkAnswer(p, raw).correct;
-    if (correct) {
-      field.disabled = true;
-      if (submit) submit.disabled = true;
-      setFeedback(state.mode === "practice" && state.attemptWrong ? t("practice.correctRetry") : pick(t("practice.correct")), "ok");
-      gradeAnswered(p, true);
-      return;
-    }
-    if (state.mode === "practice") {
-      state.attemptWrong = true;
-      setFeedback(pick(t("practice.wrong")), "no");
-      gradeAnswered(p, false);
-      try {
-        field.select();
-      } catch (e) {
-      }
-      return;
-    }
-    field.disabled = true;
-    if (submit) submit.disabled = true;
-    setFeedback(t("practice.answerWas", { answer: MathCore.renderValue(p.answer) }), "no");
-    gradeAnswered(p, false, 1700);
-  }
-  function disableChoices() {
-    $("screen-practice").querySelectorAll(".choice").forEach(function(b) {
-      b.disabled = true;
-      b.setAttribute("aria-disabled", "true");
-    });
-  }
-  function setFeedback(msg, cls) {
-    var f = $("feedback");
-    f.textContent = msg;
-    f.className = "feedback " + cls;
   }
   function handlePracticeKeys(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -1920,112 +2032,6 @@
     var screen = $("screen-practice");
     if (!screen || screen.hidden) return;
     handlePracticeKeys(e);
-  }
-  function advanceQuiz() {
-    state.index++;
-    if (state.index < state.problems.length) {
-      state.locked = false;
-      state.attemptWrong = false;
-      renderQuestion(state.problems[state.index]);
-      saveSession();
-    } else if (state.mode === "exam") {
-      finishExam();
-    } else {
-      finishQuiz();
-    }
-  }
-  function finishQuiz() {
-    var skill = getSkill(state.skillId);
-    var quizPass = skill.mastery && skill.mastery.quizPass || 0.8;
-    var grade = MathCore.gradeQuiz(state.results, quizPass);
-    var seconds = Math.round((Date.now() - state.quizStart) / 1e3);
-    clearSession();
-    MathCore.applyQuizResult(progress, skill, grade.percent);
-    saveProgress();
-    updateTopbar();
-    var starsHtml = "";
-    for (var i = 1; i <= 3; i++) starsHtml += '<span style="opacity:' + (i <= grade.stars ? 1 : 0.2) + '">★</span>';
-    $("screen-practice").innerHTML = '<div class="result-card"><div class="big">' + (grade.stars >= 2 ? "🎉" : grade.stars >= 1 ? "👍" : "💪") + "</div><h1>" + t("quiz.result") + '</h1><p class="page-sub">' + nameOf(skill) + '</p><div class="score">' + t("quiz.score", { c: grade.correct, t: grade.total }) + '</div><div class="result-stars">' + starsHtml + '</div><p class="page-sub">' + t("quiz.time") + "：" + Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0") + '</p><div class="result-actions"><button class="btn secondary" id="quizBack" type="button">' + t("quiz.back") + '</button><button class="btn" id="quizRetry" type="button">' + t("quiz.retry") + "</button></div></div>";
-    $("quizBack").addEventListener("click", function() {
-      navigate({ screen: "stage", stageId: skillStageId(state.skillId) });
-    });
-    $("quizRetry").addEventListener("click", function() {
-      startQuiz(state.skillId);
-    });
-    show("practice");
-    var quizAnnouncer = $("announcer");
-    if (quizAnnouncer) quizAnnouncer.textContent = t("quiz.result");
-  }
-  function renderGradeExam(stageId) {
-    var stage = getStage(stageId);
-    state.examStage = stageId;
-    state.stageId = stageId;
-    state.mode = "exam";
-    state.skillId = null;
-    state.problems = buildGradeExam(stage, EXAM_LENGTH);
-    state.index = 0;
-    state.correct = 0;
-    state.results = [];
-    state.locked = false;
-    state.hintShown = false;
-    state.quizStart = Date.now();
-    state.run = { mode: "exam", key: stageId };
-    if (!state.problems.length) {
-      toast(t("exam.empty"));
-      renderStage(stageId);
-      return;
-    }
-    renderQuestion(state.problems[0]);
-    show("practice");
-    saveSession();
-  }
-  function buildGradeExam(stage, n) {
-    var skills = stageSkills(stage).filter(function(s) {
-      return !s.scaffold && s.types && s.types.length;
-    });
-    if (!skills.length) return [];
-    var rng = MathCore.seedRandom(Date.now() & 4294967295);
-    var exam = MathCore.composeExam(skills, n, {
-      rng,
-      maxPerSkill: 3,
-      stepFor: function(skill) {
-        var levels = Math.max(1, (skill.levels || []).length);
-        var top = levels - 1;
-        if (top <= 0) return 0;
-        var sp = skillProgress(skill.id).difficultyStep || 0;
-        return rng() < 0.67 ? Math.max(1, top) : Math.max(1, Math.min(sp, top));
-      }
-    });
-    return applyTypedAssessment(exam, stage.id);
-  }
-  function finishExam() {
-    var stage = getStage(state.examStage);
-    var grade = MathCore.gradeQuiz(state.results);
-    var seconds = Math.round((Date.now() - state.quizStart) / 1e3);
-    clearSession();
-    var passed = grade.total > 0 && grade.percent >= EXAM_PASS;
-    var perfect = grade.total > 0 && grade.correct === grade.total;
-    progress.stageExams = progress.stageExams || {};
-    var prev = progress.stageExams[state.examStage] || {};
-    progress.stageExams[state.examStage] = {
-      passed: !!(prev.passed || prev.perfect || passed),
-      perfect: !!(prev.perfect || perfect),
-      best: Math.max(prev.best || 0, Math.round(grade.percent * 100))
-    };
-    saveProgress();
-    updateTopbar();
-    var starsHtml = "";
-    for (var i = 1; i <= 3; i++) starsHtml += '<span style="opacity:' + (i <= grade.stars ? 1 : 0.2) + '">★</span>';
-    $("screen-practice").innerHTML = '<div class="result-card"><div class="big">' + (grade.stars >= 2 ? "🎉" : grade.stars >= 1 ? "👍" : "💪") + "</div><h1>" + t("exam.result") + '</h1><p class="page-sub">' + L(stage) + '</p><div class="score">' + t("quiz.score", { c: grade.correct, t: grade.total }) + '</div><div class="result-stars">' + starsHtml + '</div><p class="page-sub">' + Math.round(grade.percent * 100) + "% · " + t("quiz.time") + "：" + Math.floor(seconds / 60) + ":" + String(seconds % 60).padStart(2, "0") + '</p><p class="page-sub">' + (passed ? perfect ? t("exam.perfectUnlock") : t("exam.passUnlock") : t("exam.needPass")) + '</p><div class="result-actions"><button class="btn secondary" id="examBack" type="button">' + t("quiz.back") + '</button><button class="btn" id="examRetry" type="button">' + t("quiz.retry") + "</button></div></div>";
-    $("examBack").addEventListener("click", function() {
-      navigate({ screen: "stage", stageId: state.examStage });
-    });
-    $("examRetry").addEventListener("click", function() {
-      renderGradeExam(state.examStage);
-    });
-    show("practice");
-    var examAnnouncer = $("announcer");
-    if (examAnnouncer) examAnnouncer.textContent = t("exam.result");
   }
   var modalState = { open: false, opener: null };
   function showModal(innerHTML, opener) {
@@ -2150,7 +2156,7 @@
       saveProgress();
       clearSession();
       var opener = closeModal({ restore: false });
-      renderHome();
+      renderHome2();
       if (!restoreFocus(opener)) focusScreen();
     });
   }
@@ -2303,7 +2309,16 @@
     advanceQuiz,
     finishQuiz,
     sessionSummary,
-    forceUpdate
+    forceUpdate,
+    pick,
+    clearSession,
+    saveSession,
+    playTone,
+    confetti,
+    touchStreak,
+    skillStageId,
+    resolveRoute,
+    writeHash
   });
   init();
   window.__mathApp = {
@@ -2318,7 +2333,7 @@
     },
     renderGradeExam,
     finishExam,
-    renderHome,
+    renderHome: renderHome2,
     parseHash,
     serializeRoute,
     resolveRoute,
