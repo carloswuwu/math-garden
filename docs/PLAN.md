@@ -10,10 +10,10 @@
 | Branch / HEAD | `main` @ `db4ab98` (Phases 1–5 complete + post-roadmap batch: Pages Actions switch, P1 content tranche, offline check/glossary; docs commit on top) |
 | Live | https://carloswuwu.github.io/math-garden/ — **Pages source is now “GitHub Actions”**; `pages.yml` deploys the built `dist/` on every main push |
 | CI | `.github/workflows/tests.yml` — build, stale-`dist`/wrapper check, six node suites, real-Chrome Lighthouse a11y gate, cold-offline check |
-| Content | **15 stages**, **139 skills**, **130 lessons — all deepened, 31 with glossaries**, **126 generator types**; `word` has **24 modes**; challenge arena **20 olympiad-style types across 6 topics with 3 difficulty tiers**; **小五 15 skills** (異分母分數、分數乘除、分數比較/擴分約分、小數四則混合、面積二、體積一、旋轉對稱、近似值/估算、統計圖、代數符號、圓的認識) and **大學 8 skills** (微積分二、線代二、統計二、微分方程、數論); Pre-K → graduate school |
+| Content | **15 stages**, **142 skills**, **133 lessons — all deepened, 34 with glossaries**, **129 generator types**; `word` has **24 modes**; challenge arena **20 olympiad-style types across 6 topics with 3 difficulty tiers**; **小五 15 skills** (異分母分數、分數乘除、分數比較/擴分約分、小數四則混合、面積二、體積一、旋轉對稱、近似值/估算、統計圖、代數符號、圓的認識) and **大學 8 skills** (微積分二、線代二、統計二、微分方程、數論); Pre-K → graduate school |
 | Code size | ESM sources: `src/core/` 14 modules (~4.5k lines), `src/ui/` 22 modules (~2.5k lines), `src/data/` 5 modules; generated wrappers `math-core.js` (~4.2k) and `app.js` (~2.5k); `style.css` 794 · `formulas.js` 91 |
-| Build | `tools/build.js` (190) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.a37e74378d67.js` **499.3 KB raw / 158.4 KB gzip** (advisory 162 KB), generated `dist/sw.js`; content ESM in `src/data/`, engine ESM in `src/core/`, UI ESM in `src/ui/`, generated classic/UMD wrappers; `dist/` + wrappers committed and CI fails on drift |
-| Tests | core **575,439** assertions · ui **283** · generators **185,792** · contract **17,850** · a11y **207** · perf **26** checks (+ Lighthouse a11y **1.000** + cold-offline check); UI/a11y/perf boot the built IIFE |
+| Build | `tools/build.js` (190) + `tools/sw-template.js` (104), esbuild 0.28.2 → `dist/app.d4cbad3400cc.js` **512.6 KB raw / 162.4 KB gzip** (advisory 166 KB), generated `dist/sw.js`; content ESM in `src/data/`, engine ESM in `src/core/`, UI ESM in `src/ui/`, generated classic/UMD wrappers; `dist/` + wrappers committed and CI fails on drift |
+| Tests | core **575,439** assertions · ui **283** · generators **188,269** · contract **18,153** · a11y **207** · perf **26** checks (+ Lighthouse a11y **1.000** + cold-offline check); UI/a11y/perf boot the built IIFE |
 | A11y | one h1 per screen + `aria-labelledby`, focus-to-heading + live-region announcements, accessible names on all controls (incl. labelled typed-answer fields), modal background `inert`/`aria-hidden`, generated `role="img"` text alternatives for question visuals, 44 px icon targets, ARIA strings in `i18n.js`, axe-core 4.10.2 jsdom subset (0 violations on 13 screens) |
 | Persistence | progress schema **v2** (`mathpath.progress`), legacy v1 key migrated, sanitized import |
 | In-flight session | `sessionStorage['mathpath.session.v1']` (24 h TTL, practice/quiz/exam only, never in progress) |
@@ -179,6 +179,8 @@
 79. **修正家長「一鍵解鎖全部」失效 + 研究院擴至 6 技能：** `confirmUnlockAll` 搬到 `dialog.js` 後漏了 `realStageList` 與 `focusScreen` import，點擊會拋 `ReferenceError`，所以只看見對話框、實際沒有解鎖。已補 import，並新增 UI 回歸測試（解鎖後所有階段考試通過、所有技能 quizStars≥2、可進入研究院 6 課、可開測度論課）。研究院由 3→**6** 個技能：新增測度論（勒貝格/計數測度）、微分幾何（圓曲率/球面高斯曲率）、範疇論入門（函數數/自同態數）；原有實分析、抽象代數、拓撲學三課亦補上視覺化。全站 **139 技能 / 130 課 / 31 個詞彙表課堂**，bundle 157.8 KB gzip，advisory/perf gate 162 KB。
 
 80. **矩陣改用 KaTeX display math：** 線性代數題目由 inline `pmatrix` 改為 `\displaystyle\begin{bmatrix}`（行列式用 `vmatrix`），`renderMath` 新增 `$$...$$` display 模式；課堂加入矩陣視覺化（KaTeX 2×2 矩陣、可橫向滾動），`col.linalg`/`col.linalg2` 的 intro/example/steps 全部改為正式矩陣公式；UI 測試驗證矩陣視覺化與題目都有 `.katex`／`.katex-display`。全站 bundle 158.4 KB gzip，ui 測試 283。
+
+81. **三角公式補齊：** 原本只有三角比與一條合併的正弦／餘弦定理，現新增 `hs.s4.identities`（平方關係、商數關係、二倍角）與 `hs.s5.sinerule`（正弦定理、餘弦定理、SAS 面積）、`hs.s5.triggraph`（振幅／週期）三個技能；公式表三角學一節由 2 條擴至 8 條，新增正弦曲線 SVG 視覺化與三課雙語詞彙表。全站 **142 技能 / 133 課 / 34 個詞彙表課堂**，bundle 162.4 KB gzip，advisory/perf gate 166 KB。
 
 ## 2. Architecture map
 
