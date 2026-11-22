@@ -3,6 +3,13 @@
  * 不含 DOM／隨機；由 src/core/index.js 匯入並保持 window.MathCore 的同一 API。
  */
 
+/* 進度 key：同一個 type 的不同 mode/form 分開追蹤（word 用 math.op 區分應用題型）。 */
+function typeAccKey(problem) {
+  var m = (problem && problem.math) || {};
+  var mode = problem && problem.type === 'word' ? (m.op || '') : (m.mode || m.form || '');
+  return problem.type + (mode && mode !== problem.type ? ':' + mode : '');
+}
+
 function defaultSkillProgress() {
   return {
     attempts: 0, correct: 0,
@@ -119,7 +126,8 @@ function applyResult(progress, skill, problem, correct, opts) {
   var sp = progress.skills[skill.id];
   sp.attempts += 1;
   sp.lastSeen = Date.now();
-  var acc = sp.typeAcc[problem.type] || { a: 0, c: 0 };
+  var accKey = typeAccKey(problem);
+  var acc = sp.typeAcc[accKey] || { a: 0, c: 0 };
   acc.a += 1;
   var credit = opts.credit !== false;
   if (correct && credit) {
@@ -144,7 +152,7 @@ function applyResult(progress, skill, problem, correct, opts) {
   }
   var levels = skill.levels || [{ min: skill.min, max: skill.max }];
   sp.difficultyStep = Math.max(0, Math.min(sp.difficultyStep, levels.length - 1));
-  sp.typeAcc[problem.type] = acc;
+  sp.typeAcc[accKey] = acc;
   sp.lastProblems.push({ type: problem.type, sig: problem.sig });
   if (sp.lastProblems.length > 3) sp.lastProblems.shift();
   var st = masteryStatus(progress, skill);
@@ -175,6 +183,7 @@ function gradeQuiz(results, pass) {
 
 export {
   defaultSkillProgress,
+  typeAccKey,
   newProgress,
   sanitizeProgress,
   practiceStars,

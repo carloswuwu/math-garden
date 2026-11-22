@@ -301,6 +301,18 @@ var __MathCoreBundle = (() => {
     wequation: function(m) {
       return (m.result - m.b) / m.a;
     },
+    wunitconv: function(m) {
+      return m.value * m.factor;
+    },
+    wremainder: function(m) {
+      return m.mode === "left" ? m.n % m.per : Math.floor(m.n / m.per);
+    },
+    wpctchain: function(m) {
+      return m.base * (100 + m.p1) / 100 * (100 - m.p2) / 100;
+    },
+    wthreepart: function(m) {
+      return m.a * m.unit;
+    },
     modpow: function(m) {
       var r = 1;
       for (var i = 0; i < m.b; i++) r = r * m.a % m.m;
@@ -481,7 +493,7 @@ var __MathCoreBundle = (() => {
       return m.pct * 360 / 100;
     },
     approx: function(m) {
-      return m.a / 2;
+      return m.mode === "range" ? m.a : m.a / 2;
     },
     direction: function(m) {
       return m.k;
@@ -983,7 +995,7 @@ var __MathCoreBundle = (() => {
       hint: { zh: "先想想用哪種運算。", en: "Decide which operation to use." }
     };
   }
-  var DEEP_WORD_OPS = ["wunit", "wmoney2", "wreverse", "wprofit2", "wratio2", "wrate2", "wgeo2", "wdata2", "wtable", "wequation"];
+  var DEEP_WORD_OPS = ["wunit", "wmoney2", "wreverse", "wprofit2", "wratio2", "wrate2", "wgeo2", "wdata2", "wtable", "wequation", "wunitconv", "wremainder", "wpctchain", "wthreepart"];
   var BASIC_WORD_OPS = ["add", "sub", "mul", "area", "percent", "speed", "profit", "compound", "twoStep", "ratio"];
   function genWord(rng, o) {
     var ops = (o.ops || ["add", "sub", "mul"]).slice();
@@ -1186,6 +1198,79 @@ var __MathCoreBundle = (() => {
         answer: unknown,
         math: { op: "wequation", a: coef, b: addend, result },
         hint: { zh: "先減去 " + addend + "，再除以 " + coef + "。", en: "Subtract " + addend + " first, then divide by " + coef + "." }
+      };
+    }
+    if (op === "wunitconv") {
+      var conv = pick(rng, [
+        { from: "km", to: "m", factor: 1e3, fromEn: "km", toEn: "m" },
+        { from: "m", to: "cm", factor: 100, fromEn: "m", toEn: "cm" },
+        { from: "kg", to: "g", factor: 1e3, fromEn: "kg", toEn: "g" },
+        { from: "L", to: "mL", factor: 1e3, fromEn: "L", toEn: "mL" },
+        { from: "小時", to: "分鐘", factor: 60, fromEn: "hours", toEn: "minutes" }
+      ]);
+      var cv = randInt(rng, 2, 9);
+      var convAnswer = cv * conv.factor;
+      return {
+        type: "word",
+        prompt: {
+          zh: "把 " + cv + " " + conv.from + " 換算成 " + conv.to + "，是多少？",
+          en: "Convert " + cv + " " + conv.fromEn + " to " + conv.toEn + ". How many " + conv.toEn + "?"
+        },
+        visual: null,
+        answer: convAnswer,
+        math: { op: "wunitconv", value: cv, factor: conv.factor, from: conv.from, to: conv.to },
+        hint: { zh: "大單位換小單位要乘以換算率（1 " + conv.from + " = " + conv.factor + " " + conv.to + "）。", en: "Larger unit to smaller: multiply by the conversion factor (1 " + conv.fromEn + " = " + conv.factor + " " + conv.toEn + ")." }
+      };
+    }
+    if (op === "wremainder") {
+      var totalItems, perBox, fullBoxes, leftOver;
+      do {
+        totalItems = randInt(rng, 20, 99);
+        perBox = randInt(rng, 6, 12);
+        fullBoxes = Math.floor(totalItems / perBox);
+        leftOver = totalItems % perBox;
+      } while (leftOver === 0);
+      var modeR = pick(rng, ["left", "full"]);
+      return {
+        type: "word",
+        prompt: modeR === "left" ? { zh: "有 " + totalItems + " 個" + item.zh + "，每盒裝 " + perBox + " 個，裝滿後還剩幾個？", en: "There are " + totalItems + " " + item.en + " packed " + perBox + " per box. How many are left over after filling as many boxes as possible?" } : { zh: "有 " + totalItems + " 個" + item.zh + "，每盒裝 " + perBox + " 個，最多可以裝滿幾盒？", en: "There are " + totalItems + " " + item.en + " packed " + perBox + " per box. How many full boxes can be made?" },
+        visual: null,
+        answer: modeR === "left" ? leftOver : fullBoxes,
+        math: { op: "wremainder", n: totalItems, per: perBox, mode: modeR },
+        hint: { zh: "用除法：商是裝滿的盒數，餘數是剩下的數量。", en: "Use division: the quotient is full boxes, the remainder is left over." }
+      };
+    }
+    if (op === "wpctchain") {
+      var base = 100 * randInt(rng, 1, 3);
+      var p1 = pick(rng, [10, 20, 25, 50]);
+      var p2 = pick(rng, [10, 20, 25]);
+      var finalPrice = base * (100 + p1) / 100 * (100 - p2) / 100;
+      return {
+        type: "word",
+        prompt: {
+          zh: "一件" + item.zh + "原價 " + money(base) + "，先加價 " + p1 + "%，再減價 " + p2 + "%，最後售價是多少？",
+          en: "An item costs " + money(base) + ". Its price is increased by " + p1 + "%, then reduced by " + p2 + "%. What is the final price?"
+        },
+        visual: null,
+        answer: finalPrice,
+        math: { op: "wpctchain", base, p1, p2 },
+        hint: { zh: "百分比改變要乘在原價上：先 ×(1+" + p1 + "%)，再 ×(1−" + p2 + "%)。", en: "Apply each percentage to the current price: ×(1+" + p1 + "%), then ×(1−" + p2 + "%)." }
+      };
+    }
+    if (op === "wthreepart") {
+      var ratio = pick(rng, [[1, 2, 3], [2, 3, 5], [1, 3, 4], [2, 2, 3]]);
+      var unitShare = randInt(rng, 2, 12);
+      var total = (ratio[0] + ratio[1] + ratio[2]) * unitShare;
+      return {
+        type: "word",
+        prompt: {
+          zh: who.zh + "、" + who.zh + "的朋友和" + who.zh + "的家人按 " + ratio[0] + " : " + ratio[1] + " : " + ratio[2] + " 分 " + money(total) + "，第一個人分得多少？",
+          en: "Three people share " + money(total) + " in the ratio " + ratio[0] + " : " + ratio[1] + " : " + ratio[2] + ". How much does the first person get?"
+        },
+        visual: null,
+        answer: ratio[0] * unitShare,
+        math: { op: "wthreepart", a: ratio[0], b: ratio[1], c: ratio[2], total, unit: unitShare },
+        hint: { zh: "先求一份 = 總數 ÷ 總份數，再乘第一個人佔的份數。", en: "Find one share = total ÷ total parts, then multiply by the first person's parts." }
       };
     }
     throw new Error("未知 word 模式: " + op);
@@ -2894,6 +2979,29 @@ var __MathCoreBundle = (() => {
     };
   }
   function genCongruent(rng, o) {
+    var mode = pick(rng, ["fact", "side", "angle"]);
+    if (mode === "side") {
+      var side = randInt(rng, 3, 18);
+      return {
+        type: "congruent",
+        prompt: { zh: "兩個全等三角形中，一個三角形的邊長是 " + side + " cm，它的對應邊是多少 cm？", en: "In two congruent triangles, one side is " + side + " cm. What is the corresponding side?" },
+        visual: { kind: "twotri" },
+        answer: side,
+        math: { op: "congruent", mode: "side", a: side },
+        hint: { zh: "全等 = 形狀大小相同，對應邊相等。", en: "Congruent means same shape and size, so corresponding sides are equal." }
+      };
+    }
+    if (mode === "angle") {
+      var ang = randInt(rng, 20, 80);
+      return {
+        type: "congruent",
+        prompt: { zh: "兩個全等三角形中，一個角是 " + ang + "°，它的對應角是多少度？", en: "In two congruent triangles, one angle is " + ang + "°. What is the corresponding angle?" },
+        visual: { kind: "twotri" },
+        answer: ang,
+        math: { op: "congruent", mode: "angle", a: ang },
+        hint: { zh: "全等三角形對應角相等。", en: "Corresponding angles of congruent triangles are equal." }
+      };
+    }
     var i = Math.floor(rng() * CONGRUENT_FACTS.length);
     var q = CONGRUENT_FACTS[i];
     return {
@@ -2901,7 +3009,7 @@ var __MathCoreBundle = (() => {
       prompt: { zh: q.zh, en: q.en },
       visual: { kind: "twotri" },
       answer: q.a,
-      math: { op: "congruent", a: q.a, k: i },
+      math: { op: "congruent", mode: "fact", a: q.a, k: i },
       hint: { zh: "全等三角形對應邊、對應角相等。", en: "Congruent triangles have equal sides and angles." }
     };
   }
@@ -2992,12 +3100,23 @@ var __MathCoreBundle = (() => {
   }
   function genApprox(rng, o) {
     var unit = pick(rng, [10, 100, 1e3]);
+    var mode = pick(rng, ["max", "range"]);
+    if (mode === "range") {
+      return {
+        type: "approx",
+        prompt: { zh: "把數值四捨五入至最接近的 " + unit + "，可能的最大值與最小值相差多少？", en: "A number is rounded to the nearest " + unit + ". What is the difference between the largest and smallest possible values?" },
+        visual: null,
+        answer: unit,
+        math: { op: "approx", mode: "range", a: unit },
+        hint: { zh: "最大與最小可能值相差整整一個單位。", en: "The largest and smallest possible values differ by one whole unit." }
+      };
+    }
     return {
       type: "approx",
       prompt: { zh: "把數值四捨五入至最接近的 " + unit + "，最大絕對誤差是多少？", en: "When a number is rounded to the nearest " + unit + ", what is the maximum absolute error?" },
       visual: null,
       answer: unit / 2,
-      math: { op: "approx", a: unit },
+      math: { op: "approx", mode: "max", a: unit },
       hint: { zh: "最大誤差 = 單位的一半。", en: "Max error = half of the unit." }
     };
   }
@@ -3070,6 +3189,37 @@ var __MathCoreBundle = (() => {
   var DIR_LABEL = { east: { zh: "東", en: "East" }, south: { zh: "南", en: "South" }, west: { zh: "西", en: "West" }, north: { zh: "北", en: "North" } };
   var CENTRE_LABEL = { incentre: { zh: "內心", en: "Incentre" }, circumcentre: { zh: "外心", en: "Circumcentre" }, centroid: { zh: "重心", en: "Centroid" }, orthocentre: { zh: "垂心", en: "Orthocentre" } };
   function genDirection(rng, o) {
+    var mode = pick(rng, ["fact", "opposite", "turn"]);
+    if (mode === "opposite") {
+      var start = pick(rng, DIRECTION_KEYS);
+      var opp = DIRECTION_KEYS[(DIRECTION_KEYS.indexOf(start) + 2) % 4];
+      return {
+        type: "direction",
+        prompt: { zh: "與「" + DIR_LABEL[start].zh + "」相對的方向是？", en: "Which direction is opposite to " + DIR_LABEL[start].en + "?" },
+        visual: { kind: "compass" },
+        answer: opp,
+        choices: DIRECTION_KEYS.slice(),
+        math: { op: "direction", mode: "opposite", k: opp, start },
+        hint: { zh: "東南西北中，相對的方向相差 180°。", en: "Opposite compass directions are 180° apart." }
+      };
+    }
+    if (mode === "turn") {
+      var from = pick(rng, DIRECTION_KEYS);
+      var turns = randInt(rng, 1, 3);
+      var dir = pick(rng, ["right", "left"]);
+      var idx = DIRECTION_KEYS.indexOf(from);
+      var delta = dir === "right" ? turns : -turns;
+      var to = DIRECTION_KEYS[((idx + delta) % 4 + 4) % 4];
+      return {
+        type: "direction",
+        prompt: { zh: "面向" + DIR_LABEL[from].zh + "，向右轉 " + turns + " 個直角（每次 90°），最後面向哪個方向？", en: "Facing " + DIR_LABEL[from].en + ", turn " + turns + " right angle(s) to the right. Which direction are you facing?" },
+        visual: { kind: "compass" },
+        answer: to,
+        choices: DIRECTION_KEYS.slice(),
+        math: { op: "direction", mode: "turn", k: to, start: from, turns, dir },
+        hint: { zh: "向右轉是順時針，每個直角轉 90°；左轉相反。", en: "Right turns are clockwise by 90° each; left turns go the other way." }
+      };
+    }
     var i = Math.floor(rng() * DIRECTION_FACTS.length);
     var q = DIRECTION_FACTS[i];
     return {
@@ -3078,7 +3228,7 @@ var __MathCoreBundle = (() => {
       visual: { kind: "compass" },
       answer: q.k,
       choices: DIRECTION_KEYS.slice(),
-      math: { op: "direction", k: q.k },
+      math: { op: "direction", mode: "fact", k: q.k, i },
       hint: { zh: "想一想指南針的方向。", en: "Think about the compass directions." }
     };
   }
@@ -4481,6 +4631,27 @@ var __MathCoreBundle = (() => {
             en: ["Subtract " + m.b + " first: " + m.a + "x = " + (m.result - m.b) + ".", "Divide by " + m.a + ": x = " + p.answer + "."]
           };
         }
+        if (m.op === "wunitconv") {
+          return {
+            zh: ["1 " + m.from + " = " + m.factor + " " + m.to + "。", m.value + " × " + m.factor + " = " + p.answer + "。"],
+            en: ["1 " + m.from + " = " + m.factor + " " + m.to + ".", m.value + " × " + m.factor + " = " + p.answer + "."]
+          };
+        }
+        if (m.op === "wremainder") {
+          return m.mode === "left" ? { zh: [m.n + " ÷ " + m.per + " = " + Math.floor(m.n / m.per) + " 餘 " + m.n % m.per + "。", "剩下 " + p.answer + " 個。"], en: [m.n + " ÷ " + m.per + " = " + Math.floor(m.n / m.per) + " remainder " + m.n % m.per + ".", "There are " + p.answer + " left over."] } : { zh: [m.n + " ÷ " + m.per + " = " + p.answer + " 餘 " + m.n % m.per + "。", "可以裝滿 " + p.answer + " 盒。"], en: [m.n + " ÷ " + m.per + " = " + p.answer + " remainder " + m.n % m.per + ".", "That makes " + p.answer + " full boxes."] };
+        }
+        if (m.op === "wpctchain") {
+          return {
+            zh: ["先加價：" + m.base + " × (1 + " + m.p1 + "%) = " + m.base * (100 + m.p1) / 100 + "。", "再減價：× (1 − " + m.p2 + "%) = " + p.answer + "。"],
+            en: ["Increase first: " + m.base + " × (1 + " + m.p1 + "%) = " + m.base * (100 + m.p1) / 100 + ".", "Then reduce: × (1 − " + m.p2 + "%) = " + p.answer + "."]
+          };
+        }
+        if (m.op === "wthreepart") {
+          return {
+            zh: ["總份數 = " + m.a + " + " + m.b + " + " + m.c + " = " + (m.a + m.b + m.c) + "。", "一份 = " + m.total + " ÷ " + (m.a + m.b + m.c) + " = " + m.unit + "；第一人得 " + p.answer + "。"],
+            en: ["Total parts = " + m.a + " + " + m.b + " + " + m.c + " = " + (m.a + m.b + m.c) + ".", "One part = " + m.total + " ÷ " + (m.a + m.b + m.c) + " = " + m.unit + "; the first person gets " + p.answer + "."]
+          };
+        }
         return null;
       case "perimeter":
         return {
@@ -4646,11 +4817,29 @@ var __MathCoreBundle = (() => {
           en: ["Central angle = percentage × 360°.", m.pct + "% × 360° = " + p.answer + "°."]
         };
       case "approx":
+        if (m.mode === "range") {
+          return {
+            zh: ["四捨五入的範圍正好是一個單位。", "最大與最小可能值相差 " + m.a + "。"],
+            en: ["The rounding interval is one whole unit.", "The largest and smallest possible values differ by " + m.a + "."]
+          };
+        }
         return {
           zh: ["最大誤差 = 單位的一半。", m.a + " ÷ 2 = " + p.answer + "。"],
           en: ["Max error = half of the unit.", m.a + " ÷ 2 = " + p.answer + "."]
         };
       case "direction":
+        if (m.mode === "turn") {
+          return {
+            zh: ["每個直角轉 90°，向右是順時針、向左是逆時針。", "最後面向 " + DIR_LABEL[p.answer].zh + "。"],
+            en: ["Each right angle is 90°; right turns are clockwise, left turns anticlockwise.", "The final direction is " + DIR_LABEL[p.answer].en + "."]
+          };
+        }
+        if (m.mode === "opposite") {
+          return {
+            zh: ["相對的指南針方向相差 180°。", "答案是 " + DIR_LABEL[p.answer].zh + "。"],
+            en: ["Opposite compass directions are 180° apart.", "The answer is " + DIR_LABEL[p.answer].en + "."]
+          };
+        }
         return {
           zh: ["想一想指南針的方向。", "答案是 " + DIR_LABEL[p.answer].zh + "。"],
           en: ["Think about the compass directions.", "The answer is " + DIR_LABEL[p.answer].en + "."]
@@ -5233,6 +5422,11 @@ var __MathCoreBundle = (() => {
   }
 
   // src/core/progress.js
+  function typeAccKey(problem) {
+    var m = problem && problem.math || {};
+    var mode = problem && problem.type === "word" ? m.op || "" : m.mode || m.form || "";
+    return problem.type + (mode && mode !== problem.type ? ":" + mode : "");
+  }
   function defaultSkillProgress() {
     return {
       attempts: 0,
@@ -5349,7 +5543,8 @@ var __MathCoreBundle = (() => {
     var sp = progress.skills[skill.id];
     sp.attempts += 1;
     sp.lastSeen = Date.now();
-    var acc = sp.typeAcc[problem.type] || { a: 0, c: 0 };
+    var accKey = typeAccKey(problem);
+    var acc = sp.typeAcc[accKey] || { a: 0, c: 0 };
     acc.a += 1;
     var credit = opts.credit !== false;
     if (correct && credit) {
@@ -5373,7 +5568,7 @@ var __MathCoreBundle = (() => {
     }
     var levels = skill.levels || [{ min: skill.min, max: skill.max }];
     sp.difficultyStep = Math.max(0, Math.min(sp.difficultyStep, levels.length - 1));
-    sp.typeAcc[problem.type] = acc;
+    sp.typeAcc[accKey] = acc;
     sp.lastProblems.push({ type: problem.type, sig: problem.sig });
     if (sp.lastProblems.length > 3) sp.lastProblems.shift();
     var st = masteryStatus(progress, skill);
@@ -5417,9 +5612,19 @@ var __MathCoreBundle = (() => {
     var step = sp.difficultyStep;
     var types = typeList(skill);
     var weights = types.map(function(ts) {
-      var acc = sp.typeAcc[ts.t];
-      if (!acc || acc.a === 0) return 1;
-      return Math.max(0.05, 1 - acc.c / acc.a);
+      var a = 0, c = 0;
+      var base = ts.t;
+      Object.keys(sp.typeAcc).forEach(function(key) {
+        if (key === base || key.indexOf(base + ":") === 0) {
+          var acc = sp.typeAcc[key];
+          if (acc && acc.a) {
+            a += acc.a;
+            c += acc.c;
+          }
+        }
+      });
+      if (!a) return 1;
+      return Math.max(0.05, 1 - c / a);
     });
     var totalW = weights.reduce(function(s, w) {
       return s + w;

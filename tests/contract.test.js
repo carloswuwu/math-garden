@@ -215,6 +215,13 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
         if (l.mistake !== undefined) {
           check(typeof l.mistake === 'string' && l.mistake.trim().length > 0, '課堂 mistake 應為非空字串 ' + skill.id + '/' + lang);
         }
+        if (l.glossary !== undefined) {
+          check(Array.isArray(l.glossary) && l.glossary.length >= 2, '課堂 glossary 應為至少 2 項的陣列 ' + skill.id + '/' + lang);
+          l.glossary.forEach(function (g) {
+            check(g && typeof g.term === 'string' && g.term.trim().length > 0, 'glossary term 不可為空 ' + skill.id + '/' + lang);
+            check(g && typeof g.def === 'string' && g.def.trim().length > 0, 'glossary def 不可為空 ' + skill.id + '/' + lang);
+          });
+        }
       });
       if (lesson.zh && lesson.en) {
         var zs = Array.isArray(lesson.zh.steps) ? lesson.zh.steps.length : 0;
@@ -337,13 +344,13 @@ const typeOf = (t) => (typeof t === 'string' ? t : t.t);
   check(coveredTypes.size === M.GENERATOR_TYPES.length, '解題覆蓋應達全部題型（' + coveredTypes.size + '/' + M.GENERATOR_TYPES.length + '）');
 
   /* 深度應用題模式必須真的透過課程 ops 出現（不只是實作了函數） */
-  const DEEP_OPS = ['wunit', 'wmoney2', 'wreverse', 'wprofit2', 'wratio2', 'wrate2', 'wgeo2', 'wdata2', 'wtable', 'wequation'];
+  const DEEP_OPS = ['wunit', 'wmoney2', 'wreverse', 'wprofit2', 'wratio2', 'wrate2', 'wgeo2', 'wdata2', 'wtable', 'wequation', 'wunitconv', 'wremainder', 'wpctchain', 'wthreepart'];
   const wordOps = new Set();
   for (const skill of skills) {
     if (!skill.types.some((t) => (typeof t === 'string' ? t : t.t) === 'word')) continue;
     const steps = Math.max(1, (skill.levels || []).length);
     for (let step = 0; step < steps; step++) {
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 160; i++) {
         wordOps.add(M.generateProblem(skill, { type: 'word', seed: 9000 + i * 13 + step * 7, difficultyStep: step }).math.op);
       }
     }

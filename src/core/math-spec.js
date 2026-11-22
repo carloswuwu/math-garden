@@ -109,6 +109,10 @@ var MATH_SPEC = {
     return m.paid - sum;
   },
   wequation: function (m) { return (m.result - m.b) / m.a; },
+  wunitconv: function (m) { return m.value * m.factor; },
+  wremainder: function (m) { return m.mode === 'left' ? m.n % m.per : Math.floor(m.n / m.per); },
+  wpctchain: function (m) { return m.base * (100 + m.p1) / 100 * (100 - m.p2) / 100; },
+  wthreepart: function (m) { return m.a * m.unit; },
   modpow: function (m) {
     var r = 1;
     for (var i = 0; i < m.b; i++) r = (r * m.a) % m.m;
@@ -220,7 +224,7 @@ var MATH_SPEC = {
   sinterest: function (m) { return m.p * m.r * m.n / 100; },
   expand: function (m) { return m.mode === 'coeff' ? m.a + m.b : m.a * m.b; },
   pichart: function (m) { return m.pct * 360 / 100; },
-  approx: function (m) { return m.a / 2; },
+  approx: function (m) { return m.mode === 'range' ? m.a : m.a / 2; },
   direction: function (m) { return m.k; },
   time24: function (m) { return m.a; },
   cone: function (m) { return piValue(m.coef); },

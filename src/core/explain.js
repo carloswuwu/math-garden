@@ -732,6 +732,29 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
             en: ['Subtract ' + m.b + ' first: ' + m.a + 'x = ' + (m.result - m.b) + '.', 'Divide by ' + m.a + ': x = ' + p.answer + '.']
           };
         }
+        if (m.op === 'wunitconv') {
+          return {
+            zh: ['1 ' + m.from + ' = ' + m.factor + ' ' + m.to + '。', m.value + ' × ' + m.factor + ' = ' + p.answer + '。'],
+            en: ['1 ' + m.from + ' = ' + m.factor + ' ' + m.to + '.', m.value + ' × ' + m.factor + ' = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wremainder') {
+          return m.mode === 'left'
+            ? { zh: [m.n + ' ÷ ' + m.per + ' = ' + Math.floor(m.n / m.per) + ' 餘 ' + (m.n % m.per) + '。', '剩下 ' + p.answer + ' 個。'], en: [m.n + ' ÷ ' + m.per + ' = ' + Math.floor(m.n / m.per) + ' remainder ' + (m.n % m.per) + '.', 'There are ' + p.answer + ' left over.'] }
+            : { zh: [m.n + ' ÷ ' + m.per + ' = ' + p.answer + ' 餘 ' + (m.n % m.per) + '。', '可以裝滿 ' + p.answer + ' 盒。'], en: [m.n + ' ÷ ' + m.per + ' = ' + p.answer + ' remainder ' + (m.n % m.per) + '.', 'That makes ' + p.answer + ' full boxes.'] };
+        }
+        if (m.op === 'wpctchain') {
+          return {
+            zh: ['先加價：' + m.base + ' × (1 + ' + m.p1 + '%) = ' + (m.base * (100 + m.p1) / 100) + '。', '再減價：× (1 − ' + m.p2 + '%) = ' + p.answer + '。'],
+            en: ['Increase first: ' + m.base + ' × (1 + ' + m.p1 + '%) = ' + (m.base * (100 + m.p1) / 100) + '.', 'Then reduce: × (1 − ' + m.p2 + '%) = ' + p.answer + '.']
+          };
+        }
+        if (m.op === 'wthreepart') {
+          return {
+            zh: ['總份數 = ' + m.a + ' + ' + m.b + ' + ' + m.c + ' = ' + (m.a + m.b + m.c) + '。', '一份 = ' + m.total + ' ÷ ' + (m.a + m.b + m.c) + ' = ' + m.unit + '；第一人得 ' + p.answer + '。'],
+            en: ['Total parts = ' + m.a + ' + ' + m.b + ' + ' + m.c + ' = ' + (m.a + m.b + m.c) + '.', 'One part = ' + m.total + ' ÷ ' + (m.a + m.b + m.c) + ' = ' + m.unit + '; the first person gets ' + p.answer + '.']
+          };
+        }
         return null;
       case 'perimeter':
         return {
@@ -897,11 +920,29 @@ import { DIR_LABEL, CENTRE_LABEL } from './generators.js';
           en: ['Central angle = percentage × 360°.', m.pct + '% × 360° = ' + p.answer + '°.']
         };
       case 'approx':
+        if (m.mode === 'range') {
+          return {
+            zh: ['四捨五入的範圍正好是一個單位。', '最大與最小可能值相差 ' + m.a + '。'],
+            en: ['The rounding interval is one whole unit.', 'The largest and smallest possible values differ by ' + m.a + '.']
+          };
+        }
         return {
           zh: ['最大誤差 = 單位的一半。', m.a + ' ÷ 2 = ' + p.answer + '。'],
           en: ['Max error = half of the unit.', m.a + ' ÷ 2 = ' + p.answer + '.']
         };
       case 'direction':
+        if (m.mode === 'turn') {
+          return {
+            zh: ['每個直角轉 90°，向右是順時針、向左是逆時針。', '最後面向 ' + DIR_LABEL[p.answer].zh + '。'],
+            en: ['Each right angle is 90°; right turns are clockwise, left turns anticlockwise.', 'The final direction is ' + DIR_LABEL[p.answer].en + '.']
+          };
+        }
+        if (m.mode === 'opposite') {
+          return {
+            zh: ['相對的指南針方向相差 180°。', '答案是 ' + DIR_LABEL[p.answer].zh + '。'],
+            en: ['Opposite compass directions are 180° apart.', 'The answer is ' + DIR_LABEL[p.answer].en + '.']
+          };
+        }
         return {
           zh: ['想一想指南針的方向。', '答案是 ' + DIR_LABEL[p.answer].zh + '。'],
           en: ['Think about the compass directions.', 'The answer is ' + DIR_LABEL[p.answer].en + '.']

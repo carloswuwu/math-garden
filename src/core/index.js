@@ -18,6 +18,7 @@ import { levelFor, typeList, generateProblem, generateSet } from './problem.js';
 import { composeSet, composeExam } from './compose.js';
 import {
   defaultSkillProgress,
+  typeAccKey,
   newProgress,
   sanitizeProgress,
   practiceStars,
@@ -302,9 +303,16 @@ import {
 
     // 按正確率加權：正確率低的類型更常出現（間隔復習精簡版）
     var weights = types.map(function (ts) {
-      var acc = sp.typeAcc[ts.t];
-      if (!acc || acc.a === 0) return 1;
-      return Math.max(0.05, 1 - acc.c / acc.a);
+      var a = 0, c = 0;
+      var base = ts.t;
+      Object.keys(sp.typeAcc).forEach(function (key) {
+        if (key === base || key.indexOf(base + ':') === 0) {
+          var acc = sp.typeAcc[key];
+          if (acc && acc.a) { a += acc.a; c += acc.c; }
+        }
+      });
+      if (!a) return 1;
+      return Math.max(0.05, 1 - c / a);
     });
     var totalW = weights.reduce(function (s, w) { return s + w; }, 0);
     var roll = rng() * totalW;

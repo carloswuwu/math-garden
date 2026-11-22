@@ -223,6 +223,17 @@ for (let seed = 1; seed <= N; seed++) {
   check(sp.attempts === 1 && sp.correct === 1, 'applyResult 計次正確');
   check(sp.typeAcc.addition.a === 1 && sp.typeAcc.addition.c === 1, 'applyResult typeAcc 正確');
 
+  /* per-mode typeAcc：word 依 math.op、其他題型依 mode/form 分開追蹤 */
+  const modeSkill = { id: 't.modeacc', types: ['word'], levels: [{ ops: ['wunit'], max: 100 }] };
+  const modeProblem = C.generateProblem(modeSkill, { seed: 7 });
+  C.applyResult(progress, modeSkill, modeProblem, true);
+  const modeAcc = progress.skills['t.modeacc'].typeAcc;
+  check(!!modeAcc['word:' + modeProblem.math.op] && modeAcc['word:' + modeProblem.math.op].a === 1,
+    'per-mode typeAcc 應以 word:<op> 記錄');
+  const discProblem = C.generateProblem({ id: 't.quadacc', types: [{ t: 'quadsolve', opts: { mode: 'disc' } }], levels: [{}] }, { seed: 2 });
+  C.applyResult(progress, { id: 't.quadacc', types: [{ t: 'quadsolve', opts: { mode: 'disc' } }], levels: [{}] }, discProblem, true);
+  check(!!progress.skills['t.quadacc'].typeAcc['quadsolve:disc'], 'per-mode typeAcc 應以 quadsolve:disc 記錄');
+
   // 連續 3 次正確 → 難度上升
   C.applyResult(progress, skill, p, true);
   C.applyResult(progress, skill, p, true);

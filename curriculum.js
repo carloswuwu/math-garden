@@ -740,7 +740,7 @@
       en: { name: "Word Problems", goal: "Solve multi-step problems combining percentages, ratios, rates and more." },
       lesson: "generic.word",
       types: ["word"],
-      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2"], max: 1e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation"], max: 2e3, maxFactor: 12 }],
+      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2"], max: 1e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 2e3, maxFactor: 12 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     "ms.s1.coord": {
@@ -762,7 +762,7 @@
       en: { name: "Word Problems", goal: "Solve word problems." },
       lesson: "generic.word",
       types: ["word"],
-      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2"], max: 1e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation"], max: 2e3, maxFactor: 12 }],
+      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2"], max: 1e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 2e3, maxFactor: 12 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     "ms.s2.word": {
@@ -773,7 +773,7 @@
       en: { name: "Word Problems", goal: "Solve word problems." },
       lesson: "generic.word",
       types: ["word"],
-      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation"], max: 2e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2"], max: 3e3, maxFactor: 12 }],
+      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 2e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 3e3, maxFactor: 12 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     "ms.s3.word": {
@@ -784,7 +784,7 @@
       en: { name: "Word Problems", goal: "Solve word problems." },
       lesson: "generic.word",
       types: ["word"],
-      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation"], max: 2e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2"], max: 3e3, maxFactor: 12 }],
+      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 2e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 3e3, maxFactor: 12 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     "hs.s4.word": {
@@ -795,7 +795,7 @@
       en: { name: "Word Problems", goal: "Solve word problems." },
       lesson: "generic.word",
       types: ["word"],
-      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation"], max: 2e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2"], max: 3e3, maxFactor: 12 }],
+      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 2e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 3e3, maxFactor: 12 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     "hs.s5.word": {
@@ -806,7 +806,7 @@
       en: { name: "Word Problems", goal: "Solve word problems." },
       lesson: "generic.word",
       types: ["word"],
-      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation"], max: 2e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2"], max: 3e3, maxFactor: 12 }],
+      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 2e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 3e3, maxFactor: 12 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     "hs.s6.word": {
@@ -817,7 +817,7 @@
       en: { name: "Word Problems", goal: "Solve word problems." },
       lesson: "generic.word",
       types: ["word"],
-      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2"], max: 3e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2"], max: 5e3, maxFactor: 12 }],
+      levels: [{ ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 3e3, maxFactor: 12 }, { ops: ["add", "sub", "mul", "area", "percent", "ratio", "speed", "profit", "compound", "twoStep", "wunit", "wmoney2", "wrate2", "wgeo2", "wratio2", "wreverse", "wprofit2", "wtable", "wequation", "wdata2", "wunitconv", "wremainder", "wpctchain", "wthreepart"], max: 5e3, maxFactor: 12 }],
       mastery: { practice: 12, quizPass: 0.8 }
     },
     /* ===================== 補缺課題 ===================== */
